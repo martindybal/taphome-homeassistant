@@ -1,0 +1,9 @@
+{
+  "domain": "taphome",
+  "name": "TapHome",
+  "documentation": "https://github.com/martindybal/taphome-homeassistant",
+  "issue_tracker": "https://github.com/martindybal/taphome-homeassistant/issues",
+  "dependencies": [],
+  "codeowners": ["@martindybal"],
+  "requirements": []
+}
