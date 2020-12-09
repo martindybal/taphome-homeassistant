@@ -24,3 +24,9 @@ You have to specify your token and id of your lights. For more information visit
 
 ## License
 This repository is under the [GPL v3 with Commons Clause](https://github.com/martindybal/taphome-homeassistant/blob/main/LICENSE.md).
+
+## Contributing
+1. [Set up Home Assistant development environment](https://developers.home-assistant.io/docs/development_environment)
+1. Clone this repository into `<config_dir>/custom_components/taphome/`
+1. Find a [good first issue](https://github.com/martindybal/taphome-homeassistant/issues?q=is%3Aissue+is%3Aopen+label%3A"good+first+issue") for you.
+1. Solve it and send me pull request :-)
