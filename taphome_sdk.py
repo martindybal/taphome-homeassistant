@@ -93,5 +93,4 @@ class TapHome:
             result = json["valuesChanged"][0]["result"]
             return TapHome.ValueChangeResult.from_string(result)
         except:
-            print(json)
             return TapHome.ValueChangeResult.FAILED
