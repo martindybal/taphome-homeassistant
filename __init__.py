@@ -17,7 +17,9 @@ CONFIG_SCHEMA = voluptuous.Schema(
                 config_validation.has_at_least_one_key(CONF_LIGHTS),
                 {
                     voluptuous.Required(CONF_TOKEN): config_validation.string,
-                    voluptuous.Optional(CONF_LIGHTS, default=[]): config_validation.ensure_list,
+                    voluptuous.Optional(
+                        CONF_LIGHTS, default=[]
+                    ): config_validation.ensure_list,
                 },
             )
         )
@@ -27,20 +29,32 @@ CONFIG_SCHEMA = voluptuous.Schema(
 
 
 async def async_setup(hass, config):
-
     token = config[DOMAIN][CONF_TOKEN]
-    lights = config[DOMAIN][CONF_LIGHTS]
+    lightIds = config[DOMAIN][CONF_LIGHTS]
 
     tapHomeHttpClientFactory = TapHomeHttpClientFactory()
     tapHomeHttpClient = tapHomeHttpClientFactory.create(token)
     tapHome = TapHome(tapHomeHttpClient)
     hass.data[TAPHOME] = tapHome
 
-    if lights:
+    devices = await tapHome.async_discovery_devices()
+
+    if lightIds:
+        lights = filter_devices_by_ids(devices, lightIds)
+
         hass.async_create_task(
-            async_load_platform(
-                hass, "light", DOMAIN, lights, config
-            )
+            async_load_platform(hass, "light", DOMAIN, lights, config)
         )
 
     return True
+
+
+def filter_devices_by_ids(devices: list, deviceIds: list):
+    return list(
+        map(
+            lambda deviceId: next(
+                device for device in devices if device.deviceId == deviceId
+            ),
+            deviceIds,
+        )
+    )

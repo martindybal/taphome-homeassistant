@@ -55,14 +55,87 @@ class TapHome:
         ON = 1
 
     class ValueType(Enum):
+        SensorBrightness = 2
+        DeviceStatus = 7
+        BlindsSlope = 10
+        ButtonHeldState = 38
+        HueDegrees = 40
+        Saturation = 41
+        AnalogOutputValue = 42
+        BlindsLevel = 46
         SwitchState = 48
+        MultiValueSwitchState = 49
+        ButtonPressed = 52
+        AnalogOutputDesiredValue = 67
+        MultiValueSwitchDesiredState = 71
+        HueBrightness = 65
+        BlindsIsMoving = 66
+        HueBrightnessDesiredValue = 68
+
+    class TapHomeDevice:
+        def __init__(
+            self,
+            deviceId: int,
+            name: str,
+            description: str,
+            type: str,
+            supportedValues: list,
+        ):
+            self._deviceId = deviceId
+            self._name = name
+            self._description = description
+            self._type = type
+            self._supportedValues = supportedValues
+
+        @staticmethod
+        def create(device: dict):
+            deviceId = device["deviceId"]
+            name = device["name"]
+            description = device["description"]
+            type = device["type"]
+            supportedValues = list(
+                map(
+                    lambda supportedValue: TapHome.ValueType(
+                        supportedValue["valueTypeId"]
+                    ),
+                    device["supportedValues"],
+                )
+            )
+
+            return TapHome.TapHomeDevice(
+                deviceId, name, description, type, supportedValues
+            )
+
+        @property
+        def deviceId(self):
+            return self._deviceId
+
+        @property
+        def name(self):
+            return self._name
+
+        @property
+        def description(self):
+            return self._description
+
+        @property
+        def type(self):
+            return self._type
+
+        @property
+        def supportedValues(self):
+            return self._supportedValues
 
     def __init__(self, tapHomeHttpClient: TapHomeHttpClientFactory._TapHomeHttpClient):
         self.tapHomeHttpClient = tapHomeHttpClient
 
     async def async_discovery_devices(self):
         json = await self.tapHomeHttpClient.async_api_get("discovery")
-        return json
+        devices = list(
+            map(lambda device: TapHome.TapHomeDevice.create(device), json["devices"])
+        )
+
+        return devices
 
     async def async_get_device_value(self, deviceId: int):
         json = await self.tapHomeHttpClient.async_api_get(f"getDeviceValue/{deviceId}")

@@ -9,31 +9,28 @@ from . import TAPHOME
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_platform(hass, config, async_add_entities, lightIds):
+async def async_setup_platform(hass, config, async_add_entities, devices: list):
     tapHome = hass.data[TAPHOME]
-    devices = (await tapHome.async_discovery_devices())["devices"]
 
     lights = []
-    for lightId in lightIds:
-        light = next(device for device in devices if device["deviceId"] == lightId)
-        lightValues = (await tapHome.async_get_device_value(lightId))["values"]
-        isLightOn = (
-            next(
-                lightValue
-                for lightValue in lightValues
-                if lightValue["valueTypeId"] == TapHome.ValueType.SwitchState.value
-            )["value"]
-            == 1
-        )
-
-        lights.append(
-            # TODO False should be change and load from TapHome
-            SimpleTapHomeLight(
-                tapHome, light["deviceId"], "TapHome - " + light["name"], isLightOn
-            )
-        )
+    for device in devices:
+        light = await async_create_light(tapHome, device)
+        lights.append(light)
 
     async_add_entities(lights)
+
+
+async def async_create_light(tapHome: TapHome, device: TapHome.TapHomeDevice):
+    lightValues = (await tapHome.async_get_device_value(device.deviceId))["values"]
+    isLightOn = (
+        next(
+            lightValue
+            for lightValue in lightValues
+            if lightValue["valueTypeId"] == TapHome.ValueType.SwitchState.value
+        )["value"]
+        == TapHome.SwitchState.ON.value
+    )
+    return SimpleTapHomeLight(tapHome, device.deviceId, device.name, isLightOn)
 
 
 class SimpleTapHomeLight(LightEntity):
