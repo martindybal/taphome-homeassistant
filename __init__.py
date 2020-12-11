@@ -2,13 +2,12 @@
 
 from .taphome_sdk import *
 from homeassistant.helpers.discovery import async_load_platform
-import voluptuous as voluptuous
+import voluptuous
 import homeassistant.helpers.config_validation as config_validation
-
 from homeassistant.const import CONF_TOKEN, CONF_LIGHTS
 
 DOMAIN = "taphome"
-TAPHOME = f"{DOMAIN}_TapHome"
+TAPHOME_HTTP_CLIENT_FACTORY = f"{DOMAIN}_HttpClientFactory"
 
 CONFIG_SCHEMA = voluptuous.Schema(
     {
@@ -34,10 +33,10 @@ async def async_setup(hass, config):
 
     tapHomeHttpClientFactory = TapHomeHttpClientFactory()
     tapHomeHttpClient = tapHomeHttpClientFactory.create(token)
-    tapHome = TapHome(tapHomeHttpClient)
-    hass.data[TAPHOME] = tapHome
+    hass.data[TAPHOME_HTTP_CLIENT_FACTORY] = tapHomeHttpClient
 
-    devices = await tapHome.async_discovery_devices()
+    discoverService = DiscoverService(tapHomeHttpClient)
+    devices = await discoverService.async_discovery_devices()
 
     if lightIds:
         lights = filter_devices_by_ids(devices, lightIds)
