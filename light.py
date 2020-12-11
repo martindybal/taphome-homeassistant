@@ -21,9 +21,7 @@ async def async_setup_platform(hass, config, async_add_entities, devices: list):
     async_add_entities(lights)
 
 
-async def async_create_light(
-    lightService: LightService, device: Device
-):
+async def async_create_light(lightService: LightService, device: Device):
     light = SimpleTapHomeLight(lightService, device.deviceId, device.name)
     await light.async_refresh_state()
     return light
@@ -67,14 +65,5 @@ class SimpleTapHomeLight(LightEntity):
             self._is_on = False
 
     async def async_refresh_state(self):
-        lightValues = (await self._lightService.async_get_device_value(self._deviceId))[
-            "values"
-        ]
-        self._is_on = (
-            next(
-                lightValue
-                for lightValue in lightValues
-                if lightValue["valueTypeId"] == ValueType.SwitchState.value
-            )["value"]
-            == SwitchState.ON.value
-        )
+        state = await self._lightService.async_get_light_state(self._deviceId)
+        self._is_on = state[ValueType.SwitchState] == SwitchState.ON

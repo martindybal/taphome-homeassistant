@@ -8,9 +8,25 @@ class LightService:
     def __init__(self, tapHomeHttpClient: TapHomeHttpClientFactory._TapHomeHttpClient):
         self.tapHomeHttpClient = tapHomeHttpClient
 
-    async def async_get_device_value(self, deviceId: int):
-        json = await self.tapHomeHttpClient.async_api_get(f"getDeviceValue/{deviceId}")
-        return json
+    async def async_get_light_state(self, deviceId: int):
+
+        lightValues = (
+            await self.tapHomeHttpClient.async_api_get(f"getDeviceValue/{deviceId}")
+        )["values"]
+
+        state = {
+            ValueType.SwitchState: SwitchState(
+                self.get_light_value(lightValues, ValueType.SwitchState)
+            )
+        }
+        return state
+
+    def get_light_value(self, lightValues: dict, vylueType: ValueType):
+        return next(
+            lightValue
+            for lightValue in lightValues
+            if lightValue["valueTypeId"] == vylueType.value
+        )["value"]
 
     def async_turn_on_light(self, lightId: int) -> ValueChangeResult:
         return self.__async_set_light_state(lightId, SwitchState.ON)
