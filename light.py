@@ -73,7 +73,15 @@ class TapHomeLight(LightEntity):
     @property
     def brightness(self):
         """Return the brightness of this light between 0..255."""
+        """Convert taphome 0..1 brightness to hass 0..255 scale."""
         return self._state[ValueType.HueBrightness] * 255
+
+    @property
+    def hs_color(self):
+        """Return the hs color value."""
+        hue = self._state[ValueType.HueDegrees]
+        saturation = self._state[ValueType.Saturation] * 100
+        return (hue, saturation)
 
     async def async_turn_on(self, **kwargs):
         """Turn device on."""
@@ -84,14 +92,19 @@ class TapHomeLight(LightEntity):
                 kwargs[ATTR_BRIGHTNESS]
             )
 
+        hue, saturation = None, None
+        if ATTR_HS_COLOR in kwargs:
+            (hue, saturation) = kwargs[ATTR_HS_COLOR]
+            saturation = saturation / 100
+
         result = await self._lightService.async_turn_on_light(
-            self._deviceId, brightness
+            self._deviceId, brightness, hue, saturation
         )
 
         if result == ValueChangeResult.FAILED:
             await self.async_refresh_state()
-        else:
-            self._state[ValueType.SwitchState] = SwitchState.ON
+        # else:
+        #     self._state[ValueType.SwitchState] = SwitchState.ON
 
     async def async_turn_off(self):
         """Turn device off."""

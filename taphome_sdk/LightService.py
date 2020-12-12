@@ -21,6 +21,14 @@ class LightService:
             lightValues, ValueType.HueBrightness
         )
 
+        state[ValueType.HueDegrees] = self.get_light_value(
+            lightValues, ValueType.HueDegrees
+        )
+
+        state[ValueType.Saturation] = self.get_light_value(
+            lightValues, ValueType.Saturation
+        )
+
         return state
 
     def get_light_value(self, lightValues: dict, vylueType: ValueType):
@@ -33,7 +41,9 @@ class LightService:
         except:
             return None
 
-    def async_turn_on_light(self, lightId: int, brightness=None) -> ValueChangeResult:
+    def async_turn_on_light(
+        self, lightId: int, brightness=None, hue=None, saturation=None
+    ) -> ValueChangeResult:
         values = [
             self.tapHomeApiService.create_device_value(
                 ValueType.SwitchState, SwitchState.ON.value
@@ -44,6 +54,18 @@ class LightService:
             values.append(
                 self.tapHomeApiService.create_device_value(
                     ValueType.HueBrightness, brightness
+                )
+            )
+
+        if hue:
+            values.append(
+                self.tapHomeApiService.create_device_value(ValueType.HueDegrees, hue)
+            )
+
+        if saturation:
+            values.append(
+                self.tapHomeApiService.create_device_value(
+                    ValueType.Saturation, saturation
                 )
             )
 
