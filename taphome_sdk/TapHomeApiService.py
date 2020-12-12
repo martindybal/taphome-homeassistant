@@ -34,7 +34,7 @@ class TapHomeApiService:
             json = await self.tapHomeHttpClient.async_api_post(
                 "setDeviceValue", requestBody
             )
-            results = json["valuesChanged"][0]["result"]
+            results = json["valuesChanged"]
 
             return (
                 ValueChangeResult.FAILED

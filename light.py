@@ -9,7 +9,6 @@ from homeassistant.components.light import (
     ATTR_HS_COLOR,
     SUPPORT_BRIGHTNESS,
     SUPPORT_COLOR,
-    SUPPORT_COLOR_TEMP,
 )
 from . import TAPHOME_API_SERVICE
 
@@ -103,8 +102,14 @@ class TapHomeLight(LightEntity):
 
         if result == ValueChangeResult.FAILED:
             await self.async_refresh_state()
-        # else:
-        #     self._state[ValueType.SwitchState] = SwitchState.ON
+        else:
+            self._state[ValueType.SwitchState] = SwitchState.ON
+            if brightness is not None:
+                self._state[ValueType.HueBrightness] = brightness
+            if hue is not None:
+                self._state[ValueType.HueDegrees] = hue
+            if saturation is not None:
+                self._state[ValueType.Saturation] = saturation
 
     async def async_turn_off(self):
         """Turn device off."""
