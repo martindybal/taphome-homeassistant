@@ -120,6 +120,12 @@ class TapHomeLight(LightEntity):
         else:
             self._state[ValueType.SwitchState] = SwitchState.OFF
 
+    # TODO don't use polling. Issue #4
+    # https://developers.home-assistant.io/docs/integration_fetching_data/#separate-polling-for-each-individual-entity
+    # https://developers.home-assistant.io/docs/core/entity/#polling
+    def async_update(self):
+        return self.async_refresh_state()
+
     async def async_refresh_state(self):
         self._state = await self._lightService.async_get_light_state(self._deviceId)
 
