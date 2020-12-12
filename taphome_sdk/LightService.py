@@ -50,19 +50,19 @@ class LightService:
             )
         ]
 
-        if brightness:
+        if brightness is not None:
             values.append(
                 self.tapHomeApiService.create_device_value(
                     ValueType.HueBrightness, brightness
                 )
             )
 
-        if hue:
+        if hue is not None:
             values.append(
                 self.tapHomeApiService.create_device_value(ValueType.HueDegrees, hue)
             )
 
-        if saturation:
+        if saturation is not None:
             values.append(
                 self.tapHomeApiService.create_device_value(
                     ValueType.Saturation, saturation
