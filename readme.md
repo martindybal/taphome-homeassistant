@@ -3,7 +3,7 @@
 This is demo of integration [TapHome](https://taphome.com/CZ/home) into [Home Assistant](https://www.home-assistant.io).
 
 ## Supported devices
-- Light switch
+- Lights - switch, brightness, RGB
 
 ## Installation
 
