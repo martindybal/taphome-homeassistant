@@ -51,12 +51,14 @@ class TapHomeCover(CoverEntity):
         self._name = name
         self._deviceId = deviceId
         self._state = None
-        self._supported_features = (
-            SUPPORT_OPEN
-            | SUPPORT_CLOSE
-            | SUPPORT_SET_POSITION
-            | SUPPORT_SET_TILT_POSITION
-        )
+        self._position = None
+        self._tilt = None
+        self._supported_features = SUPPORT_OPEN | SUPPORT_CLOSE | SUPPORT_SET_POSITION
+
+        if ValueType.BlindsSlope in supportedValues:
+            self._supported_features = (
+                self._supported_features | SUPPORT_SET_TILT_POSITION
+            )
 
     @property
     def supported_features(self):
@@ -69,26 +71,35 @@ class TapHomeCover(CoverEntity):
         return self._name
 
     @property
+    def current_cover_position(self):
+        return self._position
+
+    @property
+    def current_cover_tilt_position(self):
+        return self._tilt
+
+    @property
     def device_class(self):
         """Return the class of the device."""
-        return DEVICE_CLASS_BLIND
+        if self._supported_features & SUPPORT_SET_TILT_POSITION:
+            return DEVICE_CLASS_BLIND
+        else:
+            return DEVICE_CLASS_SHADE
 
     @property
     def is_closed(self):
-        """Return if the blind is closed or not."""
-        if self._state[ValueType.BlindsLevel] == 1:
-            return True
-        return None
+        """Return if the cover is closed or not."""
+        if self._position is None:
+            return None
+        return self._position == 0
 
     async def async_open_cover(self, **kwargs):
         """Open the cover."""
-        print(f"Open cover {self.name}")
-        print(kwargs)
-        await self.__async_set_cover_position(0)
+        await self.__async_set_cover_position(100)
 
     async def async_close_cover(self, **kwargs):
         """Close cover."""
-        await self.__async_set_cover_position(100)
+        await self.__async_set_cover_position(0)
 
     async def async_set_cover_position(self, **kwargs):
         """Move the cover to a specific position."""
@@ -97,20 +108,37 @@ class TapHomeCover(CoverEntity):
             await self.__async_set_cover_position(position)
 
     async def __async_set_cover_position(self, position):
-        taphomePosition = position / 100
-        await self._coverService.async_set_cover_position(
+        taphomePosition = 1 - position / 100
+        result = await self._coverService.async_set_cover_position(
             self._deviceId, taphomePosition
         )
+
+        if result == ValueChangeResult.FAILED:
+            await self.async_refresh_state()
+        else:
+            self._position = position
 
     async def async_set_cover_tilt_position(self, **kwargs):
         """Move the cover til to a specific position."""
         tilt = kwargs.get(ATTR_TILT_POSITION)
-        taphomeTilt = tilt / 100
-        await self._coverService.async_set_cover_tilt(self._deviceId, taphomeTilt)
+        taphomeTilt = 1 - tilt / 100
+        result = await self._coverService.async_set_cover_tilt(
+            self._deviceId, taphomeTilt
+        )
+
+        if result == ValueChangeResult.FAILED:
+            await self.async_refresh_state()
+        else:
+            self._tilt = tilt
 
     def async_update(self, **kwargs):
         """Update cover."""
         return self.async_refresh_state()
 
     async def async_refresh_state(self):
-        self._state = await self._coverService.async_get_cover_state(self._deviceId)
+        state = await self._coverService.async_get_cover_state(self._deviceId)
+
+        self._position = 100 - state[ValueType.BlindsLevel] * 100
+
+        if state[ValueType.BlindsSlope] is not None:
+            self._tilt = 100 - state[ValueType.BlindsSlope] * 100
