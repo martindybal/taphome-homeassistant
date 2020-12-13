@@ -1,3 +1,4 @@
+from .CoverService import CoverService
 from .ValueChangeResult import ValueChangeResult
 from .ValueType import ValueType
 from .Device import Device

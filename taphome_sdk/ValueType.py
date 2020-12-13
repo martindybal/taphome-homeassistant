@@ -2,7 +2,7 @@ from enum import Enum
 
 
 class ValueType(Enum):
-    SensorBrightness = 2    
+    SensorBrightness = 2
     Humidity = 3
     RealTemperature = 5
     DesiredTemperature = 6
@@ -11,8 +11,10 @@ class ValueType(Enum):
     WindSpeed = 14
     AlarmMode = 19
     AlarmState = 20
-    Co2 = 24
     SalarmActiveDeviceCount = 21
+    OperationMode = 22
+    ManualTimeout = 23
+    Co2 = 24
     ButtonHeldState = 38
     HueDegrees = 40
     Saturation = 41
