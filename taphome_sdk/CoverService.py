@@ -1,8 +1,7 @@
 from .ValueChangeResult import ValueChangeResult
 from .ValueType import ValueType
-from .SwitchState import SwitchState
-from .TapHomeHttpClientFactory import TapHomeHttpClientFactory
 from .TapHomeApiService import TapHomeApiService
+from .DeviceServiceHelper import __DeviceServiceHelper as DeviceServiceHelper
 
 
 class CoverService:
@@ -13,33 +12,23 @@ class CoverService:
         coverValues = await self.tapHomeApiService.async_get_device_values(coverId)
 
         state = dict()
-        state[ValueType.BlindsLevel] = self.get_light_value(
+        state[ValueType.BlindsLevel] = DeviceServiceHelper.get_device_value(
             coverValues, ValueType.BlindsLevel
         )
 
-        state[ValueType.BlindsSlope] = self.get_light_value(
+        state[ValueType.BlindsSlope] = DeviceServiceHelper.get_device_value(
             coverValues, ValueType.BlindsSlope
         )
 
-        state[ValueType.ManualTimeout] = self.get_light_value(
+        state[ValueType.ManualTimeout] = DeviceServiceHelper.get_device_value(
             coverValues, ValueType.ManualTimeout
         )
 
-        state[ValueType.OperationMode] = self.get_light_value(
+        state[ValueType.OperationMode] = DeviceServiceHelper.get_device_value(
             coverValues, ValueType.OperationMode
         )
 
         return state
-
-    def get_light_value(self, lightValues: dict, vylueType: ValueType):
-        try:
-            return next(
-                lightValue
-                for lightValue in lightValues
-                if lightValue["valueTypeId"] == vylueType.value
-            )["value"]
-        except:
-            return None
 
     def async_set_cover_position(self, coverId, position) -> ValueChangeResult:
         values = [
