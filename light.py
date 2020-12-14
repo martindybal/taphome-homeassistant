@@ -11,7 +11,9 @@ from homeassistant.components.light import (
     SUPPORT_COLOR,
 )
 from . import TAPHOME_API_SERVICE
+from datetime import timedelta
 
+SCAN_INTERVAL = timedelta(seconds=10)
 _LOGGER = logging.getLogger(__name__)
 
 
