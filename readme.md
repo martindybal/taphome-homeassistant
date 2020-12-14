@@ -4,6 +4,7 @@ This is demo of integration [TapHome](https://taphome.com/CZ/home) into [Home As
 
 ## Supported devices
 - Lights - switch, brightness, RGB
+- Covers - blinds, shades, garage doors
 
 ## Installation
 
