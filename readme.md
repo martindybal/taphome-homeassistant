@@ -16,7 +16,11 @@ taphome:
   token: 00000000-0000-0000-0000-000000000000
   lights:
     - 1
-    - 7
+    - 2
+  covers:
+    - 3
+    - 4
+    - 5
 ```
 
 You have to specify your token and id of your lights. For more information visit https://taphome.com/en/support/601227274

@@ -1,8 +1,8 @@
 from .ValueChangeResult import ValueChangeResult
 from .ValueType import ValueType
 from .SwitchState import SwitchState
-from .TapHomeHttpClientFactory import TapHomeHttpClientFactory
 from .TapHomeApiService import TapHomeApiService
+from .DeviceServiceHelper import __DeviceServiceHelper as DeviceServiceHelper
 
 
 class LightService:
@@ -14,32 +14,22 @@ class LightService:
 
         state = dict()
         state[ValueType.SwitchState] = SwitchState(
-            self.get_light_value(lightValues, ValueType.SwitchState)
+            DeviceServiceHelper.get_device_value(lightValues, ValueType.SwitchState)
         )
 
-        state[ValueType.HueBrightness] = self.get_light_value(
+        state[ValueType.HueBrightness] = DeviceServiceHelper.get_device_value(
             lightValues, ValueType.HueBrightness
         )
 
-        state[ValueType.HueDegrees] = self.get_light_value(
+        state[ValueType.HueDegrees] = DeviceServiceHelper.get_device_value(
             lightValues, ValueType.HueDegrees
         )
 
-        state[ValueType.Saturation] = self.get_light_value(
+        state[ValueType.Saturation] = DeviceServiceHelper.get_device_value(
             lightValues, ValueType.Saturation
         )
 
         return state
-
-    def get_light_value(self, lightValues: dict, vylueType: ValueType):
-        try:
-            return next(
-                lightValue
-                for lightValue in lightValues
-                if lightValue["valueTypeId"] == vylueType.value
-            )["value"]
-        except:
-            return None
 
     def async_turn_on_light(
         self, lightId: int, brightness=None, hue=None, saturation=None
