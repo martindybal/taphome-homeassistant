@@ -41,14 +41,23 @@ class LightService:
         self.tapHomeApiService = tapHomeApiService
 
     async def async_get_light_state(self, device: Device):
-        lightValues = await self.tapHomeApiService.async_get_device_values(device.deviceId)
+        lightValues = await self.tapHomeApiService.async_get_device_values(
+            device.deviceId
+        )
         switch_state = SwitchState(
             DeviceServiceHelper.get_device_value(lightValues, ValueType.SwitchState)
         )
 
-        brightness = DeviceServiceHelper.get_device_value(
-            lightValues, ValueType.HueBrightness
-        )
+        brightness = None
+        if ValueType.AnalogOutputValue in device.supportedValues:
+            brightness = DeviceServiceHelper.get_device_value(
+                lightValues, ValueType.AnalogOutputValue
+            )
+        else:
+            brightness = DeviceServiceHelper.get_device_value(
+                lightValues, ValueType.HueBrightness
+            )
+
         hue = DeviceServiceHelper.get_device_value(lightValues, ValueType.HueDegrees)
         saturation = DeviceServiceHelper.get_device_value(
             lightValues, ValueType.Saturation
@@ -66,11 +75,18 @@ class LightService:
         ]
 
         if brightness is not None:
-            values.append(
-                self.tapHomeApiService.create_device_value(
-                    ValueType.HueBrightness, brightness
+            if ValueType.AnalogOutputValue in device.supportedValues:
+                values.append(
+                    self.tapHomeApiService.create_device_value(
+                        ValueType.AnalogOutputValue, brightness
+                    )
                 )
-            )
+            else:
+                values.append(
+                    self.tapHomeApiService.create_device_value(
+                        ValueType.HueBrightness, brightness
+                    )
+                )
 
         if hue is not None:
             values.append(
