@@ -16,7 +16,9 @@ from homeassistant.components.cover import (
 )
 
 from . import TAPHOME_API_SERVICE
+from datetime import timedelta
 
+SCAN_INTERVAL = timedelta(seconds=10)
 _LOGGER = logging.getLogger(__name__)
 
 
