@@ -47,14 +47,20 @@ class TapHomeLight(LightEntity):
         self._name = name
         self._deviceId = deviceId
 
+        self._is_on = None
+        self._brightness = None
+        self._hue = None
+        self._saturation = None
+
         self._supported_features = 0
-        if ValueType.HueDegrees in supportedValues:
+        if (
+            ValueType.HueDegrees in supportedValues
+            or ValueType.AnalogOutputValue in supportedValues
+        ):
             self._supported_features = self._supported_features | SUPPORT_COLOR
 
         if ValueType.HueBrightness in supportedValues:
             self._supported_features = self._supported_features | SUPPORT_BRIGHTNESS
-
-        self._state = None
 
     @property
     def supported_features(self):
@@ -69,20 +75,18 @@ class TapHomeLight(LightEntity):
     @property
     def is_on(self):
         """Returns if the light entity is on or not."""
-        return self._state[ValueType.SwitchState] == SwitchState.ON
+        return self._is_on
 
     @property
     def brightness(self):
         """Return the brightness of this light between 0..255."""
         """Convert taphome 0..1 brightness to hass 0..255 scale."""
-        return self._state[ValueType.HueBrightness] * 255
+        return self._brightness
 
     @property
     def hs_color(self):
         """Return the hs color value."""
-        hue = self._state[ValueType.HueDegrees]
-        saturation = self._state[ValueType.Saturation] * 100
-        return (hue, saturation)
+        return (self._hue, self._saturation)
 
     async def async_turn_on(self, **kwargs):
         """Turn device on."""
@@ -96,7 +100,7 @@ class TapHomeLight(LightEntity):
         hue, saturation = None, None
         if ATTR_HS_COLOR in kwargs:
             (hue, saturation) = kwargs[ATTR_HS_COLOR]
-            saturation = saturation / 100
+            saturation = TapHomeLight.hass_to_taphome_saturation(saturation)
 
         result = await self._lightService.async_turn_on_light(
             self._deviceId, brightness, hue, saturation
@@ -105,13 +109,13 @@ class TapHomeLight(LightEntity):
         if result == ValueChangeResult.FAILED:
             await self.async_refresh_state()
         else:
-            self._state[ValueType.SwitchState] = SwitchState.ON
+            self._is_on = True
             if brightness is not None:
-                self._state[ValueType.HueBrightness] = brightness
+                self._brightness = TapHomeLight.taphome_to_hass_brightness(brightness)
             if hue is not None:
-                self._state[ValueType.HueDegrees] = hue
+                self._hue = hue
             if saturation is not None:
-                self._state[ValueType.Saturation] = saturation
+                self._saturation = TapHomeLight.taphome_to_hass_saturation(saturation)
 
     async def async_turn_off(self):
         """Turn device off."""
@@ -120,7 +124,7 @@ class TapHomeLight(LightEntity):
         if result == ValueChangeResult.FAILED:
             await self.async_refresh_state()
         else:
-            self._state[ValueType.SwitchState] = SwitchState.OFF
+            self._is_on = False
 
     # TODO don't use polling. Issue #4
     # https://developers.home-assistant.io/docs/integration_fetching_data/#separate-polling-for-each-individual-entity
@@ -129,9 +133,36 @@ class TapHomeLight(LightEntity):
         return self.async_refresh_state()
 
     async def async_refresh_state(self):
-        self._state = await self._lightService.async_get_light_state(self._deviceId)
+        state = await self._lightService.async_get_light_state(self._deviceId)
+        self._is_on = state.switch_state == SwitchState.ON
+        self._brightness = TapHomeLight.taphome_to_hass_brightness(state.brightness)
+        self._hue = state.hue
+        self._saturation = TapHomeLight.taphome_to_hass_saturation(state.saturation)
 
     @staticmethod
     def hass_to_taphome_brightness(value: int):
         """Convert hass brightness 0..255 to taphome 0..1 scale."""
+        if value is None:
+            return None
         return max(1, round((value / 255) * 100)) / 100
+
+    @staticmethod
+    def taphome_to_hass_brightness(value: int):
+        """Convert taphome 0..1 to hass brightness 0..255 scale."""
+        if value is None:
+            return None
+        return value * 255
+
+    @staticmethod
+    def hass_to_taphome_saturation(value: int):
+        """Convert hass brightness 0..100 to taphome 0..1 scale."""
+        if value is None:
+            return None
+        return value / 100
+
+    @staticmethod
+    def taphome_to_hass_saturation(value: int):
+        """Convert taphome 0..1 to hass brightness 0..100 scale."""
+        if value is None:
+            return None
+        return value * 100
