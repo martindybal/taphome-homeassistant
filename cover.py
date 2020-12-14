@@ -36,9 +36,7 @@ async def async_setup_platform(hass, config, async_add_entities, devices: list):
 
 # async def async_create_cover(coverService: CoverService, device: Device):
 async def async_create_cover(coverService, device: Device):
-    cover = TapHomeCover(
-        coverService, device.deviceId, device.name, device.supportedValues
-    )
+    cover = TapHomeCover(coverService, device)
     await cover.async_refresh_state()
     return cover
 
@@ -46,18 +44,15 @@ async def async_create_cover(coverService, device: Device):
 class TapHomeCover(CoverEntity):
     """Representation of an Cover"""
 
-    def __init__(
-        self, coverService: CoverService, deviceId: int, name: str, supportedValues
-    ):
+    def __init__(self, coverService: CoverService, device: Device):
         self._coverService = coverService
-        self._name = name
-        self._deviceId = deviceId
+        self._device = device
         self._state = None
         self._position = None
         self._tilt = None
         self._supported_features = SUPPORT_OPEN | SUPPORT_CLOSE | SUPPORT_SET_POSITION
 
-        if ValueType.BlindsSlope in supportedValues:
+        if ValueType.BlindsSlope in device.supportedValues:
             self._supported_features = (
                 self._supported_features | SUPPORT_SET_TILT_POSITION
             )
@@ -70,7 +65,7 @@ class TapHomeCover(CoverEntity):
     @property
     def name(self):
         """Return the name of the light."""
-        return self._name
+        return self._device.name
 
     @property
     def current_cover_position(self):
@@ -112,7 +107,7 @@ class TapHomeCover(CoverEntity):
     async def __async_set_cover_position(self, position):
         taphomePosition = 1 - position / 100
         result = await self._coverService.async_set_cover_position(
-            self._deviceId, taphomePosition
+            self._device, taphomePosition
         )
 
         if result == ValueChangeResult.FAILED:
@@ -125,7 +120,7 @@ class TapHomeCover(CoverEntity):
         tilt = kwargs.get(ATTR_TILT_POSITION)
         taphomeTilt = 1 - tilt / 100
         result = await self._coverService.async_set_cover_tilt(
-            self._deviceId, taphomeTilt
+            self._device, taphomeTilt
         )
 
         if result == ValueChangeResult.FAILED:
@@ -138,7 +133,7 @@ class TapHomeCover(CoverEntity):
         return self.async_refresh_state()
 
     async def async_refresh_state(self):
-        state = await self._coverService.async_get_cover_state(self._deviceId)
+        state = await self._coverService.async_get_cover_state(self._device)
 
         self._position = 100 - state.blinds_level * 100
 
