@@ -37,4 +37,4 @@ class ValueType(Enum):
     AnalogOutputDesiredValue = 67
     HueBrightnessDesiredValue = 68
     MultiValueSwitchDesiredState = 71
-    PWNOutputState = 72
+    PWMOutputState = 72
