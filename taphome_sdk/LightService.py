@@ -5,31 +5,52 @@ from .TapHomeApiService import TapHomeApiService
 from .DeviceServiceHelper import __DeviceServiceHelper as DeviceServiceHelper
 
 
+class LightState:
+    def __init__(
+        self, switch_state: SwitchState, brightness: float, hue: int, saturation: int
+    ):
+        self._switch_state = switch_state
+        self._brightness = brightness
+        self._hue = hue
+        self._saturation = saturation
+
+    @property
+    def switch_state(self):
+        return self._switch_state
+
+    @property
+    def brightness(self):
+        return self._brightness
+
+    @property
+    def hue(self):
+        return self._hue
+
+    @property
+    def saturation(self):
+        return self._saturation
+
+
 class LightService:
     def __init__(self, tapHomeApiService: TapHomeApiService):
         self.tapHomeApiService = tapHomeApiService
 
     async def async_get_light_state(self, deviceId: int):
         lightValues = await self.tapHomeApiService.async_get_device_values(deviceId)
-
-        state = dict()
-        state[ValueType.SwitchState] = SwitchState(
+        print(lightValues)
+        switch_state = SwitchState(
             DeviceServiceHelper.get_device_value(lightValues, ValueType.SwitchState)
         )
 
-        state[ValueType.HueBrightness] = DeviceServiceHelper.get_device_value(
+        brightness = DeviceServiceHelper.get_device_value(
             lightValues, ValueType.HueBrightness
         )
-
-        state[ValueType.HueDegrees] = DeviceServiceHelper.get_device_value(
-            lightValues, ValueType.HueDegrees
-        )
-
-        state[ValueType.Saturation] = DeviceServiceHelper.get_device_value(
+        hue = DeviceServiceHelper.get_device_value(lightValues, ValueType.HueDegrees)
+        saturation = DeviceServiceHelper.get_device_value(
             lightValues, ValueType.Saturation
         )
 
-        return state
+        return LightState(switch_state, brightness, hue, saturation)
 
     def async_turn_on_light(
         self, lightId: int, brightness=None, hue=None, saturation=None
