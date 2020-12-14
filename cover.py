@@ -138,7 +138,7 @@ class TapHomeCover(CoverEntity):
     async def async_refresh_state(self):
         state = await self._coverService.async_get_cover_state(self._deviceId)
 
-        self._position = 100 - state[ValueType.BlindsLevel] * 100
+        self._position = 100 - state.blinds_level * 100
 
-        if state[ValueType.BlindsSlope] is not None:
-            self._tilt = 100 - state[ValueType.BlindsSlope] * 100
+        if state.blinds_slope is not None:
+            self._tilt = 100 - state.blinds_slope * 100

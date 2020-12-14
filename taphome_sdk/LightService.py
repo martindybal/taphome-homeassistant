@@ -14,7 +14,7 @@ class LightService:
 
         state = dict()
         state[ValueType.SwitchState] = SwitchState(
-            self.get_light_value(lightValues, ValueType.SwitchState)
+            DeviceServiceHelper.get_device_value(lightValues, ValueType.SwitchState)
         )
 
         state[ValueType.HueBrightness] = DeviceServiceHelper.get_device_value(
