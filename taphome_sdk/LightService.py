@@ -1,3 +1,4 @@
+from .Device import Device
 from .ValueChangeResult import ValueChangeResult
 from .ValueType import ValueType
 from .SwitchState import SwitchState
@@ -7,7 +8,11 @@ from .DeviceServiceHelper import __DeviceServiceHelper as DeviceServiceHelper
 
 class LightState:
     def __init__(
-        self, switch_state: SwitchState, brightness: float, hue: int, saturation: int
+        self,
+        switch_state: SwitchState,
+        brightness: float,
+        hue: float,
+        saturation: float,
     ):
         self._switch_state = switch_state
         self._brightness = brightness
@@ -35,9 +40,8 @@ class LightService:
     def __init__(self, tapHomeApiService: TapHomeApiService):
         self.tapHomeApiService = tapHomeApiService
 
-    async def async_get_light_state(self, deviceId: int):
-        lightValues = await self.tapHomeApiService.async_get_device_values(deviceId)
-        print(lightValues)
+    async def async_get_light_state(self, device: Device):
+        lightValues = await self.tapHomeApiService.async_get_device_values(device.deviceId)
         switch_state = SwitchState(
             DeviceServiceHelper.get_device_value(lightValues, ValueType.SwitchState)
         )
@@ -53,7 +57,7 @@ class LightService:
         return LightState(switch_state, brightness, hue, saturation)
 
     def async_turn_on_light(
-        self, lightId: int, brightness=None, hue=None, saturation=None
+        self, device: Device, brightness=None, hue=None, saturation=None
     ) -> ValueChangeResult:
         values = [
             self.tapHomeApiService.create_device_value(
@@ -80,12 +84,12 @@ class LightService:
                 )
             )
 
-        return self.tapHomeApiService.async_set_device_values(lightId, values)
+        return self.tapHomeApiService.async_set_device_values(device.deviceId, values)
 
-    def async_turn_off_light(self, lightId: int) -> ValueChangeResult:
+    def async_turn_off_light(self, device: Device) -> ValueChangeResult:
         values = [
             self.tapHomeApiService.create_device_value(
                 ValueType.SwitchState, SwitchState.OFF.value
             )
         ]
-        return self.tapHomeApiService.async_set_device_values(lightId, values)
+        return self.tapHomeApiService.async_set_device_values(device.deviceId, values)

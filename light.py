@@ -30,9 +30,7 @@ async def async_setup_platform(hass, config, async_add_entities, devices: list):
 
 
 async def async_create_light(lightService: LightService, device: Device):
-    light = TapHomeLight(
-        lightService, device.deviceId, device.name, device.supportedValues
-    )
+    light = TapHomeLight(lightService, device)
     await light.async_refresh_state()
     return light
 
@@ -40,12 +38,9 @@ async def async_create_light(lightService: LightService, device: Device):
 class TapHomeLight(LightEntity):
     """Representation of an Light"""
 
-    def __init__(
-        self, lightService: LightService, deviceId: int, name: str, supportedValues
-    ):
+    def __init__(self, lightService: LightService, device: Device):
         self._lightService = lightService
-        self._name = name
-        self._deviceId = deviceId
+        self._device = device
 
         self._is_on = None
         self._brightness = None
@@ -54,12 +49,12 @@ class TapHomeLight(LightEntity):
 
         self._supported_features = 0
         if (
-            ValueType.HueDegrees in supportedValues
-            or ValueType.AnalogOutputValue in supportedValues
+            ValueType.HueDegrees in device.supportedValues
+            or ValueType.AnalogOutputValue in device.supportedValues
         ):
             self._supported_features = self._supported_features | SUPPORT_COLOR
 
-        if ValueType.HueBrightness in supportedValues:
+        if ValueType.HueBrightness in device.supportedValues:
             self._supported_features = self._supported_features | SUPPORT_BRIGHTNESS
 
     @property
@@ -70,7 +65,7 @@ class TapHomeLight(LightEntity):
     @property
     def name(self):
         """Return the name of the light."""
-        return self._name
+        return self._device.name
 
     @property
     def is_on(self):
@@ -103,7 +98,7 @@ class TapHomeLight(LightEntity):
             saturation = TapHomeLight.hass_to_taphome_saturation(saturation)
 
         result = await self._lightService.async_turn_on_light(
-            self._deviceId, brightness, hue, saturation
+            self._device, brightness, hue, saturation
         )
 
         if result == ValueChangeResult.FAILED:
@@ -119,7 +114,7 @@ class TapHomeLight(LightEntity):
 
     async def async_turn_off(self):
         """Turn device off."""
-        result = await self._lightService.async_turn_off_light(self._deviceId)
+        result = await self._lightService.async_turn_off_light(self._device)
 
         if result == ValueChangeResult.FAILED:
             await self.async_refresh_state()
@@ -133,7 +128,7 @@ class TapHomeLight(LightEntity):
         return self.async_refresh_state()
 
     async def async_refresh_state(self):
-        state = await self._lightService.async_get_light_state(self._deviceId)
+        state = await self._lightService.async_get_light_state(self._device)
         self._is_on = state.switch_state == SwitchState.ON
         self._brightness = TapHomeLight.taphome_to_hass_brightness(state.brightness)
         self._hue = state.hue
