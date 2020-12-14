@@ -48,13 +48,14 @@ class TapHomeLight(LightEntity):
         self._saturation = None
 
         self._supported_features = 0
-        if (
-            ValueType.HueDegrees in device.supportedValues
-            or ValueType.AnalogOutputValue in device.supportedValues
-        ):
+        print(device.supportedValues)
+        if ValueType.HueDegrees in device.supportedValues:
             self._supported_features = self._supported_features | SUPPORT_COLOR
 
-        if ValueType.HueBrightness in device.supportedValues:
+        if (
+            ValueType.HueBrightness in device.supportedValues
+            or ValueType.AnalogOutputValue in device.supportedValues
+        ):
             self._supported_features = self._supported_features | SUPPORT_BRIGHTNESS
 
     @property
