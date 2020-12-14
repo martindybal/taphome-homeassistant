@@ -20,10 +20,16 @@ class ValueType(Enum):
     Saturation = 41
     AnalogOutputValue = 42
     ReedContact = 44
+    Smoke = 45
     BlindsLevel = 46
+    FloodState = 47
     SwitchState = 48
     MultiValueSwitchState = 49
     ButtonPressed = 52
+    AnalogInputValue = 55
+    TotalImpulseCount = 56
+    CurrentHourImpulseCount = 57
+    LastMeasuredFrequency = 58
     ElectricityConsumption = 59
     ElectricityDemand = 60
     VariableState = 62
@@ -33,3 +39,4 @@ class ValueType(Enum):
     AnalogOutputDesiredValue = 67
     HueBrightnessDesiredValue = 68
     MultiValueSwitchDesiredState = 71
+    PWMOutputState = 72
