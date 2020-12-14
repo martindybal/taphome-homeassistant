@@ -12,6 +12,10 @@ from homeassistant.components.light import (
 )
 from . import TAPHOME_API_SERVICE
 
+from datetime import datetime
+from datetime import timedelta
+
+SCAN_INTERVAL = timedelta(seconds=10)
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -124,6 +128,9 @@ class TapHomeLight(LightEntity):
     # https://developers.home-assistant.io/docs/integration_fetching_data/#separate-polling-for-each-individual-entity
     # https://developers.home-assistant.io/docs/core/entity/#polling
     def async_update(self):
+        now = datetime.now()
+        current_time = now.strftime("%H:%M:%S")
+        print("update", current_time)
         return self.async_refresh_state()
 
     async def async_refresh_state(self):
