@@ -13,14 +13,15 @@ Add the following entry in your `configuration.yaml`:
 
 ```yaml
 taphome:
-  - token: 00000000-0000-0000-0000-000000000000
-    lights:
-      - 1
-      - 2
-    covers:
-      - 3
-      - 4
-      - 5
+  cores:
+    - token: 00000000-0000-0000-0000-000000000000
+      lights:
+        - 1
+        - 2
+      covers:
+        - 3
+        - 4
+        - 5
 ```
 
 You have to specify your token and id of your lights. For more information visit https://taphome.com/en/support/601227274
@@ -40,13 +41,14 @@ You can use multiple TapHome Core units in your installation. For this cases you
 
 ```yaml
 taphome:
-  - token: 00000000-0000-0000-0000-000000000000
-    lights:
-      - 1
-      - 2
-  - token: 00000000-0000-0000-0000-000000000000
-    lights:
-      - 1
-    covers:
-      - 6
+  cores:
+    - token: 00000000-0000-0000-0000-000000000000
+      lights:
+        - 1
+        - 2
+    - token: 00000000-0000-0000-0000-000000000000
+      lights:
+        - 1
+      covers:
+        - 6
 ```
