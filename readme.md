@@ -1,9 +1,10 @@
 # TapHome Home Assistant integration
 
-Integration [TapHome](https://taphome.com/CZ/home) into [Home Assistant](https://www.home-assistant.io).
+[TapHome](https://taphome.com/CZ/home) integration into [Home Assistant](https://www.home-assistant.io).
 
 ## Supported devices
 - Lights - switch, brightness, RGB
+- Covers - blinds, shades, garage doors
 
 ## Installation
 
