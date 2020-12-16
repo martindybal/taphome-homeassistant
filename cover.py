@@ -15,15 +15,16 @@ from homeassistant.components.cover import (
     SUPPORT_SET_TILT_POSITION,
 )
 
-from . import TAPHOME_API_SERVICE
+from . import TAPHOME_API_SERVICE, TAPHOME_DEVICES
 from datetime import timedelta
 
 SCAN_INTERVAL = timedelta(seconds=10)
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_platform(hass, config, async_add_entities, devices: list):
-    tapHomeApiService = hass.data[TAPHOME_API_SERVICE]
+async def async_setup_platform(hass, config, async_add_entities, platformConfig):
+    tapHomeApiService = platformConfig[TAPHOME_API_SERVICE]
+    devices = platformConfig[TAPHOME_DEVICES]
     coverService = CoverService(tapHomeApiService)
 
     covers = []
@@ -134,8 +135,12 @@ class TapHomeCover(CoverEntity):
 
     async def async_refresh_state(self):
         state = await self._coverService.async_get_cover_state(self._device)
+        if state.blinds_level is None:
+            self._position = None
+        else:
+            self._position = 100 - state.blinds_level * 100
 
-        self._position = 100 - state.blinds_level * 100
-
-        if state.blinds_slope is not None:
+        if state.blinds_slope is None:
+            self._tilt = None
+        else:
             self._tilt = 100 - state.blinds_slope * 100

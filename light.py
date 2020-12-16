@@ -10,15 +10,16 @@ from homeassistant.components.light import (
     SUPPORT_BRIGHTNESS,
     SUPPORT_COLOR,
 )
-from . import TAPHOME_API_SERVICE
+from . import TAPHOME_API_SERVICE, TAPHOME_DEVICES
 from datetime import timedelta
 
 SCAN_INTERVAL = timedelta(seconds=10)
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_platform(hass, config, async_add_entities, devices: list):
-    tapHomeApiService = hass.data[TAPHOME_API_SERVICE]
+async def async_setup_platform(hass, config, async_add_entities, platformConfig):
+    tapHomeApiService = platformConfig[TAPHOME_API_SERVICE]
+    devices = platformConfig[TAPHOME_DEVICES]
     lightService = LightService(tapHomeApiService)
 
     lights = []
@@ -48,7 +49,6 @@ class TapHomeLight(LightEntity):
         self._saturation = None
 
         self._supported_features = 0
-        print(device.supportedValues)
         if ValueType.HueDegrees in device.supportedValues:
             self._supported_features = self._supported_features | SUPPORT_COLOR
 
