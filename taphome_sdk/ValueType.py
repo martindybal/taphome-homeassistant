@@ -11,7 +11,7 @@ class ValueType(Enum):
     WindSpeed = 14
     AlarmMode = 19
     AlarmState = 20
-    SalarmActiveDeviceCount = 21
+    AlarmActiveDeviceCount = 21
     OperationMode = 22
     ManualTimeout = 23
     Co2 = 24
