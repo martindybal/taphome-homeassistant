@@ -8,6 +8,7 @@ class ValueType(Enum):
     DesiredTemperature = 6
     DeviceStatus = 7
     BlindsSlope = 10
+    RainCounter = 13
     WindSpeed = 14
     AlarmMode = 19
     AlarmState = 20
