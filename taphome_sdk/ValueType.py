@@ -16,6 +16,8 @@ class ValueType(Enum):
     OperationMode = 22
     ManualTimeout = 23
     Co2 = 24
+    MinTemperature = 33
+    MaxTemperature = 34
     ButtonHeldState = 38
     HueDegrees = 40
     Saturation = 41

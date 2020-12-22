@@ -6,3 +6,4 @@ from .SwitchState import SwitchState
 from .TapHomeHttpClientFactory import TapHomeHttpClientFactory
 from .LightService import LightService
 from .TapHomeApiService import TapHomeApiService
+from .ThermostatService import ThermostatService
