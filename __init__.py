@@ -10,6 +10,7 @@ DOMAIN = "taphome"
 TAPHOME_API_SERVICE = f"{DOMAIN}_TapHomeApiService"
 TAPHOME_DEVICES = f"{DOMAIN}_Devices"
 TAPHOME_CORES = "cores"
+CONF_CLIMATES = "climates"
 
 CONFIG_SCHEMA = voluptuous.Schema(
     {
@@ -18,7 +19,7 @@ CONFIG_SCHEMA = voluptuous.Schema(
                 TAPHOME_CORES: [
                     voluptuous.All(
                         config_validation.has_at_least_one_key(
-                            CONF_LIGHTS, CONF_COVERS
+                            CONF_LIGHTS, CONF_COVERS, CONF_CLIMATES
                         ),
                         {
                             voluptuous.Required(CONF_TOKEN): config_validation.string,
@@ -27,6 +28,9 @@ CONFIG_SCHEMA = voluptuous.Schema(
                             ): config_validation.ensure_list,
                             voluptuous.Optional(
                                 CONF_COVERS, default=[]
+                            ): config_validation.ensure_list,
+                            voluptuous.Optional(
+                                CONF_CLIMATES, default=[]
                             ): config_validation.ensure_list,
                         },
                     )
@@ -64,6 +68,14 @@ async def async_setup(hass, config):
 
             hass.async_create_task(
                 async_load_platform(hass, "cover", DOMAIN, platformConfig, config)
+            )
+
+        climateIds = coreConfig[CONF_CLIMATES]
+        if climateIds:
+            climates = filter_devices_by_ids(devices, climateIds)
+
+            hass.async_create_task(
+                async_load_platform(hass, "climate", DOMAIN, climates, config)
             )
 
     return True

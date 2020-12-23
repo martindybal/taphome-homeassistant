@@ -5,6 +5,7 @@
 ## Supported devices
 - Lights - switch, brightness, RGB
 - Covers - blinds, shades, garage doors
+- Climates - thermostats
 
 ## Installation
 
@@ -23,6 +24,8 @@ taphome:
         - 3
         - 4
         - 5
+      climates:
+        - 11
 ```
 
 You have to specify your token and id of your lights. For more information visit https://taphome.com/en/support/601227274

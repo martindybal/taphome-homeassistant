@@ -5,3 +5,5 @@
 - Covers - blinds, shades, garage doors
 ## 0.3
 - Multiple Core unit support
+## 0.4
+- Climates - thermostats
