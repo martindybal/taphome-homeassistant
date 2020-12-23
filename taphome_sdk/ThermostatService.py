@@ -5,7 +5,7 @@ from .TapHomeApiService import TapHomeApiService
 from .DeviceServiceHelper import __DeviceServiceHelper as DeviceServiceHelper
 
 
-class Thermostat:
+class ThermostatState:
     def __init__(
         self, desired_temperature, real_temperature, min_temperature, max_temperature
     ):
@@ -35,7 +35,7 @@ class ThermostatService:
     def __init__(self, tapHomeApiService: TapHomeApiService):
         self.tapHomeApiService = tapHomeApiService
 
-    async def async_get_thermostat_state(self, device: Device) -> Thermostat:
+    async def async_get_thermostat_state(self, device: Device) -> ThermostatState:
         thermostat_values = await self.tapHomeApiService.async_get_device_values(
             device.deviceId
         )
@@ -56,7 +56,7 @@ class ThermostatService:
             thermostat_values, ValueType.MaxTemperature
         )
 
-        return Thermostat(
+        return ThermostatState(
             desired_temperature, real_temperature, min_temperature, max_temperature
         )
 
