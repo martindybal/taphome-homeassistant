@@ -4,7 +4,7 @@ from .taphome_sdk import *
 from homeassistant.helpers.discovery import async_load_platform
 import voluptuous
 import homeassistant.helpers.config_validation as config_validation
-from homeassistant.const import CONF_TOKEN, CONF_LIGHTS, CONF_COVERS
+from homeassistant.const import CONF_TOKEN, CONF_LIGHTS, CONF_COVERS, CONF_SWITCHES
 
 DOMAIN = "taphome"
 TAPHOME_API_SERVICE = f"{DOMAIN}_TapHomeApiService"
