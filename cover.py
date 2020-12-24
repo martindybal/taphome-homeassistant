@@ -65,7 +65,7 @@ class TapHomeCover(CoverEntity):
 
     @property
     def name(self):
-        """Return the name of the light."""
+        """Return the name of the cover."""
         return self._device.name
 
     @property
