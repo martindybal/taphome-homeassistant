@@ -19,7 +19,7 @@ CONFIG_SCHEMA = voluptuous.Schema(
                 TAPHOME_CORES: [
                     voluptuous.All(
                         config_validation.has_at_least_one_key(
-                            CONF_LIGHTS, CONF_COVERS, CONF_CLIMATES
+                            CONF_LIGHTS, CONF_COVERS, CONF_CLIMATES, CONF_SWITCHES
                         ),
                         {
                             voluptuous.Required(CONF_TOKEN): config_validation.string,
@@ -31,6 +31,9 @@ CONFIG_SCHEMA = voluptuous.Schema(
                             ): config_validation.ensure_list,
                             voluptuous.Optional(
                                 CONF_CLIMATES, default=[]
+                            ): config_validation.ensure_list,
+                            voluptuous.Optional(
+                                CONF_SWITCHES, default=[]
                             ): config_validation.ensure_list,
                         },
                     )
@@ -76,6 +79,15 @@ async def async_setup(hass, config):
 
             hass.async_create_task(
                 async_load_platform(hass, "climate", DOMAIN, climates, config)
+            )
+            
+        switchIds = coreConfig[CONF_SWITCHES]
+        if switchIds:
+            switches = filter_devices_by_ids(devices, switchIds)
+            platformConfig = create_platform_config(tapHomeApiService, switches)
+
+            hass.async_create_task(
+                async_load_platform(hass, "switch", DOMAIN, platformConfig, config)
             )
 
     return True

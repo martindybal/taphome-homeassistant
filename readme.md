@@ -6,6 +6,7 @@
 - Lights - switch, brightness, RGB
 - Covers - blinds, shades, garage doors
 - Climates - thermostats
+- Switches - power outlet, digital out
 
 ## Installation
 
@@ -26,6 +27,10 @@ taphome:
         - 5
       climates:
         - 11
+      switches:
+        - 7
+        - 8
+        - 9
 ```
 
 You have to specify your token and id of your lights. For more information visit https://taphome.com/en/support/601227274
