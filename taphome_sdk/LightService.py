@@ -1,7 +1,7 @@
 from .Device import Device
 from .ValueChangeResult import ValueChangeResult
 from .ValueType import ValueType
-from .SwitchState import SwitchState
+from .SwitchStates import SwitchStates
 from .TapHomeApiService import TapHomeApiService
 from .DeviceServiceHelper import __DeviceServiceHelper as DeviceServiceHelper
 
@@ -9,7 +9,7 @@ from .DeviceServiceHelper import __DeviceServiceHelper as DeviceServiceHelper
 class LightState:
     def __init__(
         self,
-        switch_state: SwitchState,
+        switch_state: SwitchStates,
         brightness: float,
         hue: float,
         saturation: float,
@@ -44,7 +44,7 @@ class LightService:
         lightValues = await self.tapHomeApiService.async_get_device_values(
             device.deviceId
         )
-        switch_state = SwitchState(
+        switch_state = SwitchStates(
             DeviceServiceHelper.get_device_value(lightValues, ValueType.SwitchState)
         )
 
@@ -70,7 +70,7 @@ class LightService:
     ) -> ValueChangeResult:
         values = [
             self.tapHomeApiService.create_device_value(
-                ValueType.SwitchState, SwitchState.ON.value
+                ValueType.SwitchState, SwitchStates.ON.value
             )
         ]
 
@@ -105,7 +105,7 @@ class LightService:
     def async_turn_off_light(self, device: Device) -> ValueChangeResult:
         values = [
             self.tapHomeApiService.create_device_value(
-                ValueType.SwitchState, SwitchState.OFF.value
+                ValueType.SwitchState, SwitchStates.OFF.value
             )
         ]
         return self.tapHomeApiService.async_set_device_values(device.deviceId, values)

@@ -130,7 +130,7 @@ class TapHomeLight(LightEntity):
 
     async def async_refresh_state(self):
         state = await self._lightService.async_get_light_state(self._device)
-        self._is_on = state.switch_state == SwitchState.ON
+        self._is_on = state.switch_state == SwitchStates.ON
         self._brightness = TapHomeLight.taphome_to_hass_brightness(state.brightness)
         self._hue = state.hue
         self._saturation = TapHomeLight.taphome_to_hass_saturation(state.saturation)
