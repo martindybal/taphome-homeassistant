@@ -3,12 +3,12 @@ from .ValueChangeResult import ValueChangeResult
 from .ValueType import ValueType
 from .TapHomeApiService import TapHomeApiService
 from .DeviceServiceHelper import __DeviceServiceHelper as DeviceServiceHelper
-from .SwitchState import SwitchState
+from .SwitchStates import SwitchStates
 
 class SwitchIntState:
     def __init__(
         self,
-        switch_state: SwitchState,
+        switch_state: SwitchStates,
     ):
         self._switch_state = switch_state
 
@@ -24,7 +24,7 @@ class SwitchService:
         switchValues = await self.tapHomeApiService.async_get_device_values(
             device.deviceId
         )
-        switch_state = SwitchState(
+        switch_state = SwitchStates(
             DeviceServiceHelper.get_device_value(switchValues, ValueType.SwitchState)
         )
         
@@ -35,7 +35,7 @@ class SwitchService:
     ) -> ValueChangeResult:
         values = [
             self.tapHomeApiService.create_device_value(
-                ValueType.SwitchState, SwitchState.ON.value
+                ValueType.SwitchState, SwitchStates.ON.value
             )
         ]
         
@@ -44,7 +44,7 @@ class SwitchService:
     def async_turn_off_switch(self, device: Device) -> ValueChangeResult:
         values = [
             self.tapHomeApiService.create_device_value(
-                ValueType.SwitchState, SwitchState.OFF.value
+                ValueType.SwitchState, SwitchStates.OFF.value
             )
         ]
         return self.tapHomeApiService.async_set_device_values(device.deviceId, values)

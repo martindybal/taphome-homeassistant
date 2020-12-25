@@ -80,4 +80,4 @@ class TapHomeSwitch(SwitchEntity):
 
     async def async_refresh_state(self):
         state = await self._switchService.async_get_switch_state(self._device)
-        self._is_on = state.switch_state == SwitchState.ON
+        self._is_on = state.switch_state == SwitchStates.ON

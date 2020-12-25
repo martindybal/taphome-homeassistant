@@ -2,7 +2,7 @@ from .Device import Device
 from .TapHomeHttpClientFactory import TapHomeHttpClientFactory
 from .ValueChangeResult import ValueChangeResult
 from .ValueType import ValueType
-from .SwitchState import SwitchState
+from .SwitchStates import SwitchStates
 
 import sys
 
