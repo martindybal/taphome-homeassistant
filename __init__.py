@@ -74,58 +74,28 @@ async def async_setup(hass, config):
 
         devices = await tapHomeApiService.async_discovery_devices()
 
-        lightIds = coreConfig[CONF_LIGHTS]
-        if lightIds:
-            lights = filter_devices_by_ids(devices, lightIds)
-            platformConfig = create_platform_config(tapHomeApiService, lights)
+        platforms = [
+            {"config": CONF_LIGHTS, "platform": "light"},
+            {"config": CONF_COVERS, "platform": "cover"},
+            {"config": CONF_CLIMATES, "platform": "climate"},
+            {"config": CONF_SWITCHES, "platform": "switch"},
+            {"config": CONF_SENSORS, "platform": "sensor"},
+            {"config": CONF_BINARY_SENSORS, "platform": "binary_sensor"},
+        ]
 
-            hass.async_create_task(
-                async_load_platform(hass, "light", DOMAIN, platformConfig, config)
-            )
-
-        coverIds = coreConfig[CONF_COVERS]
-        if coverIds:
-            covers = filter_devices_by_ids(devices, coverIds)
-            platformConfig = create_platform_config(tapHomeApiService, covers)
-
-            hass.async_create_task(
-                async_load_platform(hass, "cover", DOMAIN, platformConfig, config)
-            )
-
-        climateIds = coreConfig[CONF_CLIMATES]
-        if climateIds:
-            climates = filter_devices_by_ids(devices, climateIds)
-
-            hass.async_create_task(
-                async_load_platform(hass, "climate", DOMAIN, climates, config)
-            )
-
-        switchIds = coreConfig[CONF_SWITCHES]
-        if switchIds:
-            switches = filter_devices_by_ids(devices, switchIds)
-            platformConfig = create_platform_config(tapHomeApiService, switches)
-
-            hass.async_create_task(
-                async_load_platform(hass, "switch", DOMAIN, platformConfig, config)
-            )
-
-        sensorIds = coreConfig[CONF_SENSORS]
-        if sensorIds:
-            sensors = filter_devices_by_ids(devices, sensorIds)
-            platformConfig = create_platform_config(tapHomeApiService, sensors)
-            hass.async_create_task(
-                async_load_platform(hass, "sensor", DOMAIN, platformConfig, config)
-            )
-
-        binarySensorIds = coreConfig[CONF_BINARY_SENSORS]
-        if sensorIds:
-            binarySensors = filter_devices_by_ids(devices, binarySensorIds)
-            platformConfig = create_platform_config(tapHomeApiService, binarySensors)
-            hass.async_create_task(
-                async_load_platform(
-                    hass, "binary_sensor", DOMAIN, platformConfig, config
+        for platform in platforms:
+            platformDeviceIds = coreConfig[platform["config"]]
+            if platformDeviceIds:
+                platformDevices = filter_devices_by_ids(devices, platformDeviceIds)
+                platformConfig = create_platform_config(
+                    tapHomeApiService, platformDevices
                 )
-            )
+
+                hass.async_create_task(
+                    async_load_platform(
+                        hass, platform["platform"], DOMAIN, platformConfig, config
+                    )
+                )
 
     return True
 
