@@ -7,7 +7,7 @@
 - Covers - blinds, shades, garage doors
 - Climates - thermostats
 - Switches - power outlet, digital out
-- Sensors - Humidity, Temperature
+- Sensors - Humidity, Temperature, Variable
 
 ## Installation
 

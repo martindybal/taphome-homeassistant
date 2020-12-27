@@ -31,16 +31,6 @@ class TapHomeSensorBase(Entity):
         return self._state
 
     @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement that the sensor is expressed in."""
-        pass
-
-    @property
-    def device_class(self):
-        """Return type of sensor."""
-        pass
-
-    @property
     def sensor_value_type(self) -> ValueType:
         """Return type of sensor."""
         pass
@@ -74,6 +64,9 @@ class TapHomeHumiditySensor(TapHomeSensorBase):
         """Return type of sensor."""
         return DEVICE_CLASS_HUMIDITY
 
+    def taphome_to_hass_value(self, value: int):
+        return value * 100
+
 
 class TapHomeTemperatureSensor(TapHomeSensorBase):
     sensor_value_type = ValueType.RealTemperature
@@ -90,6 +83,13 @@ class TapHomeTemperatureSensor(TapHomeSensorBase):
     def device_class(self):
         """Return type of sensor."""
         return DEVICE_CLASS_TEMPERATURE
+
+
+class TapHomeVariable(TapHomeSensorBase):
+    sensor_value_type = ValueType.VariableState
+
+    def __init__(self, sensorService: SensorService, device: Device):
+        super(TapHomeVariable, self).__init__(sensorService, device)
 
 
 async def async_setup_platform(hass, config, async_add_entities, platformConfig):
@@ -109,16 +109,17 @@ async def async_create_sensors(sensorService: SensorService, device: Device):
     sensors = []
     if TapHomeHumiditySensor.sensor_value_type in device.supportedValues:
         sensor = TapHomeHumiditySensor(sensorService, device)
-        await async_sensor_load_state(sensor)
         sensors.append(sensor)
 
     if TapHomeTemperatureSensor.sensor_value_type in device.supportedValues:
         sensor = TapHomeTemperatureSensor(sensorService, device)
-        await async_sensor_load_state(sensor)
         sensors.append(sensor)
 
+    if TapHomeVariable.sensor_value_type in device.supportedValues:
+        sensor = TapHomeVariable(sensorService, device)
+        sensors.append(sensor)
+
+    for sensor in sensors:
+        await sensor.async_refresh_state()
+
     return sensors
-
-
-async def async_sensor_load_state(sensor: TapHomeSensorBase):
-    await sensor.async_refresh_state()

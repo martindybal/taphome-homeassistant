@@ -10,4 +10,4 @@
 ## 0.5
 - Switches - power outlet, digital out
 ## 0.6
-- Sensors - Humidity, Temperature
+- Sensors - Humidity, Temperature, Variable
