@@ -63,6 +63,12 @@ class TapHomeMotionSensor(TapHomeBinarySensorBase):
         """Return type of sensor."""
         return DEVICE_CLASS_MOTION
 
+class TapHomeGenericReedContact(TapHomeBinarySensorBase):
+    sensor_value_type = ValueType.ReedContact
+
+    def __init__(self, sensorService: SensorService, device: Device):
+        super(TapHomeGenericReedContact, self).__init__(sensorService, device)
+
 
 async def async_setup_platform(hass, config, async_add_entities, platformConfig):
     tapHomeApiService = platformConfig[TAPHOME_API_SERVICE]
@@ -79,7 +85,7 @@ async def async_setup_platform(hass, config, async_add_entities, platformConfig)
 
 async def async_create_sensors(sensorService: SensorService, device: Device):
     sensors = []
-    sensorTypes = [TapHomeMotionSensor]
+    sensorTypes = [TapHomeMotionSensor, TapHomeGenericReedContact]
     for sensorType in sensorTypes:
         if sensorType.sensor_value_type in device.supportedValues:
             sensor = sensorType(sensorService, device)
