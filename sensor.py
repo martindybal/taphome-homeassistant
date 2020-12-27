@@ -8,8 +8,15 @@ from . import TAPHOME_API_SERVICE, TAPHOME_DEVICES
 from homeassistant.const import (
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_TEMPERATURE,
+	DEVICE_CLASS_POWER,
+	DEVICE_CLASS_ENERGY,
     PERCENTAGE,
+	LENGTH_MILLIMETERS,
+	POWER_WATT,
+	ENERGY_KILO_WATT_HOUR,
     TEMP_CELSIUS,
+	CONCENTRATION_PARTS_PER_MILLION,
+	SPEED_KILOMETERS_PER_HOUR,
 )
 
 
@@ -83,8 +90,89 @@ class TapHomeTemperatureSensor(TapHomeSensorBase):
     def device_class(self):
         """Return type of sensor."""
         return DEVICE_CLASS_TEMPERATURE
+		
+class TapHomeRainCounter(TapHomeSensorBase):
+    sensor_value_type = ValueType.RainCounter
+	
+    def __init__(self, sensorService: SensorService, device: Device):
+        super(TapHomeRainCounter, self).__init__(sensorService, device)
 
+    @property
+    def unit_of_measurement(self):
+        """Return the unit of measurement that the sensor is expressed in."""
+        return LENGTH_MILLIMETERS
+		
+class TapHomeElectricityDemand(TapHomeSensorBase):
+    sensor_value_type = ValueType.ElectricityDemand
+	
+    def __init__(self, sensorService: SensorService, device: Device):
+        super(TapHomeElectricityDemand, self).__init__(sensorService, device)
 
+    @property
+    def unit_of_measurement(self):
+        """Return the unit of measurement that the sensor is expressed in."""
+        return POWER_WATT
+
+    @property
+    def device_class(self):
+        """Return type of sensor."""
+        return DEVICE_CLASS_POWER
+		
+    def taphome_to_hass_value(self, value: int):
+        return value * 100
+		
+class TapHomeElectricityConsumption(TapHomeSensorBase):
+    sensor_value_type = ValueType.ElectricityConsumption
+	
+    def __init__(self, sensorService: SensorService, device: Device):
+        super(TapHomeElectricityConsumption, self).__init__(sensorService, device)
+
+    @property
+    def unit_of_measurement(self):
+        """Return the unit of measurement that the sensor is expressed in."""
+        return ENERGY_KILO_WATT_HOUR
+
+    @property
+    def device_class(self):
+        """Return type of sensor."""
+        return DEVICE_CLASS_ENERGY
+		
+class TapHomeCo2Sensor(TapHomeSensorBase):
+    sensor_value_type = ValueType.Co2
+	
+    def __init__(self, sensorService: SensorService, device: Device):
+        super(TapHomeCo2Sensor, self).__init__(sensorService, device)
+
+    @property
+    def unit_of_measurement(self):
+        """Return the unit of measurement that the sensor is expressed in."""
+        return CONCENTRATION_PARTS_PER_MILLION
+		
+class TapHomeBrightnessSensor(TapHomeSensorBase):
+    sensor_value_type = ValueType.SensorBrightness
+	
+    def __init__(self, sensorService: SensorService, device: Device):
+        super(TapHomeBrightnessSensor, self).__init__(sensorService, device)
+
+    @property
+    def unit_of_measurement(self):
+        """Return the unit of measurement that the sensor is expressed in."""
+        return PERCENTAGE
+		
+    def taphome_to_hass_value(self, value: int):
+        return value * 100
+		
+class TapHomeWindSpeedSensor(TapHomeSensorBase):
+    sensor_value_type = ValueType.WindSpeed
+	
+    def __init__(self, sensorService: SensorService, device: Device):
+        super(TapHomeWindSpeedSensor, self).__init__(sensorService, device)
+
+    @property
+    def unit_of_measurement(self):
+        """Return the unit of measurement that the sensor is expressed in."""
+        return SPEED_KILOMETERS_PER_HOUR
+		
 class TapHomeVariable(TapHomeSensorBase):
     sensor_value_type = ValueType.VariableState
 
@@ -107,7 +195,7 @@ async def async_setup_platform(hass, config, async_add_entities, platformConfig)
 
 async def async_create_sensors(sensorService: SensorService, device: Device):
     sensors = []
-    sensorTypes = [TapHomeHumiditySensor, TapHomeTemperatureSensor, TapHomeVariable]
+    sensorTypes = [TapHomeHumiditySensor, TapHomeTemperatureSensor, TapHomeRainCounter, TapHomeElectricityDemand, TapHomeElectricityConsumption, TapHomeCo2Sensor, TapHomeBrightnessSensor, TapHomeWindSpeedSensor, TapHomeVariable]
     for sensorType in sensorTypes:
         if sensorType.sensor_value_type in device.supportedValues:
             sensor = sensorType(sensorService, device)
