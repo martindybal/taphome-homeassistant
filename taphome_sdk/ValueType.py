@@ -28,6 +28,7 @@ class ValueType(Enum):
     FloodState = 47
     SwitchState = 48
     MultiValueSwitchState = 49
+    Motion = 51
     ButtonPressed = 52
     AnalogInputValue = 55
     TotalImpulseCount = 56

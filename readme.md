@@ -7,7 +7,7 @@
 - Covers - blinds, shades, garage doors
 - Climates - thermostats
 - Switches - power outlet, digital out
-- Sensors - Humidity, Temperature, Variable
+- Sensors - Humidity, Temperature, Variable, Motion
 
 ## Installation
 
@@ -38,6 +38,8 @@ taphome:
         - 15
         - 16
         - 17
+      binary_sensors:
+        - 18
 ```
 
 You have to specify your token and id of your lights. For more information visit https://taphome.com/en/support/601227274

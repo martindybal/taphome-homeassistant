@@ -11,6 +11,7 @@ from homeassistant.const import (
     CONF_COVERS,
     CONF_SWITCHES,
     CONF_SENSORS,
+    CONF_BINARY_SENSORS,
 )
 
 DOMAIN = "taphome"
@@ -31,6 +32,7 @@ CONFIG_SCHEMA = voluptuous.Schema(
                             CONF_CLIMATES,
                             CONF_SWITCHES,
                             CONF_SENSORS,
+                            CONF_BINARY_SENSORS,
                         ),
                         {
                             voluptuous.Required(CONF_TOKEN): config_validation.string,
@@ -48,6 +50,9 @@ CONFIG_SCHEMA = voluptuous.Schema(
                             ): config_validation.ensure_list,
                             voluptuous.Optional(
                                 CONF_SENSORS, default=[]
+                            ): config_validation.ensure_list,
+                            voluptuous.Optional(
+                                CONF_BINARY_SENSORS, default=[]
                             ): config_validation.ensure_list,
                         },
                     )
@@ -110,6 +115,16 @@ async def async_setup(hass, config):
             platformConfig = create_platform_config(tapHomeApiService, sensors)
             hass.async_create_task(
                 async_load_platform(hass, "sensor", DOMAIN, platformConfig, config)
+            )
+
+        binarySensorIds = coreConfig[CONF_BINARY_SENSORS]
+        if sensorIds:
+            binarySensors = filter_devices_by_ids(devices, binarySensorIds)
+            platformConfig = create_platform_config(tapHomeApiService, binarySensors)
+            hass.async_create_task(
+                async_load_platform(
+                    hass, "binary_sensor", DOMAIN, platformConfig, config
+                )
             )
 
     return True
