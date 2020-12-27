@@ -65,7 +65,8 @@ class TapHomeHumiditySensor(TapHomeSensorBase):
         return DEVICE_CLASS_HUMIDITY
 
     def taphome_to_hass_value(self, value: int):
-        return value * 100
+        value = value * 100
+        return round(value, 1)
 
 
 class TapHomeTemperatureSensor(TapHomeSensorBase):
@@ -83,6 +84,9 @@ class TapHomeTemperatureSensor(TapHomeSensorBase):
     def device_class(self):
         """Return type of sensor."""
         return DEVICE_CLASS_TEMPERATURE
+
+    def taphome_to_hass_value(self, value: int):
+        return round(value, 1)
 
 
 class TapHomeVariable(TapHomeSensorBase):
