@@ -22,7 +22,7 @@ class TapHomeSensorBase(Entity):
 
     @property
     def name(self):
-        """Return the name of the light."""
+        """Return the name of the sensor."""
         return self._device.name
 
     @property
