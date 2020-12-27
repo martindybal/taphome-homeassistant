@@ -107,19 +107,11 @@ async def async_setup_platform(hass, config, async_add_entities, platformConfig)
 
 async def async_create_sensors(sensorService: SensorService, device: Device):
     sensors = []
-    if TapHomeHumiditySensor.sensor_value_type in device.supportedValues:
-        sensor = TapHomeHumiditySensor(sensorService, device)
-        sensors.append(sensor)
-
-    if TapHomeTemperatureSensor.sensor_value_type in device.supportedValues:
-        sensor = TapHomeTemperatureSensor(sensorService, device)
-        sensors.append(sensor)
-
-    if TapHomeVariable.sensor_value_type in device.supportedValues:
-        sensor = TapHomeVariable(sensorService, device)
-        sensors.append(sensor)
-
-    for sensor in sensors:
-        await sensor.async_refresh_state()
+    sensorTypes = [TapHomeHumiditySensor, TapHomeTemperatureSensor, TapHomeVariable]
+    for sensorType in sensorTypes:
+        if sensorType.sensor_value_type in device.supportedValues:
+            sensor = sensorType(sensorService, device)
+            await sensor.async_refresh_state()
+            sensors.append(sensor)
 
     return sensors
