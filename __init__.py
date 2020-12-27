@@ -4,7 +4,14 @@ from .taphome_sdk import *
 from homeassistant.helpers.discovery import async_load_platform
 import voluptuous
 import homeassistant.helpers.config_validation as config_validation
-from homeassistant.const import CONF_TOKEN, CONF_LIGHTS, CONF_COVERS, CONF_SWITCHES
+
+from homeassistant.const import (
+    CONF_TOKEN,
+    CONF_LIGHTS,
+    CONF_COVERS,
+    CONF_SWITCHES,
+    CONF_SENSORS,
+)
 
 DOMAIN = "taphome"
 TAPHOME_API_SERVICE = f"{DOMAIN}_TapHomeApiService"
@@ -19,7 +26,11 @@ CONFIG_SCHEMA = voluptuous.Schema(
                 TAPHOME_CORES: [
                     voluptuous.All(
                         config_validation.has_at_least_one_key(
-                            CONF_LIGHTS, CONF_COVERS, CONF_CLIMATES, CONF_SWITCHES
+                            CONF_LIGHTS,
+                            CONF_COVERS,
+                            CONF_CLIMATES,
+                            CONF_SWITCHES,
+                            CONF_SENSORS,
                         ),
                         {
                             voluptuous.Required(CONF_TOKEN): config_validation.string,
@@ -34,6 +45,9 @@ CONFIG_SCHEMA = voluptuous.Schema(
                             ): config_validation.ensure_list,
                             voluptuous.Optional(
                                 CONF_SWITCHES, default=[]
+                            ): config_validation.ensure_list,
+                            voluptuous.Optional(
+                                CONF_SENSORS, default=[]
                             ): config_validation.ensure_list,
                         },
                     )
@@ -80,7 +94,7 @@ async def async_setup(hass, config):
             hass.async_create_task(
                 async_load_platform(hass, "climate", DOMAIN, climates, config)
             )
-            
+
         switchIds = coreConfig[CONF_SWITCHES]
         if switchIds:
             switches = filter_devices_by_ids(devices, switchIds)
@@ -88,6 +102,14 @@ async def async_setup(hass, config):
 
             hass.async_create_task(
                 async_load_platform(hass, "switch", DOMAIN, platformConfig, config)
+            )
+
+        sensorIds = coreConfig[CONF_SENSORS]
+        if sensorIds:
+            sensors = filter_devices_by_ids(devices, sensorIds)
+            platformConfig = create_platform_config(tapHomeApiService, sensors)
+            hass.async_create_task(
+                async_load_platform(hass, "sensor", DOMAIN, platformConfig, config)
             )
 
     return True
