@@ -134,6 +134,9 @@ class TapHomeElectricCounterElectricityDemandSensor(TapHomeSensorBase):
         return DEVICE_CLASS_POWER
 
     def taphome_to_hass_value(self, value: int):
+        if value is None:
+            return None
+
         return value * 100
 
 
@@ -180,6 +183,9 @@ class TapHomeBrightnessSensor(TapHomeSensorBase):
         return PERCENTAGE
 
     def taphome_to_hass_value(self, value: int):
+        if value is None:
+            return None
+
         return value * 100
 
 
@@ -207,6 +213,9 @@ class TapHomeAnalogInputSensor(TapHomeSensorBase):
         return PERCENTAGE
 
     def taphome_to_hass_value(self, value: int):
+        if value is None:
+            return None
+
         return value * 100
 
 
