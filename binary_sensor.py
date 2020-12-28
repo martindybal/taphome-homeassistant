@@ -63,6 +63,7 @@ class TapHomeMotionSensor(TapHomeBinarySensorBase):
         """Return type of sensor."""
         return DEVICE_CLASS_MOTION
 
+
 class TapHomeGenericReedContact(TapHomeBinarySensorBase):
     sensor_value_type = ValueType.ReedContact
 
