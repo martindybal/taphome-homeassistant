@@ -7,7 +7,7 @@
 - Covers - blinds, shades, garage doors
 - Climates - thermostats
 - Switches - power outlet, digital out
-- Sensors - Humidity, Temperature, Variable, Motion
+- Sensors - Humidity, Temperature, Variable, Motion, Generic reed contact, Rain counter, Electric counter (consumption, demand), Brightness, Co2, Wind speed, Pulse counter (total impulse, current hour impulse, frequency)
 
 ## Installation
 
