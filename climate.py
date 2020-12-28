@@ -7,13 +7,14 @@ from homeassistant.components.climate import ClimateEntity
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
 from homeassistant.components.climate.const import SUPPORT_TARGET_TEMPERATURE
 
-from . import TAPHOME_API_SERVICE
+from . import TAPHOME_API_SERVICE, TAPHOME_DEVICES
 
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_platform(hass, config, async_add_entities, devices: list):
-    tapHomeApiService = hass.data[TAPHOME_API_SERVICE]
+async def async_setup_platform(hass, config, async_add_entities, platformConfig):
+    tapHomeApiService = platformConfig[TAPHOME_API_SERVICE]
+    devices = platformConfig[TAPHOME_DEVICES]
     thermostatService = ThermostatService(tapHomeApiService)
 
     thermostats = []
