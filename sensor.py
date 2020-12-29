@@ -147,6 +147,12 @@ class TapHomeElectricCounterElectricityConsumptionSensor(TapHomeSensorBase):
         """Return type of sensor."""
         return DEVICE_CLASS_ENERGY
 
+    def taphome_to_hass_value(self, value: int):
+        if value is None:
+            return None
+
+        return round(value, 2)
+
 
 class TapHomeCo2Sensor(TapHomeSensorBase):
     sensor_value_type = ValueType.Co2
