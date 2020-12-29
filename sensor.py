@@ -275,6 +275,11 @@ class TapHomeVariable(TapHomeSensorBase):
     def __init__(self, sensorService: SensorService, device: Device):
         super(TapHomeVariable, self).__init__(sensorService, device)
 
+    @property
+    def unit_of_measurement(self):
+        """Return the unit of measurement that the sensor is expressed in."""
+        return " " # this is workaround for https://github.com/home-assistant/architecture/issues/478 
+
 
 async def async_setup_platform(hass, config, async_add_entities, platformConfig):
     tapHomeApiService = platformConfig[TAPHOME_API_SERVICE]
