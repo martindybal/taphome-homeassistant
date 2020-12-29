@@ -11,7 +11,6 @@ from homeassistant.const import (
     DEVICE_CLASS_POWER,
     DEVICE_CLASS_ENERGY,
     PERCENTAGE,
-    LENGTH_MILLIMETERS,
     POWER_WATT,
     ENERGY_KILO_WATT_HOUR,
     TEMP_CELSIUS,
@@ -101,18 +100,6 @@ class TapHomeTemperatureSensor(TapHomeSensorBase):
             return None
 
         return round(value, 1)
-
-
-class TapHomeRainCounterSensor(TapHomeSensorBase):
-    sensor_value_type = ValueType.RainCounter
-
-    def __init__(self, sensorService: SensorService, device: Device):
-        super(TapHomeRainCounterSensor, self).__init__(sensorService, device)
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement that the sensor is expressed in."""
-        return LENGTH_MILLIMETERS
 
 
 class TapHomeElectricCounterElectricityDemandSensor(TapHomeSensorBase):
@@ -294,7 +281,6 @@ async def async_create_sensors(sensorService: SensorService, device: Device):
     sensorTypes = [
         TapHomeHumiditySensor,
         TapHomeTemperatureSensor,
-        TapHomeRainCounterSensor,
         TapHomeElectricCounterElectricityDemandSensor,
         TapHomeElectricCounterElectricityConsumptionSensor,
         TapHomeCo2Sensor,
