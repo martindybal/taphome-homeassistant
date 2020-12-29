@@ -10,11 +10,12 @@ from homeassistant.const import (
     DEVICE_CLASS_TEMPERATURE,
     DEVICE_CLASS_POWER,
     DEVICE_CLASS_ENERGY,
+    DEVICE_CLASS_ILLUMINANCE,
     PERCENTAGE,
-    LENGTH_MILLIMETERS,
     POWER_WATT,
     ENERGY_KILO_WATT_HOUR,
     TEMP_CELSIUS,
+    LIGHT_LUX,
     CONCENTRATION_PARTS_PER_MILLION,
     SPEED_KILOMETERS_PER_HOUR,
     FREQUENCY_HERTZ,
@@ -103,18 +104,6 @@ class TapHomeTemperatureSensor(TapHomeSensorBase):
         return round(value, 1)
 
 
-class TapHomeRainCounterSensor(TapHomeSensorBase):
-    sensor_value_type = ValueType.RainCounter
-
-    def __init__(self, sensorService: SensorService, device: Device):
-        super(TapHomeRainCounterSensor, self).__init__(sensorService, device)
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement that the sensor is expressed in."""
-        return LENGTH_MILLIMETERS
-
-
 class TapHomeElectricCounterElectricityDemandSensor(TapHomeSensorBase):
     sensor_value_type = ValueType.ElectricityDemand
 
@@ -158,6 +147,12 @@ class TapHomeElectricCounterElectricityConsumptionSensor(TapHomeSensorBase):
         """Return type of sensor."""
         return DEVICE_CLASS_ENERGY
 
+    def taphome_to_hass_value(self, value: int):
+        if value is None:
+            return None
+
+        return round(value, 2)
+
 
 class TapHomeCo2Sensor(TapHomeSensorBase):
     sensor_value_type = ValueType.Co2
@@ -180,13 +175,18 @@ class TapHomeBrightnessSensor(TapHomeSensorBase):
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement that the sensor is expressed in."""
-        return PERCENTAGE
+        return LIGHT_LUX
+
+    @property
+    def device_class(self):
+        """Return type of sensor."""
+        return DEVICE_CLASS_ILLUMINANCE
 
     def taphome_to_hass_value(self, value: int):
         if value is None:
             return None
 
-        return value * 100
+        return value * 100_000
 
 
 class TapHomeWindSpeedSensor(TapHomeSensorBase):
@@ -299,7 +299,6 @@ async def async_create_sensors(sensorService: SensorService, device: Device):
     sensorTypes = [
         TapHomeHumiditySensor,
         TapHomeTemperatureSensor,
-        TapHomeRainCounterSensor,
         TapHomeElectricCounterElectricityDemandSensor,
         TapHomeElectricCounterElectricityConsumptionSensor,
         TapHomeCo2Sensor,
