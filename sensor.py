@@ -125,8 +125,9 @@ class TapHomeElectricCounterElectricityDemandSensor(TapHomeSensorBase):
     def taphome_to_hass_value(self, value: int):
         if value is None:
             return None
-
-        return value * 100
+        
+        value = value * 100
+        return round(value, 2)
 
 
 class TapHomeElectricCounterElectricityConsumptionSensor(TapHomeSensorBase):
