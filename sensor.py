@@ -185,9 +185,9 @@ class TapHomeBrightnessSensor(TapHomeSensorBase):
     def taphome_to_hass_value(self, value: int):
         if value is None:
             return None
-
-        return value * 100_000
-
+        
+        value = value * 100_000
+        return round(value, 2)
 
 class TapHomeWindSpeedSensor(TapHomeSensorBase):
     sensor_value_type = ValueType.WindSpeed
