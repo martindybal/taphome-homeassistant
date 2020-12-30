@@ -12,7 +12,7 @@ from homeassistant.const import (
     DEVICE_CLASS_ENERGY,
     DEVICE_CLASS_ILLUMINANCE,
     PERCENTAGE,
-    POWER_WATT,
+    POWER_KILO_WATT,
     ENERGY_KILO_WATT_HOUR,
     TEMP_CELSIUS,
     LIGHT_LUX,
@@ -115,7 +115,7 @@ class TapHomeElectricCounterElectricityDemandSensor(TapHomeSensorBase):
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement that the sensor is expressed in."""
-        return POWER_WATT
+        return POWER_KILO_WATT
 
     @property
     def device_class(self):
@@ -126,8 +126,7 @@ class TapHomeElectricCounterElectricityDemandSensor(TapHomeSensorBase):
         if value is None:
             return None
         
-        value = value * 100
-        return round(value, 2)
+        return round(value, 3)
 
 
 class TapHomeElectricCounterElectricityConsumptionSensor(TapHomeSensorBase):
