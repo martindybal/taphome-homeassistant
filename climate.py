@@ -2,6 +2,7 @@
 from .taphome_sdk import *
 
 import logging
+import typing
 from homeassistant.components.climate import ClimateEntity
 
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
@@ -15,14 +16,24 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_platform(hass, config, async_add_entities, platformConfig):
     tapHomeApiService = platformConfig[TAPHOME_API_SERVICE]
     devices = platformConfig[TAPHOME_DEVICES]
-    thermostatService = ThermostatService(tapHomeApiService)
 
-    thermostats = []
+    climates = []
     for device in devices:
-        thermostat = await async_create_thermostat(thermostatService, device)
-        thermostats.append(thermostat)
+        for climate in await async_create_climate(tapHomeApiService, device):
+            climates.append(climate)
 
-    async_add_entities(thermostats)
+    async_add_entities(climates)
+
+
+async def async_create_climate(
+    tapHomeApiService: TapHomeApiService, device: Device
+) -> typing.List[ClimateEntity]:
+    climates = []
+    thermostatService = ThermostatService(tapHomeApiService)
+    thermostat = TapHomeThermostat(thermostatService, device)
+    await thermostat.async_refresh_state()
+    climates.append(thermostat)
+    return climates
 
 
 async def async_create_thermostat(thermostatService: ThermostatService, device: Device):
