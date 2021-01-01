@@ -230,7 +230,7 @@ class TapHomePulseCounterTotalImpulseCountSensor(TapHomeSensorBase):
     @property
     def name(self):
         """Return the name of the sensor."""
-        appendName = " total"
+        appendName = " total_pulse"
         return self._device.name + appendName
 
 
@@ -245,7 +245,7 @@ class TapHomePulseCounterCurrentHourImpulseCountSensor(TapHomeSensorBase):
     @property
     def name(self):
         """Return the name of the sensor."""
-        appendName = " current hour"
+        appendName = " current_hour_pulse"
         return self._device.name + appendName
 
 
@@ -260,7 +260,7 @@ class TapHomePulseCounterLastMeasuredFrequencySensor(TapHomeSensorBase):
     @property
     def name(self):
         """Return the name of the sensor."""
-        appendName = " frequency"
+        appendName = " frequency_pulse"
         return self._device.name + appendName
 
     @property
