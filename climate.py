@@ -29,10 +29,11 @@ async def async_create_climate(
     tapHomeApiService: TapHomeApiService, device: Device
 ) -> typing.List[ClimateEntity]:
     climates = []
-    thermostatService = ThermostatService(tapHomeApiService)
-    thermostat = TapHomeThermostat(thermostatService, device)
-    await thermostat.async_refresh_state()
-    climates.append(thermostat)
+    if "VirtualThermostatDummy" == device.type:
+        thermostatService = ThermostatService(tapHomeApiService)
+        thermostat = TapHomeThermostat(thermostatService, device)
+        await thermostat.async_refresh_state()
+        climates.append(thermostat)
     return climates
 
 
