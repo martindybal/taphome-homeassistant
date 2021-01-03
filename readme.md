@@ -27,7 +27,8 @@ taphome:
         - 4
         - 5
       climates:
-        - 11
+        - thermostat: 14
+          mode: 13
       switches:
         - 13
       sensors:
