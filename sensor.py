@@ -278,7 +278,7 @@ class TapHomeVariable(TapHomeSensorBase):
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement that the sensor is expressed in."""
-        return " " # this is workaround for https://github.com/home-assistant/architecture/issues/478 
+        return " " # this is workaround for https://github.com/home-assistant/architecture/issues/478
 
 
 async def async_setup_platform(hass, config, async_add_entities, platformConfig):
@@ -313,7 +313,6 @@ async def async_create_sensors(sensorService: SensorService, device: Device):
     for sensorType in sensorTypes:
         if sensorType.sensor_value_type in device.supportedValues:
             sensor = sensorType(sensorService, device)
-            await sensor.async_refresh_state()
             sensors.append(sensor)
 
     return sensors

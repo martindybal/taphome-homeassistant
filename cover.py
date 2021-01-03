@@ -38,7 +38,6 @@ async def async_setup_platform(hass, config, async_add_entities, platformConfig)
 # async def async_create_cover(coverService: CoverService, device: Device):
 async def async_create_cover(coverService, device: Device):
     cover = TapHomeCover(coverService, device)
-    await cover.async_refresh_state()
     return cover
 
 

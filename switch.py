@@ -28,7 +28,6 @@ async def async_setup_platform(hass, config, async_add_entities, platformConfig)
 
 async def async_create_switch(switchService: SwitchService, device: Device):
     switch = TapHomeSwitch(switchService, device)
-    await switch.async_refresh_state()
     return switch
 
 

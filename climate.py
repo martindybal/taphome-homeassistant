@@ -40,7 +40,6 @@ async def async_create_climate(
         thermostatService = ThermostatService(tapHomeApiService)
         multiValueSwitchService = MultiValueSwitchService(tapHomeApiService)
         thermostat = TapHomeClimate(thermostatService, multiValueSwitchService, device)
-        await thermostat.async_refresh_state()
         climates.append(thermostat)
     return climates
 
