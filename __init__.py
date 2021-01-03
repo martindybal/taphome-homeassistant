@@ -125,7 +125,17 @@ async def async_setup(hass, config):
     return True
 
 
-def create_climates(devices: typing.List[Device], climateConfig):
+def create_climates(devices: typing.List[Device], climateConfig: list):
+    if all(isinstance(climate, int) for climate in climateConfig):
+        return list(
+            map(
+                lambda thermostatId: TapHomeClimateDevice.create(
+                    devices, thermostatId, None
+                ),
+                climateConfig,
+            )
+        )
+
     return list(
         map(
             lambda climate: TapHomeClimateDevice.create(
@@ -164,7 +174,8 @@ class TapHomeClimateDevice:
     def create(devices: typing.List[Device], thermostatId: int, modeId: int):
         assert thermostatId >= 0
         thermostat = filter_devices_by_id(devices, thermostatId)
-        if modeId >= 0:
+
+        if modeId is not None and modeId >= 0:
             mode = filter_devices_by_id(devices, modeId)
         else:
             mode = None
