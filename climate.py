@@ -112,7 +112,7 @@ class TapHomeClimate(ClimateEntity):
 
     async def async_set_hvac_mode(self, hvac_mode):
         """Set new target hvac mode."""
-        self._device.controller.async_set_hvac_mode(hvac_mode)
+        await self._device.controller.async_set_hvac_mode(hvac_mode)
 
     def async_update(self, **kwargs):
         return self.async_refresh_state()
