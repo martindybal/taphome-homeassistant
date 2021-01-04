@@ -26,7 +26,9 @@ CONFIG_SCHEMA = voluptuous.Schema(
     {
         DOMAIN: voluptuous.Schema(
             {
-                voluptuous.Optional(CONF_LANGUAGE): config_validation.string,
+                voluptuous.Optional(
+                    CONF_LANGUAGE, default="en"
+                ): config_validation.string,
                 CONF_CORES: [
                     voluptuous.All(
                         config_validation.has_at_least_one_key(
@@ -59,7 +61,7 @@ CONFIG_SCHEMA = voluptuous.Schema(
                             ): config_validation.ensure_list,
                         },
                     )
-                ]
+                ],
             }
         )
     },
