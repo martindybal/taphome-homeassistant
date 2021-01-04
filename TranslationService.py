@@ -16,7 +16,6 @@ class TranslationService:
             return translation
 
     def __get_translation_file_path(language: str) -> str:
-
         translation_directory_path = os.path.join(
             os.path.dirname(os.path.realpath(__file__)), "translations"
         )
@@ -29,7 +28,7 @@ class TranslationService:
             f"{default_translation_file_name}.{language}.{translation_file_extension}",
         )
 
-        if os.path.isfile("filename.txt"):
+        if os.path.isfile(language_translation_file_path):
             return language_translation_file_path
         else:
             return os.path.join(
