@@ -72,7 +72,6 @@ class TapHomeSwitchClimateController(TapHomeClimateController):
 
     async def async_set_hvac_mode(self, hvac_mode):
         """Set new target hvac mode."""
-
         if hvac_mode == HVAC_MODE_OFF:
             result = await self._switchService.async_turn_off_switch(self._device)
         elif hvac_mode == self._supported_hvac_mode:
@@ -90,7 +89,7 @@ class TapHomeSwitchClimateController(TapHomeClimateController):
 
     async def async_refresh_state(self):
         state = await self._switchService.async_get_switch_state(self._device)
-        switch_is_on = state == SwitchStates.ON
+        switch_is_on = state.switch_state == SwitchStates.ON
         self._hvac_mode = self._supported_hvac_mode if switch_is_on else HVAC_MODE_OFF
 
 
