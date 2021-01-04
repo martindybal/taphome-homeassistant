@@ -1,9 +1,10 @@
 """TapHome light integration."""
 from .taphome_sdk import *
+from .TranslationService import TranslationService
 
 import logging
 from homeassistant.helpers.entity import Entity
-from . import TAPHOME_API_SERVICE, TAPHOME_DEVICES
+from . import TAPHOME_API_SERVICE, TAPHOME_DEVICES, TAPHOME_LANGUAGE
 
 from homeassistant.const import (
     DEVICE_CLASS_HUMIDITY,
@@ -125,7 +126,7 @@ class TapHomeElectricCounterElectricityDemandSensor(TapHomeSensorBase):
     def taphome_to_hass_value(self, value: int):
         if value is None:
             return None
-        
+
         return round(value, 3)
 
 
@@ -185,9 +186,10 @@ class TapHomeBrightnessSensor(TapHomeSensorBase):
     def taphome_to_hass_value(self, value: int):
         if value is None:
             return None
-        
+
         value = value * 100_000
         return round(value, 2)
+
 
 class TapHomeWindSpeedSensor(TapHomeSensorBase):
     sensor_value_type = ValueType.WindSpeed
@@ -230,8 +232,10 @@ class TapHomePulseCounterTotalImpulseCountSensor(TapHomeSensorBase):
     @property
     def name(self):
         """Return the name of the sensor."""
-        appendName = " total_pulse"
-        return self._device.name + appendName
+        appendName = TranslationService.get_text(
+            self.hass.data[TAPHOME_LANGUAGE], "sensor.pulse.total_pulse"
+        )
+        return f"{self._device.name} {appendName}"
 
 
 class TapHomePulseCounterCurrentHourImpulseCountSensor(TapHomeSensorBase):
@@ -245,8 +249,10 @@ class TapHomePulseCounterCurrentHourImpulseCountSensor(TapHomeSensorBase):
     @property
     def name(self):
         """Return the name of the sensor."""
-        appendName = " current_hour_pulse"
-        return self._device.name + appendName
+        appendName = TranslationService.get_text(
+            self.hass.data[TAPHOME_LANGUAGE], "sensor.pulse.current_hour_pulse"
+        )
+        return f"{self._device.name} {appendName}"
 
 
 class TapHomePulseCounterLastMeasuredFrequencySensor(TapHomeSensorBase):
@@ -260,8 +266,10 @@ class TapHomePulseCounterLastMeasuredFrequencySensor(TapHomeSensorBase):
     @property
     def name(self):
         """Return the name of the sensor."""
-        appendName = " frequency_pulse"
-        return self._device.name + appendName
+        appendName = TranslationService.get_text(
+            self.hass.data[TAPHOME_LANGUAGE], "sensor.pulse.frequency_pulse"
+        )
+        return f"{self._device.name} {appendName}"
 
     @property
     def unit_of_measurement(self):
@@ -278,7 +286,7 @@ class TapHomeVariable(TapHomeSensorBase):
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement that the sensor is expressed in."""
-        return " " # this is workaround for https://github.com/home-assistant/architecture/issues/478 
+        return " " # this is workaround for https://github.com/home-assistant/architecture/issues/478
 
 
 async def async_setup_platform(hass, config, async_add_entities, platformConfig):

@@ -17,14 +17,17 @@ from homeassistant.const import (
 DOMAIN = "taphome"
 TAPHOME_API_SERVICE = f"{DOMAIN}_TapHomeApiService"
 TAPHOME_DEVICES = f"{DOMAIN}_Devices"
-TAPHOME_CORES = "cores"
+TAPHOME_LANGUAGE = f"{DOMAIN}_language"
+CONF_CORES = "cores"
+CONF_LANGUAGE = "language"
 CONF_CLIMATES = "climates"
 
 CONFIG_SCHEMA = voluptuous.Schema(
     {
         DOMAIN: voluptuous.Schema(
             {
-                TAPHOME_CORES: [
+                voluptuous.Optional(CONF_LANGUAGE): config_validation.string,
+                CONF_CORES: [
                     voluptuous.All(
                         config_validation.has_at_least_one_key(
                             CONF_LIGHTS,
@@ -65,7 +68,9 @@ CONFIG_SCHEMA = voluptuous.Schema(
 
 
 async def async_setup(hass, config):
-    for coreConfig in config[DOMAIN][TAPHOME_CORES]:
+    hass.data[TAPHOME_LANGUAGE] = config[DOMAIN][CONF_LANGUAGE]
+
+    for coreConfig in config[DOMAIN][CONF_CORES]:
         token = coreConfig[CONF_TOKEN]
         tapHomeHttpClientFactory = TapHomeHttpClientFactory()
         tapHomeHttpClient = tapHomeHttpClientFactory.create(token)
