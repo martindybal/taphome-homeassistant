@@ -166,6 +166,12 @@ class TapHomeCo2Sensor(TapHomeSensorBase):
         """Return the unit of measurement that the sensor is expressed in."""
         return CONCENTRATION_PARTS_PER_MILLION
 
+    def taphome_to_hass_value(self, value: int):
+        if value is None:
+            return None
+
+        return round(value, 1)
+
 
 class TapHomeBrightnessSensor(TapHomeSensorBase):
     sensor_value_type = ValueType.SensorBrightness
@@ -201,6 +207,12 @@ class TapHomeWindSpeedSensor(TapHomeSensorBase):
     def unit_of_measurement(self):
         """Return the unit of measurement that the sensor is expressed in."""
         return SPEED_KILOMETERS_PER_HOUR
+
+    def taphome_to_hass_value(self, value: int):
+        if value is None:
+            return None
+
+        return round(value, 1)
 
 
 class TapHomeAnalogInputSensor(TapHomeSensorBase):
@@ -254,6 +266,12 @@ class TapHomePulseCounterCurrentHourImpulseCountSensor(TapHomeSensorBase):
         )
         return f"{self._device.name} {appendName}"
 
+    def taphome_to_hass_value(self, value: int):
+        if value is None:
+            return None
+
+        return round(value, 1)
+
 
 class TapHomePulseCounterLastMeasuredFrequencySensor(TapHomeSensorBase):
     sensor_value_type = ValueType.LastMeasuredFrequency
@@ -275,6 +293,12 @@ class TapHomePulseCounterLastMeasuredFrequencySensor(TapHomeSensorBase):
     def unit_of_measurement(self):
         """Return the unit of measurement that the sensor is expressed in."""
         return FREQUENCY_HERTZ
+
+    def taphome_to_hass_value(self, value: int):
+        if value is None:
+            return None
+
+        return round(value, 1)
 
 
 class TapHomeVariable(TapHomeSensorBase):
