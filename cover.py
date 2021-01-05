@@ -1,6 +1,7 @@
 """TapHome cover integration."""
 from voluptuous.schema_builder import Self
 from .taphome_sdk import *
+from .taphome_entity import TapHomeEntity
 
 import logging
 from homeassistant.components.cover import (
@@ -41,12 +42,13 @@ async def async_create_cover(coverService, device: Device):
     return cover
 
 
-class TapHomeCover(CoverEntity):
+class TapHomeCover(TapHomeEntity, CoverEntity):
     """Representation of an Cover"""
 
     def __init__(self, coverService: CoverService, device: Device):
+        super(TapHomeCover, self).__init__(device=device)
+
         self._coverService = coverService
-        self._device = device
         self._state = None
         self._position = None
         self._tilt = None
@@ -61,11 +63,6 @@ class TapHomeCover(CoverEntity):
     def supported_features(self):
         """Flag supported features."""
         return self._supported_features
-
-    @property
-    def name(self):
-        """Return the name of the cover."""
-        return self._device.name
 
     @property
     def current_cover_position(self):

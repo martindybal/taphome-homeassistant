@@ -1,5 +1,6 @@
 """TapHome light integration."""
 from .taphome_sdk import *
+from .taphome_entity import TapHomeEntity
 
 import logging
 
@@ -12,17 +13,14 @@ from homeassistant.components.binary_sensor import (
 from . import TAPHOME_API_SERVICE, TAPHOME_DEVICES
 
 
-class TapHomeBinarySensorBase(BinarySensorEntity):
+class TapHomeBinarySensorBase(TapHomeEntity, BinarySensorEntity):
     def __init__(self, sensorService: SensorService, device: Device):
+        super(TapHomeBinarySensorBase, self).__init__(device=device)
+
         self._sensorService = sensorService
         self._device = device
 
         self._is_on = None
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._device.name
 
     @property
     def is_on(self) -> bool:

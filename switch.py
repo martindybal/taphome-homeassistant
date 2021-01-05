@@ -1,6 +1,7 @@
 """TapHome light integration."""
 from voluptuous.schema_builder import Self
 from .taphome_sdk import *
+from .taphome_entity import TapHomeEntity
 
 import logging
 from homeassistant.components.switch import (
@@ -31,19 +32,14 @@ async def async_create_switch(switchService: SwitchService, device: Device):
     return switch
 
 
-class TapHomeSwitch(SwitchEntity):
+class TapHomeSwitch(TapHomeEntity, SwitchEntity):
     """Representation of an Switch"""
 
     def __init__(self, switchService: SwitchService, device: Device):
+        super(TapHomeSwitch, self).__init__(device=device)
+
         self._switchService = switchService
-        self._device = device
-
         self._is_on = None
-
-    @property
-    def name(self):
-        """Return the name of the switch."""
-        return self._device.name
 
     @property
     def is_on(self):
@@ -53,9 +49,7 @@ class TapHomeSwitch(SwitchEntity):
     async def async_turn_on(self, **kwargs):
         """Turn device on."""
 
-        result = await self._switchService.async_turn_on_switch(
-            self._device
-        )
+        result = await self._switchService.async_turn_on_switch(self._device)
 
         if result == ValueChangeResult.FAILED:
             await self.async_refresh_state()

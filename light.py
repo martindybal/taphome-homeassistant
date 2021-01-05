@@ -1,6 +1,7 @@
 """TapHome light integration."""
 from voluptuous.schema_builder import Self
 from .taphome_sdk import *
+from .taphome_entity import TapHomeEntity
 
 import logging
 from homeassistant.components.light import (
@@ -35,13 +36,13 @@ async def async_create_light(lightService: LightService, device: Device):
     return light
 
 
-class TapHomeLight(LightEntity):
+class TapHomeLight(TapHomeEntity, LightEntity):
     """Representation of an Light"""
 
     def __init__(self, lightService: LightService, device: Device):
-        self._lightService = lightService
-        self._device = device
+        super(TapHomeLight, self).__init__(device=device)
 
+        self._lightService = lightService
         self._is_on = None
         self._brightness = None
         self._hue = None
@@ -61,11 +62,6 @@ class TapHomeLight(LightEntity):
     def supported_features(self):
         """Flag supported features."""
         return self._supported_features
-
-    @property
-    def name(self):
-        """Return the name of the light."""
-        return self._device.name
 
     @property
     def is_on(self):
