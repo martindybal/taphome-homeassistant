@@ -8,3 +8,4 @@ from .LightService import LightService
 from .TapHomeApiService import TapHomeApiService
 from .ThermostatService import ThermostatService
 from .SwitchService import SwitchService
+from .SensorService import SensorService

@@ -7,6 +7,7 @@
 - Covers - blinds, shades, garage doors
 - Climates - thermostats
 - Switches - power outlet, digital out
+- Sensors - Humidity, Temperature, Variable, Motion, Generic reed contact, Electric counter (consumption, demand), Brightness, Co2, Wind speed, Pulse counter (total impulse, current hour impulse, frequency)
 
 ## Installation
 
@@ -28,9 +29,17 @@ taphome:
       climates:
         - 11
       switches:
-        - 7
+        - 13
+      sensors:
         - 8
         - 9
+        - 10
+        - 14
+        - 15
+        - 16
+        - 17
+      binary_sensors:
+        - 18
 ```
 
 You have to specify your token and id of your lights. For more information visit https://taphome.com/en/support/601227274

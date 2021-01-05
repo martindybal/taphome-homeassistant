@@ -1,0 +1,9 @@
+{
+    "sensor": {
+        "pulse": {
+            "total_pulse": "impulsi totali",
+            "current_hour_pulse": "impulsi ora corrente",
+            "frequency_pulse": "frequenza impulsi"
+        }
+    }
+}
