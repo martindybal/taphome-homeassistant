@@ -32,7 +32,6 @@ async def async_setup_platform(hass, config, async_add_entities, platformConfig)
 
 async def async_create_light(lightService: LightService, device: Device):
     light = TapHomeLight(lightService, device)
-    await light.async_refresh_state()
     return light
 
 

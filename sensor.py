@@ -345,7 +345,6 @@ async def async_create_sensors(sensorService: SensorService, device: Device):
     for sensorType in sensorTypes:
         if sensorType.sensor_value_type in device.supportedValues:
             sensor = sensorType(sensorService, device)
-            await sensor.async_refresh_state()
             sensors.append(sensor)
 
     return sensors

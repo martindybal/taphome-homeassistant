@@ -39,7 +39,6 @@ async def async_create_climate(
     if "VirtualThermostatDummy" == device.thermostat.type:
         thermostatService = ThermostatService(tapHomeApiService)
         thermostat = TapHomeClimate(thermostatService, device)
-        await thermostat.async_refresh_state()
         climates.append(thermostat)
     return climates
 
