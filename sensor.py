@@ -1,9 +1,10 @@
 """TapHome light integration."""
 from .taphome_sdk import *
+from .TranslationService import TranslationService
 
 import logging
 from homeassistant.helpers.entity import Entity
-from . import TAPHOME_API_SERVICE, TAPHOME_DEVICES
+from . import TAPHOME_API_SERVICE, TAPHOME_DEVICES, TAPHOME_LANGUAGE
 
 from homeassistant.const import (
     DEVICE_CLASS_HUMIDITY,
@@ -12,7 +13,7 @@ from homeassistant.const import (
     DEVICE_CLASS_ENERGY,
     DEVICE_CLASS_ILLUMINANCE,
     PERCENTAGE,
-    POWER_WATT,
+    POWER_KILO_WATT,
     ENERGY_KILO_WATT_HOUR,
     TEMP_CELSIUS,
     LIGHT_LUX,
@@ -115,7 +116,7 @@ class TapHomeElectricCounterElectricityDemandSensor(TapHomeSensorBase):
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement that the sensor is expressed in."""
-        return POWER_WATT
+        return POWER_KILO_WATT
 
     @property
     def device_class(self):
@@ -126,7 +127,7 @@ class TapHomeElectricCounterElectricityDemandSensor(TapHomeSensorBase):
         if value is None:
             return None
 
-        return value * 100
+        return round(value, 3)
 
 
 class TapHomeElectricCounterElectricityConsumptionSensor(TapHomeSensorBase):
@@ -165,6 +166,12 @@ class TapHomeCo2Sensor(TapHomeSensorBase):
         """Return the unit of measurement that the sensor is expressed in."""
         return CONCENTRATION_PARTS_PER_MILLION
 
+    def taphome_to_hass_value(self, value: int):
+        if value is None:
+            return None
+
+        return round(value, 1)
+
 
 class TapHomeBrightnessSensor(TapHomeSensorBase):
     sensor_value_type = ValueType.SensorBrightness
@@ -186,7 +193,8 @@ class TapHomeBrightnessSensor(TapHomeSensorBase):
         if value is None:
             return None
 
-        return value * 100_000
+        value = value * 100_000
+        return round(value, 2)
 
 
 class TapHomeWindSpeedSensor(TapHomeSensorBase):
@@ -199,6 +207,12 @@ class TapHomeWindSpeedSensor(TapHomeSensorBase):
     def unit_of_measurement(self):
         """Return the unit of measurement that the sensor is expressed in."""
         return SPEED_KILOMETERS_PER_HOUR
+
+    def taphome_to_hass_value(self, value: int):
+        if value is None:
+            return None
+
+        return round(value, 1)
 
 
 class TapHomeAnalogInputSensor(TapHomeSensorBase):
@@ -230,8 +244,10 @@ class TapHomePulseCounterTotalImpulseCountSensor(TapHomeSensorBase):
     @property
     def name(self):
         """Return the name of the sensor."""
-        appendName = " total"
-        return self._device.name + appendName
+        appendName = TranslationService.get_text(
+            self.hass.data[TAPHOME_LANGUAGE], "sensor.pulse.total_pulse"
+        )
+        return f"{self._device.name} {appendName}"
 
 
 class TapHomePulseCounterCurrentHourImpulseCountSensor(TapHomeSensorBase):
@@ -245,8 +261,16 @@ class TapHomePulseCounterCurrentHourImpulseCountSensor(TapHomeSensorBase):
     @property
     def name(self):
         """Return the name of the sensor."""
-        appendName = " current hour"
-        return self._device.name + appendName
+        appendName = TranslationService.get_text(
+            self.hass.data[TAPHOME_LANGUAGE], "sensor.pulse.current_hour_pulse"
+        )
+        return f"{self._device.name} {appendName}"
+
+    def taphome_to_hass_value(self, value: int):
+        if value is None:
+            return None
+
+        return round(value, 1)
 
 
 class TapHomePulseCounterLastMeasuredFrequencySensor(TapHomeSensorBase):
@@ -260,13 +284,21 @@ class TapHomePulseCounterLastMeasuredFrequencySensor(TapHomeSensorBase):
     @property
     def name(self):
         """Return the name of the sensor."""
-        appendName = " frequency"
-        return self._device.name + appendName
+        appendName = TranslationService.get_text(
+            self.hass.data[TAPHOME_LANGUAGE], "sensor.pulse.frequency_pulse"
+        )
+        return f"{self._device.name} {appendName}"
 
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement that the sensor is expressed in."""
         return FREQUENCY_HERTZ
+
+    def taphome_to_hass_value(self, value: int):
+        if value is None:
+            return None
+
+        return round(value, 1)
 
 
 class TapHomeVariable(TapHomeSensorBase):

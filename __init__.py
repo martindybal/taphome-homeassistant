@@ -1,5 +1,9 @@
 """TapHome integration."""
 from .taphome_sdk import *
+from .TapHomeClimateController import (
+    TapHomeClimateController,
+    TapHomeClimateControllerFactory,
+)
 from homeassistant.helpers.discovery import async_load_platform
 import voluptuous
 import typing
@@ -17,14 +21,19 @@ from homeassistant.const import (
 DOMAIN = "taphome"
 TAPHOME_API_SERVICE = f"{DOMAIN}_TapHomeApiService"
 TAPHOME_DEVICES = f"{DOMAIN}_Devices"
-TAPHOME_CORES = "cores"
+TAPHOME_LANGUAGE = f"{DOMAIN}_language"
+CONF_CORES = "cores"
+CONF_LANGUAGE = "language"
 CONF_CLIMATES = "climates"
 
 CONFIG_SCHEMA = voluptuous.Schema(
     {
         DOMAIN: voluptuous.Schema(
             {
-                TAPHOME_CORES: [
+                voluptuous.Optional(
+                    CONF_LANGUAGE, default="en"
+                ): config_validation.string,
+                CONF_CORES: [
                     voluptuous.All(
                         config_validation.has_at_least_one_key(
                             CONF_LIGHTS,
@@ -56,7 +65,7 @@ CONFIG_SCHEMA = voluptuous.Schema(
                             ): config_validation.ensure_list,
                         },
                     )
-                ]
+                ],
             }
         )
     },
@@ -65,12 +74,13 @@ CONFIG_SCHEMA = voluptuous.Schema(
 
 
 async def async_setup(hass, config):
-    for coreConfig in config[DOMAIN][TAPHOME_CORES]:
+    hass.data[TAPHOME_LANGUAGE] = config[DOMAIN][CONF_LANGUAGE]
+
+    for coreConfig in config[DOMAIN][CONF_CORES]:
         token = coreConfig[CONF_TOKEN]
         tapHomeHttpClientFactory = TapHomeHttpClientFactory()
         tapHomeHttpClient = tapHomeHttpClientFactory.create(token)
         tapHomeApiService = TapHomeApiService(tapHomeHttpClient)
-        hass.data[TAPHOME_API_SERVICE] = tapHomeApiService
 
         devices = await tapHomeApiService.async_discovery_devices()
 
@@ -78,12 +88,12 @@ async def async_setup(hass, config):
             {
                 "config": CONF_LIGHTS,
                 "platform": "light",
-                "map_devices": filter_devices_by_ids,
+                "map_devices": map_devices_by_ids,
             },
             {
                 "config": CONF_COVERS,
                 "platform": "cover",
-                "map_devices": filter_devices_by_ids,
+                "map_devices": map_devices_by_ids,
             },
             {
                 "config": CONF_CLIMATES,
@@ -93,17 +103,17 @@ async def async_setup(hass, config):
             {
                 "config": CONF_SWITCHES,
                 "platform": "switch",
-                "map_devices": filter_devices_by_ids,
+                "map_devices": map_devices_by_ids,
             },
             {
                 "config": CONF_SENSORS,
                 "platform": "sensor",
-                "map_devices": filter_devices_by_ids,
+                "map_devices": map_devices_by_ids,
             },
             {
                 "config": CONF_BINARY_SENSORS,
                 "platform": "binary_sensor",
-                "map_devices": filter_devices_by_ids,
+                "map_devices": map_devices_by_ids,
             },
         ]
 
@@ -111,7 +121,9 @@ async def async_setup(hass, config):
             platformConfig = coreConfig[platform["config"]]
             if platformConfig:
                 map_devices = platform["map_devices"]
-                platformDevices = map_devices(devices, platformConfig)
+                platformDevices = map_devices(
+                    devices, platformConfig, tapHomeApiService
+                )
                 platformConfig = create_platform_config(
                     tapHomeApiService, platformDevices
                 )
@@ -125,22 +137,40 @@ async def async_setup(hass, config):
     return True
 
 
-def create_climates(devices: typing.List[Device], climateConfig):
+def map_devices_by_ids(
+    devices: typing.List[Device],
+    platformConfig: list,
+    tapHomeApiService: TapHomeApiService,
+):
+    return filter_devices_by_ids(devices, platformConfig)
+
+
+def create_climates(
+    devices: typing.List[Device],
+    climateConfig: list,
+    tapHomeApiService: TapHomeApiService,
+):
+    if all(isinstance(climate, int) for climate in climateConfig):
+        return list(
+            map(
+                lambda thermostatId: TapHomeClimateDevice.create(devices, tapHomeApiService, thermostatId),
+                climateConfig,
+            )
+        )
+
     return list(
         map(
             lambda climate: TapHomeClimateDevice.create(
-                devices, climate["thermostat"], climate.get("mode", None)
+                devices,
+                tapHomeApiService,
+                climate["thermostat"],
+                climate.get("mode", None),
+                climate.get("heat", None),
+                climate.get("cool", None),
             ),
             climateConfig,
         )
     )
-
-
-def create_platform_config(tapHomeApiService: TapHomeApiService, devices: list):
-    platformConfig = dict()
-    platformConfig[TAPHOME_API_SERVICE] = tapHomeApiService
-    platformConfig[TAPHOME_DEVICES] = devices
-    return platformConfig
 
 
 def filter_devices_by_ids(devices: typing.List[Device], deviceIds: typing.List[int]):
@@ -156,16 +186,33 @@ def filter_devices_by_id(devices: typing.List[Device], deviceId: int):
     return next(device for device in devices if device.deviceId == deviceId)
 
 
-class TapHomeClimateDevice:
-    def __init__(self, thermostat: Device, mode: Device):
-        self.thermostat = thermostat
-        self.mode = mode
+def create_platform_config(tapHomeApiService: TapHomeApiService, devices: list):
+    platformConfig = dict()
+    platformConfig[TAPHOME_API_SERVICE] = tapHomeApiService
+    platformConfig[TAPHOME_DEVICES] = devices
+    return platformConfig
 
-    def create(devices: typing.List[Device], thermostatId: int, modeId: int):
-        assert thermostatId >= 0
-        thermostat = filter_devices_by_id(devices, thermostatId)
-        if modeId >= 0:
-            mode = filter_devices_by_id(devices, modeId)
-        else:
-            mode = None
-        return TapHomeClimateDevice(thermostat, mode)
+
+class TapHomeClimateDevice:
+    def __init__(
+        self,
+        thermostat: Device,
+        controller: TapHomeClimateController,
+    ):
+        self.thermostat = thermostat
+        self.controller = controller
+
+    def create(
+        devices: typing.List[Device],
+        tapHomeApiService: TapHomeApiService,
+        thermostat_id: int,
+        mode_id: typing.Optional[int] = None,
+        heat_id: typing.Optional[int] = None,
+        cool_id: typing.Optional[int] = None,
+    ) -> TapHomeClimateController:
+        thermostat = filter_devices_by_id(devices, thermostat_id)
+        controller = TapHomeClimateControllerFactory.create(
+            devices, tapHomeApiService, mode_id, heat_id, cool_id
+        )
+
+        return TapHomeClimateDevice(thermostat, controller)
