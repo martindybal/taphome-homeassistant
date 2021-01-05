@@ -1,10 +1,11 @@
+import logging
 from .Device import Device
 from .TapHomeHttpClientFactory import TapHomeHttpClientFactory
 from .ValueChangeResult import ValueChangeResult
 from .ValueType import ValueType
-from .SwitchStates import SwitchStates
 
-import sys
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class TapHomeApiService:
@@ -13,19 +14,28 @@ class TapHomeApiService:
 
     async def async_discovery_devices(self):
         json = await self.tapHomeHttpClient.async_api_get("discovery")
-        devices = list(map(lambda device: Device.create(device), json["devices"]))
-
-        return devices
+        try:
+            devices = list(map(lambda device: Device.create(device), json["devices"]))
+            return devices
+        except Exception:
+            _LOGGER.exception(f"async_discovery_devices fails \n {json}")
 
     async def async_get_device_values(self, deviceId: int):
-        deviceInfo = await self.tapHomeHttpClient.async_api_get(
-            f"getDeviceValue/{deviceId}"
-        )
-        return deviceInfo["values"]
+        deviceInfo = None
+        try:
+            deviceInfo = await self.tapHomeHttpClient.async_api_get(
+                f"getDeviceValue/{deviceId}"
+            )
+            return deviceInfo["values"]
+        except Exception:
+            _LOGGER.exception(
+                f"async_get_device_values for {deviceId} fails \n {deviceInfo}"
+            )
 
     async def async_set_device_values(
         self, deviceId: int, values: list
     ) -> ValueChangeResult:
+        json = None
         try:
             requestBody = {
                 "deviceId": deviceId,
@@ -47,7 +57,8 @@ class TapHomeApiService:
                 )
                 else ValueChangeResult.CHANGED
             )
-        except:
+        except Exception:
+            _LOGGER.exception(f"async_get_device_values for {deviceId} fails \n {json}")
             return ValueChangeResult.FAILED
 
     def create_device_value(self, valueType: ValueType, value):
