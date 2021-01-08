@@ -1,5 +1,6 @@
 """TapHome light integration."""
 from .taphome_sdk import *
+from .taphome_entity import TapHomeEntity
 from .TranslationService import TranslationService
 
 import logging
@@ -23,17 +24,12 @@ from homeassistant.const import (
 )
 
 
-class TapHomeSensorBase(Entity):
+class TapHomeSensorBase(TapHomeEntity, Entity):
     def __init__(self, sensorService: SensorService, device: Device):
+        super(TapHomeSensorBase, self).__init__(device=device)
+
         self._sensorService = sensorService
-        self._device = device
-
         self._state = None
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._device.name
 
     @property
     def state(self):

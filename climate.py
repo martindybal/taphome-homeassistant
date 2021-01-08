@@ -1,5 +1,6 @@
 """TapHome climate integration."""
 from .taphome_sdk import *
+from .taphome_entity import TapHomeEntity
 from enum import Enum
 
 import logging
@@ -43,7 +44,7 @@ async def async_create_climate(
     return climates
 
 
-class TapHomeClimate(ClimateEntity):
+class TapHomeClimate(TapHomeEntity, ClimateEntity):
     """Representation of an Thermostat"""
 
     def __init__(
@@ -51,8 +52,10 @@ class TapHomeClimate(ClimateEntity):
         thermostatService: ThermostatService,
         device: TapHomeClimateDevice,
     ):
+        super(TapHomeClimate, self).__init__(device=device.thermostat)
+
         self._thermostatService = thermostatService
-        self._device = device
+        self._controller = device.controller
         self._supported_features = SUPPORT_TARGET_TEMPERATURE
         self._target_temperature = None
         self._current_temperature = None
@@ -62,10 +65,6 @@ class TapHomeClimate(ClimateEntity):
     @property
     def supported_features(self):
         return self._supported_features
-
-    @property
-    def name(self):
-        return self._device.thermostat.name
 
     @property
     def temperature_unit(self):
@@ -90,18 +89,18 @@ class TapHomeClimate(ClimateEntity):
     @property
     def hvac_mode(self):
         """Return current operation ie. heat, cool, idle."""
-        return self._device.controller.hvac_mode
+        return self._controller.hvac_mode
 
     @property
     def hvac_modes(self):
         """Return the list of available operation/controller modes."""
-        return self._device.controller.hvac_modes
+        return self._controller.hvac_modes
 
     async def async_set_temperature(self, **kwargs):
         temp = kwargs.get(ATTR_TEMPERATURE)
 
         result = await self._thermostatService.async_set_desired_temperature(
-            self._device.thermostat, temp
+            self._device, temp
         )
 
         if result == ValueChangeResult.FAILED:
@@ -111,19 +110,17 @@ class TapHomeClimate(ClimateEntity):
 
     async def async_set_hvac_mode(self, hvac_mode):
         """Set new target hvac mode."""
-        await self._device.controller.async_set_hvac_mode(hvac_mode)
+        await self._controller.async_set_hvac_mode(hvac_mode)
 
     def async_update(self, **kwargs):
         return self.async_refresh_state()
 
     async def async_refresh_state(self):
         await self.async_refresh_thermostat_state()
-        await self._device.controller.async_refresh_state()
+        await self._controller.async_refresh_state()
 
     async def async_refresh_thermostat_state(self):
-        state = await self._thermostatService.async_get_thermostat_state(
-            self._device.thermostat
-        )
+        state = await self._thermostatService.async_get_thermostat_state(self._device)
         self._target_temperature = state.desired_temperature
         self._current_temperature = state.real_temperature
         self._min_temperature = state.min_temperature
