@@ -1,0 +1,16 @@
+{
+    "name": "TapHome Home Assistant integration",
+    "content_in_root": true,    
+    "render_readme": true,
+    "hacs": "1.10.1",
+    "domains": [
+        "binary_sensor",
+        "climate",
+        "cover",
+        "light",
+        "sensor",
+        "switch"
+    ],
+    "iot_class": "Cloud Polling",
+    "homeassistant": "2021.1.5"
+  }  
