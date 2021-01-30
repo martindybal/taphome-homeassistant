@@ -10,5 +10,6 @@
         "light",
         "sensor",
         "switch"
-    ]
+    ],
+    "content_in_root": true
   }  
