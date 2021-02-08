@@ -1,4 +1,8 @@
+import logging
 from .ValueType import ValueType
+
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class Device:
@@ -22,12 +26,12 @@ class Device:
         name = device["name"]
         description = device["description"]
         type = device["type"]
-        supportedValues = list(
-            map(
-                lambda supportedValue: ValueType(supportedValue["valueTypeId"]),
-                device["supportedValues"],
-            )
-        )
+        supportedValues = []
+        for supportedValue in device["supportedValues"]:
+            try:
+                supportedValues.append(ValueType(supportedValue["valueTypeId"]))
+            except Exception:
+                _LOGGER.exception(f"Unkown ValueType")
 
         return Device(deviceId, name, description, type, supportedValues)
 

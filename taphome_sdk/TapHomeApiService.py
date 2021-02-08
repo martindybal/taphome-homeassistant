@@ -15,7 +15,12 @@ class TapHomeApiService:
     async def async_discovery_devices(self):
         json = await self.tapHomeHttpClient.async_api_get("discovery")
         try:
-            devices = list(map(lambda device: Device.create(device), json["devices"]))
+            devices = []
+            for device in json["devices"]:
+                try:
+                    devices.append(Device.create(device))
+                except Exception:
+                    _LOGGER.exception(f"Device.create fails")
             return devices
         except Exception:
             _LOGGER.exception(f"async_discovery_devices fails \n {json}")
