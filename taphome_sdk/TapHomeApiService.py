@@ -1,5 +1,6 @@
 import logging
 from .Device import Device
+from .Location import Location
 from .TapHomeHttpClientFactory import TapHomeHttpClientFactory
 from .ValueChangeResult import ValueChangeResult
 from .ValueType import ValueType
@@ -13,8 +14,9 @@ class TapHomeApiService:
         self.tapHomeHttpClient = tapHomeHttpClient
 
     async def async_discovery_devices(self):
-        json = await self.tapHomeHttpClient.async_api_get("discovery")
+        json = {}
         try:
+            json = await self.tapHomeHttpClient.async_api_get("discovery")
             devices = []
             for device in json["devices"]:
                 try:
@@ -24,6 +26,14 @@ class TapHomeApiService:
             return devices
         except Exception:
             _LOGGER.exception(f"async_discovery_devices fails \n {json}")
+
+    async def async_get_location(self):
+        json = {}
+        try:
+            json = await self.tapHomeHttpClient.async_api_get("location")
+            return Location.create(json)
+        except Exception:
+            _LOGGER.exception(f"async_get_location fails \n {json}")
 
     async def async_get_device_values(self, deviceId: int):
         deviceInfo = None
