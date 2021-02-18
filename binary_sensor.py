@@ -6,11 +6,45 @@ import logging
 
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_MOTION,
+    DEVICE_CLASS_CONNECTIVITY,
     BinarySensorEntity,
 )
 
 
 from . import TAPHOME_API_SERVICE, TAPHOME_DEVICES
+
+
+class TapHomeIsAliveSensor(BinarySensorEntity):
+    sensor_value_type = ValueType.Motion
+
+    def __init__(self, tapHomeApiService: TapHomeApiService):
+        self._tapHomeApiService = tapHomeApiService
+        self._is_on = None
+
+    @property
+    def unique_id(self):
+        return "taphome_is_alive_sensor.taphome".lower()
+
+    @property
+    def name(self):
+        return "TapHome is alive sensor"
+
+    @property
+    def device_class(self):
+        """Return type of sensor."""
+        return DEVICE_CLASS_CONNECTIVITY
+
+    @property
+    def is_on(self) -> bool:
+        """Return if the binary sensor is currently on or off."""
+        return self._is_on
+
+    async def async_update(self):
+        try:
+            location = await self._tapHomeApiService.async_get_location()
+            self._is_on = location is not None
+        except Exception:
+            self._is_on = False
 
 
 class TapHomeBinarySensorBase(TapHomeEntity, BinarySensorEntity):
@@ -81,7 +115,7 @@ async def async_setup_platform(hass, config, async_add_entities, platformConfig)
     devices = platformConfig[TAPHOME_DEVICES]
     sensorService = SensorService(tapHomeApiService)
 
-    sensors = []
+    sensors = [TapHomeIsAliveSensor(tapHomeApiService)]
     for device in devices:
         for sensor in await async_create_sensors(sensorService, device):
             sensors.append(sensor)

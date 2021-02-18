@@ -5,6 +5,7 @@ from .Device import Device
 from .SwitchStates import SwitchStates
 from .TapHomeHttpClientFactory import TapHomeHttpClientFactory
 from .LightService import LightService
+from .Location import Location
 from .TapHomeApiService import TapHomeApiService
 from .ThermostatService import ThermostatService
 from .SwitchService import SwitchService
