@@ -14,7 +14,7 @@
 This is official [HACS](https://hacs.xyz) repository. So [use HACS](https://hacs.xyz/docs/basic/getting_started) to install it! Or you can
 copy this folder to `<config_dir>/custom_components/taphome/` manually if you want.
 
-Add TapHome entry in to your `configuration.yaml`. Configuration scheme is described in [wiki](https://github.com/martindybal/taphome-homeassistant/wiki/Configuration).
+Add `taphome` entry in to your `configuration.yaml`. Configuration scheme is described in [wiki](https://github.com/martindybal/taphome-homeassistant/wiki/Configuration).
 
 ```yaml
 taphome:
