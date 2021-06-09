@@ -22,7 +22,7 @@ class TapHomeApiService:
                 try:
                     devices.append(Device.create(device))
                 except Exception:
-                    _LOGGER.exception(f"Device.create fails")
+                    _LOGGER.exception(f"Device.create fails \n {device} \n {json}")
             return devices
         except Exception:
             _LOGGER.exception(f"async_discovery_devices fails \n {json}")
