@@ -113,7 +113,7 @@ class TapHomeCover(TapHomeEntity, CoverEntity):
             self._position = position
 
     async def async_set_cover_tilt_position(self, **kwargs):
-        """Move the cover til to a specific position."""
+        """Move the cover tilt to a specific position."""
         tilt = kwargs.get(ATTR_TILT_POSITION)
         taphomeTilt = 1 - tilt / 100
         result = await self._coverService.async_set_cover_tilt(
