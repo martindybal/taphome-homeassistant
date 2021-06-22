@@ -95,10 +95,10 @@ class TapHomeDataUpdateCoordinator(DataUpdateCoordinator):
                 device = self.get_device_data(device_value["deviceId"])
 
                 if device.taphome_state_type is not None:
-                    device.taphome_state = device.taphome_state_type.create(
-                        device_value["values"]
-                    )
-                    self.schedule_update_ha_state(device)
+                    current_state = device.taphome_state_type(device_value["values"])
+                    if not device.taphome_state == current_state:
+                        device.taphome_state = current_state
+                        self.schedule_update_ha_state(device)
 
     def get_device_data(
         self, taphome_device_id: int

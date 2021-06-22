@@ -3,6 +3,7 @@ from .Device import Device
 from .ValueChangeResult import ValueChangeResult
 from .ValueType import ValueType
 from .TapHomeApiService import TapHomeApiService
+from .taphome_device_state import TapHomeState
 from .DeviceServiceHelper import __DeviceServiceHelper as DeviceServiceHelper
 from .SwitchStates import SwitchStates
 
@@ -11,19 +12,21 @@ import logging
 _LOGGER = logging.getLogger(__name__)
 
 
-class SwitchState:
+class SwitchState(TapHomeState):
     def __init__(
         self,
-        switch_state: SwitchStates,
+        switch_values: dict,
     ):
-        self.switch_state = switch_state
-
-    @staticmethod
-    def create(values: dict):
-        switch_state = SwitchStates(
-            DeviceServiceHelper.get_device_value(values, ValueType.SwitchState)
+        super().__init__(switch_values)
+        self.switch_state = SwitchStates(
+            self.get_device_value(switch_values, ValueType.SwitchState)
         )
-        return SwitchState(switch_state)
+
+    def __eq__(self, other):
+        if isinstance(other, SwitchState):
+            return super().__eq__(other) and self.switch_state == other.switch_state
+
+        return False
 
 
 class SwitchService:
@@ -39,7 +42,7 @@ class SwitchService:
             if switch_values is None:
                 return None
 
-            return SwitchState.create(switch_values)
+            return SwitchState(switch_values)
         except:
             _LOGGER.exception(f"async_get_switch_state for {device_id} fails")
             return None
