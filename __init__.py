@@ -1,10 +1,12 @@
 """TapHome integration."""
+import asyncio
 from .add_entry_request import AddEntryRequest
 from .switch import SwitchConfigEntry
 from .taphome_entity import TapHomeConfigEntry
 from .taphome_sdk import *
 from .const import *
 
+from async_timeout import timeout
 from .TapHomeClimateController import (
     TapHomeClimateController,
     TapHomeClimateControllerFactory,
@@ -22,7 +24,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 
-# from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.helpers.update_coordinator import ConfigEntryAuthFailed
 
 from homeassistant.const import (
     CONF_TOKEN,
@@ -104,6 +106,14 @@ async def async_setup(hass: HomeAssistant, config: ConfigEntry) -> bool:
             hass, update_interval, taphome_api_service=tapHome_api_service
         )
 
+        try:
+            async with timeout(10):
+                await coordinator.async_refresh()
+        except asyncio.TimeoutError:
+            hass.async_create_task(coordinator.async_refresh())
+        except NotImplementedError:
+            return False
+
         platforms = [
             {
                 "domain": SWITCH_DOMAIN,
@@ -137,7 +147,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigEntry) -> bool:
                 config,
             )
 
-        hass.async_create_task(coordinator.async_refresh())
     return True
 
 

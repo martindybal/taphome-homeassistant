@@ -1,5 +1,5 @@
 import aiohttp
-from aiohttp.client_reqrep import ClientResponse
+from aiohttp.client_reqrep import ClientResponse, ClientResponseError
 import logging
 
 
@@ -30,7 +30,16 @@ class TapHomeHttpClientFactory:
 
         async def __get_json(self, response: ClientResponse):
             try:
-                return await response.json()
+                if response.status == 200:
+                    return await response.json()
+                else:
+                    raise ClientResponseError(
+                        response.request_info,
+                        response.history,
+                        status=response.status,
+                        message=response.reason,
+                        headers=response.headers,
+                    )
             except:
                 _LOGGER.warning(
                     f"request {response.url} {response.request_info.headers}\nstatus {response.status} {response.reason}\nheaders {response.headers}\ntext {await response.text()}\n"

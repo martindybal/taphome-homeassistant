@@ -5,6 +5,7 @@ from .Location import Location
 from .TapHomeHttpClientFactory import TapHomeHttpClientFactory
 from .ValueChangeResult import ValueChangeResult
 from .ValueType import ValueType
+from aiohttp.client_reqrep import ClientResponseError
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -52,8 +53,12 @@ class TapHomeApiService:
         deviceInfo = None
         try:
             return await self.taphome_api_service.async_api_get("getAllDevicesValues")
-        except Exception:
-            """async_get_all_devices_values fails"""
+        except Exception as ex:
+            if hasattr(ex, "status") and ex.status == 501:
+                _LOGGER.exception(
+                    f"Request not supported by core! Please update your core to latest version"
+                )
+                raise
             _LOGGER.exception(f"async_get_all_devices_values fails \n {deviceInfo}")
             return None
 

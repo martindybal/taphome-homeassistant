@@ -8,7 +8,11 @@ import logging
 from async_timeout import timeout
 from voluptuous.schema_builder import Undefined
 
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.helpers.update_coordinator import (
+    DataUpdateCoordinator,
+    ConfigEntryAuthFailed,
+    UpdateFailed,
+)
 
 from .const import DOMAIN
 from .taphome_sdk import *
@@ -61,8 +65,6 @@ class TapHomeDataUpdateCoordinator(DataUpdateCoordinator):
     async def _async_update_data(self):
         """Fetch data from TapHome."""
         try:
-            _LOGGER.info(f"Fetch data from TapHome Core")
-
             await self.async_discovery_devices()
 
             async with timeout(10):
@@ -70,7 +72,8 @@ class TapHomeDataUpdateCoordinator(DataUpdateCoordinator):
 
                 return self._devices
         except Exception as ex:
-            raise  # For development reason
+            if hasattr(ex, "status") and ex.status == 501:
+                raise NotImplementedError()  # NotImplementedError is reraised to fail integration loading
             raise UpdateFailed(f"Invalid response from API: {ex}") from ex
 
     async def async_discovery_devices(self) -> None:
