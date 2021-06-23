@@ -107,7 +107,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigEntry) -> bool:
         )
 
         try:
-            async with timeout(10):
+            async with timeout(6):
                 await coordinator.async_refresh()
         except asyncio.TimeoutError:
             hass.async_create_task(coordinator.async_refresh())
