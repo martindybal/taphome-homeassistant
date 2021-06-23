@@ -10,7 +10,7 @@ from .TapHomeClimateController import (
     TapHomeClimateControllerFactory,
 )
 from .coordinator import TapHomeDataUpdateCoordinator
-from homeassistant.helpers.discovery import async_load_platform
+from homeassistant.helpers.discovery import load_platform
 import voluptuous
 import typing
 import homeassistant.helpers.config_validation as config_validation
@@ -20,6 +20,7 @@ from homeassistant.config_entries import ConfigEntry
 
 
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
+from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 
 # from homeassistant.exceptions import ConfigEntryAuthFailed
 
@@ -103,29 +104,40 @@ async def async_setup(hass: HomeAssistant, config: ConfigEntry) -> bool:
             hass, update_interval, taphome_api_service=tapHome_api_service
         )
 
-        hass.async_create_task(coordinator.async_refresh())
+        platforms = [
+            {
+                "domain": SWITCH_DOMAIN,
+                "config_key": CONF_SWITCHES,
+                "config_entry": SwitchConfigEntry,
+            },
+            {
+                "domain": LIGHT_DOMAIN,
+                "config_key": CONF_LIGHTS,
+                "config_entry": TapHomeConfigEntry,
+            },
+        ]
+        hass.data[DOMAIN] = {}
+        for platform in platforms:
+            platform_config = core_config[platform["config_key"]]
+            config_entries = map_config_entries(
+                platform["config_entry"], platform_config
+            )
 
-        platform_config = core_config[CONF_SWITCHES]
-        config_entries = map_config_entries(platform_config)
+            add_entry_requests = map_add_entry_requests(
+                config_entries, coordinator, tapHome_api_service
+            )
 
-        add_entry_requests = map_add_entry_requests(
-            config_entries, coordinator, tapHome_api_service
-        )
+            hass.data[DOMAIN][platform["config_key"]] = add_entry_requests
 
-        hass.data[DOMAIN] = {
-            CONF_SWITCHES: add_entry_requests,
-        }
-
-        hass.async_create_task(
-            async_load_platform(
+            load_platform(
                 hass,
-                SWITCH_DOMAIN,
+                platform["domain"],
                 DOMAIN,
                 {},
                 config,
             )
-        )
 
+        hass.async_create_task(coordinator.async_refresh())
     return True
 
 
@@ -136,10 +148,12 @@ def read_from_config_or_default(config: dict, key: str, default_value) -> typing
         return default_value
 
 
-def map_config_entries(platform_config: typing.List) -> typing.List[TapHomeConfigEntry]:
+def map_config_entries(
+    config_entry, platform_config: typing.List
+) -> typing.List[TapHomeConfigEntry]:
     return list(
         map(
-            lambda device_config: SwitchConfigEntry(device_config),
+            lambda device_config: config_entry(device_config),
             platform_config,
         )
     )

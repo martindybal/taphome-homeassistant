@@ -1,7 +1,6 @@
 from .Device import Device
 from .ValueType import ValueType
 from .TapHomeApiService import TapHomeApiService
-from .DeviceServiceHelper import __DeviceServiceHelper as DeviceServiceHelper
 
 
 class SensorService:

@@ -39,9 +39,10 @@ class TapHomeEntity(CoordinatorEntity):
         coordinator: TapHomeDataUpdateCoordinator,
         taphome_state_type,
     ):
+        self._taphome_device_id = taphome_device_id
+
         CoordinatorEntity.__init__(self, coordinator)
         coordinator.register_entity(taphome_device_id, self, taphome_state_type)
-        self._taphome_device_id = taphome_device_id
 
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator. Coordinator call schedule_update_ha_state when is needed"""
@@ -66,6 +67,34 @@ class TapHomeEntity(CoordinatorEntity):
     @property
     def taphome_device(self) -> Device:
         return self.coordinator.get_device(self._taphome_device_id)
+
+    @staticmethod
+    def convert_taphome_byte_to_ha(value: int):
+        """Convert 0..1 to 0..255 scale."""
+        if value is None:
+            return None
+        return value * 255
+
+    @staticmethod
+    def convert_ha_byte_to_taphome(value: int):
+        """Convert 0..255 to 0..1 scale."""
+        if value is None:
+            return None
+        return max(1, round((value / 255) * 100)) / 100
+
+    @staticmethod
+    def convert_taphome_percentage_to_ha(value: int):
+        """Convert 0..1 to 0..100 scale."""
+        if value is None:
+            return None
+        return value * 100
+
+    @staticmethod
+    def convert_ha_percentage_to_taphome(value: int):
+        """Convert 0..100 to 0..1 scale."""
+        if value is None:
+            return None
+        return value / 100
 
 
 class UpdateTapHomeState(object):

@@ -14,7 +14,7 @@ from .taphome_entity import *
 
 class SwitchConfigEntry(TapHomeConfigEntry):
     def __init__(self, device_config: dict):
-        super(SwitchConfigEntry, self).__init__(device_config)
+        super().__init__(device_config)
         self._device_class = self.get_optional(device_config, "device_class", None)
 
     @property
@@ -31,7 +31,7 @@ class TapHomeSwitch(TapHomeEntity, SwitchEntity):
         coordinator: TapHomeDataUpdateCoordinator,
         switch_service: SwitchService,
     ):
-        super(TapHomeSwitch, self).__init__(config_entry.id, coordinator, SwitchState)
+        super().__init__(config_entry.id, coordinator, SwitchState)
         self.switch_service = switch_service
         self._device_class = config_entry.device_class
 

@@ -4,7 +4,6 @@ from .ValueChangeResult import ValueChangeResult
 from .ValueType import ValueType
 from .TapHomeApiService import TapHomeApiService
 from .taphome_device_state import TapHomeState
-from .DeviceServiceHelper import __DeviceServiceHelper as DeviceServiceHelper
 from .SwitchStates import SwitchStates
 
 import logging

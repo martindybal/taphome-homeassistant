@@ -2,7 +2,6 @@ from .ValueChangeResult import ValueChangeResult
 from .ValueType import ValueType
 from .Device import Device
 from .TapHomeApiService import TapHomeApiService
-from .DeviceServiceHelper import __DeviceServiceHelper as DeviceServiceHelper
 
 
 class ThermostatState:

@@ -2,8 +2,6 @@ from .Device import Device
 from .ValueChangeResult import ValueChangeResult
 from .ValueType import ValueType
 from .TapHomeApiService import TapHomeApiService
-from .DeviceServiceHelper import __DeviceServiceHelper as DeviceServiceHelper
-from .SwitchStates import SwitchStates
 
 
 class MultiValueSwitchState:

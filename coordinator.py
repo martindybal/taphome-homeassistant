@@ -70,7 +70,7 @@ class TapHomeDataUpdateCoordinator(DataUpdateCoordinator):
 
                 return self._devices
         except Exception as ex:
-            raise
+            raise  # For development reason
             raise UpdateFailed(f"Invalid response from API: {ex}") from ex
 
     async def async_discovery_devices(self) -> None:
@@ -112,5 +112,5 @@ class TapHomeDataUpdateCoordinator(DataUpdateCoordinator):
     def schedule_update_ha_state(
         self, device: TapHomeDataUpdateCoordinatorDevice
     ) -> None:
-        if device.ha_entity is not None:
+        if device.ha_entity is not None and device.ha_entity.hass is not None:
             device.ha_entity.schedule_update_ha_state()
