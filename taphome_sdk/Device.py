@@ -31,7 +31,7 @@ class Device:
             try:
                 supported_values.append(ValueType(supported_value["valueTypeId"]))
             except Exception:
-                _LOGGER.exception(f"Unkown ValueType")
+                _LOGGER.warning(f"{supported_value} is not a valid ValueType")
 
         return Device(id, name, description, type, supported_values)
 
