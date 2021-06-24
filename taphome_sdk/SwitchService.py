@@ -33,10 +33,10 @@ class SwitchService:
     def __init__(self, taphome_api_service: TapHomeApiService):
         self.taphome_api_service = taphome_api_service
 
-    async def async_get_switch_state(self, device_id: int):
+    async def async_get_state(self, device: Device):
         try:
             switch_values = await self.taphome_api_service.async_get_device_values(
-                device_id
+                device.id
             )
 
             if switch_values is None:
@@ -44,10 +44,10 @@ class SwitchService:
 
             return SwitchState(switch_values)
         except:
-            _LOGGER.exception(f"async_get_switch_state for {device_id} fails")
+            _LOGGER.error(f"TapHome async_get_state for {device.id} failed")
             return None
 
-    def async_turn_switch(self, switch_state: SwitchStates, device: Device) -> None:
+    def async_turn(self, switch_state: SwitchStates, device: Device) -> None:
         values = [
             self.taphome_api_service.create_device_value(
                 ValueType.SwitchState, switch_state.value

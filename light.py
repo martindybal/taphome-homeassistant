@@ -1,9 +1,13 @@
 """TapHome light integration."""
 import typing
 
-from homeassistant.components.light import (ATTR_BRIGHTNESS, ATTR_HS_COLOR,
-                                            SUPPORT_BRIGHTNESS, SUPPORT_COLOR,
-                                            LightEntity)
+from homeassistant.components.light import (
+    ATTR_BRIGHTNESS,
+    ATTR_HS_COLOR,
+    SUPPORT_BRIGHTNESS,
+    SUPPORT_COLOR,
+    LightEntity,
+)
 from homeassistant.const import CONF_LIGHTS
 from homeassistant.core import HomeAssistant
 
@@ -24,15 +28,13 @@ class TapHomeLight(TapHomeEntity[LightState], LightEntity):
         light_service: LightService,
     ):
         super().__init__(config_entry.id, coordinator, LightState)
-
         self.light_service = light_service
-
         self._supported_features = None
 
     @property
     def supported_features(self):
         """Flag supported features."""
-        if self.taphome_state is None:
+        if self._supported_features is None and self.taphome_state is None:
             return 0
 
         if self._supported_features is None:
@@ -83,7 +85,7 @@ class TapHomeLight(TapHomeEntity[LightState], LightEntity):
             saturation = TapHomeEntity.convert_ha_percentage_to_taphome(saturation)
 
         async with UpdateTapHomeState(self) as state:
-            await self.light_service.async_turn_on_light(
+            await self.light_service.async_turn_on(
                 self.taphome_device, brightness, hue, saturation
             )
             state.switch_state = SwitchStates.ON
@@ -97,7 +99,7 @@ class TapHomeLight(TapHomeEntity[LightState], LightEntity):
     async def async_turn_off(self, **kwargs):
         """Turn device off."""
         async with UpdateTapHomeState(self) as state:
-            await self.light_service.async_turn_off_light(self.taphome_device)
+            await self.light_service.async_turn_off(self.taphome_device)
             state.switch_state = SwitchStates.OFF
 
 

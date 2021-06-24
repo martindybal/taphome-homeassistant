@@ -56,9 +56,7 @@ class TapHomeSwitch(TapHomeEntity[SwitchState], SwitchEntity):
 
     async def async_turn(self, switch_state: SwitchStates):
         async with UpdateTapHomeState(self) as state:
-            await self.switch_service.async_turn_switch(
-                switch_state, self.taphome_device
-            )
+            await self.switch_service.async_turn(switch_state, self.taphome_device)
             state.switch_state = switch_state
 
 

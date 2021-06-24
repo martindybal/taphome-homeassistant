@@ -2,15 +2,13 @@
 # from .switch import TapHomeSwitch
 import logging
 from datetime import timedelta
-from typing import List
 
 from aiohttp.client_reqrep import ClientResponseError
-from async_timeout import timeout
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.update_coordinator import (ConfigEntryAuthFailed,
-                                                      DataUpdateCoordinator,
-                                                      UpdateFailed)
-from voluptuous.schema_builder import Undefined
+from homeassistant.helpers.update_coordinator import (
+    DataUpdateCoordinator,
+    UpdateFailed,
+)
 
 from .const import DOMAIN
 from .taphome_sdk import *

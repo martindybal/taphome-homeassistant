@@ -15,6 +15,7 @@ class TapHomeHttpClientFactory:
         async def async_api_get(self, endpoint: str):
             async with aiohttp.ClientSession() as session:
                 requestUrl = self.__get_request_url(endpoint)
+                _LOGGER.info(f"TapHome get {requestUrl}")
                 headers = self.__get_authorization_header()
                 async with session.get(requestUrl, headers=headers) as response:
                     return await self.__get_json(response)
@@ -22,6 +23,7 @@ class TapHomeHttpClientFactory:
         async def async_api_post(self, endpoint: str, body):
             async with aiohttp.ClientSession() as session:
                 requestUrl = self.__get_request_url(endpoint)
+                _LOGGER.info(f"TapHome post {requestUrl}")
                 headers = self.__get_authorization_header()
                 async with session.post(
                     requestUrl, headers=headers, json=body
