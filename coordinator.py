@@ -4,6 +4,7 @@ from datetime import timedelta
 from typing import List
 from homeassistant.helpers.entity import Entity
 import logging
+from aiohttp.client_reqrep import ClientResponseError
 
 from async_timeout import timeout
 from voluptuous.schema_builder import Undefined
@@ -21,16 +22,42 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class TapHomeDataUpdateCoordinatorDevice:
-    taphome_device_id: int
-    taphome_device: Device
-    ha_entity: Entity
-
-    def __init__(self, taphome_device_id: int):
-        self.taphome_device_id = taphome_device_id
-        self.taphome_device = None
-        self.ha_entity = None
-        self.taphome_state = None
+    def __init__(self):
+        self._ha_entity = None
+        self._taphome_device = None
+        self._taphome_state = None
         self.taphome_state_type = None
+
+    @property
+    def ha_entity(self) -> Entity:
+        return self._ha_entity
+
+    @ha_entity.setter
+    def ha_entity(self, entity: Entity):
+        self._ha_entity = entity
+        self._schedule_update_ha_state()
+
+    @property
+    def taphome_device(self):
+        return self._taphome_device
+
+    @taphome_device.setter
+    def taphome_device(self, device):
+        self._taphome_device = device
+        self._schedule_update_ha_state()
+
+    @property
+    def taphome_state(self):
+        return self._taphome_state
+
+    @taphome_state.setter
+    def taphome_state(self, new_state):
+        self._taphome_state = new_state
+        self._schedule_update_ha_state()
+
+    def _schedule_update_ha_state(self) -> None:
+        if self.ha_entity is not None and self.ha_entity.hass is not None:
+            self.ha_entity.schedule_update_ha_state()
 
 
 class TapHomeDataUpdateCoordinator(DataUpdateCoordinator):
@@ -66,54 +93,58 @@ class TapHomeDataUpdateCoordinator(DataUpdateCoordinator):
         """Fetch data from TapHome."""
         try:
             await self.async_discovery_devices()
-
-            async with timeout(10):
-                await self.async_update_devices_values()
-
-                return self._devices
+            await self.async_update_devices_values()
+            return self._devices
         except Exception as ex:
-            if hasattr(ex, "status") and ex.status == 501:
-                raise NotImplementedError()  # NotImplementedError is reraised to fail integration loading
-            raise UpdateFailed(f"Invalid response from API: {ex}") from ex
+            exception_info = ""
+            _LOGGER.warning(ex.__class__.__name__)
+            if isinstance(ex, ClientResponseError):
+                if ex.status == 501:
+                    raise NotImplementedError()  # NotImplementedError is reraised to fail integration loading
+                else:
+                    exception_info = f"{ex.code} - {ex.request_info.url} {ex.message}"
+            # raise
+            raise UpdateFailed(f"Invalid response from API: {exception_info}") from ex
 
     async def async_discovery_devices(self) -> None:
         if not self._was_devices_discovered:
-            for (
-                taphome_device
-            ) in await self.taphome_api_service.async_discovery_devices():
-                device = self.get_device_data(taphome_device.id)
-                device.taphome_device = taphome_device
-                self.schedule_update_ha_state(device)
-            self._was_devices_discovered = True
+            discovery_devices = await self.taphome_api_service.async_discovery_devices()
+            if discovery_devices is not None:
+                for taphome_device in discovery_devices:
+                    device = self.get_device_data(taphome_device.id)
+                    device.taphome_device = taphome_device
+                self._was_devices_discovered = True
 
     async def async_update_devices_values(self) -> None:
         all_devices_values = (
             await self.taphome_api_service.async_get_all_devices_values()
         )
+        if all_devices_values is not None:
+            if (
+                self.last_update_devices_values_timestamp
+                < all_devices_values["timestamp"]
+            ):
+                self.last_update_devices_values_timestamp = all_devices_values[
+                    "timestamp"
+                ]
 
-        if self.last_update_devices_values_timestamp < all_devices_values["timestamp"]:
-            self.last_update_devices_values_timestamp = all_devices_values["timestamp"]
+                for device_value in all_devices_values["devices"]:
+                    device = self.get_device_data(device_value["deviceId"])
 
-            for device_value in all_devices_values["devices"]:
-                device = self.get_device_data(device_value["deviceId"])
+                    if device.taphome_state_type is not None:
+                        current_state = device.taphome_state_type(
+                            device_value["values"]
+                        )
+                        if not device.taphome_state == current_state:
+                            device.taphome_state = current_state
 
-                if device.taphome_state_type is not None:
-                    current_state = device.taphome_state_type(device_value["values"])
-                    if not device.taphome_state == current_state:
-                        device.taphome_state = current_state
-                        self.schedule_update_ha_state(device)
+        else:
+            for device_id in self._devices:
+                self._devices[device_id].taphome_state = None
 
     def get_device_data(
         self, taphome_device_id: int
     ) -> TapHomeDataUpdateCoordinatorDevice:
         if not taphome_device_id in self._devices:
-            self._devices[taphome_device_id] = TapHomeDataUpdateCoordinatorDevice(
-                taphome_device_id
-            )
+            self._devices[taphome_device_id] = TapHomeDataUpdateCoordinatorDevice()
         return self._devices[taphome_device_id]
-
-    def schedule_update_ha_state(
-        self, device: TapHomeDataUpdateCoordinatorDevice
-    ) -> None:
-        if device.ha_entity is not None and device.ha_entity.hass is not None:
-            device.ha_entity.schedule_update_ha_state()
