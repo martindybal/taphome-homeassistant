@@ -5,23 +5,32 @@ import typing
 import homeassistant.helpers.config_validation as config_validation
 import voluptuous
 from async_timeout import timeout
+from homeassistant.components.cover import DOMAIN as COVER_DOMAIN
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (CONF_BINARY_SENSORS, CONF_COVERS, CONF_LIGHTS,
-                                 CONF_SENSORS, CONF_SWITCHES, CONF_TOKEN)
+from homeassistant.const import (
+    CONF_BINARY_SENSORS,
+    CONF_COVERS,
+    CONF_LIGHTS,
+    CONF_SENSORS,
+    CONF_SWITCHES,
+    CONF_TOKEN,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.discovery import load_platform
-from homeassistant.helpers.update_coordinator import ConfigEntryAuthFailed
 
 from .add_entry_request import AddEntryRequest
 from .const import *
 from .coordinator import TapHomeDataUpdateCoordinator
+from .cover import CoverConfigEntry
 from .switch import SwitchConfigEntry
 from .taphome_entity import TapHomeConfigEntry
 from .taphome_sdk import *
-from .TapHomeClimateController import (TapHomeClimateController,
-                                       TapHomeClimateControllerFactory)
+from .TapHomeClimateController import (
+    TapHomeClimateController,
+    TapHomeClimateControllerFactory,
+)
 
 CONFIG_SCHEMA = voluptuous.Schema(
     {
@@ -104,14 +113,19 @@ async def async_setup(hass: HomeAssistant, config: ConfigEntry) -> bool:
 
         platforms = [
             {
-                "domain": SWITCH_DOMAIN,
-                "config_key": CONF_SWITCHES,
-                "config_entry": SwitchConfigEntry,
+                "domain": COVER_DOMAIN,
+                "config_key": CONF_COVERS,
+                "config_entry": CoverConfigEntry,
             },
             {
                 "domain": LIGHT_DOMAIN,
                 "config_key": CONF_LIGHTS,
                 "config_entry": TapHomeConfigEntry,
+            },
+            {
+                "domain": SWITCH_DOMAIN,
+                "config_key": CONF_SWITCHES,
+                "config_entry": SwitchConfigEntry,
             },
         ]
         hass.data[DOMAIN] = {}

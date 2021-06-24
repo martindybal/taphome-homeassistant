@@ -1,4 +1,4 @@
-from .CoverService import CoverService
+from .CoverService import CoverService, CoverState
 from .Device import Device
 from .LightService import LightService, LightState
 from .Location import Location
