@@ -19,7 +19,7 @@ from .taphome_sdk import *
 from .taphome_entity import *
 
 
-class TapHomeLight(TapHomeEntity, LightEntity):
+class TapHomeLight(TapHomeEntity[LightState], LightEntity):
     """Representation of an light"""
 
     def __init__(

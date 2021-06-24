@@ -22,7 +22,7 @@ class SwitchConfigEntry(TapHomeConfigEntry):
         return self._device_class
 
 
-class TapHomeSwitch(TapHomeEntity, SwitchEntity):
+class TapHomeSwitch(TapHomeEntity[SwitchState], SwitchEntity):
     """Representation of an switch"""
 
     def __init__(

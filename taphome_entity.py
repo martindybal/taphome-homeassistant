@@ -1,6 +1,5 @@
-import copy
 from types import TracebackType
-from typing import Type
+from typing import Type, TypeVar, Generic
 
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -32,7 +31,10 @@ class TapHomeConfigEntry:
         return default
 
 
-class TapHomeEntity(CoordinatorEntity):
+TState = TypeVar("TState")
+
+
+class TapHomeEntity(CoordinatorEntity, Generic[TState]):
     def __init__(
         self,
         taphome_device_id: int,
@@ -61,7 +63,7 @@ class TapHomeEntity(CoordinatorEntity):
             return self.taphome_device.name
 
     @property
-    def taphome_state(self):
+    def taphome_state(self) -> TState:
         return self.coordinator.get_state(self._taphome_device_id)
 
     @property
