@@ -1,4 +1,5 @@
 import typing
+
 from .device_operation_mode import DeviceOperationMode
 from .ValueType import ValueType
 

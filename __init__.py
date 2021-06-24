@@ -1,39 +1,27 @@
 """TapHome integration."""
 import asyncio
+import typing
+
+import homeassistant.helpers.config_validation as config_validation
+import voluptuous
+from async_timeout import timeout
+from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import (CONF_BINARY_SENSORS, CONF_COVERS, CONF_LIGHTS,
+                                 CONF_SENSORS, CONF_SWITCHES, CONF_TOKEN)
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.discovery import load_platform
+from homeassistant.helpers.update_coordinator import ConfigEntryAuthFailed
+
 from .add_entry_request import AddEntryRequest
+from .const import *
+from .coordinator import TapHomeDataUpdateCoordinator
 from .switch import SwitchConfigEntry
 from .taphome_entity import TapHomeConfigEntry
 from .taphome_sdk import *
-from .const import *
-
-from async_timeout import timeout
-from .TapHomeClimateController import (
-    TapHomeClimateController,
-    TapHomeClimateControllerFactory,
-)
-from .coordinator import TapHomeDataUpdateCoordinator
-from homeassistant.helpers.discovery import load_platform
-import voluptuous
-import typing
-import homeassistant.helpers.config_validation as config_validation
-
-from homeassistant.core import HomeAssistant
-from homeassistant.config_entries import ConfigEntry
-
-
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
-from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
-
-from homeassistant.helpers.update_coordinator import ConfigEntryAuthFailed
-
-from homeassistant.const import (
-    CONF_TOKEN,
-    CONF_LIGHTS,
-    CONF_COVERS,
-    CONF_SWITCHES,
-    CONF_SENSORS,
-    CONF_BINARY_SENSORS,
-)
+from .TapHomeClimateController import (TapHomeClimateController,
+                                       TapHomeClimateControllerFactory)
 
 CONFIG_SCHEMA = voluptuous.Schema(
     {

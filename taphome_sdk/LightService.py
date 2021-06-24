@@ -1,9 +1,9 @@
 from .Device import Device
+from .SwitchStates import SwitchStates
+from .taphome_device_state import TapHomeState
+from .TapHomeApiService import TapHomeApiService
 from .ValueChangeResult import ValueChangeResult
 from .ValueType import ValueType
-from .SwitchStates import SwitchStates
-from .TapHomeApiService import TapHomeApiService
-from .taphome_device_state import TapHomeState
 
 
 class LightState(TapHomeState):

@@ -1,17 +1,13 @@
 """TapHome light integration."""
-from .taphome_sdk import *
-from .taphome_entity import TapHomeEntity
-
 import logging
 
-from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_MOTION,
-    DEVICE_CLASS_CONNECTIVITY,
-    BinarySensorEntity,
-)
-
+from homeassistant.components.binary_sensor import (DEVICE_CLASS_CONNECTIVITY,
+                                                    DEVICE_CLASS_MOTION,
+                                                    BinarySensorEntity)
 
 from . import TAPHOME_API_SERVICE, TAPHOME_DEVICES
+from .taphome_entity import TapHomeEntity
+from .taphome_sdk import *
 
 
 class TapHomeIsAliveSensor(BinarySensorEntity):

@@ -1,6 +1,6 @@
 import logging
-from .ValueType import ValueType
 
+from .ValueType import ValueType
 
 _LOGGER = logging.getLogger(__name__)
 

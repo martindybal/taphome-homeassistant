@@ -1,5 +1,5 @@
-from .taphome_entity import TapHomeConfigEntry
 from .coordinator import TapHomeDataUpdateCoordinator
+from .taphome_entity import TapHomeConfigEntry
 from .taphome_sdk import *
 
 

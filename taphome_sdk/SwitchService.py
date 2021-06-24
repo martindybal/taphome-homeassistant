@@ -1,12 +1,13 @@
+import logging
+
 from voluptuous.schema_builder import Undefined
+
 from .Device import Device
+from .SwitchStates import SwitchStates
+from .taphome_device_state import TapHomeState
+from .TapHomeApiService import TapHomeApiService
 from .ValueChangeResult import ValueChangeResult
 from .ValueType import ValueType
-from .TapHomeApiService import TapHomeApiService
-from .taphome_device_state import TapHomeState
-from .SwitchStates import SwitchStates
-
-import logging
 
 _LOGGER = logging.getLogger(__name__)
 

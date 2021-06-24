@@ -1,27 +1,19 @@
 """TapHome light integration."""
-from .taphome_sdk import *
-from .taphome_entity import TapHomeEntity
-from .TranslationService import TranslationService
-
 import logging
-from homeassistant.helpers.entity import Entity
-from . import TAPHOME_API_SERVICE, TAPHOME_DEVICES, TAPHOME_LANGUAGE
 
-from homeassistant.const import (
-    DEVICE_CLASS_HUMIDITY,
-    DEVICE_CLASS_TEMPERATURE,
-    DEVICE_CLASS_POWER,
-    DEVICE_CLASS_ENERGY,
-    DEVICE_CLASS_ILLUMINANCE,
-    PERCENTAGE,
-    POWER_KILO_WATT,
-    ENERGY_KILO_WATT_HOUR,
-    TEMP_CELSIUS,
-    LIGHT_LUX,
-    CONCENTRATION_PARTS_PER_MILLION,
-    SPEED_KILOMETERS_PER_HOUR,
-    FREQUENCY_HERTZ,
-)
+from homeassistant.const import (CONCENTRATION_PARTS_PER_MILLION,
+                                 DEVICE_CLASS_ENERGY, DEVICE_CLASS_HUMIDITY,
+                                 DEVICE_CLASS_ILLUMINANCE, DEVICE_CLASS_POWER,
+                                 DEVICE_CLASS_TEMPERATURE,
+                                 ENERGY_KILO_WATT_HOUR, FREQUENCY_HERTZ,
+                                 LIGHT_LUX, PERCENTAGE, POWER_KILO_WATT,
+                                 SPEED_KILOMETERS_PER_HOUR, TEMP_CELSIUS)
+from homeassistant.helpers.entity import Entity
+
+from . import TAPHOME_API_SERVICE, TAPHOME_DEVICES, TAPHOME_LANGUAGE
+from .taphome_entity import TapHomeEntity
+from .taphome_sdk import *
+from .TranslationService import TranslationService
 
 
 class TapHomeSensorBase(TapHomeEntity, Entity):

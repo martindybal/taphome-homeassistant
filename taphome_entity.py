@@ -1,10 +1,11 @@
 from types import TracebackType
-from typing import Type, TypeVar, Generic
+from typing import Generic, Type, TypeVar
 
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.exceptions import ConfigEntryNotReady
-from .taphome_sdk import *
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
+
 from .coordinator import TapHomeDataUpdateCoordinator
+from .taphome_sdk import *
 
 
 class TapHomeConfigEntry:

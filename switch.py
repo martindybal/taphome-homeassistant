@@ -8,8 +8,8 @@ from homeassistant.core import HomeAssistant
 from .add_entry_request import AddEntryRequest
 from .const import DOMAIN
 from .coordinator import TapHomeDataUpdateCoordinator
-from .taphome_sdk import *
 from .taphome_entity import *
+from .taphome_sdk import *
 
 
 class SwitchConfigEntry(TapHomeConfigEntry):

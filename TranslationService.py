@@ -1,6 +1,6 @@
-import typing
 import json
 import os
+import typing
 
 
 class TranslationService:

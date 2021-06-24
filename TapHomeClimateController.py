@@ -1,14 +1,12 @@
-from .taphome_sdk import *
-
-from homeassistant.components.climate.const import (
-    HVAC_MODE_OFF,
-    HVAC_MODE_HEAT,
-    HVAC_MODE_COOL,
-    HVAC_MODE_HEAT_COOL,
-)
-
 import logging
 import typing
+
+from homeassistant.components.climate.const import (HVAC_MODE_COOL,
+                                                    HVAC_MODE_HEAT,
+                                                    HVAC_MODE_HEAT_COOL,
+                                                    HVAC_MODE_OFF)
+
+from .taphome_sdk import *
 
 _LOGGER = logging.getLogger(__name__)
 

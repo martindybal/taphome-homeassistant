@@ -1,22 +1,17 @@
 """TapHome light integration."""
 import typing
 
-from homeassistant.components.light import (
-    LightEntity,
-    ATTR_BRIGHTNESS,
-    ATTR_HS_COLOR,
-    SUPPORT_BRIGHTNESS,
-    SUPPORT_COLOR,
-)
-
+from homeassistant.components.light import (ATTR_BRIGHTNESS, ATTR_HS_COLOR,
+                                            SUPPORT_BRIGHTNESS, SUPPORT_COLOR,
+                                            LightEntity)
 from homeassistant.const import CONF_LIGHTS
 from homeassistant.core import HomeAssistant
 
 from .add_entry_request import AddEntryRequest
 from .const import DOMAIN
 from .coordinator import TapHomeDataUpdateCoordinator
-from .taphome_sdk import *
 from .taphome_entity import *
+from .taphome_sdk import *
 
 
 class TapHomeLight(TapHomeEntity[LightState], LightEntity):

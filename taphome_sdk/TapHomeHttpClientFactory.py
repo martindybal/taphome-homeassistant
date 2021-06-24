@@ -1,7 +1,7 @@
-import aiohttp
-from aiohttp.client_reqrep import ClientResponse, ClientResponseError
 import logging
 
+import aiohttp
+from aiohttp.client_reqrep import ClientResponse, ClientResponseError
 
 _LOGGER = logging.getLogger(__name__)
 

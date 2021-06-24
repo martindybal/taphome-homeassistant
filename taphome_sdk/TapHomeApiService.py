@@ -1,12 +1,13 @@
 import logging
 import typing
+
+from aiohttp.client_reqrep import ClientResponseError
+
 from .Device import Device
 from .Location import Location
 from .TapHomeHttpClientFactory import TapHomeHttpClientFactory
 from .ValueChangeResult import ValueChangeResult
 from .ValueType import ValueType
-from aiohttp.client_reqrep import ClientResponseError
-
 
 _LOGGER = logging.getLogger(__name__)
 

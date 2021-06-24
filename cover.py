@@ -1,23 +1,18 @@
 """TapHome cover integration."""
-from voluptuous.schema_builder import Self
-from .taphome_sdk import *
-from .taphome_entity import TapHomeEntity
-
 import logging
-from homeassistant.components.cover import (
-    ATTR_POSITION,
-    ATTR_TILT_POSITION,
-    CoverEntity,
-    DEVICE_CLASS_BLIND,
-    DEVICE_CLASS_SHADE,
-    SUPPORT_OPEN,
-    SUPPORT_CLOSE,
-    SUPPORT_SET_POSITION,
-    SUPPORT_SET_TILT_POSITION,
-)
+from datetime import timedelta
+
+from homeassistant.components.cover import (ATTR_POSITION, ATTR_TILT_POSITION,
+                                            DEVICE_CLASS_BLIND,
+                                            DEVICE_CLASS_SHADE, SUPPORT_CLOSE,
+                                            SUPPORT_OPEN, SUPPORT_SET_POSITION,
+                                            SUPPORT_SET_TILT_POSITION,
+                                            CoverEntity)
+from voluptuous.schema_builder import Self
 
 from . import TAPHOME_API_SERVICE, TAPHOME_DEVICES
-from datetime import timedelta
+from .taphome_entity import TapHomeEntity
+from .taphome_sdk import *
 
 SCAN_INTERVAL = timedelta(seconds=10)
 _LOGGER = logging.getLogger(__name__)
