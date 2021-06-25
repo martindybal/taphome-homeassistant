@@ -128,7 +128,7 @@ class TapHomeCover(TapHomeEntity[CoverState], CoverEntity):
             taphome_position = 1 - self.convert_ha_percentage_to_taphome(ha_position)
 
             async with UpdateTapHomeState(self) as state:
-                await self.cover_service.async_set_position(
+                await self.cover_service.async_set_level(
                     self.taphome_device, taphome_position
                 )
                 state.blinds_level = taphome_position
@@ -148,7 +148,7 @@ class TapHomeCover(TapHomeEntity[CoverState], CoverEntity):
             taphome_tilt = 1 - self.convert_ha_percentage_to_taphome(ha_tilt)
 
             async with UpdateTapHomeState(self) as state:
-                await self.cover_service.async_set_tilt(
+                await self.cover_service.async_set_slope(
                     self.taphome_device, taphome_tilt
                 )
                 state.blinds_slope = taphome_tilt
