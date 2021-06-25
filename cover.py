@@ -89,14 +89,20 @@ class TapHomeCover(TapHomeEntity[CoverState], CoverEntity):
 
     @property
     def current_cover_position(self):
-        if not self.taphome_state is None:
+        if (
+            not self.taphome_state is None
+            and self.taphome_state.blinds_level is not None
+        ):
             return self.convert_taphome_percentage_to_ha(
                 1 - self.taphome_state.blinds_level
             )
 
     @property
     def current_cover_tilt_position(self):
-        if not self.taphome_state is None:
+        if (
+            not self.taphome_state is None
+            and self.taphome_state.blinds_slope is not None
+        ):
             return self.convert_taphome_percentage_to_ha(
                 1 - self.taphome_state.blinds_slope
             )
