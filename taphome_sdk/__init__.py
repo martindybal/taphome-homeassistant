@@ -8,6 +8,6 @@ from .SwitchService import SwitchService, SwitchState
 from .SwitchStates import SwitchStates
 from .TapHomeApiService import TapHomeApiService
 from .TapHomeHttpClientFactory import TapHomeHttpClientFactory
-from .ThermostatService import ThermostatService
+from .ThermostatService import ThermostatService, ThermostatState
 from .ValueChangeResult import ValueChangeResult
 from .ValueType import ValueType

@@ -1,42 +1,53 @@
+import logging
+
 from .Device import Device
 from .TapHomeApiService import TapHomeApiService
+from .taphome_device_state import TapHomeState
 from .ValueChangeResult import ValueChangeResult
 from .ValueType import ValueType
 
+_LOGGER = logging.getLogger(__name__)
 
-class MultiValueSwitchState:
+
+class MultiValueSwitchState(TapHomeState):
     def __init__(
         self,
-        multi_value_switch_state: int,
+        multi_value_switch_values: dict,
     ):
-        self._multi_value_switch_state = multi_value_switch_state
+        super().__init__(multi_value_switch_values)
+        self.multi_value_switch_state: int = self.get_device_value(
+            multi_value_switch_values, ValueType.MultiValueSwitchState
+        )
 
-    @property
-    def multi_value_switch_state(self):
-        return self._multi_value_switch_state
+    def __eq__(self, other):
+        if isinstance(other, MultiValueSwitchState):
+            return (
+                super().__eq__(other)
+                and self.multi_value_switch_state == other.multi_value_switch_state
+            )
+
+        return False
 
 
 class MultiValueSwitchService:
-    def __init__(self, tapHomeApiService: TapHomeApiService):
-        self.tapHomeApiService = tapHomeApiService
+    def __init__(self, taphome_api_service: TapHomeApiService):
+        self.taphome_api_service = taphome_api_service
 
-    async def async_get_multi_value_switch_state(
-        self, device: Device
-    ) -> MultiValueSwitchState:
-        switchValues = await self.tapHomeApiService.async_get_device_values(
-            device.deviceId
-        )
-        multi_value_switch_state = DeviceServiceHelper.get_device_value(
-            switchValues, ValueType.MultiValueSwitchState
-        )
+    async def async_get_state(self, device: Device) -> MultiValueSwitchState:
+        try:
+            multi_value_switch_values = (
+                await self.taphome_api_service.async_get_device_values(device.id)
+            )
+            return MultiValueSwitchState(multi_value_switch_values)
+        except:
+            _LOGGER.error(f"TapHome async_get_state for {device.id} failed")
+            return None
 
-        return MultiValueSwitchState(multi_value_switch_state)
-
-    def async_set_value(self, device: Device, value: int) -> ValueChangeResult:
+    def async_set_value(self, value: int, device: Device) -> ValueChangeResult:
         values = [
-            self.tapHomeApiService.create_device_value(
+            self.taphome_api_service.create_device_value(
                 ValueType.MultiValueSwitchState, value
             )
         ]
 
-        return self.tapHomeApiService.async_set_device_values(device.deviceId, values)
+        return self.taphome_api_service.async_set_device_values(device.id, values)

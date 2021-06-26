@@ -5,6 +5,7 @@ import typing
 import homeassistant.helpers.config_validation as config_validation
 import voluptuous
 from async_timeout import timeout
+from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
 from homeassistant.components.cover import DOMAIN as COVER_DOMAIN
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
@@ -23,10 +24,12 @@ from homeassistant.helpers.discovery import load_platform
 from .add_entry_request import AddEntryRequest
 from .const import *
 from .coordinator import TapHomeDataUpdateCoordinator
+from .climate import ClimateConfigEntry
 from .cover import CoverConfigEntry
 from .switch import SwitchConfigEntry
 from .taphome_entity import TapHomeConfigEntry
 from .taphome_sdk import *
+
 from .TapHomeClimateController import (
     TapHomeClimateController,
     TapHomeClimateControllerFactory,
@@ -112,6 +115,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigEntry) -> bool:
             return False
 
         platforms = [
+            {
+                "domain": CLIMATE_DOMAIN,
+                "config_key": CONF_CLIMATES,
+                "config_entry": ClimateConfigEntry,
+            },
             {
                 "domain": COVER_DOMAIN,
                 "config_key": CONF_COVERS,

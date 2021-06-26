@@ -2,8 +2,11 @@
 # from .switch import TapHomeSwitch
 import logging
 from datetime import timedelta
+from typing import Generic, Type, TypeVar
+from types import TracebackType
 
 from aiohttp.client_reqrep import ClientResponseError
+from homeassistant.core import callback
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
@@ -16,21 +19,24 @@ from .taphome_sdk import *
 _LOGGER = logging.getLogger(__name__)
 
 
+TState = TypeVar("TState")
+
+
 class TapHomeDataUpdateCoordinatorDevice:
     def __init__(self):
-        self._ha_entity = None
+        self._handle_coordinator_update = None
         self._taphome_device = None
         self._taphome_state = None
         self.taphome_state_type = None
 
     @property
-    def ha_entity(self) -> Entity:
-        return self._ha_entity
+    def handle_coordinator_update(self) -> Entity:
+        return self._handle_coordinator_update
 
-    @ha_entity.setter
-    def ha_entity(self, entity: Entity):
-        self._ha_entity = entity
-        self._schedule_update_ha_state()
+    @handle_coordinator_update.setter
+    def handle_coordinator_update(self, entity: Entity):
+        self._handle_coordinator_update = entity
+        self._invoke_coordinator_update()
 
     @property
     def taphome_device(self):
@@ -39,7 +45,7 @@ class TapHomeDataUpdateCoordinatorDevice:
     @taphome_device.setter
     def taphome_device(self, device):
         self._taphome_device = device
-        self._schedule_update_ha_state()
+        self._invoke_coordinator_update()
 
     @property
     def taphome_state(self):
@@ -48,11 +54,11 @@ class TapHomeDataUpdateCoordinatorDevice:
     @taphome_state.setter
     def taphome_state(self, new_state):
         self._taphome_state = new_state
-        self._schedule_update_ha_state()
+        self._invoke_coordinator_update()
 
-    def _schedule_update_ha_state(self) -> None:
-        if self.ha_entity is not None and self.ha_entity.hass is not None:
-            self.ha_entity.schedule_update_ha_state()
+    def _invoke_coordinator_update(self) -> None:
+        if self.handle_coordinator_update is not None:
+            self.handle_coordinator_update()
 
 
 class TapHomeDataUpdateCoordinator(DataUpdateCoordinator):
@@ -70,10 +76,13 @@ class TapHomeDataUpdateCoordinator(DataUpdateCoordinator):
         super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=update_interval)
 
     def register_entity(
-        self, taphome_device_id: int, ha_entity: Entity, taphome_state_type
+        self,
+        taphome_device_id: int,
+        handle_coordinator_update,
+        taphome_state_type,
     ) -> None:
         device = self.get_device_data(taphome_device_id)
-        device.ha_entity = ha_entity
+        device.handle_coordinator_update = handle_coordinator_update
         device.taphome_state_type = taphome_state_type
 
     def get_device(self, taphome_device_id: int) -> Device:
@@ -143,3 +152,49 @@ class TapHomeDataUpdateCoordinator(DataUpdateCoordinator):
         if not taphome_device_id in self._devices:
             self._devices[taphome_device_id] = TapHomeDataUpdateCoordinatorDevice()
         return self._devices[taphome_device_id]
+
+
+class TapHomeDataUpdateCoordinatorObject(Generic[TState]):
+    def __init__(
+        self,
+        taphome_device_id: int,
+        coordinator: TapHomeDataUpdateCoordinator,
+        taphome_state_type,
+    ):
+        self._taphome_device_id = taphome_device_id
+        self.coordinator = coordinator
+        coordinator.register_entity(
+            taphome_device_id,
+            self.handle_taphome_coordinator_update,
+            taphome_state_type,
+        )
+
+    @property
+    def taphome_state(self) -> TState:
+        return self.coordinator.get_state(self._taphome_device_id)
+
+    @property
+    def taphome_device(self) -> Device:
+        return self.coordinator.get_device(self._taphome_device_id)
+
+    @callback
+    def handle_taphome_coordinator_update(self) -> None:
+        """This method is called when data for id is changed"""
+        pass
+
+
+class UpdateTapHomeState(object):
+    def __init__(self, coordinator_object: TapHomeDataUpdateCoordinatorObject[TState]):
+        self._coordinator_object = coordinator_object
+
+    async def __aenter__(self):
+        return self._coordinator_object.taphome_state
+
+    async def __aexit__(
+        self,
+        exc_type: Type[BaseException],
+        exc_val: BaseException,
+        exc_tb: TracebackType,
+    ) -> None:
+        if exc_type is None:
+            self._coordinator_object.handle_taphome_coordinator_update()

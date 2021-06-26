@@ -1,10 +1,9 @@
-from types import TracebackType
-from typing import Generic, Type, TypeVar
+from homeassistant.core import callback
 
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .coordinator import TapHomeDataUpdateCoordinator
+from .coordinator import *
 from .taphome_sdk import *
 
 
@@ -32,23 +31,27 @@ class TapHomeConfigEntry:
         return default
 
 
-TState = TypeVar("TState")
-
-
-class TapHomeEntity(CoordinatorEntity, Generic[TState]):
+class TapHomeEntity(CoordinatorEntity, TapHomeDataUpdateCoordinatorObject[TState]):
     def __init__(
         self,
         taphome_device_id: int,
         coordinator: TapHomeDataUpdateCoordinator,
         taphome_state_type,
     ):
-        self._taphome_device_id = taphome_device_id
-
+        TapHomeDataUpdateCoordinatorObject.__init__(
+            self, taphome_device_id, coordinator, taphome_state_type
+        )
         CoordinatorEntity.__init__(self, coordinator)
-        coordinator.register_entity(taphome_device_id, self, taphome_state_type)
+
+        self._taphome_device_id = taphome_device_id
 
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator. Coordinator call schedule_update_ha_state when is needed"""
+
+    @callback
+    def handle_taphome_coordinator_update(self) -> None:
+        if self.hass is not None:  # chack if entity was added to hass
+            self.schedule_update_ha_state()
 
     @property
     def unique_id(self):
@@ -62,14 +65,6 @@ class TapHomeEntity(CoordinatorEntity, Generic[TState]):
     def name(self):
         if not self.taphome_device is None:
             return self.taphome_device.name
-
-    @property
-    def taphome_state(self) -> TState:
-        return self.coordinator.get_state(self._taphome_device_id)
-
-    @property
-    def taphome_device(self) -> Device:
-        return self.coordinator.get_device(self._taphome_device_id)
 
     @staticmethod
     def convert_taphome_byte_to_ha(value: int):
@@ -98,20 +93,3 @@ class TapHomeEntity(CoordinatorEntity, Generic[TState]):
         if value is None:
             return None
         return value / 100
-
-
-class UpdateTapHomeState(object):
-    def __init__(self, taphome_entity: TapHomeEntity):
-        self._taphome_entity = taphome_entity
-
-    async def __aenter__(self):
-        return self._taphome_entity.taphome_state
-
-    async def __aexit__(
-        self,
-        exc_type: Type[BaseException],
-        exc_val: BaseException,
-        exc_tb: TracebackType,
-    ) -> None:
-        if exc_type is None:
-            self._taphome_entity.schedule_update_ha_state()

@@ -1,63 +1,266 @@
-"""TapHome climate integration."""
+"""TapHome light integration."""
+from config.custom_components.taphome.taphome_sdk.MultiValueSwitchService import (
+    MultiValueSwitchState,
+)
 import logging
 import typing
-from enum import Enum
 
 from homeassistant.components.climate import ClimateEntity
-from homeassistant.components.climate.const import (HVAC_MODE_COOL,
-                                                    HVAC_MODE_HEAT,
-                                                    HVAC_MODE_HEAT_COOL,
-                                                    HVAC_MODE_OFF,
-                                                    SUPPORT_TARGET_TEMPERATURE)
+from homeassistant.components.climate.const import (
+    SUPPORT_TARGET_TEMPERATURE,
+    HVAC_MODE_COOL,
+    HVAC_MODE_HEAT,
+    HVAC_MODE_HEAT_COOL,
+    HVAC_MODE_OFF,
+)
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 
-from . import TAPHOME_API_SERVICE, TAPHOME_DEVICES, TapHomeClimateDevice
-from .taphome_entity import TapHomeEntity
+from .add_entry_request import AddEntryRequest
+from .const import DOMAIN, CONF_CLIMATES
+from .coordinator import TapHomeDataUpdateCoordinator
+from .taphome_entity import *
 from .taphome_sdk import *
 
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_platform(hass, config, async_add_entities, platformConfig):
-    tapHomeApiService = platformConfig[TAPHOME_API_SERVICE]
-    devices = platformConfig[TAPHOME_DEVICES]
+class TapHomeClimateController:
+    def __init__(self) -> None:
+        self._listeners: list[CALLBACK_TYPE] = []
 
-    climates = []
-    for device in devices:
-        for climate in await async_create_climate(tapHomeApiService, device):
-            climates.append(climate)
+    @property
+    def hvac_mode(self):
+        """Return current operation ie. heat, cool, idle."""
+        pass
 
-    async_add_entities(climates)
+    @property
+    def hvac_modes(self):
+        """Return the list of available operation/controller modes."""
+        pass
+
+    async def async_set_hvac_mode(self, hvac_mode):
+        """Set new target hvac mode."""
+        pass
+
+    @callback
+    def add_hvac_mode_changed_listener(
+        self, update_callback: CALLBACK_TYPE
+    ) -> typing.Callable[[], None]:
+        """Listen for data updates."""
+        self._listeners.append(update_callback)
+
+    def _invoke_hvac_mode_changed(self) -> None:
+        for update_callback in self._listeners:
+            update_callback()
 
 
-async def async_create_climate(
-    tapHomeApiService: TapHomeApiService, device: TapHomeClimateDevice
-) -> typing.List[ClimateEntity]:
-    climates = []
-    if "VirtualThermostatDummy" == device.thermostat.type:
-        thermostatService = ThermostatService(tapHomeApiService)
-        thermostat = TapHomeClimate(thermostatService, device)
-        climates.append(thermostat)
-    return climates
+class TapHomeNoneClimateController(TapHomeClimateController):
+    def __init__(self) -> None:
+        super().__init__()
+
+    @property
+    def hvac_mode(self):
+        return None
+
+    @property
+    def hvac_modes(self):
+        return []
+
+    async def async_set_hvac_mode(self, hvac_mode):
+        pass
 
 
-class TapHomeClimate(TapHomeEntity, ClimateEntity):
-    """Representation of an Thermostat"""
+class TapHomeCoordinatorObjectClimateController(
+    TapHomeClimateController, TapHomeDataUpdateCoordinatorObject[TState]
+):
+    def __init__(
+        self,
+        taphome_device_id: int,
+        taphome_state_type,
+        coordinator: TapHomeDataUpdateCoordinator,
+    ) -> None:
+        TapHomeClimateController.__init__(self)
+        TapHomeDataUpdateCoordinatorObject.__init__(
+            self, taphome_device_id, coordinator, taphome_state_type
+        )
+        self.coordinator = coordinator
+
+    @callback
+    def handle_taphome_coordinator_update(self) -> None:
+        self._invoke_hvac_mode_changed()
+
+
+class TapHomeSwitchClimateController(
+    TapHomeCoordinatorObjectClimateController[SwitchState]
+):
+    def __init__(
+        self,
+        taphome_device_id: int,
+        on_hvac_mode,
+        tapHome_api_service: TapHomeApiService,
+        coordinator: TapHomeDataUpdateCoordinator,
+    ) -> None:
+        super().__init__(taphome_device_id, SwitchState, coordinator)
+        self.switch_service = SwitchService(tapHome_api_service)
+        self.on_hvac_mode = on_hvac_mode
+
+    @property
+    def hvac_mode(self):
+        if not self.taphome_state is None:
+            if self.taphome_state.switch_state == SwitchStates.ON:
+                return self.on_hvac_mode
+            else:
+                return HVAC_MODE_OFF
+
+    @property
+    def hvac_modes(self):
+        return [HVAC_MODE_OFF, self.on_hvac_mode]
+
+    async def async_set_hvac_mode(self, hvac_mode):
+        switch_state: SwitchStates
+        if hvac_mode == HVAC_MODE_OFF:
+            switch_state = SwitchStates.OFF
+        elif hvac_mode == self.on_hvac_mode:
+            switch_state = SwitchStates.ON
+        else:
+            raise Exception(f"Unknown hvac mode: {hvac_mode}")
+
+        async with UpdateTapHomeState(self) as state:
+            await self.switch_service.async_turn(switch_state, self.taphome_device)
+            state.switch_state = switch_state
+
+
+class TapHomeModeClimateController(
+    TapHomeCoordinatorObjectClimateController[MultiValueSwitchState]
+):
+    def __init__(
+        self,
+        taphome_device_id: int,
+        tapHome_api_service: TapHomeApiService,
+        coordinator: TapHomeDataUpdateCoordinator,
+    ) -> None:
+        super().__init__(taphome_device_id, MultiValueSwitchState, coordinator)
+        self.multi_value_switch_service = MultiValueSwitchService(tapHome_api_service)
+
+    @property
+    def hvac_modes(self):
+        return [HVAC_MODE_OFF, HVAC_MODE_HEAT, HVAC_MODE_COOL, HVAC_MODE_HEAT_COOL]
+
+    @property
+    def hvac_mode(self):
+        if not self.taphome_state is None:
+            modes = {
+                0: HVAC_MODE_OFF,
+                1: HVAC_MODE_HEAT,
+                2: HVAC_MODE_COOL,
+                3: HVAC_MODE_HEAT_COOL,
+            }
+            return modes.get(self.taphome_state.multi_value_switch_state, None)
+
+    async def async_set_hvac_mode(self, hvac_mode):
+        modes = {
+            HVAC_MODE_OFF: 0,
+            HVAC_MODE_HEAT: 1,
+            HVAC_MODE_COOL: 2,
+            HVAC_MODE_HEAT_COOL: 3,
+        }
+        multi_value_switch_state = modes.get(hvac_mode, None)
+
+        async with UpdateTapHomeState(self) as state:
+            await self.multi_value_switch_service.async_set_value(
+                multi_value_switch_state, self.taphome_device
+            )
+            state.multi_value_switch_state = multi_value_switch_state
+
+
+class ClimateConfigEntry(TapHomeConfigEntry):
+    def __init__(self, device_config: dict):
+        self._device_config = ClimateConfigEntry._backwards_compatibility(device_config)
+        super().__init__(self._device_config)
+
+        self._min_temperature = self.get_optional(
+            self._device_config, "min_temperature", None
+        )
+        self._max_temperature = self.get_optional(
+            self._device_config, "max_temperature", None
+        )
+
+    @property
+    def min_temperature(self):
+        return self._min_temperature
+
+    @property
+    def max_temperature(self):
+        return self._max_temperature
+
+    def create_climate_controller(
+        self,
+        tapHome_api_service: TapHomeApiService,
+        coordinator: TapHomeDataUpdateCoordinator,
+    ) -> TapHomeClimateController:
+        if isinstance(self._device_config, dict):
+            if "heating_switch_id" in self._device_config:
+                return TapHomeSwitchClimateController(
+                    self._device_config["heating_switch_id"],
+                    HVAC_MODE_HEAT,
+                    tapHome_api_service,
+                    coordinator,
+                )
+            if "cooling_switch_id" in self._device_config:
+                return TapHomeSwitchClimateController(
+                    self._device_config["cooling_switch_id"],
+                    HVAC_MODE_COOL,
+                    tapHome_api_service,
+                    coordinator,
+                )
+            if "heating_cooling_mode_id" in self._device_config:
+                return TapHomeModeClimateController(
+                    self._device_config["heating_cooling_mode_id"],
+                    tapHome_api_service,
+                    coordinator,
+                )
+
+        return TapHomeNoneClimateController()
+
+    @staticmethod
+    def _backwards_compatibility(device_config):
+        if isinstance(device_config, dict):
+            if "thermostat" in device_config:
+                device_config["id"] = device_config["thermostat"]
+            if "heat" in device_config:
+                device_config["heating_switch_id"] = device_config["heat"]
+            if "cool" in device_config:
+                device_config["cooling_switch_id"] = device_config["cool"]
+            if "mode" in device_config:
+                device_config["hvac_mode_id"] = device_config["mode"]
+
+        return device_config
+
+
+class TapHomeClimate(TapHomeEntity[ThermostatState], ClimateEntity):
+    """Representation of an climate"""
 
     def __init__(
         self,
-        thermostatService: ThermostatService,
-        device: TapHomeClimateDevice,
+        config_entry: ClimateConfigEntry,
+        tapHome_api_service: TapHomeApiService,
+        coordinator: TapHomeDataUpdateCoordinator,
     ):
-        super(TapHomeClimate, self).__init__(device=device.thermostat)
+        super().__init__(config_entry.id, coordinator, ThermostatState)
 
-        self._thermostatService = thermostatService
-        self._controller = device.controller
+        self.thermostat_service = ThermostatService(tapHome_api_service)
+        self.climate_controller = config_entry.create_climate_controller(
+            tapHome_api_service, coordinator
+        )
+        self.climate_controller.add_hvac_mode_changed_listener(
+            self.handle_taphome_coordinator_update
+        )
+
+        self._config_min_temperature = config_entry.min_temperature
+        self._config_max_temperature = config_entry.max_temperature
+
         self._supported_features = SUPPORT_TARGET_TEMPERATURE
-        self._target_temperature = None
-        self._current_temperature = None
-        self._min_temperature = None
-        self._max_temperature = None
 
     @property
     def supported_features(self):
@@ -69,56 +272,73 @@ class TapHomeClimate(TapHomeEntity, ClimateEntity):
 
     @property
     def target_temperature(self):
-        return self._target_temperature
+        if self.taphome_state is not None:
+            return self.taphome_state.desired_temperature
 
     @property
     def current_temperature(self):
-        return self._current_temperature
+        if self.taphome_state is not None:
+            return self.taphome_state.real_temperature
 
     @property
     def min_temp(self):
-        return self._min_temperature
+        if self._config_min_temperature is not None:
+            return self._config_min_temperature
+
+        if self.taphome_state is not None:
+            return self.taphome_state.min_temperature
+
+        return 10
 
     @property
     def max_temp(self):
-        return self._max_temperature
+        if self._config_max_temperature is not None:
+            return self._config_max_temperature
 
-    @property
-    def hvac_mode(self):
-        """Return current operation ie. heat, cool, idle."""
-        return self._controller.hvac_mode
+        if self.taphome_state is not None:
+            return self.taphome_state.max_temperature
+
+        return 30
 
     @property
     def hvac_modes(self):
         """Return the list of available operation/controller modes."""
-        return self._controller.hvac_modes
+        return self.climate_controller.hvac_modes
+
+    @property
+    def hvac_mode(self):
+        """Return the list of available operation/controller modes."""
+        return self.climate_controller.hvac_mode
 
     async def async_set_temperature(self, **kwargs):
-        temp = kwargs.get(ATTR_TEMPERATURE)
+        new_target_temperature = kwargs.get(ATTR_TEMPERATURE)
 
-        result = await self._thermostatService.async_set_desired_temperature(
-            self._device, temp
-        )
-
-        if result == ValueChangeResult.FAILED:
-            await self.async_refresh_thermostat_state()
-        else:
-            self._target_temperature = temp
+        async with UpdateTapHomeState(self) as state:
+            await self.thermostat_service.async_set_desired_temperature(
+                self.taphome_device, new_target_temperature
+            )
+            state.desired_temperature = new_target_temperature
 
     async def async_set_hvac_mode(self, hvac_mode):
         """Set new target hvac mode."""
-        await self._controller.async_set_hvac_mode(hvac_mode)
+        await self.climate_controller.async_set_hvac_mode(hvac_mode)
 
-    def async_update(self, **kwargs):
-        return self.async_refresh_state()
 
-    async def async_refresh_state(self):
-        await self.async_refresh_thermostat_state()
-        await self._controller.async_refresh_state()
+def setup_platform(
+    hass: HomeAssistant,
+    config,
+    add_entities,
+    discovery_info=None,
+) -> None:
+    """Set up the climate platform."""
+    add_entry_requests: typing.List[AddEntryRequest] = hass.data[DOMAIN][CONF_CLIMATES]
+    climates = []
+    for add_entry_request in add_entry_requests:
+        climate = TapHomeClimate(
+            add_entry_request.config_entry,
+            add_entry_request.tapHome_api_service,
+            add_entry_request.coordinator,
+        )
+        climates.append(climate)
 
-    async def async_refresh_thermostat_state(self):
-        state = await self._thermostatService.async_get_thermostat_state(self._device)
-        self._target_temperature = state.desired_temperature
-        self._current_temperature = state.real_temperature
-        self._min_temperature = state.min_temperature
-        self._max_temperature = state.max_temperature
+    add_entities(climates)

@@ -19,7 +19,7 @@ from homeassistant.core import HomeAssistant
 
 from .add_entry_request import AddEntryRequest
 from .const import DOMAIN
-from .coordinator import TapHomeDataUpdateCoordinator
+from .coordinator import *
 from .taphome_entity import *
 from .taphome_sdk import *
 
