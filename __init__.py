@@ -8,6 +8,7 @@ from async_timeout import timeout
 from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
 from homeassistant.components.cover import DOMAIN as COVER_DOMAIN
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
+from homeassistant.components.select import DOMAIN as SELECT_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -30,11 +31,6 @@ from .switch import SwitchConfigEntry
 from .taphome_entity import TapHomeConfigEntry
 from .taphome_sdk import *
 
-from .TapHomeClimateController import (
-    TapHomeClimateController,
-    TapHomeClimateControllerFactory,
-)
-
 CONFIG_SCHEMA = voluptuous.Schema(
     {
         DOMAIN: voluptuous.Schema(
@@ -48,6 +44,7 @@ CONFIG_SCHEMA = voluptuous.Schema(
                             CONF_LIGHTS,
                             CONF_COVERS,
                             CONF_CLIMATES,
+                            CONF_MULTIVALUE_SWITCHES,
                             CONF_SWITCHES,
                             CONF_SENSORS,
                             CONF_BINARY_SENSORS,
@@ -66,6 +63,9 @@ CONFIG_SCHEMA = voluptuous.Schema(
                             ): config_validation.ensure_list,
                             voluptuous.Optional(
                                 CONF_CLIMATES, default=[]
+                            ): config_validation.ensure_list,
+                            voluptuous.Optional(
+                                CONF_MULTIVALUE_SWITCHES, default=[]
                             ): config_validation.ensure_list,
                             voluptuous.Optional(
                                 CONF_SWITCHES, default=[]
@@ -128,6 +128,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigEntry) -> bool:
             {
                 "domain": LIGHT_DOMAIN,
                 "config_key": CONF_LIGHTS,
+                "config_entry": TapHomeConfigEntry,
+            },
+            {
+                "domain": SELECT_DOMAIN,
+                "config_key": CONF_MULTIVALUE_SWITCHES,
                 "config_entry": TapHomeConfigEntry,
             },
             {
