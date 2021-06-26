@@ -42,6 +42,7 @@ var HomeAssistantEntityType;
     HomeAssistantEntityType["light"] = "light";
     HomeAssistantEntityType["sensor"] = "sensor";
     HomeAssistantEntityType["switch"] = "switch";
+    HomeAssistantEntityType["multivalueSwitches"] = "multivalue switch";
 })(HomeAssistantEntityType || (HomeAssistantEntityType = {}));
 ;
 var TapHomeValueType;
@@ -199,6 +200,9 @@ var TapHomeCore = /** @class */ (function () {
                                 if (deviceSupportValue(TapHomeValueType.analogOutputValue) || deviceSupportValue(TapHomeValueType.hueBrightness)) {
                                     possibleEntityTypes.push(HomeAssistantEntityType.light);
                                 }
+                                else if (deviceSupportValue(TapHomeValueType.multiValueSwitchState)) {
+                                    possibleEntityTypes.push(HomeAssistantEntityType.multivalueSwitches);
+                                }
                                 else {
                                     possibleEntityTypes.push(HomeAssistantEntityType.light);
                                     possibleEntityTypes.push(HomeAssistantEntityType.switch);
@@ -295,6 +299,7 @@ var TapHomeCore = /** @class */ (function () {
         configSectionName[HomeAssistantEntityType.cover] = "covers";
         configSectionName[HomeAssistantEntityType.climate] = "climates";
         configSectionName[HomeAssistantEntityType.switch] = "switches";
+        configSectionName[HomeAssistantEntityType.multivalueSwitches] = "multivalue_switches";
         configSectionName[HomeAssistantEntityType.sensor] = "sensors";
         configSectionName[HomeAssistantEntityType.binarySensor] = "binary_sensors";
         var entities = selectedDevices.filter(function (device) { return device.entityType == entityType; });

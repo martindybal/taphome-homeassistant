@@ -7,6 +7,7 @@ enum HomeAssistantEntityType {
     light = "light",
     sensor = "sensor",
     switch = "switch",
+    multivalueSwitches = "multivalue switch",
 };
 
 enum TapHomeValueType {
@@ -180,6 +181,7 @@ class TapHomeCore {
         configSectionName[HomeAssistantEntityType.cover] = "covers";
         configSectionName[HomeAssistantEntityType.climate] = "climates";
         configSectionName[HomeAssistantEntityType.switch] = "switches";
+        configSectionName[HomeAssistantEntityType.multivalueSwitches] = "multivalue_switches";
         configSectionName[HomeAssistantEntityType.sensor] = "sensors";
         configSectionName[HomeAssistantEntityType.binarySensor] = "binary_sensors";
 
@@ -205,7 +207,10 @@ class TapHomeCore {
             if (deviceSupportValue(TapHomeValueType.switchState)) {
                 if (deviceSupportValue(TapHomeValueType.analogOutputValue) || deviceSupportValue(TapHomeValueType.hueBrightness)) {
                     possibleEntityTypes.push(HomeAssistantEntityType.light);
-                } else {
+                } else if (deviceSupportValue(TapHomeValueType.multiValueSwitchState)){
+                    possibleEntityTypes.push(HomeAssistantEntityType.multivalueSwitches);
+                }
+                else {
                     possibleEntityTypes.push(HomeAssistantEntityType.light);
                     possibleEntityTypes.push(HomeAssistantEntityType.switch);
                 }

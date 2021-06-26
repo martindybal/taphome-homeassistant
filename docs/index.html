@@ -56,7 +56,7 @@
         <div class="col-8">
             <div class="row mb-3">
                 <label for="language" class="col-3 col-form-label">
-                    Language
+                    language
                 </label>
                 <div class="col-9">
                     <select id="language" class="form-select" v-model="language">
@@ -95,7 +95,7 @@
 
                             <div class="row mb-3">
                                 <label v-bind:for="'token' + taphomeCore.token" class="col-3 col-form-label">
-                                    Token
+                                    token
                                 </label>
                                 <div class="col-6">
                                     <input class="form-control" v-bind:id="'token' + taphomeCore.token"
@@ -111,9 +111,9 @@
                                     Discover devices
                                 </button>
                             </div>
-                            <!-- <div class="row mb-3">
+                            <div class="row mb-3">
                                 <label v-bind:for="'api_url' + taphomeCore.token" class="col-3 col-form-label">
-                                    Host
+                                    api_url
                                 </label>
                                 <div class="col-9">
                                     <input class="form-control" v-bind:id="'api_url' + taphomeCore.token"
@@ -125,13 +125,13 @@
                             </div>
                             <div class="row mb-3">
                                 <label v-bind:for="'update_interval' + taphomeCore.token" class="col-3 col-form-label">
-                                    Update interval
+                                    update_interval
                                 </label>
                                 <div class="col-9">
                                     <input class="form-control" v-bind:id="'update_interval' + taphomeCore.token"
                                         placeholder="10" v-model="taphomeCore.updateInterval">
                                 </div>
-                            </div> -->
+                            </div>
 
                             <div class="accordion">
                                 <div class="accordion-item mb-3" v-for="device in taphomeCore.devices">
@@ -147,7 +147,7 @@
                                         <div class="accordion-body">
                                             <div class="row">
                                                 <div class="col-9">
-                                                    <label v-bind:for="'device-type' + taphomeCore.token + device.deviceId" class="col-sm-2 col-form-label">
+                                                    <label v-bind:for="'device-type' + taphomeCore.token + device.deviceId" class="col-sm-5 col-form-label">
                                                         {{ device.description }}
                                                     </label>
                                                 </div>
@@ -166,10 +166,10 @@
                                             </div>
                                             <div v-if="device.entityType === HomeAssistantEntityType.switch || device.entityType === HomeAssistantEntityType.cover">
                                                 <div class="row mt-3">
-                                                    <label v-bind:for="'device-class' + taphomeCore.token + device.deviceId" class="col-sm-2 col-form-label">
+                                                    <label v-bind:for="'device-class' + taphomeCore.token + device.deviceId" class="col-sm-5 col-form-label">
                                                         Device class
                                                     </label>
-                                                    <div class="col-sm-10">
+                                                    <div class="col-sm-7">
                                                         <input v-bind:id="'device-class' + taphomeCore.token + device.deviceId" class="form-select" v-model="device.deviceClass" v-bind:list="device.entityType + '_device_classes'" />
                                                     </div>
                                                 </div>
@@ -178,8 +178,8 @@
                                                 <div class="row mt-3">
                                                     <label
                                                         v-bind:for="'climate-min_temperature' + taphomeCore.token + device.deviceId"
-                                                        class="col-sm-2 col-form-label">min_temperature</label>
-                                                    <div class="col-sm-10">
+                                                        class="col-sm-5 col-form-label">min_temperature</label>
+                                                    <div class="col-sm-7">
                                                         <input 
                                                             v-bind:id="'climate-min_temperature' + taphomeCore.token + device.deviceId"
                                                             class="form-select" 
@@ -194,8 +194,8 @@
                                                 <div class="row mt-3">
                                                     <label
                                                         v-bind:for="'climate-max_temperature' + taphomeCore.token + device.deviceId"
-                                                        class="col-sm-2 col-form-label">max_temperature</label>
-                                                    <div class="col-sm-10">
+                                                        class="col-sm-5 col-form-label">max_temperature</label>
+                                                    <div class="col-sm-7">
                                                         <input 
                                                             v-bind:id="'climate-max_temperature' + taphomeCore.token + device.deviceId"
                                                             class="form-select" 
@@ -210,8 +210,8 @@
                                                 <div class="row mt-3">
                                                     <label
                                                         v-bind:for="'climate-heating_cooling_mode_id-selector' + taphomeCore.token + device.deviceId"
-                                                        class="col-sm-2 col-form-label">heating_cooling_mode_id</label>
-                                                    <div class="col-sm-10">
+                                                        class="col-sm-5 col-form-label">heating_cooling_mode_id</label>
+                                                    <div class="col-sm-7">
                                                         <input 
                                                             v-bind:id="'climate-heating_cooling_mode_id-selector' + taphomeCore.token + device.deviceId"
                                                             class="form-select" v-model="device.climateHeatingSwitchIdingCoolingModeId"
@@ -225,8 +225,8 @@
                                                 <div class="row mt-3">
                                                     <label
                                                         v-bind:for="'climate-heating_switch_id-selector' + taphomeCore.token + device.deviceId"
-                                                        class="col-sm-2 col-form-label">heating_switch_id</label>
-                                                    <div class="col-sm-10">
+                                                        class="col-sm-5 col-form-label">heating_switch_id</label>
+                                                    <div class="col-sm-7">
                                                         <input 
                                                             v-bind:id="'climate-heating_switch_id-selector' + taphomeCore.token + device.deviceId"
                                                             class="form-select" v-model="device.climateHeatingSwitchId"
@@ -240,8 +240,8 @@
                                                 <div class="row mt-3">
                                                     <label
                                                         v-bind:for="'climate-cooling_switch_id-selector' + taphomeCore.token + device.deviceId"
-                                                        class="col-sm-2 col-form-label">cooling_switch_id</label>
-                                                    <div class="col-sm-10">
+                                                        class="col-sm-5 col-form-label">cooling_switch_id</label>
+                                                    <div class="col-sm-7">
                                                         <input
                                                             v-bind:id="'climate-cooling_switch_id-selector' + taphomeCore.token + device.deviceId"
                                                             class="form-select" v-model="device.climateCoolingSwitchId"
