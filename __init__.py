@@ -8,7 +8,8 @@ from async_timeout import timeout
 from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
 from homeassistant.components.cover import DOMAIN as COVER_DOMAIN
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
-from homeassistant.components.select import DOMAIN as SELECT_DOMAIN
+
+# from homeassistant.components.select import DOMAIN as SELECT_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -130,11 +131,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigEntry) -> bool:
                 "config_key": CONF_LIGHTS,
                 "config_entry": TapHomeConfigEntry,
             },
-            {
-                "domain": SELECT_DOMAIN,
-                "config_key": CONF_MULTIVALUE_SWITCHES,
-                "config_entry": TapHomeConfigEntry,
-            },
+            # {
+            #     "domain": SELECT_DOMAIN,
+            #     "config_key": CONF_MULTIVALUE_SWITCHES,
+            #     "config_entry": TapHomeConfigEntry,
+            # },
             {
                 "domain": SWITCH_DOMAIN,
                 "config_key": CONF_SWITCHES,
