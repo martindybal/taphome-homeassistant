@@ -24,19 +24,11 @@ TState = TypeVar("TState")
 
 class TapHomeDataUpdateCoordinatorDevice:
     def __init__(self):
-        self._handle_coordinator_update = None
+        self._taphome_device_change_handler = None
+        self._taphome_state_change_handler = None
         self._taphome_device = None
         self._taphome_state = None
         self.taphome_state_type = None
-
-    @property
-    def handle_coordinator_update(self) -> Entity:
-        return self._handle_coordinator_update
-
-    @handle_coordinator_update.setter
-    def handle_coordinator_update(self, entity: Entity):
-        self._handle_coordinator_update = entity
-        self._invoke_coordinator_update()
 
     @property
     def taphome_device(self):
@@ -45,7 +37,16 @@ class TapHomeDataUpdateCoordinatorDevice:
     @taphome_device.setter
     def taphome_device(self, device):
         self._taphome_device = device
-        self._invoke_coordinator_update()
+        if self.taphome_device_change_handler is not None:
+            self.taphome_device_change_handler()
+
+    @property
+    def taphome_device_change_handler(self) -> Entity:
+        return self._taphome_device_change_handler
+
+    @taphome_device_change_handler.setter
+    def taphome_device_change_handler(self, entity: Entity):
+        self._taphome_device_change_handler = entity
 
     @property
     def taphome_state(self):
@@ -54,11 +55,16 @@ class TapHomeDataUpdateCoordinatorDevice:
     @taphome_state.setter
     def taphome_state(self, new_state):
         self._taphome_state = new_state
-        self._invoke_coordinator_update()
+        if self.taphome_state_change_handler is not None:
+            self.taphome_state_change_handler()
 
-    def _invoke_coordinator_update(self) -> None:
-        if self.handle_coordinator_update is not None:
-            self.handle_coordinator_update()
+    @property
+    def taphome_state_change_handler(self) -> Entity:
+        return self._taphome_state_change_handler
+
+    @taphome_state_change_handler.setter
+    def taphome_state_change_handler(self, entity: Entity):
+        self._taphome_state_change_handler = entity
 
 
 class TapHomeDataUpdateCoordinator(DataUpdateCoordinator):
@@ -78,12 +84,14 @@ class TapHomeDataUpdateCoordinator(DataUpdateCoordinator):
     def register_entity(
         self,
         taphome_device_id: int,
-        handle_coordinator_update,
         taphome_state_type,
+        taphome_device_change_handler,
+        taphome_state_change_handler,
     ) -> None:
         device = self.get_device_data(taphome_device_id)
-        device.handle_coordinator_update = handle_coordinator_update
         device.taphome_state_type = taphome_state_type
+        device.taphome_device_change_handler = taphome_device_change_handler
+        device.taphome_state_change_handler = taphome_state_change_handler
 
     def get_device(self, taphome_device_id: int) -> Device:
         device = self.get_device_data(taphome_device_id)
@@ -163,10 +171,12 @@ class TapHomeDataUpdateCoordinatorObject(Generic[TState]):
     ):
         self._taphome_device_id = taphome_device_id
         self.coordinator = coordinator
+
         coordinator.register_entity(
             taphome_device_id,
-            self.handle_taphome_coordinator_update,
             taphome_state_type,
+            self.handle_taphome_device_change,
+            self.handle_taphome_state_change,
         )
 
     @property
@@ -178,8 +188,13 @@ class TapHomeDataUpdateCoordinatorObject(Generic[TState]):
         return self.coordinator.get_device(self._taphome_device_id)
 
     @callback
-    def handle_taphome_coordinator_update(self) -> None:
-        """This method is called when data for id is changed"""
+    def handle_taphome_device_change(self) -> None:
+        """This method is called when taphome_device is changed"""
+        pass
+
+    @callback
+    def handle_taphome_state_change(self) -> None:
+        """This method is called when taphome_state is changed"""
         pass
 
 
@@ -197,4 +212,4 @@ class UpdateTapHomeState(object):
         exc_tb: TracebackType,
     ) -> None:
         if exc_type is None:
-            self._coordinator_object.handle_taphome_coordinator_update()
+            self._coordinator_object.handle_taphome_state_change()

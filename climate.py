@@ -87,7 +87,7 @@ class TapHomeCoordinatorObjectClimateController(
         self.coordinator = coordinator
 
     @callback
-    def handle_taphome_coordinator_update(self) -> None:
+    def handle_taphome_state_change(self) -> None:
         self._invoke_hvac_mode_changed()
 
 
@@ -254,7 +254,7 @@ class TapHomeClimate(TapHomeEntity[ThermostatState], ClimateEntity):
             tapHome_api_service, coordinator
         )
         self.climate_controller.add_hvac_mode_changed_listener(
-            self.handle_taphome_coordinator_update
+            self.handle_taphome_state_change
         )
 
         self._config_min_temperature = config_entry.min_temperature
