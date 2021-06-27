@@ -11,3 +11,4 @@ from .TapHomeHttpClientFactory import TapHomeHttpClientFactory
 from .ThermostatService import ThermostatService, ThermostatState
 from .ValueChangeResult import ValueChangeResult
 from .ValueType import ValueType
+from .taphome_device_state import TapHomeState

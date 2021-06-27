@@ -15,18 +15,8 @@ class CoverState(TapHomeState):
         switch_values: dict,
     ):
         super().__init__(switch_values)
-        self.blinds_level = self.get_device_value(switch_values, ValueType.BlindsLevel)
-        self.blinds_slope = self.get_device_value(switch_values, ValueType.BlindsSlope)
-
-    def __eq__(self, other):
-        if isinstance(other, CoverState):
-            return (
-                super().__eq__(other)
-                and self.blinds_level == other.blinds_level
-                and self.blinds_slope == other.blinds_slope
-            )
-
-        return False
+        self.blinds_level = self.get_device_value(ValueType.BlindsLevel)
+        self.blinds_slope = self.get_device_value(ValueType.BlindsSlope)
 
 
 class CoverService:

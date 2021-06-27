@@ -16,17 +16,8 @@ class MultiValueSwitchState(TapHomeState):
     ):
         super().__init__(multi_value_switch_values)
         self.multi_value_switch_state: int = self.get_device_value(
-            multi_value_switch_values, ValueType.MultiValueSwitchState
+            ValueType.MultiValueSwitchState
         )
-
-    def __eq__(self, other):
-        if isinstance(other, MultiValueSwitchState):
-            return (
-                super().__eq__(other)
-                and self.multi_value_switch_state == other.multi_value_switch_state
-            )
-
-        return False
 
 
 class MultiValueSwitchService:

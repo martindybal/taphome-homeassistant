@@ -13,33 +13,14 @@ class LightState(TapHomeState):
     ):
         super().__init__(light_values)
 
-        self.switch_state = SwitchStates(
-            self.get_device_value(light_values, ValueType.SwitchState)
-        )
+        self.switch_state = SwitchStates(self.get_device_value(ValueType.SwitchState))
 
-        self.brightness = self.get_device_value(
-            light_values, ValueType.AnalogOutputValue
-        )
+        self.hue = self.get_device_value(ValueType.HueDegrees)
+        self.saturation = self.get_device_value(ValueType.Saturation)
 
+        self.brightness = self.get_device_value(ValueType.AnalogOutputValue)
         if self.brightness is None:
-            self.brightness = self.get_device_value(
-                light_values, ValueType.HueBrightness
-            )
-
-        self.hue = self.get_device_value(light_values, ValueType.HueDegrees)
-        self.saturation = self.get_device_value(light_values, ValueType.Saturation)
-
-    def __eq__(self, other):
-        if isinstance(other, LightState):
-            return (
-                super().__eq__(other)
-                and self.switch_state == other.switch_state
-                and self.brightness == other.brightness
-                and self.hue == other.hue
-                and self.saturation == other.saturation
-            )
-
-        return False
+            self.brightness = self.get_device_value(ValueType.HueBrightness)
 
 
 class LightService:

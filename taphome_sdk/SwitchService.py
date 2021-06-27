@@ -17,15 +17,7 @@ class SwitchState(TapHomeState):
         switch_values: dict,
     ):
         super().__init__(switch_values)
-        self.switch_state = SwitchStates(
-            self.get_device_value(switch_values, ValueType.SwitchState)
-        )
-
-    def __eq__(self, other):
-        if isinstance(other, SwitchState):
-            return super().__eq__(other) and self.switch_state == other.switch_state
-
-        return False
+        self.switch_state = SwitchStates(self.get_device_value(ValueType.SwitchState))
 
 
 class SwitchService:

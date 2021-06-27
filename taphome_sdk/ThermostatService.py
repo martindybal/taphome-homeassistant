@@ -15,30 +15,10 @@ class ThermostatState(TapHomeState):
     ):
         super().__init__(thermostat_values)
 
-        self.desired_temperature = self.get_device_value(
-            thermostat_values, ValueType.DesiredTemperature
-        )
-        self.real_temperature = self.get_device_value(
-            thermostat_values, ValueType.RealTemperature
-        )
-        self.min_temperature = self.get_device_value(
-            thermostat_values, ValueType.MinTemperature
-        )
-        self.max_temperature = self.get_device_value(
-            thermostat_values, ValueType.MaxTemperature
-        )
-
-    def __eq__(self, other):
-        if isinstance(other, ThermostatState):
-            return (
-                super().__eq__(other)
-                and self.desired_temperature == other.desired_temperature
-                and self.real_temperature == other.real_temperature
-                and self.min_temperature == other.min_temperature
-                and self.max_temperature == other.max_temperature
-            )
-
-        return False
+        self.desired_temperature = self.get_device_value(ValueType.DesiredTemperature)
+        self.real_temperature = self.get_device_value(ValueType.RealTemperature)
+        self.min_temperature = self.get_device_value(ValueType.MinTemperature)
+        self.max_temperature = self.get_device_value(ValueType.MaxTemperature)
 
 
 class ThermostatService:
