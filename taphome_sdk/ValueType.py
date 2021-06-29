@@ -52,3 +52,4 @@ class ValueType(Enum):
     MultiValueSwitchDesiredState = 71
     PWMOutputState = 72
     BatteryPercentageRemaining = 73
+    BlindCommandState = 74
