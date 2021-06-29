@@ -19,8 +19,8 @@ from .taphome_sdk import *
 class BinarySensorConfigEntry(TapHomeConfigEntry):
     def __init__(self, device_config: dict):
         super().__init__(device_config)
-        self._device_class = self.get_optional(device_config, "device_class", None)
-        self._value_type = self.get_optional(device_config, "value_type", None)
+        self._device_class = self.get_optional("device_class", None)
+        self._value_type = self.get_optional("value_type", None)
 
     @property
     def device_class(self) -> str:
@@ -58,12 +58,10 @@ class TapHomeBinarySensor(TapHomeEntity[TapHomeState], BinarySensorEntity):
 
     @callback
     def handle_taphome_device_change(self) -> None:
-        self.resolve_device_class()
+        self.auto_resolve()
 
-    @callback
     def auto_resolve(self) -> None:
-
-        if self._value_type is None:
+        if self.taphome_device is not None and self._value_type is None:
             supported_sensor_types = [
                 {"value_type": ValueType.Motion, "device_class": DEVICE_CLASS_MOTION},
                 {"value_type": ValueType.ReedContact, "device_class": None},

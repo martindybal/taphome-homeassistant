@@ -15,7 +15,7 @@ from .taphome_sdk import *
 class SwitchConfigEntry(TapHomeConfigEntry):
     def __init__(self, device_config: dict):
         super().__init__(device_config)
-        self._device_class = self.get_optional(device_config, "device_class", None)
+        self._device_class = self.get_optional("device_class", None)
 
     @property
     def device_class(self):

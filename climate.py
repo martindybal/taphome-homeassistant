@@ -179,12 +179,8 @@ class ClimateConfigEntry(TapHomeConfigEntry):
         self._device_config = ClimateConfigEntry._backwards_compatibility(device_config)
         super().__init__(self._device_config)
 
-        self._min_temperature = self.get_optional(
-            self._device_config, "min_temperature", None
-        )
-        self._max_temperature = self.get_optional(
-            self._device_config, "max_temperature", None
-        )
+        self._min_temperature = self.get_optional("min_temperature", None)
+        self._max_temperature = self.get_optional("max_temperature", None)
 
     @property
     def min_temperature(self):

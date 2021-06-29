@@ -9,25 +9,26 @@ from .taphome_sdk import *
 
 class TapHomeConfigEntry:
     def __init__(self, device_config: dict):
+        self._device_config = device_config
         if isinstance(device_config, int):
             self._id = device_config
         else:
-            self._id = self.get_required(device_config, "id")
+            self._id = self.get_required("id")
 
     @property
     def id(self):
         return self._id
 
-    def get_required(self, device_config: dict, key: str):
-        if isinstance(device_config, dict):
-            if key in device_config:
-                return device_config[key]
+    def get_required(self, key: str):
+        if isinstance(self._device_config, dict):
+            if key in self._device_config:
+                return self._device_config[key]
         raise ConfigEntryNotReady()
 
-    def get_optional(self, device_config: dict, key: str, default):
-        if isinstance(device_config, dict):
-            if key in device_config:
-                return device_config[key]
+    def get_optional(self, key: str, default):
+        if isinstance(self._device_config, dict):
+            if key in self._device_config:
+                return self._device_config[key]
         return default
 
 
