@@ -1,7 +1,4 @@
 """TapHome light integration."""
-from config.custom_components.taphome.taphome_sdk.MultiValueSwitchService import (
-    MultiValueSwitchState,
-)
 import logging
 import typing
 
