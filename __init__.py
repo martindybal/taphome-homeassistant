@@ -11,6 +11,7 @@ from homeassistant.components.cover import DOMAIN as COVER_DOMAIN
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 
 # from homeassistant.components.select import DOMAIN as SELECT_DOMAIN
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -26,6 +27,7 @@ from homeassistant.helpers.discovery import load_platform
 
 from .add_entry_request import AddEntryRequest
 from .binary_sensor import BinarySensorConfigEntry
+from .sensor import SensorConfigEntry
 from .const import *
 from .coordinator import TapHomeDataUpdateCoordinator
 from .climate import ClimateConfigEntry
@@ -143,6 +145,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigEntry) -> bool:
             #     "config_key": CONF_MULTIVALUE_SWITCHES,
             #     "config_entry": TapHomeConfigEntry,
             # },
+            {
+                "domain": SENSOR_DOMAIN,
+                "config_key": CONF_SENSORS,
+                "config_entry": SensorConfigEntry,
+            },
             {
                 "domain": SWITCH_DOMAIN,
                 "config_key": CONF_SWITCHES,
