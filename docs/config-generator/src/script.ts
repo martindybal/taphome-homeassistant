@@ -112,24 +112,24 @@ class TapHomeDevice {
 
     private get climateConfig() {
         if (this.climateMinTemperature ||
-            this.climateMaxTemperature || 
-            this.climateHeatingSwitchIdingCoolingModeId || 
-            this.climateHeatingSwitchId || 
+            this.climateMaxTemperature ||
+            this.climateHeatingSwitchIdingCoolingModeId ||
+            this.climateHeatingSwitchId ||
             this.climateCoolingSwitchId) {
             let config = `\n        - id: ${this.deviceId}`
             if (this.climateMinTemperature) {
                 config += `\n          min_temperature: ${this.climateMinTemperature}`;
-            } else 
-            if (this.climateMaxTemperature) {
-                config += `\n          max_temperature: ${this.climateMaxTemperature}`;
-            } else 
-            if (this.climateHeatingSwitchIdingCoolingModeId) {
-                config += `\n          heating_cooling_mode_id: ${this.climateHeatingSwitchIdingCoolingModeId}`;
-            } else if (this.climateHeatingSwitchId) {
-                config += `\n          heating_switch_id: ${this.climateHeatingSwitchId}`;
-            } else if (this.climateCoolingSwitchId) {
-                config += `\n          cooling_switch_id: ${this.climateCoolingSwitchId}`;
-            }
+            } else
+                if (this.climateMaxTemperature) {
+                    config += `\n          max_temperature: ${this.climateMaxTemperature}`;
+                } else
+                    if (this.climateHeatingSwitchIdingCoolingModeId) {
+                        config += `\n          heating_cooling_mode_id: ${this.climateHeatingSwitchIdingCoolingModeId}`;
+                    } else if (this.climateHeatingSwitchId) {
+                        config += `\n          heating_switch_id: ${this.climateHeatingSwitchId}`;
+                    } else if (this.climateCoolingSwitchId) {
+                        config += `\n          cooling_switch_id: ${this.climateCoolingSwitchId}`;
+                    }
             return config;
         }
         return this.idConfig;
@@ -160,14 +160,14 @@ class TapHomeCore {
         }
         return `    - token: ${this.token}${this.apiUrlConfig()}${this.updateIntervalConfig()}${this.entitiesConfig(selectedDevices, HomeAssistantEntityType.light)}${this.entitiesConfig(selectedDevices, HomeAssistantEntityType.cover)}${this.entitiesConfig(selectedDevices, HomeAssistantEntityType.climate)}${this.entitiesConfig(selectedDevices, HomeAssistantEntityType.switch)}${this.entitiesConfig(selectedDevices, HomeAssistantEntityType.sensor)}${this.entitiesConfig(selectedDevices, HomeAssistantEntityType.binarySensor)}\n`
     }
-    
+
     private apiUrlConfig() {
         if (!this.apiUrl) {
             return "";
         }
         return `\n      api_url: ${this.apiUrl}`;
     }
-    
+
     private updateIntervalConfig() {
         if (!this.updateInterval) {
             return "";
@@ -193,7 +193,7 @@ class TapHomeCore {
     }
 
     loadFromCloudApi = async () => {
-        this.devices  = [];
+        this.devices = [];
         this.unsupportedDevices = [];
 
         let url = `https://cloudapi.taphome.com/api/cloudapi/v1/discovery/?token=${this.token}`;
@@ -207,7 +207,7 @@ class TapHomeCore {
             if (deviceSupportValue(TapHomeValueType.switchState)) {
                 if (deviceSupportValue(TapHomeValueType.analogOutputValue) || deviceSupportValue(TapHomeValueType.hueBrightness)) {
                     possibleEntityTypes.push(HomeAssistantEntityType.light);
-                } else if (deviceSupportValue(TapHomeValueType.multiValueSwitchState)){
+                } else if (deviceSupportValue(TapHomeValueType.multiValueSwitchState)) {
                     possibleEntityTypes.push(HomeAssistantEntityType.multivalueSwitches);
                 }
                 else {
@@ -278,20 +278,11 @@ let ViewModel = class {
     taphomeCores: TapHomeCore[];
     HomeAssistantEntityType;
     TapHomeValueType;
-    languages;
-    language: string;
 
     constructor() {
         this.taphomeCores = [];
         this.HomeAssistantEntityType = HomeAssistantEntityType;
         this.TapHomeValueType = TapHomeValueType;
-
-        this.languages = Object.freeze({
-            cz: "cz",
-            en: "en",
-            it: "it"
-        });;
-        this.language = this.languages.en;
         this.addCore();
     }
 
@@ -309,17 +300,7 @@ let ViewModel = class {
         if (!coresConfig) {
             return "";
         }
-        let config = `taphome:${this.languageConfig()}      
-  cores:
-${coresConfig}`;
-        return config;
-    }
-
-    private languageConfig() {
-        if (this.language == this.languages.en) {
-            return "";
-        }
-        return `\n  language: ${this.language}`;
+        return `taphome:\n  cores:\n${coresConfig}`;
     }
 };
 

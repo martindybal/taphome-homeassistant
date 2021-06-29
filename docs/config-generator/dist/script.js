@@ -316,13 +316,6 @@ var ViewModel = /** @class */ (function () {
         this.taphomeCores = [];
         this.HomeAssistantEntityType = HomeAssistantEntityType;
         this.TapHomeValueType = TapHomeValueType;
-        this.languages = Object.freeze({
-            cz: "cz",
-            en: "en",
-            it: "it"
-        });
-        ;
-        this.language = this.languages.en;
         this.addCore();
     }
     class_1.prototype.addCore = function () {
@@ -338,18 +331,11 @@ var ViewModel = /** @class */ (function () {
             if (!coresConfig) {
                 return "";
             }
-            var config = "taphome:" + this.languageConfig() + "      \n  cores:\n" + coresConfig;
-            return config;
+            return "taphome:\n  cores:\n" + coresConfig;
         },
         enumerable: false,
         configurable: true
     });
-    class_1.prototype.languageConfig = function () {
-        if (this.language == this.languages.en) {
-            return "";
-        }
-        return "\n  language: " + this.language;
-    };
     return class_1;
 }());
 var viewModel = new ViewModel();

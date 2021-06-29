@@ -1,6 +1,7 @@
 """TapHome integration."""
 import asyncio
 import typing
+import logging
 
 import homeassistant.helpers.config_validation as config_validation
 import voluptuous
@@ -36,13 +37,13 @@ from .switch import SwitchConfigEntry
 from .taphome_entity import TapHomeConfigEntry
 from .taphome_sdk import *
 
+_LOGGER = logging.getLogger(__name__)
+
 CONFIG_SCHEMA = voluptuous.Schema(
     {
         DOMAIN: voluptuous.Schema(
             {
-                voluptuous.Optional(
-                    CONF_LANGUAGE, default="en"
-                ): config_validation.string,
+                voluptuous.Optional(CONF_LANGUAGE): config_validation.string,
                 CONF_CORES: [
                     voluptuous.All(
                         config_validation.has_at_least_one_key(
@@ -92,6 +93,12 @@ CONFIG_SCHEMA = voluptuous.Schema(
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigEntry) -> bool:
+
+    if CONF_LANGUAGE in config[DOMAIN]:
+        _LOGGER.warning(
+            "TapHome language setting is not supported any more. You can renema entities as you wish. This options'll be removed in future, please remove it from your config"
+        )
+
     for core_config in config[DOMAIN][CONF_CORES]:
         token = core_config[CONF_TOKEN]
 
