@@ -1,20 +1,12 @@
-import typing
-
-from .device_operation_mode import DeviceOperationMode
 from .ValueType import ValueType
 
 
 class TapHomeState:
-    OperationMode: DeviceOperationMode
-
     def __init__(
         self,
         device_values: dict,
     ):
         self._device_values = device_values
-        operation_mode = self.get_device_value(ValueType.OperationMode)
-        if operation_mode is not None:
-            self.operation_mode = DeviceOperationMode(operation_mode)
 
     def __eq__(self, other):
         if isinstance(other, TapHomeState):
