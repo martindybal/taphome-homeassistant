@@ -3,7 +3,6 @@ from .Device import Device
 from .LightService import LightService, LightState
 from .Location import Location
 from .MultiValueSwitchService import MultiValueSwitchService, MultiValueSwitchState
-from .SensorService import SensorService
 from .SwitchService import SwitchService, SwitchState
 from .SwitchStates import SwitchStates
 from .TapHomeApiService import TapHomeApiService
