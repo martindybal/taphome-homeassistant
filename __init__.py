@@ -122,6 +122,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigEntry) -> bool:
             async with timeout(6):
                 await coordinator.async_refresh()
         except asyncio.TimeoutError:
+            _LOGGER.warn("TapHome devices was not discovered during startup")
             hass.async_create_task(coordinator.async_refresh())
         except NotImplementedError:
             return False
