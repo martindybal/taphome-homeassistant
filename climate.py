@@ -226,7 +226,7 @@ class ClimateConfigEntry(TapHomeConfigEntry):
             if "cool" in device_config:
                 device_config["cooling_switch_id"] = device_config["cool"]
             if "mode" in device_config:
-                device_config["hvac_mode_id"] = device_config["mode"]
+                device_config["heating_cooling_mode_id"] = device_config["mode"]
 
         return device_config
 
