@@ -1,8 +1,30 @@
 import logging
+import typing
 
 from .ValueType import ValueType
 
 _LOGGER = logging.getLogger(__name__)
+
+
+class SupportedValue:
+    def __init__(
+        self, value_type: ValueType, read_only: bool, allowed_values: list[dict]
+    ) -> None:
+        self._value_type = value_type
+        self._read_only = read_only
+        self._allowed_values = allowed_values
+
+    @property
+    def value_type(self) -> ValueType:
+        return self._value_type
+
+    @property
+    def read_only(self) -> bool:
+        return self._read_only
+
+    @property
+    def allowed_values(self) -> list[dict]:
+        return self._allowed_values
 
 
 class Device:
@@ -12,7 +34,7 @@ class Device:
         name: str,
         description: str,
         type: str,
-        supported_values: list,
+        supported_values,
     ):
         self._id = id
         self._name = name
@@ -26,10 +48,16 @@ class Device:
         name = device["name"]
         description = device["description"]
         type = device["type"]
-        supported_values = []
+        supported_values = {}
         for supported_value in device["supportedValues"]:
             try:
-                supported_values.append(ValueType(supported_value["valueTypeId"]))
+                value_type = ValueType(supported_value["valueTypeId"])
+                read_only = supported_value["readOnly"]
+                allowed_values = supported_value.get("enumeratedValues", [])
+                supported_values[value_type] = SupportedValue(
+                    value_type, read_only, allowed_values
+                )
+
             except Exception:
                 _LOGGER.warning(f"{supported_value} is not a valid ValueType")
 
@@ -54,3 +82,6 @@ class Device:
     @property
     def supported_values(self):
         return self._supported_values
+
+    def supports_value(self, value_type: ValueType):
+        return value_type in self.supported_values

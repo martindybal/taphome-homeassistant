@@ -44,13 +44,13 @@ class LightService:
         ]
 
         if brightness is not None:
-            if ValueType.AnalogOutputDesiredValue in device.supported_values:
+            if device.supports_value(ValueType.AnalogOutputDesiredValue):
                 values.append(
                     self.tapHomeApiService.create_device_value(
                         ValueType.AnalogOutputDesiredValue, brightness
                     )
                 )
-            elif ValueType.HueBrightnessDesiredValue in device.supported_values:
+            elif device.supports_value(ValueType.HueBrightnessDesiredValue):
                 values.append(
                     self.tapHomeApiService.create_device_value(
                         ValueType.HueBrightnessDesiredValue, brightness
