@@ -13,9 +13,6 @@ from .taphome_sdk import *
 
 class TapHomeSelectOption:
     def __init__(self, value: int, text: str) -> None:
-        assert value
-        assert text
-
         self._value = value
         self._text = text
 
@@ -40,21 +37,23 @@ class TapHomeSelect(TapHomeEntity[MultiValueSwitchState], SelectEntity):
         super().__init__(config_entry.id, coordinator, MultiValueSwitchState)
         self.multi_value_switch_service = multi_value_switch_service
         # this should be load from TapHome or config. TapHome don't provide such information but they promissed it to me
-        self._options = [
-            TapHomeSelectOption(1, "1"),
-            TapHomeSelectOption(2, "2"),
-            TapHomeSelectOption(3, "3"),
-            TapHomeSelectOption(4, "4"),
-            TapHomeSelectOption(5, "5"),
-            TapHomeSelectOption(6, "6"),
-            TapHomeSelectOption(7, "7"),
-            TapHomeSelectOption(8, "8"),
-            TapHomeSelectOption(9, "9"),
-        ]
+
+    @property
+    def taphome_options(self) -> list[TapHomeSelectOption]:
+        if self.taphome_device is not None:
+            allowed_values = self.taphome_device.supported_values[
+                ValueType.MultiValueSwitchState
+            ].allowed_values
+            return list(
+                map(
+                    lambda value: TapHomeSelectOption(value["value"], value["name"]),
+                    filter(lambda value: value["isEnabled"], allowed_values),
+                )
+            )
 
     @property
     def options(self) -> list[str]:
-        return list(map(lambda option: option.text, self._options))
+        return list(map(lambda option: option.text, self.taphome_options))
 
     @property
     def current_option(self) -> str:
@@ -63,22 +62,22 @@ class TapHomeSelect(TapHomeEntity[MultiValueSwitchState], SelectEntity):
                 self.taphome_state.multi_value_switch_state
             ).text
 
-    async def async_select_option(self, option_text: str) -> None:
+    async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
-        opinion = self.get_opinion_by_text(option_text)
+        taphome_option = self.get_opinion_by_text(option)
 
         async with UpdateTapHomeState(self) as state:
 
             await self.multi_value_switch_service.async_set_value(
-                opinion.value, self.taphome_device
+                taphome_option.value, self.taphome_device
             )
-            state.multi_value_switch_state = opinion.value
+            state.multi_value_switch_state = taphome_option.value
 
     def get_opinion_by_value(self, value: int) -> TapHomeSelectOption:
-        return next(option for option in self._options if option.value == value)
+        return next(option for option in self.taphome_options if option.value == value)
 
     def get_opinion_by_text(self, text: str) -> TapHomeSelectOption:
-        return next(option for option in self._options if option.text == text)
+        return next(option for option in self.taphome_options if option.text == text)
 
 
 def setup_platform(

@@ -11,7 +11,7 @@ from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
 from homeassistant.components.cover import DOMAIN as COVER_DOMAIN
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 
-# from homeassistant.components.select import DOMAIN as SELECT_DOMAIN
+from homeassistant.components.select import DOMAIN as SELECT_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import ConfigEntry
@@ -119,7 +119,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigEntry) -> bool:
         )
 
         try:
-            async with timeout(6):
+            async with timeout(8):
                 await coordinator.async_refresh()
         except asyncio.TimeoutError:
             _LOGGER.warn("TapHome devices was not discovered during startup")
@@ -148,11 +148,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigEntry) -> bool:
                 "config_key": CONF_LIGHTS,
                 "config_entry": TapHomeConfigEntry,
             },
-            # {
-            #     "domain": SELECT_DOMAIN,
-            #     "config_key": CONF_MULTIVALUE_SWITCHES,
-            #     "config_entry": TapHomeConfigEntry,
-            # },
+            {
+                "domain": SELECT_DOMAIN,
+                "config_key": CONF_MULTIVALUE_SWITCHES,
+                "config_entry": TapHomeConfigEntry,
+            },
             {
                 "domain": SENSOR_DOMAIN,
                 "config_key": CONF_SENSORS,
