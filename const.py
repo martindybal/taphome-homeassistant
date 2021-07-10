@@ -1,0 +1,12 @@
+DOMAIN = "taphome"
+
+TAPHOME_API_SERVICE = f"{DOMAIN}_TapHomeApiService"
+TAPHOME_COORDINATOR = f"{DOMAIN}_Coordinator"
+TAPHOME_DEVICES = f"{DOMAIN}_Devices"
+TAPHOME_LANGUAGE = f"{DOMAIN}_language"
+CONF_CORES = "cores"
+CONF_LANGUAGE = "language"
+CONF_API_URL = "api_url"
+CONF_UPDATE_INTERVAL = "update_interval"
+CONF_CLIMATES = "climates"
+CONF_MULTIVALUE_SWITCHES = "multivalue_switches"

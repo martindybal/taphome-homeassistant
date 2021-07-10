@@ -1,72 +1,48 @@
+import logging
+from .Device import Device
+from .taphome_device_state import TapHomeState
+from .TapHomeApiService import TapHomeApiService
 from .ValueChangeResult import ValueChangeResult
 from .ValueType import ValueType
-from .Device import Device
-from .TapHomeApiService import TapHomeApiService
-from .DeviceServiceHelper import __DeviceServiceHelper as DeviceServiceHelper
+
+_LOGGER = logging.getLogger(__name__)
 
 
-class ThermostatState:
+class ThermostatState(TapHomeState):
     def __init__(
-        self, desired_temperature, real_temperature, min_temperature, max_temperature
+        self,
+        thermostat_values: dict,
     ):
-        self._desired_temperature = desired_temperature
-        self._real_temperature = real_temperature
-        self._min_temperature = min_temperature
-        self._max_temperature = max_temperature
+        super().__init__(thermostat_values)
 
-    @property
-    def desired_temperature(self):
-        return self._desired_temperature
-
-    @property
-    def real_temperature(self):
-        return self._real_temperature
-
-    @property
-    def min_temperature(self):
-        return self._min_temperature
-
-    @property
-    def max_temperature(self):
-        return self._max_temperature
+        self.desired_temperature = self.get_device_value(ValueType.DesiredTemperature)
+        self.real_temperature = self.get_device_value(ValueType.RealTemperature)
+        self.min_temperature = self.get_device_value(ValueType.MinTemperature)
+        self.max_temperature = self.get_device_value(ValueType.MaxTemperature)
 
 
 class ThermostatService:
-    def __init__(self, tapHomeApiService: TapHomeApiService):
-        self.tapHomeApiService = tapHomeApiService
+    def __init__(self, taphome_api_service: TapHomeApiService):
+        self.taphome_api_service = taphome_api_service
 
-    async def async_get_thermostat_state(self, device: Device) -> ThermostatState:
-        thermostat_values = await self.tapHomeApiService.async_get_device_values(
-            device.deviceId
-        )
+    async def async_get_state(self, device: Device) -> ThermostatState:
+        try:
+            thermostat_values = await self.taphome_api_service.async_get_device_values(
+                device.deviceId
+            )
 
-        desired_temperature = DeviceServiceHelper.get_device_value(
-            thermostat_values, ValueType.DesiredTemperature
-        )
-
-        real_temperature = DeviceServiceHelper.get_device_value(
-            thermostat_values, ValueType.RealTemperature
-        )
-
-        min_temperature = DeviceServiceHelper.get_device_value(
-            thermostat_values, ValueType.MinTemperature
-        )
-
-        max_temperature = DeviceServiceHelper.get_device_value(
-            thermostat_values, ValueType.MaxTemperature
-        )
-
-        return ThermostatState(
-            desired_temperature, real_temperature, min_temperature, max_temperature
-        )
+            return ThermostatState(thermostat_values)
+        except:
+            _LOGGER.error(f"TapHome async_get_state for {device.id} failed")
+            return None
 
     def async_set_desired_temperature(
         self, device: Device, desired_temperature
-    ) -> ValueChangeResult:
+    ) -> None:
         values = [
-            self.tapHomeApiService.create_device_value(
+            self.taphome_api_service.create_device_value(
                 ValueType.DesiredTemperature, desired_temperature
             )
         ]
 
-        return self.tapHomeApiService.async_set_device_values(device.deviceId, values)
+        return self.taphome_api_service.async_set_device_values(device.id, values)

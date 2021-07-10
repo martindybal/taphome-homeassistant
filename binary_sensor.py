@@ -1,138 +1,95 @@
 """TapHome light integration."""
-from .taphome_sdk import *
-from .taphome_entity import TapHomeEntity
-
-import logging
+import typing
 
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_MOTION,
-    DEVICE_CLASS_CONNECTIVITY,
     BinarySensorEntity,
+    DEVICE_CLASS_CONNECTIVITY,
+    DEVICE_CLASS_MOTION,
 )
+from homeassistant.const import CONF_BINARY_SENSORS
+from homeassistant.core import HomeAssistant
+
+from .add_entry_request import AddEntryRequest
+from .const import DOMAIN
+from .coordinator import TapHomeDataUpdateCoordinator
+from .taphome_entity import *
+from .taphome_sdk import *
 
 
-from . import TAPHOME_API_SERVICE, TAPHOME_DEVICES
-
-
-class TapHomeIsAliveSensor(BinarySensorEntity):
-    sensor_value_type = ValueType.Motion
-
-    def __init__(self, tapHomeApiService: TapHomeApiService):
-        self._tapHomeApiService = tapHomeApiService
-        self._is_on = None
-
-    @property
-    def unique_id(self):
-        return "taphome_is_alive_sensor.taphome".lower()
-
-    @property
-    def name(self):
-        return "TapHome is alive sensor"
+class BinarySensorConfigEntry(TapHomeConfigEntry):
+    def __init__(self, device_config: dict):
+        super().__init__(device_config)
+        self._device_class = self.get_optional("device_class", None)
+        self._value_type = self.get_optional("value_type", None)
 
     @property
-    def device_class(self):
-        """Return type of sensor."""
-        return DEVICE_CLASS_CONNECTIVITY
+    def device_class(self) -> str:
+        return self._device_class
 
     @property
-    def is_on(self) -> bool:
-        """Return if the binary sensor is currently on or off."""
-        return self._is_on
-
-    async def async_update(self):
-        try:
-            location = await self._tapHomeApiService.async_get_location()
-            self._is_on = location is not None
-        except Exception:
-            self._is_on = False
+    def value_type(self) -> ValueType:
+        return self._value_type
 
 
-class TapHomeBinarySensorBase(TapHomeEntity, BinarySensorEntity):
-    def __init__(self, sensorService: SensorService, device: Device):
-        super(TapHomeBinarySensorBase, self).__init__(device=device)
+class TapHomeBinarySensor(TapHomeEntity[TapHomeState], BinarySensorEntity):
+    """Representation of an binary_sensor"""
 
-        self._sensorService = sensorService
-        self._device = device
-
-        self._is_on = None
+    def __init__(
+        self,
+        config_entry: BinarySensorConfigEntry,
+        coordinator: TapHomeDataUpdateCoordinator,
+    ):
+        super().__init__(config_entry.id, coordinator, TapHomeState)
+        self._device_class = config_entry.device_class
+        self._value_type = config_entry.value_type
+        self.auto_resolve()
 
     @property
     def is_on(self) -> bool:
         """Return if the binary sensor is currently on or off."""
-        return self._is_on
-
-    @property
-    def sensor_value_type(self) -> ValueType:
-        """Return type of sensor."""
-        pass
-
-    def async_update(self):
-        return self.async_refresh_state()
-
-    async def async_refresh_state(self):
-        value = await self._sensorService.async_get_sensor_value(
-            self._device, self.sensor_value_type
-        )
-        self._is_on = self.taphome_to_hass_value(value)
-
-    def taphome_to_hass_value(self, value: int):
-        if value == 1:
-            return True
-        elif value == 0:
-            return False
-        else:
-            return None
-
-
-class TapHomeMotionSensor(TapHomeBinarySensorBase):
-    sensor_value_type = ValueType.Motion
-
-    def __init__(self, sensorService: SensorService, device: Device):
-        super(TapHomeMotionSensor, self).__init__(sensorService, device)
+        if not self.taphome_state is None and self._value_type is not None:
+            sensor_value = self.taphome_state.get_device_value(self._value_type)
+            return TapHomeEntity.convert_taphome_bool_to_ha(sensor_value)
 
     @property
     def device_class(self):
-        """Return type of sensor."""
-        return DEVICE_CLASS_MOTION
+        """Return the class of this device, from component DEVICE_CLASSES."""
+        return self._device_class
+
+    @callback
+    def handle_taphome_device_change(self) -> None:
+        self.auto_resolve()
+
+    def auto_resolve(self) -> None:
+        if self.taphome_device is not None and self._value_type is None:
+            supported_sensor_types = [
+                {"value_type": ValueType.Motion, "device_class": DEVICE_CLASS_MOTION},
+                {"value_type": ValueType.ReedContact, "device_class": None},
+                {"value_type": ValueType.VariableState, "device_class": None},
+            ]
+            supported_values = self.taphome_device.supported_values
+            for sensor_types in supported_sensor_types:
+                if sensor_types["value_type"] in supported_values:
+                    self._value_type = sensor_types["value_type"]
+                    if self._device_class is None:
+                        self._device_class = sensor_types["device_class"]
 
 
-class TapHomeGenericReedContact(TapHomeBinarySensorBase):
-    sensor_value_type = ValueType.ReedContact
-
-    def __init__(self, sensorService: SensorService, device: Device):
-        super(TapHomeGenericReedContact, self).__init__(sensorService, device)
-
-
-class TapHomeBinaryVariable(TapHomeBinarySensorBase):
-    sensor_value_type = ValueType.VariableState
-
-    def __init__(self, sensorService: SensorService, device: Device):
-        super(TapHomeBinaryVariable, self).__init__(sensorService, device)
-
-
-async def async_setup_platform(hass, config, async_add_entities, platformConfig):
-    tapHomeApiService = platformConfig[TAPHOME_API_SERVICE]
-    devices = platformConfig[TAPHOME_DEVICES]
-    sensorService = SensorService(tapHomeApiService)
-
-    sensors = [TapHomeIsAliveSensor(tapHomeApiService)]
-    for device in devices:
-        for sensor in await async_create_sensors(sensorService, device):
-            sensors.append(sensor)
-
-    async_add_entities(sensors)
-
-
-async def async_create_sensors(sensorService: SensorService, device: Device):
-    sensors = []
-    sensorTypes = [
-        TapHomeMotionSensor,
-        TapHomeGenericReedContact,
-        TapHomeBinaryVariable,
+def setup_platform(
+    hass: HomeAssistant,
+    config,
+    add_entities,
+    discovery_info=None,
+) -> None:
+    """Set up the binary_sensor platform."""
+    add_entry_requests: typing.List[AddEntryRequest] = hass.data[DOMAIN][
+        CONF_BINARY_SENSORS
     ]
-    for sensorType in sensorTypes:
-        if sensorType.sensor_value_type in device.supportedValues:
-            sensor = sensorType(sensorService, device)
-            sensors.append(sensor)
+    binary_sensors = []
+    for add_entry_request in add_entry_requests:
+        binary_sensor = TapHomeBinarySensor(
+            add_entry_request.config_entry, add_entry_request.coordinator
+        )
+        binary_sensors.append(binary_sensor)
 
-    return sensors
+    add_entities(binary_sensors)

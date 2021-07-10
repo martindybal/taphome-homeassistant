@@ -1,6 +1,6 @@
 import logging
-from .ValueType import ValueType
 
+from .ValueType import ValueType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -8,36 +8,36 @@ _LOGGER = logging.getLogger(__name__)
 class Device:
     def __init__(
         self,
-        deviceId: int,
+        id: int,
         name: str,
         description: str,
         type: str,
-        supportedValues: list,
+        supported_values: list,
     ):
-        self._deviceId = deviceId
+        self._id = id
         self._name = name
         self._description = description
         self._type = type
-        self._supportedValues = supportedValues
+        self._supported_values = supported_values
 
     @staticmethod
     def create(device: dict):
-        deviceId = device["deviceId"]
+        id = device["deviceId"]
         name = device["name"]
         description = device["description"]
         type = device["type"]
-        supportedValues = []
-        for supportedValue in device["supportedValues"]:
+        supported_values = []
+        for supported_value in device["supportedValues"]:
             try:
-                supportedValues.append(ValueType(supportedValue["valueTypeId"]))
+                supported_values.append(ValueType(supported_value["valueTypeId"]))
             except Exception:
-                _LOGGER.exception(f"Unkown ValueType")
+                _LOGGER.warning(f"{supported_value} is not a valid ValueType")
 
-        return Device(deviceId, name, description, type, supportedValues)
+        return Device(id, name, description, type, supported_values)
 
     @property
-    def deviceId(self):
-        return self._deviceId
+    def id(self):
+        return self._id
 
     @property
     def name(self):
@@ -52,5 +52,5 @@ class Device:
         return self._type
 
     @property
-    def supportedValues(self):
-        return self._supportedValues
+    def supported_values(self):
+        return self._supported_values

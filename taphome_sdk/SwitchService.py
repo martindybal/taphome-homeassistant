@@ -1,50 +1,48 @@
+import logging
+
+from voluptuous.schema_builder import Undefined
+
 from .Device import Device
-from .ValueChangeResult import ValueChangeResult
-from .ValueType import ValueType
-from .TapHomeApiService import TapHomeApiService
-from .DeviceServiceHelper import __DeviceServiceHelper as DeviceServiceHelper
 from .SwitchStates import SwitchStates
+from .taphome_device_state import TapHomeState
+from .TapHomeApiService import TapHomeApiService
+from .ValueType import ValueType
+
+_LOGGER = logging.getLogger(__name__)
 
 
-class SwitchState:
+class SwitchState(TapHomeState):
     def __init__(
         self,
-        switch_state: SwitchStates,
+        switch_values: dict,
     ):
-        self._switch_state = switch_state
-
-    @property
-    def switch_state(self):
-        return self._switch_state
+        super().__init__(switch_values)
+        self.switch_state = SwitchStates(self.get_device_value(ValueType.SwitchState))
 
 
 class SwitchService:
-    def __init__(self, tapHomeApiService: TapHomeApiService):
-        self.tapHomeApiService = tapHomeApiService
+    def __init__(self, taphome_api_service: TapHomeApiService):
+        self.taphome_api_service = taphome_api_service
 
-    async def async_get_switch_state(self, device: Device):
-        switchValues = await self.tapHomeApiService.async_get_device_values(
-            device.deviceId
-        )
-        switch_state = SwitchStates(
-            DeviceServiceHelper.get_device_value(switchValues, ValueType.SwitchState)
-        )
+    async def async_get_state(self, device: Device):
+        try:
+            switch_values = await self.taphome_api_service.async_get_device_values(
+                device.id
+            )
 
-        return SwitchState(switch_state)
+            if switch_values is None:
+                return None
 
-    def async_turn_on_switch(self, device: Device) -> ValueChangeResult:
+            return SwitchState(switch_values)
+        except:
+            _LOGGER.error(f"TapHome async_get_state for {device.id} failed")
+            return None
+
+    def async_turn(self, switch_state: SwitchStates, device: Device) -> None:
         values = [
-            self.tapHomeApiService.create_device_value(
-                ValueType.SwitchState, SwitchStates.ON.value
+            self.taphome_api_service.create_device_value(
+                ValueType.SwitchState, switch_state.value
             )
         ]
 
-        return self.tapHomeApiService.async_set_device_values(device.deviceId, values)
-
-    def async_turn_off_switch(self, device: Device) -> ValueChangeResult:
-        values = [
-            self.tapHomeApiService.create_device_value(
-                ValueType.SwitchState, SwitchStates.OFF.value
-            )
-        ]
-        return self.tapHomeApiService.async_set_device_values(device.deviceId, values)
+        return self.taphome_api_service.async_set_device_values(device.id, values)
