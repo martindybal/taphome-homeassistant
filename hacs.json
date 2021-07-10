@@ -1,15 +1,16 @@
 {
     "name": "TapHome",
     "render_readme": true,
-    "iot_class": "Cloud Polling",
-    "homeassistant": "2021.1.5",
+    "iot_class": "Local Polling",
+    "homeassistant": "2021.7.0",
     "domains": [
         "binary_sensor",
         "climate",
         "cover",
         "light",
         "sensor",
-        "switch"
+        "switch",
+        "select"
     ],
     "content_in_root": true
-  }  
+}
