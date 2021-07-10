@@ -67,9 +67,9 @@ class TapHomeBinarySensor(TapHomeEntity[TapHomeState], BinarySensorEntity):
                 {"value_type": ValueType.ReedContact, "device_class": None},
                 {"value_type": ValueType.VariableState, "device_class": None},
             ]
-            supported_values = self.taphome_device.supported_values
+
             for sensor_types in supported_sensor_types:
-                if sensor_types["value_type"] in supported_values:
+                if self.taphome_device.supports_value(sensor_types["value_type"]):
                     self._value_type = sensor_types["value_type"]
                     if self._device_class is None:
                         self._device_class = sensor_types["device_class"]

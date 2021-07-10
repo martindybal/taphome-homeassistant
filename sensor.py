@@ -323,10 +323,9 @@ class TapHomeSensorCreateRequest(TapHomeDataUpdateCoordinatorObject[TapHomeState
                 TapHomeVariableType(),
             ]
 
-            supported_values = self.taphome_device.supported_values
             sensors = []
             for sensor_type in supported_sensor_types:
-                if sensor_type.value_type in supported_values:
+                if self.taphome_device.supports_value(sensor_type.value_type):
                     if self._config_entry.device_class is not None:
                         sensor_type.device_class = self._config_entry.device_class
                     if self._config_entry.unit_of_measurement is not None:
@@ -355,47 +354,3 @@ def setup_platform(
         TapHomeSensorCreateRequest(
             add_entry_request.config_entry, add_entry_request.coordinator, add_entities
         )
-
-
-# def setup_platform(
-#     hass: HomeAssistant,
-#     config,
-#     add_entities,
-#     discovery_info=None,
-# ) -> None:
-#     """Set up the sensor platform."""
-#     add_entry_requests: typing.List[AddEntryRequest] = hass.data[DOMAIN][CONF_SENSORS]
-#     sensors = []
-#     for add_entry_request in add_entry_requests:
-#         supported_sensor_types: typing.List[TapHomeSensorType] = [
-#             TapHomeHumiditySensorType(),
-#             TapHomeTemperatureSensorType(),
-#         ]
-#         sensor_id = add_entry_request.config_entry.id
-#         taphome_device = add_entry_request.coordinator.get_device(sensor_id)
-#         supported_values = taphome_device.supported_values
-
-#         for sensor_type in supported_sensor_types:
-#             if sensor_type.value_type in supported_values:
-#                 if add_entry_request.config_entry.device_class is not None:
-#                     sensor_type.device_class = (
-#                         add_entry_request.config_entry.device_class
-#                     )
-#                 if add_entry_request.config_entry.unit_of_measurement is not None:
-#                     sensor_type.unit_of_measurement = (
-#                         add_entry_request.config_entry.unit_of_measurement
-#                     )
-#                 if add_entry_request.config_entry.was_measured is not None:
-#                     sensor_type.was_measured = (
-#                         add_entry_request.config_entry.was_measured
-#                     )
-
-#                 sensor = TapHomeSensor(
-#                     add_entry_request.config_entry,
-#                     add_entry_request.coordinator,
-#                     sensor_type,
-#                 )
-
-#                 sensors.append(sensor)
-
-#     add_entities(sensors)
