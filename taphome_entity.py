@@ -14,9 +14,15 @@ class TapHomeConfigEntry:
         else:
             self._id = self.get_required("id")
 
+        self._unique_id = self.get_optional("unique_id", None)
+
     @property
     def id(self):
         return self._id
+
+    @property
+    def unique_id(self):
+        return self._unique_id
 
     def get_required(self, key: str):
         if isinstance(self._device_config, dict):
@@ -31,19 +37,33 @@ class TapHomeConfigEntry:
         return default
 
 
+# Přidat parametr domain do všech entity. Použít "from homeassistant.components.select import DOMAIN"
+# Místo ID posílat celou konfiguraci
+
+# Otestovat unique_id
+
+
 class TapHomeEntity(CoordinatorEntity, TapHomeDataUpdateCoordinatorObject[TState]):
     def __init__(
         self,
-        taphome_device_id: int,
+        config: TapHomeConfigEntry,
+        unique_id_determination: str,
         coordinator: TapHomeDataUpdateCoordinator,
         taphome_state_type,
     ):
+        self._taphome_device_id = config.id
+
+        if config.unique_id == None:
+            self._unique_id = (
+                f"taphome.{unique_id_determination}.{self._taphome_device_id}".lower()
+            )
+        else:
+            self._unique_id = config.unique_id
+
         TapHomeDataUpdateCoordinatorObject.__init__(
-            self, taphome_device_id, coordinator, taphome_state_type
+            self, self._taphome_device_id, coordinator, taphome_state_type
         )
         CoordinatorEntity.__init__(self, coordinator)
-
-        self._taphome_device_id = taphome_device_id
 
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator. Coordinator call schedule_update_ha_state when is needed"""
@@ -55,7 +75,7 @@ class TapHomeEntity(CoordinatorEntity, TapHomeDataUpdateCoordinatorObject[TState
 
     @property
     def unique_id(self):
-        return f"{self.__class__.__name__}.taphome_{self._taphome_device_id}".lower()
+        return self._unique_id
 
     @property
     def available(self):

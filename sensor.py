@@ -2,7 +2,11 @@
 import datetime
 import typing
 
-from homeassistant.components.sensor import STATE_CLASS_MEASUREMENT, SensorEntity
+from homeassistant.components.sensor import (
+    DOMAIN,
+    STATE_CLASS_MEASUREMENT,
+    SensorEntity,
+)
 from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
     CONF_SENSORS,
@@ -17,16 +21,14 @@ from homeassistant.const import (
     LIGHT_LUX,
     PERCENTAGE,
     POWER_KILO_WATT,
-    POWER_WATT,
     SPEED_KILOMETERS_PER_HOUR,
     TEMP_CELSIUS,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import StateType
 
 from .add_entry_request import AddEntryRequest
-from .const import DOMAIN
+from .const import TAPHOME_PLATFORM
 from .coordinator import TapHomeDataUpdateCoordinator
 from .taphome_entity import *
 from .taphome_sdk import *
@@ -242,13 +244,16 @@ class TapHomeSensor(TapHomeEntity[TapHomeState], SensorEntity):
         coordinator: TapHomeDataUpdateCoordinator,
         sensor_type: TapHomeSensorType,
     ):
-        super().__init__(config_entry.id, coordinator, TapHomeState)
         assert sensor_type is not None
         self._sensor_type = sensor_type
+        unique_id_determination = f"{DOMAIN}.{self._sensor_type.value_type}"
 
-    @property
-    def unique_id(self):
-        return f"taphome.sensor.{self._sensor_type.value_type}.{self._taphome_device_id}".lower()
+        super().__init__(
+            config_entry,
+            unique_id_determination,
+            coordinator,
+            TapHomeState,
+        )
 
     @property
     def state(self):
@@ -348,7 +353,9 @@ def setup_platform(
     discovery_info=None,
 ) -> None:
     """Set up the sensor platform."""
-    add_entry_requests: typing.List[AddEntryRequest] = hass.data[DOMAIN][CONF_SENSORS]
+    add_entry_requests: typing.List[AddEntryRequest] = hass.data[TAPHOME_PLATFORM][
+        CONF_SENSORS
+    ]
     for add_entry_request in add_entry_requests:
         TapHomeSensorCreateRequest(
             add_entry_request.config_entry, add_entry_request.coordinator, add_entities

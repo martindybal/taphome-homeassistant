@@ -4,6 +4,7 @@ import typing
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_HS_COLOR,
+    DOMAIN,
     SUPPORT_BRIGHTNESS,
     SUPPORT_COLOR,
     LightEntity,
@@ -12,7 +13,7 @@ from homeassistant.const import CONF_LIGHTS
 from homeassistant.core import HomeAssistant
 
 from .add_entry_request import AddEntryRequest
-from .const import DOMAIN
+from .const import TAPHOME_PLATFORM
 from .coordinator import *
 from .taphome_entity import *
 from .taphome_sdk import *
@@ -27,7 +28,7 @@ class TapHomeLight(TapHomeEntity[LightState], LightEntity):
         coordinator: TapHomeDataUpdateCoordinator,
         light_service: LightService,
     ):
-        super().__init__(config_entry.id, coordinator, LightState)
+        super().__init__(config_entry, DOMAIN, coordinator, LightState)
         self.light_service = light_service
         self._supported_features = None
 
@@ -110,7 +111,9 @@ def setup_platform(
     discovery_info=None,
 ) -> None:
     """Set up the light platform."""
-    add_entry_requests: typing.List[AddEntryRequest] = hass.data[DOMAIN][CONF_LIGHTS]
+    add_entry_requests: typing.List[AddEntryRequest] = hass.data[TAPHOME_PLATFORM][
+        CONF_LIGHTS
+    ]
     lights = []
     for add_entry_request in add_entry_requests:
         light_service = LightService(add_entry_request.tapHome_api_service)

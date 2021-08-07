@@ -4,13 +4,14 @@ import typing
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_CONNECTIVITY,
     DEVICE_CLASS_MOTION,
+    DOMAIN,
     BinarySensorEntity,
 )
 from homeassistant.const import CONF_BINARY_SENSORS
 from homeassistant.core import HomeAssistant
 
 from .add_entry_request import AddEntryRequest
-from .const import DOMAIN
+from .const import TAPHOME_PLATFORM
 from .coordinator import TapHomeDataUpdateCoordinator
 from .taphome_entity import *
 from .taphome_sdk import *
@@ -39,7 +40,7 @@ class TapHomeBinarySensor(TapHomeEntity[TapHomeState], BinarySensorEntity):
         config_entry: BinarySensorConfigEntry,
         coordinator: TapHomeDataUpdateCoordinator,
     ):
-        super().__init__(config_entry.id, coordinator, TapHomeState)
+        super().__init__(config_entry, DOMAIN, coordinator, TapHomeState)
         self._device_class = config_entry.device_class
         self._value_type = config_entry.value_type
         self.auto_resolve()
@@ -82,7 +83,7 @@ def setup_platform(
     discovery_info=None,
 ) -> None:
     """Set up the binary_sensor platform."""
-    add_entry_requests: typing.List[AddEntryRequest] = hass.data[DOMAIN][
+    add_entry_requests: typing.List[AddEntryRequest] = hass.data[TAPHOME_PLATFORM][
         CONF_BINARY_SENSORS
     ]
     binary_sensors = []

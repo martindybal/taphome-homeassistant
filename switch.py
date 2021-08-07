@@ -1,12 +1,12 @@
 """TapHome light integration."""
 import typing
 
-from homeassistant.components.switch import SwitchEntity
+from homeassistant.components.switch import DOMAIN, SwitchEntity
 from homeassistant.const import CONF_SWITCHES
 from homeassistant.core import HomeAssistant
 
 from .add_entry_request import AddEntryRequest
-from .const import DOMAIN
+from .const import TAPHOME_PLATFORM
 from .coordinator import *
 from .taphome_entity import *
 from .taphome_sdk import *
@@ -31,7 +31,7 @@ class TapHomeSwitch(TapHomeEntity[SwitchState], SwitchEntity):
         coordinator: TapHomeDataUpdateCoordinator,
         switch_service: SwitchService,
     ):
-        super().__init__(config_entry.id, coordinator, SwitchState)
+        super().__init__(config_entry, DOMAIN, coordinator, SwitchState)
         self.switch_service = switch_service
         self._device_class = config_entry.device_class
 
@@ -67,7 +67,9 @@ def setup_platform(
     discovery_info=None,
 ) -> None:
     """Set up the switch platform."""
-    add_entry_requests: typing.List[AddEntryRequest] = hass.data[DOMAIN][CONF_SWITCHES]
+    add_entry_requests: typing.List[AddEntryRequest] = hass.data[TAPHOME_PLATFORM][
+        CONF_SWITCHES
+    ]
     switches = []
     for add_entry_request in add_entry_requests:
         switch_service = SwitchService(add_entry_request.tapHome_api_service)

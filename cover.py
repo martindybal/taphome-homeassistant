@@ -6,11 +6,12 @@ from homeassistant.components.cover import (
     ATTR_TILT_POSITION,
     DEVICE_CLASS_BLIND,
     DEVICE_CLASS_SHADE,
+    DOMAIN,
     SUPPORT_CLOSE,
-    SUPPORT_OPEN,
-    SUPPORT_SET_POSITION,
-    SUPPORT_OPEN_TILT,
     SUPPORT_CLOSE_TILT,
+    SUPPORT_OPEN,
+    SUPPORT_OPEN_TILT,
+    SUPPORT_SET_POSITION,
     SUPPORT_SET_TILT_POSITION,
     CoverEntity,
 )
@@ -18,7 +19,7 @@ from homeassistant.const import CONF_COVERS
 from homeassistant.core import HomeAssistant
 
 from .add_entry_request import AddEntryRequest
-from .const import DOMAIN
+from .const import TAPHOME_PLATFORM
 from .coordinator import *
 from .taphome_entity import *
 from .taphome_sdk import *
@@ -43,7 +44,7 @@ class TapHomeCover(TapHomeEntity[CoverState], CoverEntity):
         coordinator: TapHomeDataUpdateCoordinator,
         cover_service: CoverService,
     ):
-        super().__init__(config_entry.id, coordinator, CoverState)
+        super().__init__(config_entry, DOMAIN, coordinator, CoverState)
         self.cover_service = cover_service
         self._device_class = config_entry.device_class
         self._supported_features = None
@@ -155,7 +156,9 @@ def setup_platform(
     discovery_info=None,
 ) -> None:
     """Set up the cover platform."""
-    add_entry_requests: typing.List[AddEntryRequest] = hass.data[DOMAIN][CONF_COVERS]
+    add_entry_requests: typing.List[AddEntryRequest] = hass.data[TAPHOME_PLATFORM][
+        CONF_COVERS
+    ]
     covers = []
     for add_entry_request in add_entry_requests:
         cover_service = CoverService(add_entry_request.tapHome_api_service)

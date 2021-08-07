@@ -11,7 +11,7 @@ from homeassistant.core import callback
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN
+from .const import TAPHOME_PLATFORM
 from .taphome_sdk import *
 
 _LOGGER = logging.getLogger(__name__)
@@ -73,7 +73,9 @@ class TapHomeDataUpdateCoordinator(DataUpdateCoordinator):
         self.last_update_devices_values_timestamp = 0
         self._devices = {}
         update_interval = timedelta(seconds=update_interval)
-        super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=update_interval)
+        super().__init__(
+            hass, _LOGGER, name=TAPHOME_PLATFORM, update_interval=update_interval
+        )
 
     def register_entity(
         self,
