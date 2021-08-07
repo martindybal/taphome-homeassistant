@@ -1,17 +1,15 @@
 """Provides the taphome DataUpdateCoordinator."""
 # from .switch import TapHomeSwitch
-import logging
 from datetime import timedelta
-from typing import Generic, Type, TypeVar
+import logging
 from types import TracebackType
+from typing import Generic, Type, TypeVar
 
 from aiohttp.client_reqrep import ClientResponseError
+
 from homeassistant.core import callback
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.update_coordinator import (
-    DataUpdateCoordinator,
-    UpdateFailed,
-)
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
 from .taphome_sdk import *

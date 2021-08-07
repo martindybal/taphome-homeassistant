@@ -1,16 +1,16 @@
 """TapHome light integration."""
 import datetime
-from homeassistant.helpers.typing import StateType
 import typing
 
-from homeassistant.components.sensor import SensorEntity, STATE_CLASS_MEASUREMENT
+from homeassistant.components.sensor import STATE_CLASS_MEASUREMENT, SensorEntity
 from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
+    CONF_SENSORS,
+    DEVICE_CLASS_CO2,
     DEVICE_CLASS_ENERGY,
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_ILLUMINANCE,
     DEVICE_CLASS_POWER,
-    DEVICE_CLASS_CO2,
     DEVICE_CLASS_TEMPERATURE,
     ENERGY_KILO_WATT_HOUR,
     FREQUENCY_HERTZ,
@@ -20,10 +20,10 @@ from homeassistant.const import (
     POWER_WATT,
     SPEED_KILOMETERS_PER_HOUR,
     TEMP_CELSIUS,
-    CONF_SENSORS,
 )
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import StateType
 
 from .add_entry_request import AddEntryRequest
 from .const import DOMAIN

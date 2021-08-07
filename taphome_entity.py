@@ -1,5 +1,4 @@
 from homeassistant.core import callback
-
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 

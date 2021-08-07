@@ -4,9 +4,9 @@ from voluptuous.schema_builder import Undefined
 
 from .Device import Device
 from .SwitchStates import SwitchStates
-from .taphome_device_state import TapHomeState
 from .TapHomeApiService import TapHomeApiService
 from .ValueType import ValueType
+from .taphome_device_state import TapHomeState
 
 _LOGGER = logging.getLogger(__name__)
 

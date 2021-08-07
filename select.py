@@ -5,7 +5,7 @@ from homeassistant.components.select import SelectEntity
 from homeassistant.core import HomeAssistant
 
 from .add_entry_request import AddEntryRequest
-from .const import DOMAIN, CONF_MULTIVALUE_SWITCHES
+from .const import CONF_MULTIVALUE_SWITCHES, DOMAIN
 from .coordinator import TapHomeDataUpdateCoordinator
 from .taphome_entity import *
 from .taphome_sdk import *

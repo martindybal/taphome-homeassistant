@@ -109,22 +109,16 @@ class TapHomeCover(TapHomeEntity[CoverState], CoverEntity):
 
     async def async_open_cover(self, **kwargs):
         """Open the cover."""
-        print(f"kwargs {kwargs}")
-        print("async_open_cover")
         await self.async_set_cover_position(position=100)
 
     async def async_close_cover(self, **kwargs):
         """Close cover."""
-        print(f"kwargs {kwargs}")
-        print("async_close_cover")
         await self.async_set_cover_position(position=0)
 
     async def async_set_cover_position(self, **kwargs):
         """Move the cover to a specific position."""
-        print(f"kwargs {kwargs}")
         if ATTR_POSITION in kwargs:
             ha_position = kwargs.get(ATTR_POSITION)
-            print(f"async_set_cover_position {ha_position}")
             taphome_position = 1 - self.convert_ha_percentage_to_taphome(ha_position)
 
             async with UpdateTapHomeState(self) as state:

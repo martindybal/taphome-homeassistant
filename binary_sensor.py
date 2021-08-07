@@ -2,9 +2,9 @@
 import typing
 
 from homeassistant.components.binary_sensor import (
-    BinarySensorEntity,
     DEVICE_CLASS_CONNECTIVITY,
     DEVICE_CLASS_MOTION,
+    BinarySensorEntity,
 )
 from homeassistant.const import CONF_BINARY_SENSORS
 from homeassistant.core import HomeAssistant

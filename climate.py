@@ -4,17 +4,17 @@ import typing
 
 from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
-    SUPPORT_TARGET_TEMPERATURE,
     HVAC_MODE_COOL,
     HVAC_MODE_HEAT,
     HVAC_MODE_HEAT_COOL,
     HVAC_MODE_OFF,
+    SUPPORT_TARGET_TEMPERATURE,
 )
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 
 from .add_entry_request import AddEntryRequest
-from .const import DOMAIN, CONF_CLIMATES
+from .const import CONF_CLIMATES, DOMAIN
 from .coordinator import TapHomeDataUpdateCoordinator
 from .taphome_entity import *
 from .taphome_sdk import *
