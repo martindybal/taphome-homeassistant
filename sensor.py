@@ -67,7 +67,6 @@ class TapHomeHumiditySensorType(TapHomeSensorType):
         )
 
     def convert_taphome_to_ha(self, value: int) -> int:
-        print(f"humidity {value}")
         return TapHomeEntity.convert_taphome_percentage_to_ha(value)
 
 
