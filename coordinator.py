@@ -8,7 +8,6 @@ from typing import Generic, Type, TypeVar
 from aiohttp.client_reqrep import ClientResponseError
 
 from homeassistant.core import callback
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import TAPHOME_PLATFORM

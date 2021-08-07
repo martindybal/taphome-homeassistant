@@ -1,7 +1,5 @@
 import logging
 
-from voluptuous.schema_builder import Undefined
-
 from .device import Device
 from .switch_states import SwitchStates
 from .taphome_api_service import TapHomeApiService

@@ -1,8 +1,6 @@
 import logging
 import typing
 
-from aiohttp.client_reqrep import ClientResponseError
-
 from .device import Device
 from .location import Location
 from .taphome_http_client_factory import TapHomeHttpClientFactory

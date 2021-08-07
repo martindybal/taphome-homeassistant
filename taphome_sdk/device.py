@@ -1,5 +1,4 @@
 import logging
-import typing
 
 from .value_type import ValueType
 
