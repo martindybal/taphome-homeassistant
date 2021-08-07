@@ -1,11 +1,11 @@
 """TapHome light integration."""
 import typing
 
-from homeassistant.components.select import SelectEntity
+from homeassistant.components.select import DOMAIN, SelectEntity
 from homeassistant.core import HomeAssistant
 
 from .add_entry_request import AddEntryRequest
-from .const import DOMAIN, CONF_MULTIVALUE_SWITCHES
+from .const import CONF_MULTIVALUE_SWITCHES, TAPHOME_PLATFORM
 from .coordinator import TapHomeDataUpdateCoordinator
 from .taphome_entity import *
 from .taphome_sdk import *
@@ -34,7 +34,7 @@ class TapHomeSelect(TapHomeEntity[MultiValueSwitchState], SelectEntity):
         coordinator: TapHomeDataUpdateCoordinator,
         multi_value_switch_service: MultiValueSwitchService,
     ):
-        super().__init__(config_entry.id, coordinator, MultiValueSwitchState)
+        super().__init__(config_entry, DOMAIN, coordinator, MultiValueSwitchState)
         self.multi_value_switch_service = multi_value_switch_service
         # this should be load from TapHome or config. TapHome don't provide such information but they promissed it to me
 
@@ -87,7 +87,7 @@ def setup_platform(
     discovery_info=None,
 ) -> None:
     """Set up the select platform."""
-    add_entry_requests: typing.List[AddEntryRequest] = hass.data[DOMAIN][
+    add_entry_requests: typing.List[AddEntryRequest] = hass.data[TAPHOME_PLATFORM][
         CONF_MULTIVALUE_SWITCHES
     ]
     selects = []

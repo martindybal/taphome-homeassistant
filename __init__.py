@@ -1,16 +1,15 @@
 """TapHome integration."""
 import asyncio
-import typing
 import logging
+import typing
 
-import homeassistant.helpers.config_validation as config_validation
-import voluptuous
 from async_timeout import timeout
+import voluptuous
+
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
 from homeassistant.components.cover import DOMAIN as COVER_DOMAIN
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
-
 from homeassistant.components.select import DOMAIN as SELECT_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
@@ -24,15 +23,16 @@ from homeassistant.const import (
     CONF_TOKEN,
 )
 from homeassistant.core import HomeAssistant
+import homeassistant.helpers.config_validation as config_validation
 from homeassistant.helpers.discovery import load_platform
 
 from .add_entry_request import AddEntryRequest
 from .binary_sensor import BinarySensorConfigEntry
-from .sensor import SensorConfigEntry
+from .climate import ClimateConfigEntry
 from .const import *
 from .coordinator import TapHomeDataUpdateCoordinator
-from .climate import ClimateConfigEntry
 from .cover import CoverConfigEntry
+from .sensor import SensorConfigEntry
 from .switch import SwitchConfigEntry
 from .taphome_entity import TapHomeConfigEntry
 from .taphome_sdk import *
@@ -41,7 +41,7 @@ _LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = voluptuous.Schema(
     {
-        DOMAIN: voluptuous.Schema(
+        TAPHOME_PLATFORM: voluptuous.Schema(
             {
                 voluptuous.Optional(CONF_LANGUAGE): config_validation.string,
                 CONF_CORES: [
@@ -94,12 +94,12 @@ CONFIG_SCHEMA = voluptuous.Schema(
 
 async def async_setup(hass: HomeAssistant, config: ConfigEntry) -> bool:
 
-    if CONF_LANGUAGE in config[DOMAIN]:
+    if CONF_LANGUAGE in config[TAPHOME_PLATFORM]:
         _LOGGER.warning(
             "TapHome language setting is not supported any more. You can renema entities as you wish. This options'll be removed in future, please remove it from your config"
         )
 
-    for core_config in config[DOMAIN][CONF_CORES]:
+    for core_config in config[TAPHOME_PLATFORM][CONF_CORES]:
         token = core_config[CONF_TOKEN]
 
         api_url = read_from_config_or_default(
@@ -127,7 +127,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigEntry) -> bool:
         except NotImplementedError:
             return False
 
-        platforms = [
+        domains = [
             {
                 "domain": BINARY_SENSOR_DOMAIN,
                 "config_key": CONF_BINARY_SENSORS,
@@ -164,23 +164,21 @@ async def async_setup(hass: HomeAssistant, config: ConfigEntry) -> bool:
                 "config_entry": SwitchConfigEntry,
             },
         ]
-        hass.data[DOMAIN] = {}
-        for platform in platforms:
-            platform_config = core_config[platform["config_key"]]
-            config_entries = map_config_entries(
-                platform["config_entry"], platform_config
-            )
+        hass.data[TAPHOME_PLATFORM] = {}
+        for domain in domains:
+            domain_config = core_config[domain["config_key"]]
+            config_entries = map_config_entries(domain["config_entry"], domain_config)
 
             add_entry_requests = map_add_entry_requests(
                 config_entries, coordinator, tapHome_api_service
             )
 
-            hass.data[DOMAIN][platform["config_key"]] = add_entry_requests
+            hass.data[TAPHOME_PLATFORM][domain["config_key"]] = add_entry_requests
 
             load_platform(
                 hass,
-                platform["domain"],
-                DOMAIN,
+                domain["domain"],
+                TAPHOME_PLATFORM,
                 {},
                 config,
             )

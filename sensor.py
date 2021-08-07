@@ -1,32 +1,34 @@
 """TapHome light integration."""
 import datetime
-from homeassistant.helpers.typing import StateType
 import typing
 
-from homeassistant.components.sensor import SensorEntity, STATE_CLASS_MEASUREMENT
+from homeassistant.components.sensor import (
+    DOMAIN,
+    STATE_CLASS_MEASUREMENT,
+    SensorEntity,
+)
 from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
+    CONF_SENSORS,
+    DEVICE_CLASS_CO2,
     DEVICE_CLASS_ENERGY,
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_ILLUMINANCE,
     DEVICE_CLASS_POWER,
-    DEVICE_CLASS_CO2,
     DEVICE_CLASS_TEMPERATURE,
     ENERGY_KILO_WATT_HOUR,
     FREQUENCY_HERTZ,
     LIGHT_LUX,
     PERCENTAGE,
     POWER_KILO_WATT,
-    POWER_WATT,
     SPEED_KILOMETERS_PER_HOUR,
     TEMP_CELSIUS,
-    CONF_SENSORS,
 )
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .add_entry_request import AddEntryRequest
-from .const import DOMAIN
+from .const import TAPHOME_PLATFORM
 from .coordinator import TapHomeDataUpdateCoordinator
 from .taphome_entity import *
 from .taphome_sdk import *
@@ -67,7 +69,6 @@ class TapHomeHumiditySensorType(TapHomeSensorType):
         )
 
     def convert_taphome_to_ha(self, value: int) -> int:
-        print(f"humidity {value}")
         return TapHomeEntity.convert_taphome_percentage_to_ha(value)
 
 
@@ -243,13 +244,16 @@ class TapHomeSensor(TapHomeEntity[TapHomeState], SensorEntity):
         coordinator: TapHomeDataUpdateCoordinator,
         sensor_type: TapHomeSensorType,
     ):
-        super().__init__(config_entry.id, coordinator, TapHomeState)
         assert sensor_type is not None
         self._sensor_type = sensor_type
+        unique_id_determination = f"{DOMAIN}.{self._sensor_type.value_type.name}"
 
-    @property
-    def unique_id(self):
-        return f"taphome.sensor.{self._sensor_type.value_type}.{self._taphome_device_id}".lower()
+        super().__init__(
+            config_entry,
+            unique_id_determination,
+            coordinator,
+            TapHomeState,
+        )
 
     @property
     def state(self):
@@ -349,7 +353,9 @@ def setup_platform(
     discovery_info=None,
 ) -> None:
     """Set up the sensor platform."""
-    add_entry_requests: typing.List[AddEntryRequest] = hass.data[DOMAIN][CONF_SENSORS]
+    add_entry_requests: typing.List[AddEntryRequest] = hass.data[TAPHOME_PLATFORM][
+        CONF_SENSORS
+    ]
     for add_entry_request in add_entry_requests:
         TapHomeSensorCreateRequest(
             add_entry_request.config_entry, add_entry_request.coordinator, add_entities

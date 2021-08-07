@@ -4,17 +4,18 @@ import typing
 
 from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
-    SUPPORT_TARGET_TEMPERATURE,
+    DOMAIN,
     HVAC_MODE_COOL,
     HVAC_MODE_HEAT,
     HVAC_MODE_HEAT_COOL,
     HVAC_MODE_OFF,
+    SUPPORT_TARGET_TEMPERATURE,
 )
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 
 from .add_entry_request import AddEntryRequest
-from .const import DOMAIN, CONF_CLIMATES
+from .const import CONF_CLIMATES, TAPHOME_PLATFORM
 from .coordinator import TapHomeDataUpdateCoordinator
 from .taphome_entity import *
 from .taphome_sdk import *
@@ -240,7 +241,7 @@ class TapHomeClimate(TapHomeEntity[ThermostatState], ClimateEntity):
         tapHome_api_service: TapHomeApiService,
         coordinator: TapHomeDataUpdateCoordinator,
     ):
-        super().__init__(config_entry.id, coordinator, ThermostatState)
+        super().__init__(config_entry, DOMAIN, coordinator, ThermostatState)
 
         self.thermostat_service = ThermostatService(tapHome_api_service)
         self.climate_controller = config_entry.create_climate_controller(
@@ -324,7 +325,9 @@ def setup_platform(
     discovery_info=None,
 ) -> None:
     """Set up the climate platform."""
-    add_entry_requests: typing.List[AddEntryRequest] = hass.data[DOMAIN][CONF_CLIMATES]
+    add_entry_requests: typing.List[AddEntryRequest] = hass.data[TAPHOME_PLATFORM][
+        CONF_CLIMATES
+    ]
     climates = []
     for add_entry_request in add_entry_requests:
         climate = TapHomeClimate(

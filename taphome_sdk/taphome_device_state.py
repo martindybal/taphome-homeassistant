@@ -1,4 +1,4 @@
-from .ValueType import ValueType
+from .value_type import ValueType
 
 
 class TapHomeState:

@@ -1,10 +1,10 @@
 import logging
 
-from .Device import Device
-from .TapHomeApiService import TapHomeApiService
+from .device import Device
+from .taphome_api_service import TapHomeApiService
+from .value_change_result import ValueChangeResult
+from .value_type import ValueType
 from .taphome_device_state import TapHomeState
-from .ValueChangeResult import ValueChangeResult
-from .ValueType import ValueType
 
 _LOGGER = logging.getLogger(__name__)
 
