@@ -1,19 +1,19 @@
 class Location:
-    def __init__(self, locationId: str, locationName: str):
-        self._locationId = locationId
-        self._locationName = locationName
+    def __init__(self, location_id: str, location_name: str):
+        self._location_id = location_id
+        self._location_name = location_name
 
     @staticmethod
     def create(location: dict):
-        locationId = location["locationId"]
-        locationName = location["locationName"]
+        location_id = location["locationId"]
+        location_name = location["locationName"]
 
-        return Location(locationId, locationName)
-
-    @property
-    def locationId(self):
-        return self._locationId
+        return Location(location_id, location_name)
 
     @property
-    def locationName(self):
-        return self._locationName
+    def location_id(self):
+        return self._location_id
+
+    @property
+    def location_name(self):
+        return self._location_name
