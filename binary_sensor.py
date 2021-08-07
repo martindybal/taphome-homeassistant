@@ -69,6 +69,7 @@ class TapHomeBinarySensor(TapHomeEntity[TapHomeState], BinarySensorEntity):
 
     def __init__(
         self,
+        core_name: str,
         config_entry: BinarySensorConfigEntry,
         coordinator: TapHomeDataUpdateCoordinator,
         sensor_type: TapHomeBinarySensorType,
@@ -78,6 +79,7 @@ class TapHomeBinarySensor(TapHomeEntity[TapHomeState], BinarySensorEntity):
         unique_id_determination = f"{DOMAIN}.{self._sensor_type.value_type.name}"
 
         super().__init__(
+            core_name,
             config_entry,
             unique_id_determination,
             coordinator,
@@ -105,11 +107,13 @@ class TapHomeBinarySensorCreateRequest(
 
     def __init__(
         self,
+        core_name: str,
         config_entry: BinarySensorConfigEntry,
         coordinator: TapHomeDataUpdateCoordinator,
         add_entities: AddEntitiesCallback,
     ):
         super().__init__(config_entry.id, coordinator, TapHomeState)
+        self._core_name = core_name
         self._config_entry = config_entry
         self.coordinator = coordinator
         self.add_entities = add_entities
@@ -138,7 +142,10 @@ class TapHomeBinarySensorCreateRequest(
                         sensor_type.device_class = self._config_entry.device_class
 
                     binary_sensor = TapHomeBinarySensor(
-                        self._config_entry, self.coordinator, sensor_type
+                        self._core_name,
+                        self._config_entry,
+                        self.coordinator,
+                        sensor_type,
                     )
                     binary_sensors.append(binary_sensor)
             self.add_entities(binary_sensors)
@@ -156,5 +163,8 @@ def setup_platform(
     ]
     for add_entry_request in add_entry_requests:
         TapHomeBinarySensorCreateRequest(
-            add_entry_request.config_entry, add_entry_request.coordinator, add_entities
+            add_entry_request.core_name,
+            add_entry_request.config_entry,
+            add_entry_request.coordinator,
+            add_entities,
         )

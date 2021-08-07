@@ -237,11 +237,12 @@ class TapHomeClimate(TapHomeEntity[ThermostatState], ClimateEntity):
 
     def __init__(
         self,
+        core_name: str,
         config_entry: ClimateConfigEntry,
         tapHome_api_service: TapHomeApiService,
         coordinator: TapHomeDataUpdateCoordinator,
     ):
-        super().__init__(config_entry, DOMAIN, coordinator, ThermostatState)
+        super().__init__(core_name, config_entry, DOMAIN, coordinator, ThermostatState)
 
         self.thermostat_service = ThermostatService(tapHome_api_service)
         self.climate_controller = config_entry.create_climate_controller(
@@ -331,6 +332,7 @@ def setup_platform(
     climates = []
     for add_entry_request in add_entry_requests:
         climate = TapHomeClimate(
+            add_entry_request.core_name,
             add_entry_request.config_entry,
             add_entry_request.tapHome_api_service,
             add_entry_request.coordinator,

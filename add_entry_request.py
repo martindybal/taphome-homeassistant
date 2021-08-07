@@ -6,15 +6,21 @@ from .taphome_sdk import *
 class AddEntryRequest:
     def __init__(
         self,
+        core_name: str,
         config_entry: TapHomeConfigEntry,
         taphome_device_id: int,
         coordinator: TapHomeDataUpdateCoordinator,
         tapHome_api_service: TapHomeApiService,
     ):
+        self._core_name = core_name
         self._config_entry = config_entry
         self._taphome_device_id = taphome_device_id
         self._coordinator = coordinator
         self._tapHome_api_service = tapHome_api_service
+
+    @property
+    def core_name(self):
+        return self._core_name
 
     @property
     def config_entry(self):
