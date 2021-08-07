@@ -24,8 +24,8 @@ TState = TypeVar("TState")
 
 class TapHomeDataUpdateCoordinatorDevice:
     def __init__(self):
-        self._taphome_device_change_handler = None
-        self._taphome_state_change_handler = None
+        self._taphome_device_change_listeners = []
+        self._taphome_state_change_listeners = []
         self._taphome_device = None
         self._taphome_state = None
         self.taphome_state_type = None
@@ -37,16 +37,14 @@ class TapHomeDataUpdateCoordinatorDevice:
     @taphome_device.setter
     def taphome_device(self, device):
         self._taphome_device = device
-        if self.taphome_device_change_handler is not None:
-            self.taphome_device_change_handler()
+        self.invoke_taphome_device_change()
 
-    @property
-    def taphome_device_change_handler(self) -> Entity:
-        return self._taphome_device_change_handler
+    def attach_taphome_device_change_handler(self, taphome_device_change_handler):
+        self._taphome_device_change_listeners.append(taphome_device_change_handler)
 
-    @taphome_device_change_handler.setter
-    def taphome_device_change_handler(self, entity: Entity):
-        self._taphome_device_change_handler = entity
+    def invoke_taphome_device_change(self):
+        for taphome_device_change_handler in self._taphome_device_change_listeners:
+            taphome_device_change_handler()
 
     @property
     def taphome_state(self):
@@ -55,16 +53,14 @@ class TapHomeDataUpdateCoordinatorDevice:
     @taphome_state.setter
     def taphome_state(self, new_state):
         self._taphome_state = new_state
-        if self.taphome_state_change_handler is not None:
-            self.taphome_state_change_handler()
+        self.invoke_taphome_state_change()
 
-    @property
-    def taphome_state_change_handler(self) -> Entity:
-        return self._taphome_state_change_handler
+    def attach_taphome_state_change_handler(self, taphome_state_change_handler):
+        self._taphome_state_change_listeners.append(taphome_state_change_handler)
 
-    @taphome_state_change_handler.setter
-    def taphome_state_change_handler(self, entity: Entity):
-        self._taphome_state_change_handler = entity
+    def invoke_taphome_state_change(self):
+        for taphome_state_change_handler in self._taphome_state_change_listeners:
+            taphome_state_change_handler()
 
 
 class TapHomeDataUpdateCoordinator(DataUpdateCoordinator):
@@ -90,8 +86,8 @@ class TapHomeDataUpdateCoordinator(DataUpdateCoordinator):
     ) -> None:
         device = self.get_device_data(taphome_device_id)
         device.taphome_state_type = taphome_state_type
-        device.taphome_device_change_handler = taphome_device_change_handler
-        device.taphome_state_change_handler = taphome_state_change_handler
+        device.attach_taphome_device_change_handler(taphome_device_change_handler)
+        device.attach_taphome_state_change_handler(taphome_state_change_handler)
 
     def get_device(self, taphome_device_id: int) -> Device:
         device = self.get_device_data(taphome_device_id)
