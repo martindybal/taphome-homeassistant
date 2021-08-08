@@ -19,6 +19,36 @@ from .taphome_entity import *
 from .taphome_sdk import *
 
 
+class TapHomeIsAliveSensor(BinarySensorEntity):
+    sensor_value_type = ValueType.Motion
+
+    def __init__(self, core_name: str, coordinator: TapHomeDataUpdateCoordinator):
+        self._core_name = core_name
+        self.coordinator = coordinator
+
+        unique_id_core_name = f".{core_name}" if core_name is not None else ""
+        self._unique_id = f"taphome{unique_id_core_name}.{DOMAIN}.isalive".lower()
+
+    @property
+    def unique_id(self):
+        return self._unique_id
+
+    @property
+    def name(self):
+        core_name = f" {self._core_name}" if self._core_name is not None else ""
+        return f"TapHome{core_name} is alive sensor"
+
+    @property
+    def device_class(self):
+        """Return type of binary sensor from component DEVICE_CLASSES."""
+        return DEVICE_CLASS_CONNECTIVITY
+
+    @property
+    def is_on(self) -> bool:
+        """Return if the binary sensor is currently on or off."""
+        return self.coordinator.last_update_success
+
+
 class TapHomeBinarySensorType:
     def __init__(self, value_type: ValueType, device_class: str = None) -> None:
         self.value_type = value_type
@@ -87,17 +117,17 @@ class TapHomeBinarySensor(TapHomeEntity[TapHomeState], BinarySensorEntity):
         )
 
     @property
+    def device_class(self) -> str:
+        """Return type of binary sensor from component DEVICE_CLASSES."""
+        return self._sensor_type.device_class
+
+    @property
     def is_on(self) -> bool:
         """Return if the binary sensor is currently on or off."""
         if self.taphome_state is not None:
             sensor_type = self._sensor_type
             sensor_value = self.taphome_state.get_device_value(sensor_type.value_type)
             return TapHomeEntity.convert_taphome_bool_to_ha(sensor_value)
-
-    @property
-    def device_class(self) -> str:
-        """Return the class of this device, from component DEVICE_CLASSES."""
-        return self._sensor_type.device_class
 
 
 class TapHomeBinarySensorCreateRequest(
@@ -161,6 +191,7 @@ def setup_platform(
     add_entry_requests: typing.List[AddEntryRequest] = hass.data[TAPHOME_PLATFORM][
         CONF_BINARY_SENSORS
     ]
+
     for add_entry_request in add_entry_requests:
         TapHomeBinarySensorCreateRequest(
             add_entry_request.core_name,
@@ -168,3 +199,13 @@ def setup_platform(
             add_entry_request.coordinator,
             add_entities,
         )
+
+    cores = {}
+    is_alive_sensors = []
+    for domain in hass.data[TAPHOME_PLATFORM]:
+        for add_entry_request in hass.data[TAPHOME_PLATFORM][domain]:
+            cores[add_entry_request.core_name] = add_entry_request.coordinator
+
+    for core_name in cores:
+        is_alive_sensors.append(TapHomeIsAliveSensor(core_name, cores[core_name]))
+    add_entities(is_alive_sensors)
