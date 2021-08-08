@@ -66,7 +66,6 @@ class TapHomeDataUpdateCoordinator(DataUpdateCoordinator):
     def __init__(
         self, hass, update_interval: int, taphome_api_service: TapHomeApiService
     ):
-        """Initialize global TapHome data updater."""
         self.taphome_api_service = taphome_api_service
         self._was_devices_discovered = False
         self.last_update_devices_values_timestamp = 0

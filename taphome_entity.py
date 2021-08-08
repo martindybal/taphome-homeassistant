@@ -37,12 +37,6 @@ class TapHomeConfigEntry:
         return default
 
 
-# Přidat parametr domain do všech entity. Použít "from homeassistant.components.select import DOMAIN"
-# Místo ID posílat celou konfiguraci
-
-# Otestovat unique_id
-
-
 class TapHomeEntity(CoordinatorEntity, TapHomeDataUpdateCoordinatorObject[TState]):
     def __init__(
         self,

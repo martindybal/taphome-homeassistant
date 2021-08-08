@@ -1,4 +1,4 @@
-"""TapHome light integration."""
+"""TapHome climate integration."""
 import logging
 import typing
 

@@ -95,7 +95,7 @@ class BinarySensorConfigEntry(TapHomeConfigEntry):
 
 
 class TapHomeBinarySensor(TapHomeEntity[TapHomeState], BinarySensorEntity):
-    """Representation of an sensor"""
+    """Representation of an binary sensor"""
 
     def __init__(
         self,
@@ -133,7 +133,7 @@ class TapHomeBinarySensor(TapHomeEntity[TapHomeState], BinarySensorEntity):
 class TapHomeBinarySensorCreateRequest(
     TapHomeDataUpdateCoordinatorObject[TapHomeState]
 ):
-    """Create TapHomeSensors from SensorConfigEntry when devices is discovered"""
+    """Create TapHomeBinarySensor from BinarySensorConfigEntry when devices is discovered"""
 
     def __init__(
         self,

@@ -1,4 +1,4 @@
-"""TapHome light integration."""
+"""TapHome cover integration."""
 import typing
 
 from homeassistant.components.cover import (

@@ -1,4 +1,4 @@
-"""TapHome light integration."""
+"""TapHome sensor integration."""
 import datetime
 import typing
 
