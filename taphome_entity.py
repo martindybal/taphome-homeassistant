@@ -40,7 +40,7 @@ class TapHomeConfigEntry:
 class TapHomeEntity(CoordinatorEntity, TapHomeDataUpdateCoordinatorObject[TState]):
     def __init__(
         self,
-        core_name: str,
+        core_id: str,
         config: TapHomeConfigEntry,
         unique_id_determination: str,
         coordinator: TapHomeDataUpdateCoordinator,
@@ -49,8 +49,8 @@ class TapHomeEntity(CoordinatorEntity, TapHomeDataUpdateCoordinatorObject[TState
         self._taphome_device_id = config.id
 
         if config.unique_id == None:
-            unique_id_core_name = f".{core_name}" if core_name is not None else ""
-            self._unique_id = f"taphome{unique_id_core_name}.{unique_id_determination}.{self._taphome_device_id}".lower()
+            unique_id_core_id = f".{core_id}" if core_id is not None else ""
+            self._unique_id = f"taphome{unique_id_core_id}.{unique_id_determination}.{self._taphome_device_id}".lower()
         else:
             self._unique_id = config.unique_id
 

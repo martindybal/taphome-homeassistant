@@ -22,12 +22,12 @@ from .taphome_sdk import *
 class TapHomeIsAliveSensor(BinarySensorEntity):
     sensor_value_type = ValueType.Motion
 
-    def __init__(self, core_name: str, coordinator: TapHomeDataUpdateCoordinator):
-        self._core_name = core_name
+    def __init__(self, core_id: str, coordinator: TapHomeDataUpdateCoordinator):
+        self._core_id = core_id
         self.coordinator = coordinator
 
-        unique_id_core_name = f".{core_name}" if core_name is not None else ""
-        self._unique_id = f"taphome{unique_id_core_name}.{DOMAIN}.isalive".lower()
+        unique_id_core_id = f".{core_id}" if core_id is not None else ""
+        self._unique_id = f"taphome{unique_id_core_id}.{DOMAIN}.isalive".lower()
 
     @property
     def unique_id(self):
@@ -35,8 +35,8 @@ class TapHomeIsAliveSensor(BinarySensorEntity):
 
     @property
     def name(self):
-        core_name = f" {self._core_name}" if self._core_name is not None else ""
-        return f"TapHome{core_name} is alive sensor"
+        core_id = f" {self._core_id}" if self._core_id is not None else ""
+        return f"TapHome{core_id} is alive sensor"
 
     @property
     def device_class(self):
@@ -99,7 +99,7 @@ class TapHomeBinarySensor(TapHomeEntity[TapHomeState], BinarySensorEntity):
 
     def __init__(
         self,
-        core_name: str,
+        core_id: str,
         config_entry: BinarySensorConfigEntry,
         coordinator: TapHomeDataUpdateCoordinator,
         sensor_type: TapHomeBinarySensorType,
@@ -109,7 +109,7 @@ class TapHomeBinarySensor(TapHomeEntity[TapHomeState], BinarySensorEntity):
         unique_id_determination = f"{DOMAIN}.{self._sensor_type.value_type.name}"
 
         super().__init__(
-            core_name,
+            core_id,
             config_entry,
             unique_id_determination,
             coordinator,
@@ -137,13 +137,13 @@ class TapHomeBinarySensorCreateRequest(
 
     def __init__(
         self,
-        core_name: str,
+        core_id: str,
         config_entry: BinarySensorConfigEntry,
         coordinator: TapHomeDataUpdateCoordinator,
         add_entities: AddEntitiesCallback,
     ):
         super().__init__(config_entry.id, coordinator, TapHomeState)
-        self._core_name = core_name
+        self._core_id = core_id
         self._config_entry = config_entry
         self.coordinator = coordinator
         self.add_entities = add_entities
@@ -172,7 +172,7 @@ class TapHomeBinarySensorCreateRequest(
                         sensor_type.device_class = self._config_entry.device_class
 
                     binary_sensor = TapHomeBinarySensor(
-                        self._core_name,
+                        self._core_id,
                         self._config_entry,
                         self.coordinator,
                         sensor_type,
@@ -194,7 +194,7 @@ def setup_platform(
 
     for add_entry_request in add_entry_requests:
         TapHomeBinarySensorCreateRequest(
-            add_entry_request.core_name,
+            add_entry_request.core_id,
             add_entry_request.config_entry,
             add_entry_request.coordinator,
             add_entities,
@@ -204,8 +204,8 @@ def setup_platform(
     is_alive_sensors = []
     for domain in hass.data[TAPHOME_PLATFORM]:
         for add_entry_request in hass.data[TAPHOME_PLATFORM][domain]:
-            cores[add_entry_request.core_name] = add_entry_request.coordinator
+            cores[add_entry_request.core_id] = add_entry_request.coordinator
 
-    for core_name in cores:
-        is_alive_sensors.append(TapHomeIsAliveSensor(core_name, cores[core_name]))
+    for core_id in cores:
+        is_alive_sensors.append(TapHomeIsAliveSensor(core_id, cores[core_id]))
     add_entities(is_alive_sensors)

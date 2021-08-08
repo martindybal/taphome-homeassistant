@@ -30,13 +30,13 @@ class TapHomeSelect(TapHomeEntity[MultiValueSwitchState], SelectEntity):
 
     def __init__(
         self,
-        core_name: str,
+        core_id: str,
         config_entry: TapHomeConfigEntry,
         coordinator: TapHomeDataUpdateCoordinator,
         multi_value_switch_service: MultiValueSwitchService,
     ):
         super().__init__(
-            core_name, config_entry, DOMAIN, coordinator, MultiValueSwitchState
+            core_id, config_entry, DOMAIN, coordinator, MultiValueSwitchState
         )
         self.multi_value_switch_service = multi_value_switch_service
         # this should be load from TapHome or config. TapHome don't provide such information but they promissed it to me
@@ -97,7 +97,7 @@ def setup_platform(
     for add_entry_request in add_entry_requests:
         select_service = MultiValueSwitchService(add_entry_request.tapHome_api_service)
         select = TapHomeSelect(
-            add_entry_request.core_name,
+            add_entry_request.core_id,
             add_entry_request.config_entry,
             add_entry_request.coordinator,
             select_service,

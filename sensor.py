@@ -240,7 +240,7 @@ class TapHomeSensor(TapHomeEntity[TapHomeState], SensorEntity):
 
     def __init__(
         self,
-        core_name: str,
+        core_id: str,
         config_entry: SensorConfigEntry,
         coordinator: TapHomeDataUpdateCoordinator,
         sensor_type: TapHomeSensorType,
@@ -250,7 +250,7 @@ class TapHomeSensor(TapHomeEntity[TapHomeState], SensorEntity):
         unique_id_determination = f"{DOMAIN}.{self._sensor_type.value_type.name}"
 
         super().__init__(
-            core_name,
+            core_id,
             config_entry,
             unique_id_determination,
             coordinator,
@@ -293,13 +293,13 @@ class TapHomeSensorCreateRequest(TapHomeDataUpdateCoordinatorObject[TapHomeState
 
     def __init__(
         self,
-        core_name: str,
+        core_id: str,
         config_entry: SensorConfigEntry,
         coordinator: TapHomeDataUpdateCoordinator,
         add_entities: AddEntitiesCallback,
     ):
         super().__init__(config_entry.id, coordinator, TapHomeState)
-        self._core_name = core_name
+        self._core_id = core_id
         self._config_entry = config_entry
         self.coordinator = coordinator
         self.add_entities = add_entities
@@ -344,7 +344,7 @@ class TapHomeSensorCreateRequest(TapHomeDataUpdateCoordinatorObject[TapHomeState
                         sensor_type.was_measured = self._config_entry.was_measured
 
                     sensor = TapHomeSensor(
-                        self._core_name,
+                        self._core_id,
                         self._config_entry,
                         self.coordinator,
                         sensor_type,
@@ -365,7 +365,7 @@ def setup_platform(
     ]
     for add_entry_request in add_entry_requests:
         TapHomeSensorCreateRequest(
-            add_entry_request.core_name,
+            add_entry_request.core_id,
             add_entry_request.config_entry,
             add_entry_request.coordinator,
             add_entities,
