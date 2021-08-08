@@ -99,6 +99,21 @@
                                 </button>
                             </div>
                             <div class="row mb-3">
+                                <label v-bind:for="'id' + taphomeCore.token" class="col-3 col-form-label">
+                                    id
+                                </label>
+                                <div class="col-9">
+                                    <input class="form-control" v-bind:id="'id' + taphomeCore.token"
+                                        placeholder="mycore"
+                                        v-model="taphomeCore.id">
+                                    <small class="form-text">
+                                        <span v-if="taphomeCores.length <= 1">Optional.</span> 
+                                        <span v-if="taphomeCores.length > 1">Required. You're using multiple cores</span> 
+                                        Id of core is used in logs and unique_id
+                                    </small>
+                                </div>
+                            </div>
+                            <div class="row mb-3">
                                 <label v-bind:for="'api_url' + taphomeCore.token" class="col-3 col-form-label">
                                     api_url
                                 </label>
