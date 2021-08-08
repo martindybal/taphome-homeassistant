@@ -25,7 +25,7 @@ The configuration is described in more detail in the [wiki](https://github.com/m
 1. Use [config-generator](https://www.dybal.it/taphome-homeassistant/config-generator/) to generate your config
 1. Copy config to your `configuration.yaml`
 
-** If you used first preview of this component (2020.1.1-pre). Your TapHome entities'll duplicate after update. Please follow **
+**If you used first preview of this component (2020.1.1-pre). Your TapHome entities'll duplicate after update. Please follow next steps**
 1. Disable taphome (comment `taphome` section in your `configuration.yaml`)
 1. Restart Home Assistant Core
 1. Remove all TapHome entities
