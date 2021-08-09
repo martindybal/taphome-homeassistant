@@ -1,7 +1,6 @@
 """TapHome binary_sensor integration."""
 import typing
 
-from config.custom_components.taphome.sensor import TapHomeVariableType
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_CONNECTIVITY,
     DEVICE_CLASS_MOTION,
@@ -162,7 +161,7 @@ class TapHomeBinarySensorCreateRequest(
             supported_sensor_types: typing.List[TapHomeBinarySensorType] = [
                 TapHomeMotionBinarySensorType(),
                 TapHomeReedContactBinarySensorType(),
-                TapHomeVariableType(),
+                TapHomeVariableBinarySensorType(),
             ]
 
             binary_sensors = []
