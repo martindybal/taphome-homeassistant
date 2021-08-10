@@ -32,7 +32,7 @@ The configuration is described in more detail in the [wiki](https://github.com/m
 1. Uncomment `taphome` section in your `configuration.yaml`
 1. Restart Home Assistant Core again
 
-Home Assistant entities'll recreat with same `entity_id` (If you're not change the name of taphome device in cloudapi setting). So you don't have to change your dashbords or scripts
+Home Assistant will recreate entities with same `entity_id` (If you're not change the name of taphome device in cloudapi setting). So you don't have to change your dashbords or scripts
 
 
 ## License
