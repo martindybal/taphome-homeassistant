@@ -141,6 +141,7 @@ class TapHomeDevice {
 };
 
 class TapHomeCore {
+    id: string;
     token: string;
     apiUrl: string;
     updateInterval: number;
@@ -158,7 +159,14 @@ class TapHomeCore {
         if (selectedDevices.length === 0) {
             return "";
         }
-        return `    - token: ${this.token}${this.apiUrlConfig()}${this.updateIntervalConfig()}${this.entitiesConfig(selectedDevices, HomeAssistantEntityType.light)}${this.entitiesConfig(selectedDevices, HomeAssistantEntityType.cover)}${this.entitiesConfig(selectedDevices, HomeAssistantEntityType.climate)}${this.entitiesConfig(selectedDevices, HomeAssistantEntityType.switch)}${this.entitiesConfig(selectedDevices, HomeAssistantEntityType.sensor)}${this.entitiesConfig(selectedDevices, HomeAssistantEntityType.binarySensor)}\n`
+        return `    - ${this.idConfig()}token: ${this.token}${this.apiUrlConfig()}${this.updateIntervalConfig()}${this.entitiesConfig(selectedDevices, HomeAssistantEntityType.light)}${this.entitiesConfig(selectedDevices, HomeAssistantEntityType.cover)}${this.entitiesConfig(selectedDevices, HomeAssistantEntityType.climate)}${this.entitiesConfig(selectedDevices, HomeAssistantEntityType.switch)}${this.entitiesConfig(selectedDevices, HomeAssistantEntityType.sensor)}${this.entitiesConfig(selectedDevices, HomeAssistantEntityType.binarySensor)}\n`
+    }
+
+    private idConfig() {
+        if (!this.id) {
+            return "";
+        }
+        return `id: ${this.id}\n      `;
     }
 
     private apiUrlConfig() {

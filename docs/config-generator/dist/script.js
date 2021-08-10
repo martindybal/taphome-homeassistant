@@ -276,11 +276,17 @@ var TapHomeCore = /** @class */ (function () {
             if (selectedDevices.length === 0) {
                 return "";
             }
-            return "    - token: " + this.token + this.apiUrlConfig() + this.updateIntervalConfig() + this.entitiesConfig(selectedDevices, HomeAssistantEntityType.light) + this.entitiesConfig(selectedDevices, HomeAssistantEntityType.cover) + this.entitiesConfig(selectedDevices, HomeAssistantEntityType.climate) + this.entitiesConfig(selectedDevices, HomeAssistantEntityType.switch) + this.entitiesConfig(selectedDevices, HomeAssistantEntityType.sensor) + this.entitiesConfig(selectedDevices, HomeAssistantEntityType.binarySensor) + "\n";
+            return "    - " + this.idConfig() + "token: " + this.token + this.apiUrlConfig() + this.updateIntervalConfig() + this.entitiesConfig(selectedDevices, HomeAssistantEntityType.light) + this.entitiesConfig(selectedDevices, HomeAssistantEntityType.cover) + this.entitiesConfig(selectedDevices, HomeAssistantEntityType.climate) + this.entitiesConfig(selectedDevices, HomeAssistantEntityType.switch) + this.entitiesConfig(selectedDevices, HomeAssistantEntityType.sensor) + this.entitiesConfig(selectedDevices, HomeAssistantEntityType.binarySensor) + "\n";
         },
         enumerable: false,
         configurable: true
     });
+    TapHomeCore.prototype.idConfig = function () {
+        if (!this.id) {
+            return "";
+        }
+        return "id: " + this.id + "\n      ";
+    };
     TapHomeCore.prototype.apiUrlConfig = function () {
         if (!this.apiUrl) {
             return "";

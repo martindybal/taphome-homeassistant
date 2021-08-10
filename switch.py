@@ -1,4 +1,4 @@
-"""TapHome light integration."""
+"""TapHome switch integration."""
 import typing
 
 from homeassistant.components.switch import DOMAIN, SwitchEntity
@@ -27,11 +27,12 @@ class TapHomeSwitch(TapHomeEntity[SwitchState], SwitchEntity):
 
     def __init__(
         self,
+        core_id: str,
         config_entry: SwitchConfigEntry,
         coordinator: TapHomeDataUpdateCoordinator,
         switch_service: SwitchService,
     ):
-        super().__init__(config_entry, DOMAIN, coordinator, SwitchState)
+        super().__init__(core_id, config_entry, DOMAIN, coordinator, SwitchState)
         self.switch_service = switch_service
         self._device_class = config_entry.device_class
 
@@ -74,6 +75,7 @@ def setup_platform(
     for add_entry_request in add_entry_requests:
         switch_service = SwitchService(add_entry_request.tapHome_api_service)
         switch = TapHomeSwitch(
+            add_entry_request.core_id,
             add_entry_request.config_entry,
             add_entry_request.coordinator,
             switch_service,

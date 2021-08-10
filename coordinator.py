@@ -66,7 +66,6 @@ class TapHomeDataUpdateCoordinator(DataUpdateCoordinator):
     def __init__(
         self, hass, update_interval: int, taphome_api_service: TapHomeApiService
     ):
-        """Initialize global TapHome data updater."""
         self.taphome_api_service = taphome_api_service
         self._was_devices_discovered = False
         self.last_update_devices_values_timestamp = 0
@@ -102,16 +101,18 @@ class TapHomeDataUpdateCoordinator(DataUpdateCoordinator):
             await self.async_discovery_devices()
             await self.async_update_devices_values()
             return self._devices
+
+        except (ClientResponseError) as ex:
+            if ex.status == 501:
+                raise NotImplementedError()  # NotImplementedError is reraised to fail integration loading. Core don't support get all devices api endpoint
+            else:
+                exception_info = f"{ex.code} - {ex.request_info.url} {ex.message}"
+                raise UpdateFailed(
+                    f"Invalid response from API: {exception_info}"
+                ) from ex
+
         except Exception as ex:
-            exception_info = ""
-            _LOGGER.warning(ex.__class__.__name__)
-            if isinstance(ex, ClientResponseError):
-                if ex.status == 501:
-                    raise NotImplementedError()  # NotImplementedError is reraised to fail integration loading
-                else:
-                    exception_info = f"{ex.code} - {ex.request_info.url} {ex.message}"
-            # raise
-            raise UpdateFailed(f"Invalid response from API: {exception_info}") from ex
+            raise UpdateFailed() from ex
 
     async def async_discovery_devices(self) -> None:
         if not self._was_devices_discovered:
@@ -148,6 +149,7 @@ class TapHomeDataUpdateCoordinator(DataUpdateCoordinator):
         else:
             for device_id in self._devices:
                 self._devices[device_id].taphome_state = None
+            raise UpdateFailed()
 
     def get_device_data(
         self, taphome_device_id: int
