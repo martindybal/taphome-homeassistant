@@ -9,7 +9,7 @@
 - Sensors - Humidity, Temperature, Variable, Motion, Generic reed contact, Electric counter (consumption, demand), Brightness, Co2, Wind speed, Pulse counter (total impulse, current hour impulse, frequency)
 - Switches - power outlet, digital out
 
-## Installation
+## Quick start
 
 ### Install with HACS (recomended)
 Do you you have HACS installed? Just search for TapHome and install it direct from HACS. HACS will keep track of updates and you can easly upgrade TapHome to latest version.
@@ -33,7 +33,6 @@ The configuration is described in more detail in the [wiki](https://github.com/m
 1. Restart Home Assistant Core again
 
 Home Assistant will recreate entities with same `entity_id` (If you're not change the name of taphome device in cloudapi setting). So you don't have to change your dashbords or scripts
-
 
 ## License
 This repository is under the [GPL v3 with Commons Clause](https://github.com/martindybal/taphome-homeassistant/blob/main/LICENSE.md).
