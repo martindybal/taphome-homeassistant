@@ -1,9 +1,0 @@
-{
-    "sensor": {
-        "pulse": {
-            "total_pulse": "celkový počet pulzů",
-            "current_hour_pulse": "pulzů za poslední hodinu",
-            "frequency_pulse": "frekvence pulzů"
-        }
-    }
-}

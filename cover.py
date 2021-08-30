@@ -1,142 +1,174 @@
 """TapHome cover integration."""
-from voluptuous.schema_builder import Self
-from .taphome_sdk import *
-from .taphome_entity import TapHomeEntity
+import typing
 
-import logging
 from homeassistant.components.cover import (
     ATTR_POSITION,
     ATTR_TILT_POSITION,
-    CoverEntity,
     DEVICE_CLASS_BLIND,
     DEVICE_CLASS_SHADE,
-    SUPPORT_OPEN,
+    DOMAIN,
     SUPPORT_CLOSE,
+    SUPPORT_CLOSE_TILT,
+    SUPPORT_OPEN,
+    SUPPORT_OPEN_TILT,
     SUPPORT_SET_POSITION,
     SUPPORT_SET_TILT_POSITION,
+    CoverEntity,
 )
+from homeassistant.const import CONF_COVERS
+from homeassistant.core import HomeAssistant
 
-from . import TAPHOME_API_SERVICE, TAPHOME_DEVICES
-from datetime import timedelta
-
-SCAN_INTERVAL = timedelta(seconds=10)
-_LOGGER = logging.getLogger(__name__)
-
-
-async def async_setup_platform(hass, config, async_add_entities, platformConfig):
-    tapHomeApiService = platformConfig[TAPHOME_API_SERVICE]
-    devices = platformConfig[TAPHOME_DEVICES]
-    coverService = CoverService(tapHomeApiService)
-
-    covers = []
-    for device in devices:
-        cover = await async_create_cover(coverService, device)
-        covers.append(cover)
-
-    async_add_entities(covers)
+from .add_entry_request import AddEntryRequest
+from .const import TAPHOME_PLATFORM
+from .coordinator import *
+from .taphome_entity import *
+from .taphome_sdk import *
 
 
-# async def async_create_cover(coverService: CoverService, device: Device):
-async def async_create_cover(coverService, device: Device):
-    cover = TapHomeCover(coverService, device)
-    return cover
-
-
-class TapHomeCover(TapHomeEntity, CoverEntity):
-    """Representation of an Cover"""
-
-    def __init__(self, coverService: CoverService, device: Device):
-        super(TapHomeCover, self).__init__(device=device)
-
-        self._coverService = coverService
-        self._state = None
-        self._position = None
-        self._tilt = None
-        self._supported_features = SUPPORT_OPEN | SUPPORT_CLOSE | SUPPORT_SET_POSITION
-
-        if ValueType.BlindsSlope in device.supportedValues:
-            self._supported_features = (
-                self._supported_features | SUPPORT_SET_TILT_POSITION
-            )
+class CoverConfigEntry(TapHomeConfigEntry):
+    def __init__(self, device_config: dict):
+        super().__init__(device_config)
+        self._device_class = self.get_optional("device_class", None)
 
     @property
-    def supported_features(self):
-        """Flag supported features."""
-        return self._supported_features
+    def device_class(self):
+        return self._device_class
 
-    @property
-    def current_cover_position(self):
-        return self._position
 
-    @property
-    def current_cover_tilt_position(self):
-        return self._tilt
+class TapHomeCover(TapHomeEntity[CoverState], CoverEntity):
+    """Representation of an cover"""
+
+    def __init__(
+        self,
+        core_id: str,
+        config_entry: TapHomeConfigEntry,
+        coordinator: TapHomeDataUpdateCoordinator,
+        cover_service: CoverService,
+    ):
+        super().__init__(core_id, config_entry, DOMAIN, coordinator, CoverState)
+        self.cover_service = cover_service
+        self._device_class = config_entry.device_class
+        self._supported_features = None
 
     @property
     def device_class(self):
         """Return the class of the device."""
-        if self._supported_features & SUPPORT_SET_TILT_POSITION:
-            return DEVICE_CLASS_BLIND
-        else:
-            return DEVICE_CLASS_SHADE
+        return self._device_class
+
+    @property
+    def supported_features(self):
+        """Flag supported features."""
+        default = SUPPORT_OPEN | SUPPORT_CLOSE | SUPPORT_SET_POSITION
+
+        if self._supported_features is None and self.taphome_state is None:
+            return default
+
+        if self._supported_features is None:
+            self._supported_features = default
+
+            if self.taphome_state.blinds_slope is not None:
+                self._supported_features = (
+                    self._supported_features
+                    | SUPPORT_OPEN_TILT
+                    | SUPPORT_CLOSE_TILT
+                    | SUPPORT_SET_TILT_POSITION
+                )
+
+            if self._device_class is None:
+                if self._supported_features & SUPPORT_SET_TILT_POSITION:
+                    self._device_class = DEVICE_CLASS_BLIND
+                else:
+                    self._device_class = DEVICE_CLASS_SHADE
+
+        return self._supported_features
 
     @property
     def is_closed(self):
         """Return if the cover is closed or not."""
-        if self._position is None:
+        if self.current_cover_position is None:
             return None
-        return self._position == 0
+        return self.current_cover_position == 0
+
+    @property
+    def current_cover_position(self):
+        if (
+            not self.taphome_state is None
+            and self.taphome_state.blinds_level is not None
+        ):
+            return self.convert_taphome_percentage_to_ha(
+                1 - self.taphome_state.blinds_level
+            )
+
+    @property
+    def current_cover_tilt_position(self):
+        if (
+            not self.taphome_state is None
+            and self.taphome_state.blinds_slope is not None
+        ):
+            return self.convert_taphome_percentage_to_ha(
+                1 - self.taphome_state.blinds_slope
+            )
 
     async def async_open_cover(self, **kwargs):
         """Open the cover."""
-        await self.__async_set_cover_position(100)
+        await self.async_set_cover_position(position=100)
 
     async def async_close_cover(self, **kwargs):
         """Close cover."""
-        await self.__async_set_cover_position(0)
+        await self.async_set_cover_position(position=0)
 
     async def async_set_cover_position(self, **kwargs):
         """Move the cover to a specific position."""
         if ATTR_POSITION in kwargs:
-            position = kwargs.get(ATTR_POSITION)
-            await self.__async_set_cover_position(position)
+            ha_position = kwargs.get(ATTR_POSITION)
+            taphome_position = 1 - self.convert_ha_percentage_to_taphome(ha_position)
 
-    async def __async_set_cover_position(self, position):
-        taphomePosition = 1 - position / 100
-        result = await self._coverService.async_set_cover_position(
-            self._device, taphomePosition
-        )
+            async with UpdateTapHomeState(self) as state:
+                await self.cover_service.async_set_level(
+                    self.taphome_device, taphome_position
+                )
+                state.blinds_level = taphome_position
 
-        if result == ValueChangeResult.FAILED:
-            await self.async_refresh_state()
-        else:
-            self._position = position
+    async def async_open_cover_tilt(self, **kwargs):
+        """Open the cover tilt."""
+        await self.async_set_cover_tilt_position(tilt_position=100)
+
+    async def async_close_cover_tilt(self, **kwargs):
+        """Close the cover tilt."""
+        await self.async_set_cover_tilt_position(tilt_position=0)
 
     async def async_set_cover_tilt_position(self, **kwargs):
-        """Move the cover til to a specific position."""
-        tilt = kwargs.get(ATTR_TILT_POSITION)
-        taphomeTilt = 1 - tilt / 100
-        result = await self._coverService.async_set_cover_tilt(
-            self._device, taphomeTilt
+        """Move the cover to a specific position."""
+        if ATTR_TILT_POSITION in kwargs:
+            ha_tilt = kwargs.get(ATTR_TILT_POSITION)
+            taphome_tilt = 1 - self.convert_ha_percentage_to_taphome(ha_tilt)
+
+            async with UpdateTapHomeState(self) as state:
+                await self.cover_service.async_set_slope(
+                    self.taphome_device, taphome_tilt
+                )
+                state.blinds_slope = taphome_tilt
+
+
+def setup_platform(
+    hass: HomeAssistant,
+    config,
+    add_entities,
+    discovery_info=None,
+) -> None:
+    """Set up the cover platform."""
+    add_entry_requests: typing.List[AddEntryRequest] = hass.data[TAPHOME_PLATFORM][
+        CONF_COVERS
+    ]
+    covers = []
+    for add_entry_request in add_entry_requests:
+        cover_service = CoverService(add_entry_request.tapHome_api_service)
+        cover = TapHomeCover(
+            add_entry_request.core_id,
+            add_entry_request.config_entry,
+            add_entry_request.coordinator,
+            cover_service,
         )
+        covers.append(cover)
 
-        if result == ValueChangeResult.FAILED:
-            await self.async_refresh_state()
-        else:
-            self._tilt = tilt
-
-    def async_update(self, **kwargs):
-        """Update cover."""
-        return self.async_refresh_state()
-
-    async def async_refresh_state(self):
-        state = await self._coverService.async_get_cover_state(self._device)
-        if state.blinds_level is None:
-            self._position = None
-        else:
-            self._position = 100 - state.blinds_level * 100
-
-        if state.blinds_slope is None:
-            self._tilt = None
-        else:
-            self._tilt = 100 - state.blinds_slope * 100
+    add_entities(covers)

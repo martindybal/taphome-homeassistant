@@ -1,0 +1,312 @@
+<html class="h-100">
+
+<head>
+    <link href="lib/bootstrap.min.css" rel="stylesheet">
+    <script src="lib/vue.min.js" defer></script>
+    <script src="dist/script.js" defer></script>
+    <script src="lib/bootstrap.bundle.min.js"></script>
+
+    <style>
+        .accordion-button-selectable::before {
+            flex-shrink: 0;
+            width: 1.25rem;
+            height: 1.25rem;
+            margin-right: 1em;
+            content: "";
+            background-image: none;
+            background-repeat: no-repeat;
+            background-size: 1.25rem;
+            transition: transform .2s ease-in-out;
+            border-radius: .25em;
+            border: 1px solid rgba(0, 0, 0, .25);
+        }
+
+        .accordion-button-selectable:not(.collapsed)::before {
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3e%3cpath fill='none' stroke='%230c63e4' stroke-linecap='round' stroke-linejoin='round' stroke-width='3' d='M6 10l3 3l6-6'/%3e%3c/svg%3e");
+        }
+
+        .accordion-button-selectable::after {
+            background-image: none;
+        }
+
+        .accordion-button-selectable:not(.collapsed)::after {
+            background-image: none;
+        }
+    </style>
+</head>
+
+<body>
+    <datalist id="switch_device_classes">
+        <option>outlet</option>
+        <option>switch</option>
+    </datalist>
+    <datalist id="cover_device_classes">
+        <option>awning</option>
+        <option>blind</option>
+        <option>curtain</option>
+        <option>damper</option>
+        <option>door</option>
+        <option>garage</option>
+        <option>gate</option>
+        <option>shade</option>
+        <option>shutter</option>
+        <option>window</option>
+    </datalist>
+    <div id="app" class="container-fluid row h-100">
+        <div class="col-8">
+            <div class="accordion">
+                <div class="accordion-item mb-3" v-for="taphomeCore in taphomeCores">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button" type="button" data-bs-toggle="collapse"
+                            v-bind:data-bs-target="'#core' + taphomeCore.token">
+                            Core {{ taphomeCore.token }}
+                        </button>
+                    </h2>
+                    <div v-bind:id="'core' + taphomeCore.token" class="accordion-collapse collapse show">
+                        <div class="accordion-body">
+                            <datalist v-bind:id="'switches' + taphomeCore.token">
+                                <option
+                                    v-for="device in taphomeCore.devices.filter(device => device.supportedValues.some(supportedValue => supportedValue.valueTypeId == TapHomeValueType.switchState) && !device.supportedValues.some(supportedValue => supportedValue.valueTypeId == TapHomeValueType.multiValueSwitchState) && device.entityType !== HomeAssistantEntityType.light)"
+                                    v-bind:value="device.deviceId">
+                                    {{ device.name }}
+                                </option>
+                            </datalist>
+
+                            <datalist v-bind:id="'multiValueSwitches' + taphomeCore.token">
+                                <option
+                                    v-for="device in taphomeCore.devices.filter(device => device.supportedValues.some(supportedValue => supportedValue.valueTypeId == TapHomeValueType.multiValueSwitchState))"
+                                    v-bind:value="device.deviceId">
+                                    {{ device.name }}
+                                </option>
+                            </datalist>
+
+                            <div class="row mb-3">
+                                <label v-bind:for="'token' + taphomeCore.token" class="col-3 col-form-label">
+                                    token
+                                </label>
+                                <div class="col-6">
+                                    <input class="form-control" v-bind:id="'token' + taphomeCore.token"
+                                        placeholder="00000000-0000-0000-0000-000000000000" v-model="taphomeCore.token"
+                                        v-bind:class="{ 'is-invalid': !taphomeCore.token }" autofocus>
+                                    <small class="form-text">
+                                        <a target="_blank" href="https://taphome.com/en/support/601227274">TapHome api
+                                            doc</a>
+                                    </small>
+                                </div>
+
+                                <button class="col-3 btn btn-primary mb-3" v-on:click="taphomeCore.loadFromCloudApi">
+                                    Discover devices
+                                </button>
+                            </div>
+                            <div class="row mb-3">
+                                <label v-bind:for="'id' + taphomeCore.token" class="col-3 col-form-label">
+                                    id
+                                </label>
+                                <div class="col-9">
+                                    <input class="form-control" v-bind:id="'id' + taphomeCore.token"
+                                        placeholder="mycore"
+                                        v-model="taphomeCore.id">
+                                    <small class="form-text">
+                                        <span v-if="taphomeCores.length <= 1">Optional.</span> 
+                                        <span v-if="taphomeCores.length > 1">Required. You're using multiple cores</span> 
+                                        Id of core is used in logs and unique_id
+                                    </small>
+                                </div>
+                            </div>
+                            <div class="row mb-3">
+                                <label v-bind:for="'api_url' + taphomeCore.token" class="col-3 col-form-label">
+                                    api_url
+                                </label>
+                                <div class="col-9">
+                                    <input class="form-control" v-bind:id="'api_url' + taphomeCore.token"
+                                        placeholder="https://cloudapi.taphome.com/api/CloudApi/v1"
+                                        v-model="taphomeCore.apiUrl">
+                                    <small class="form-text">
+                                        Optional. Local api is preferred way "http://192.168.0.198/api/cloudapi/v1".
+                                        Make sure that IP of your core will not change
+                                    </small>
+                                </div>
+                            </div>
+                            <div class="row mb-3">
+                                <label v-bind:for="'update_interval' + taphomeCore.token" class="col-3 col-form-label">
+                                    update_interval
+                                </label>
+                                <div class="col-9">
+                                    <input class="form-control" v-bind:id="'update_interval' + taphomeCore.token"
+                                        placeholder="10" v-model="taphomeCore.updateInterval">
+                                </div>
+                            </div>
+
+                            <div class="accordion">
+                                <div class="accordion-item mb-3" v-for="device in taphomeCore.devices">
+                                    <h2 class="accordion-header">
+                                        <button class="accordion-button accordion-button-selectable" type="button"
+                                            v-bind:class="{ 'collapsed': !device.isSelected }"
+                                            v-on:click="device.isSelected = !device.isSelected">
+                                            {{ device.deviceId }} - {{ device.name }}
+                                        </button>
+                                    </h2>
+                                    <div class="accordion-collapse collapse"
+                                        v-bind:class="{ 'show': device.isSelected }">
+                                        <div class="accordion-body">
+                                            <div class="row">
+                                                <div class="col-9">
+                                                    <label
+                                                        v-bind:for="'device-type' + taphomeCore.token + device.deviceId"
+                                                        class="col-sm-5 col-form-label">
+                                                        {{ device.description }}
+                                                    </label>
+                                                </div>
+                                                <div class="col-3">
+                                                    <select
+                                                        v-bind:id="'device-type' + taphomeCore.token + device.deviceId"
+                                                        class="form-select"
+                                                        v-bind:class="{ 'is-invalid': !device.entityType }"
+                                                        v-model="device.entityType">
+                                                        <option v-for="option in device.possibleEntityTypes"
+                                                            v-bind:value="option">
+                                                            {{ option }}
+                                                        </option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            <div
+                                                v-if="device.entityType === HomeAssistantEntityType.switch || device.entityType === HomeAssistantEntityType.cover">
+                                                <div class="row mt-3">
+                                                    <label
+                                                        v-bind:for="'device-class' + taphomeCore.token + device.deviceId"
+                                                        class="col-sm-5 col-form-label">
+                                                        Device class
+                                                    </label>
+                                                    <div class="col-sm-7">
+                                                        <input
+                                                            v-bind:id="'device-class' + taphomeCore.token + device.deviceId"
+                                                            class="form-select" v-model="device.deviceClass"
+                                                            v-bind:list="device.entityType + '_device_classes'" />
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div v-if="device.entityType === HomeAssistantEntityType.climate">
+                                                <div class="row mt-3">
+                                                    <label
+                                                        v-bind:for="'climate-min_temperature' + taphomeCore.token + device.deviceId"
+                                                        class="col-sm-5 col-form-label">min_temperature</label>
+                                                    <div class="col-sm-7">
+                                                        <input
+                                                            v-bind:id="'climate-min_temperature' + taphomeCore.token + device.deviceId"
+                                                            class="form-select" v-model="device.climateMinTemperature"
+                                                            placeholder="10" />
+                                                        <small class="form-text">
+                                                            Minimum temperature. TapHome don't provide me information
+                                                            about setting. Please fill value from TapHome setting to
+                                                            avoid the problems
+                                                        </small>
+                                                    </div>
+                                                </div>
+                                                <div class="row mt-3">
+                                                    <label
+                                                        v-bind:for="'climate-max_temperature' + taphomeCore.token + device.deviceId"
+                                                        class="col-sm-5 col-form-label">max_temperature</label>
+                                                    <div class="col-sm-7">
+                                                        <input
+                                                            v-bind:id="'climate-max_temperature' + taphomeCore.token + device.deviceId"
+                                                            class="form-select" v-model="device.climateMaxTemperature"
+                                                            placeholder="30" />
+                                                        <small class="form-text">
+                                                            Maximum temperature. TapHome don't provide me information
+                                                            about setting. Please fill value from TapHome setting to
+                                                            avoid the problems
+                                                        </small>
+                                                    </div>
+                                                </div>
+                                                <div class="row mt-3">
+                                                    <label
+                                                        v-bind:for="'climate-heating_cooling_mode_id-selector' + taphomeCore.token + device.deviceId"
+                                                        class="col-sm-5 col-form-label">heating_cooling_mode_id</label>
+                                                    <div class="col-sm-7">
+                                                        <input
+                                                            v-bind:id="'climate-heating_cooling_mode_id-selector' + taphomeCore.token + device.deviceId"
+                                                            class="form-select"
+                                                            v-model="device.climateHeatingSwitchIdingCoolingModeId"
+                                                            :disabled="!!device.climateCoolingSwitchId || !!device.climateHeatingSwitchId"
+                                                            v-bind:list="'multiValueSwitches' + taphomeCore.token" />
+                                                        <small class="form-text">
+                                                            Optional. Multivalue switch. 0 Off, 1 Heating, 2 Cooling, 3
+                                                            Heating & Cooling
+                                                        </small>
+                                                    </div>
+                                                </div>
+                                                <div class="row mt-3">
+                                                    <label
+                                                        v-bind:for="'climate-heating_switch_id-selector' + taphomeCore.token + device.deviceId"
+                                                        class="col-sm-5 col-form-label">heating_switch_id</label>
+                                                    <div class="col-sm-7">
+                                                        <input
+                                                            v-bind:id="'climate-heating_switch_id-selector' + taphomeCore.token + device.deviceId"
+                                                            class="form-select" v-model="device.climateHeatingSwitchId"
+                                                            :disabled="!!device.climateHeatingSwitchIdingCoolingModeId || !!device.climateCoolingSwitchId"
+                                                            v-bind:list="'switches' + taphomeCore.token" />
+                                                        <small class="form-text">
+                                                            Optional. Heating switch
+                                                        </small>
+                                                    </div>
+                                                </div>
+                                                <div class="row mt-3">
+                                                    <label
+                                                        v-bind:for="'climate-cooling_switch_id-selector' + taphomeCore.token + device.deviceId"
+                                                        class="col-sm-5 col-form-label">cooling_switch_id</label>
+                                                    <div class="col-sm-7">
+                                                        <input
+                                                            v-bind:id="'climate-cooling_switch_id-selector' + taphomeCore.token + device.deviceId"
+                                                            class="form-select" v-model="device.climateCoolingSwitchId"
+                                                            :disabled="!!device.climateHeatingSwitchIdingCoolingModeId || !!device.climateHeatingSwitchId"
+                                                            v-bind:list="'switches' + taphomeCore.token" />
+                                                        <small class="form-text">
+                                                            Optional. Cooling switch
+                                                        </small>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="accordion-item mb-3" v-for="taphomeCore in taphomeCores"
+                                    v-if="taphomeCore.unsupportedDevices.length > 0">
+                                    <h2 class="accordion-header">
+                                        <button class="accordion-button" type="button" data-bs-toggle="collapse"
+                                            v-bind:data-bs-target="'#core2' + taphomeCore.token">
+                                            Unsupported devices
+                                        </button>
+                                    </h2>
+                                    <div v-bind:id="'core2' + taphomeCore.token"
+                                        class="accordion-collapse collapse show">
+                                        <div class="accordion-body">
+                                            <div v-for="device in taphomeCore.unsupportedDevices">
+                                                <a v-bind:href="'https://cloudapi.taphome.com/api/cloudapi/v1/getDeviceValue/'+ device.deviceId + '?token=' + taphomeCore.token"
+                                                    target="_blank">
+                                                    {{ device.deviceId }} - {{ device.name }}
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <button class="col-3 btn btn-primary mb-3" v-on:click="addCore">
+                Add another core
+            </button>
+        </div>
+        <div class="col-4">
+            <button class="btn btn-primary float-end mb-3" v-on:click="copyConfig">
+                copy
+            </button>
+            <textarea id="config-textarea" class="form-control h-100" type="text" v-model="config"></textarea>
+        </div>
+    </div>
+</body>
+
+</html>

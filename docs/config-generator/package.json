@@ -1,0 +1,33 @@
+{
+  "name": "taphome-homeassistant-config",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "bundle": "tsc",
+    "build": "tsc -w"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/martindybal/taphome-homeassistant-config.git"
+  },
+  "author": "Martin Dybal <martin@dybal.it> (https://dybal.it/)",
+  "license": "GPL v3 with Commons Clause",
+  "bugs": {
+    "url": "https://github.com/martindybal/taphome-homeassistant-config/issues"
+  },
+  "homepage": "https://www.dybal.it/taphome-homeassistant-config/",
+  "dependencies": {},
+  "devDependencies": {
+    "typescript": "^4.2.4"
+  },
+  "browserslist": {
+    "production": [
+      "defaults",
+      "IE 11",
+      "not IE_Mob 11"
+    ],
+    "development": [
+      "defaults"
+    ]
+  }
+}

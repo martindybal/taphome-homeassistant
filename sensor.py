@@ -1,346 +1,372 @@
-"""TapHome light integration."""
-from .taphome_sdk import *
-from .taphome_entity import TapHomeEntity
-from .TranslationService import TranslationService
+"""TapHome sensor integration."""
+import datetime
+import typing
 
-import logging
-from homeassistant.helpers.entity import Entity
-from . import TAPHOME_API_SERVICE, TAPHOME_DEVICES, TAPHOME_LANGUAGE
-
+from homeassistant.components.sensor import (
+    DOMAIN,
+    STATE_CLASS_MEASUREMENT,
+    SensorEntity,
+)
 from homeassistant.const import (
-    DEVICE_CLASS_HUMIDITY,
-    DEVICE_CLASS_TEMPERATURE,
-    DEVICE_CLASS_POWER,
+    CONCENTRATION_PARTS_PER_MILLION,
+    CONF_SENSORS,
+    DEVICE_CLASS_CO2,
     DEVICE_CLASS_ENERGY,
+    DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_ILLUMINANCE,
+    DEVICE_CLASS_POWER,
+    DEVICE_CLASS_TEMPERATURE,
+    ENERGY_KILO_WATT_HOUR,
+    FREQUENCY_HERTZ,
+    LIGHT_LUX,
     PERCENTAGE,
     POWER_KILO_WATT,
-    ENERGY_KILO_WATT_HOUR,
-    TEMP_CELSIUS,
-    LIGHT_LUX,
-    CONCENTRATION_PARTS_PER_MILLION,
     SPEED_KILOMETERS_PER_HOUR,
-    FREQUENCY_HERTZ,
+    TEMP_CELSIUS,
 )
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+from .add_entry_request import AddEntryRequest
+from .const import TAPHOME_PLATFORM
+from .coordinator import TapHomeDataUpdateCoordinator
+from .taphome_entity import *
+from .taphome_sdk import *
 
 
-class TapHomeSensorBase(TapHomeEntity, Entity):
-    def __init__(self, sensorService: SensorService, device: Device):
-        super(TapHomeSensorBase, self).__init__(device=device)
-
-        self._sensorService = sensorService
-        self._state = None
+class TapHomeSensorType:
+    def __init__(
+        self,
+        value_type: ValueType,
+        device_class: str = None,
+        unit_of_measurement: str = None,
+        was_measured: bool = False,
+        last_reset: datetime = None,
+    ) -> None:
+        self.device_class = device_class
+        self.value_type = value_type
+        self.unit_of_measurement = unit_of_measurement
+        self.was_measured = was_measured
+        self.last_reset = last_reset
 
     @property
-    def state(self):
-        """Return the value of the sensor."""
-        return self._state
+    def state_class(self) -> str:
+        if self.was_measured is True:
+            return STATE_CLASS_MEASUREMENT
+        return None
 
-    @property
-    def sensor_value_type(self) -> ValueType:
-        """Return type of sensor."""
-        pass
-
-    def async_update(self):
-        return self.async_refresh_state()
-
-    async def async_refresh_state(self):
-        value = await self._sensorService.async_get_sensor_value(
-            self._device, self.sensor_value_type
-        )
-        self._state = self.taphome_to_hass_value(value)
-
-    def taphome_to_hass_value(self, value: int):
+    def convert_taphome_to_ha(self, value: int) -> int:
         return value
 
 
-class TapHomeHumiditySensor(TapHomeSensorBase):
-    sensor_value_type = ValueType.Humidity
-
-    def __init__(self, sensorService: SensorService, device: Device):
-        super(TapHomeHumiditySensor, self).__init__(sensorService, device)
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement that the sensor is expressed in."""
-        return PERCENTAGE
-
-    @property
-    def device_class(self):
-        """Return type of sensor."""
-        return DEVICE_CLASS_HUMIDITY
-
-    def taphome_to_hass_value(self, value: int):
-        if value is None:
-            return None
-
-        value = value * 100
-        return round(value, 1)
-
-
-class TapHomeTemperatureSensor(TapHomeSensorBase):
-    sensor_value_type = ValueType.RealTemperature
-
-    def __init__(self, sensorService: SensorService, device: Device):
-        super(TapHomeTemperatureSensor, self).__init__(sensorService, device)
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement that the sensor is expressed in."""
-        return TEMP_CELSIUS
-
-    @property
-    def device_class(self):
-        """Return type of sensor."""
-        return DEVICE_CLASS_TEMPERATURE
-
-    def taphome_to_hass_value(self, value: int):
-        if value is None:
-            return None
-
-        return round(value, 1)
-
-
-class TapHomeElectricCounterElectricityDemandSensor(TapHomeSensorBase):
-    sensor_value_type = ValueType.ElectricityDemand
-
-    def __init__(self, sensorService: SensorService, device: Device):
-        super(TapHomeElectricCounterElectricityDemandSensor, self).__init__(
-            sensorService, device
+class TapHomeHumiditySensorType(TapHomeSensorType):
+    def __init__(self) -> None:
+        super().__init__(
+            ValueType.Humidity,
+            DEVICE_CLASS_HUMIDITY,
+            PERCENTAGE,
+            True,
         )
 
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement that the sensor is expressed in."""
-        return POWER_KILO_WATT
+    def convert_taphome_to_ha(self, value: int) -> int:
+        return TapHomeEntity.convert_taphome_percentage_to_ha(value)
 
-    @property
-    def device_class(self):
-        """Return type of sensor."""
-        return DEVICE_CLASS_POWER
 
-    def taphome_to_hass_value(self, value: int):
-        if value is None:
-            return None
+class TapHomeTemperatureSensorType(TapHomeSensorType):
+    def __init__(self) -> None:
+        super().__init__(
+            ValueType.RealTemperature,
+            DEVICE_CLASS_TEMPERATURE,
+            TEMP_CELSIUS,
+            True,
+        )
 
+    def convert_taphome_to_ha(self, value: int) -> int:
+        return round(value, 1)
+
+
+class TapHomeElectricCounterElectricityDemandSensorType(TapHomeSensorType):
+    def __init__(self) -> None:
+        super().__init__(
+            ValueType.ElectricityDemand,
+            DEVICE_CLASS_POWER,
+            POWER_KILO_WATT,
+            True,
+        )
+
+    def convert_taphome_to_ha(self, value: int) -> int:
         return round(value, 3)
 
 
-class TapHomeElectricCounterElectricityConsumptionSensor(TapHomeSensorBase):
-    sensor_value_type = ValueType.ElectricityConsumption
-
-    def __init__(self, sensorService: SensorService, device: Device):
-        super(TapHomeElectricCounterElectricityConsumptionSensor, self).__init__(
-            sensorService, device
+class TapHomeElectricCounterElectricityConsumptionSensorType(TapHomeSensorType):
+    def __init__(self) -> None:
+        super().__init__(
+            ValueType.ElectricityConsumption,
+            DEVICE_CLASS_ENERGY,
+            ENERGY_KILO_WATT_HOUR,
+            True,
         )
 
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement that the sensor is expressed in."""
-        return ENERGY_KILO_WATT_HOUR
-
-    @property
-    def device_class(self):
-        """Return type of sensor."""
-        return DEVICE_CLASS_ENERGY
-
-    def taphome_to_hass_value(self, value: int):
-        if value is None:
-            return None
-
+    def convert_taphome_to_ha(self, value: int) -> int:
         return round(value, 2)
 
 
-class TapHomeCo2Sensor(TapHomeSensorBase):
-    sensor_value_type = ValueType.Co2
+class TapHomeCo2SensorType(TapHomeSensorType):
+    def __init__(self) -> None:
+        super().__init__(
+            ValueType.Co2,
+            DEVICE_CLASS_CO2,
+            CONCENTRATION_PARTS_PER_MILLION,
+            True,
+        )
 
-    def __init__(self, sensorService: SensorService, device: Device):
-        super(TapHomeCo2Sensor, self).__init__(sensorService, device)
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement that the sensor is expressed in."""
-        return CONCENTRATION_PARTS_PER_MILLION
-
-    def taphome_to_hass_value(self, value: int):
-        if value is None:
-            return None
-
-        return round(value, 1)
+    def convert_taphome_to_ha(self, value: int) -> int:
+        return round(value)
 
 
-class TapHomeBrightnessSensor(TapHomeSensorBase):
-    sensor_value_type = ValueType.SensorBrightness
+class TapHomeBrightnessSensorType(TapHomeSensorType):
+    def __init__(self) -> None:
+        super().__init__(
+            ValueType.SensorBrightness,
+            DEVICE_CLASS_ILLUMINANCE,
+            LIGHT_LUX,
+            True,
+        )
 
-    def __init__(self, sensorService: SensorService, device: Device):
-        super(TapHomeBrightnessSensor, self).__init__(sensorService, device)
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement that the sensor is expressed in."""
-        return LIGHT_LUX
-
-    @property
-    def device_class(self):
-        """Return type of sensor."""
-        return DEVICE_CLASS_ILLUMINANCE
-
-    def taphome_to_hass_value(self, value: int):
-        if value is None:
-            return None
-
+    def convert_taphome_to_ha(self, value: int) -> int:
         value = value * 100_000
         return round(value, 2)
 
 
-class TapHomeWindSpeedSensor(TapHomeSensorBase):
-    sensor_value_type = ValueType.WindSpeed
+class TapHomeWindSpeedSensorType(TapHomeSensorType):
+    def __init__(self) -> None:
+        super().__init__(
+            ValueType.WindSpeed,
+            None,
+            SPEED_KILOMETERS_PER_HOUR,
+            True,
+        )
 
-    def __init__(self, sensorService: SensorService, device: Device):
-        super(TapHomeWindSpeedSensor, self).__init__(sensorService, device)
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement that the sensor is expressed in."""
-        return SPEED_KILOMETERS_PER_HOUR
-
-    def taphome_to_hass_value(self, value: int):
-        if value is None:
-            return None
-
+    def convert_taphome_to_ha(self, value: int) -> int:
         return round(value, 1)
 
 
-class TapHomeAnalogInputSensor(TapHomeSensorBase):
-    sensor_value_type = ValueType.AnalogInputValue
-
-    def __init__(self, sensorService: SensorService, device: Device):
-        super(TapHomeAnalogInputSensor, self).__init__(sensorService, device)
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement that the sensor is expressed in."""
-        return PERCENTAGE
-
-    def taphome_to_hass_value(self, value: int):
-        if value is None:
-            return None
-
-        return value * 100
-
-
-class TapHomePulseCounterTotalImpulseCountSensor(TapHomeSensorBase):
-    sensor_value_type = ValueType.TotalImpulseCount
-
-    def __init__(self, sensorService: SensorService, device: Device):
-        super(TapHomePulseCounterTotalImpulseCountSensor, self).__init__(
-            sensorService, device
+class TapHomeAnalogInputSensorType(TapHomeSensorType):
+    def __init__(self) -> None:
+        super().__init__(
+            ValueType.AnalogInputValue,
+            None,
+            PERCENTAGE,
+            True,
         )
 
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        appendName = TranslationService.get_text(
-            self.hass.data[TAPHOME_LANGUAGE], "sensor.pulse.total_pulse"
-        )
-        return f"{self._device.name} {appendName}"
+    def convert_taphome_to_ha(self, value: int) -> int:
+        return TapHomeEntity.convert_taphome_percentage_to_ha(value)
 
 
-class TapHomePulseCounterCurrentHourImpulseCountSensor(TapHomeSensorBase):
-    sensor_value_type = ValueType.CurrentHourImpulseCount
-
-    def __init__(self, sensorService: SensorService, device: Device):
-        super(TapHomePulseCounterCurrentHourImpulseCountSensor, self).__init__(
-            sensorService, device
+class TapHomePulseCounterTotalImpulseCountSensorType(TapHomeSensorType):
+    def __init__(self) -> None:
+        super().__init__(
+            ValueType.TotalImpulseCount,
+            None,
+            " ",
+            True,
         )
 
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        appendName = TranslationService.get_text(
-            self.hass.data[TAPHOME_LANGUAGE], "sensor.pulse.current_hour_pulse"
+
+class TapHomePulseCounterCurrentHourImpulseCountSensorType(TapHomeSensorType):
+    def __init__(self) -> None:
+        super().__init__(
+            ValueType.CurrentHourImpulseCount,
+            None,
+            " ",
+            True,
         )
-        return f"{self._device.name} {appendName}"
 
-    def taphome_to_hass_value(self, value: int):
-        if value is None:
-            return None
 
+class TapHomePulseCounterLastMeasuredFrequencySensorType(TapHomeSensorType):
+    def __init__(self) -> None:
+        super().__init__(
+            ValueType.LastMeasuredFrequency,
+            None,
+            FREQUENCY_HERTZ,
+            True,
+        )
+
+    def convert_taphome_to_ha(self, value: int) -> int:
         return round(value, 1)
 
 
-class TapHomePulseCounterLastMeasuredFrequencySensor(TapHomeSensorBase):
-    sensor_value_type = ValueType.LastMeasuredFrequency
-
-    def __init__(self, sensorService: SensorService, device: Device):
-        super(TapHomePulseCounterLastMeasuredFrequencySensor, self).__init__(
-            sensorService, device
+class TapHomeVariableType(TapHomeSensorType):
+    def __init__(self) -> None:
+        super().__init__(
+            ValueType.VariableState,
+            None,
+            " ",  # this is workaround for https://github.com/home-assistant/architecture/issues/478
+            True,
         )
 
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        appendName = TranslationService.get_text(
-            self.hass.data[TAPHOME_LANGUAGE], "sensor.pulse.frequency_pulse"
-        )
-        return f"{self._device.name} {appendName}"
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement that the sensor is expressed in."""
-        return FREQUENCY_HERTZ
-
-    def taphome_to_hass_value(self, value: int):
-        if value is None:
-            return None
-
+    def convert_taphome_to_ha(self, value: int) -> int:
         return round(value, 1)
 
 
-class TapHomeVariable(TapHomeSensorBase):
-    sensor_value_type = ValueType.VariableState
-
-    def __init__(self, sensorService: SensorService, device: Device):
-        super(TapHomeVariable, self).__init__(sensorService, device)
+class SensorConfigEntry(TapHomeConfigEntry):
+    def __init__(self, device_config: dict):
+        super().__init__(device_config)
+        self._device_class = self.get_optional("device_class", None)
+        self._value_type = self.get_optional("value_type", None)
+        self._unit_of_measurement = self.get_optional("unit_of_measurement", None)
+        self._was_measured = self.get_optional("was_measured", None)
 
     @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement that the sensor is expressed in."""
-        return " " # this is workaround for https://github.com/home-assistant/architecture/issues/478
+    def device_class(self) -> str:
+        return self._device_class
+
+    @property
+    def value_type(self) -> ValueType:
+        return self._value_type
+
+    @property
+    def unit_of_measurement(self) -> str:
+        return self._unit_of_measurement
+
+    @property
+    def was_measured(self) -> bool:
+        return self._was_measured
 
 
-async def async_setup_platform(hass, config, async_add_entities, platformConfig):
-    tapHomeApiService = platformConfig[TAPHOME_API_SERVICE]
-    devices = platformConfig[TAPHOME_DEVICES]
-    sensorService = SensorService(tapHomeApiService)
+class TapHomeSensor(TapHomeEntity[TapHomeState], SensorEntity):
+    """Representation of an sensor"""
 
-    sensors = []
-    for device in devices:
-        for sensor in await async_create_sensors(sensorService, device):
-            sensors.append(sensor)
+    def __init__(
+        self,
+        core_id: str,
+        config_entry: SensorConfigEntry,
+        coordinator: TapHomeDataUpdateCoordinator,
+        sensor_type: TapHomeSensorType,
+    ):
+        assert sensor_type is not None
+        self._sensor_type = sensor_type
+        unique_id_determination = f"{DOMAIN}.{self._sensor_type.value_type.name}"
 
-    async_add_entities(sensors)
+        super().__init__(
+            core_id,
+            config_entry,
+            unique_id_determination,
+            coordinator,
+            TapHomeState,
+        )
+
+    @property
+    def state(self):
+        """Return the value of the sensor."""
+        sensor_type = self._sensor_type
+        if self.taphome_state is not None:
+            sensor_value = self.taphome_state.get_device_value(sensor_type.value_type)
+            if sensor_value is None:
+                return None
+            return sensor_type.convert_taphome_to_ha(sensor_value)
+
+    @property
+    def device_class(self) -> str:
+        """Return the class of this device, from component DEVICE_CLASSES."""
+        return self._sensor_type.device_class
+
+    @property
+    def state_class(self) -> str:
+        """Return the state class of this entity, from STATE_CLASSES, if any."""
+        return self._sensor_type.state_class
+
+    @property
+    def unit_of_measurement(self) -> str:
+        """Return the unit of measurement of this entity, if any."""
+        return self._sensor_type.unit_of_measurement
+
+    @property
+    def last_reset(self) -> datetime:
+        """Return the time when the sensor was last reset, if any."""
+        return self._sensor_type.last_reset
 
 
-async def async_create_sensors(sensorService: SensorService, device: Device):
-    sensors = []
-    sensorTypes = [
-        TapHomeHumiditySensor,
-        TapHomeTemperatureSensor,
-        TapHomeElectricCounterElectricityDemandSensor,
-        TapHomeElectricCounterElectricityConsumptionSensor,
-        TapHomeCo2Sensor,
-        TapHomeBrightnessSensor,
-        TapHomeWindSpeedSensor,
-        TapHomeAnalogInputSensor,
-        TapHomePulseCounterTotalImpulseCountSensor,
-        TapHomePulseCounterCurrentHourImpulseCountSensor,
-        TapHomePulseCounterLastMeasuredFrequencySensor,
-        TapHomeVariable,
+class TapHomeSensorCreateRequest(TapHomeDataUpdateCoordinatorObject[TapHomeState]):
+    """Create TapHomeSensors from SensorConfigEntry when devices is discovered"""
+
+    def __init__(
+        self,
+        core_id: str,
+        config_entry: SensorConfigEntry,
+        coordinator: TapHomeDataUpdateCoordinator,
+        add_entities: AddEntitiesCallback,
+    ):
+        super().__init__(config_entry.id, coordinator, TapHomeState)
+        self._core_id = core_id
+        self._config_entry = config_entry
+        self.coordinator = coordinator
+        self.add_entities = add_entities
+
+        self._was_entities_created = False
+        self.create_entities()
+
+    @callback
+    def handle_taphome_device_change(self) -> None:
+        self.create_entities()
+
+    def create_entities(self) -> None:
+        if self.taphome_device is not None:
+            self._was_entities_created = True
+
+            supported_sensor_types: typing.List[TapHomeSensorType] = [
+                TapHomeHumiditySensorType(),
+                TapHomeTemperatureSensorType(),
+                TapHomeElectricCounterElectricityDemandSensorType(),
+                TapHomeElectricCounterElectricityConsumptionSensorType(),
+                TapHomeCo2SensorType(),
+                TapHomeBrightnessSensorType(),
+                TapHomeWindSpeedSensorType(),
+                TapHomeAnalogInputSensorType(),
+                TapHomePulseCounterTotalImpulseCountSensorType(),
+                TapHomePulseCounterCurrentHourImpulseCountSensorType(),
+                TapHomePulseCounterLastMeasuredFrequencySensorType(),
+                TapHomePulseCounterLastMeasuredFrequencySensorType(),
+                TapHomeVariableType(),
+            ]
+
+            sensors = []
+            for sensor_type in supported_sensor_types:
+                if self.taphome_device.supports_value(sensor_type.value_type):
+                    if self._config_entry.device_class is not None:
+                        sensor_type.device_class = self._config_entry.device_class
+                    if self._config_entry.unit_of_measurement is not None:
+                        sensor_type.unit_of_measurement = (
+                            self._config_entry.unit_of_measurement
+                        )
+                    if self._config_entry.was_measured is not None:
+                        sensor_type.was_measured = self._config_entry.was_measured
+
+                    sensor = TapHomeSensor(
+                        self._core_id,
+                        self._config_entry,
+                        self.coordinator,
+                        sensor_type,
+                    )
+                    sensors.append(sensor)
+            self.add_entities(sensors)
+
+
+def setup_platform(
+    hass: HomeAssistant,
+    config,
+    add_entities: AddEntitiesCallback,
+    discovery_info=None,
+) -> None:
+    """Set up the sensor platform."""
+    add_entry_requests: typing.List[AddEntryRequest] = hass.data[TAPHOME_PLATFORM][
+        CONF_SENSORS
     ]
-    for sensorType in sensorTypes:
-        if sensorType.sensor_value_type in device.supportedValues:
-            sensor = sensorType(sensorService, device)
-            sensors.append(sensor)
-
-    return sensors
+    for add_entry_request in add_entry_requests:
+        TapHomeSensorCreateRequest(
+            add_entry_request.core_id,
+            add_entry_request.config_entry,
+            add_entry_request.coordinator,
+            add_entities,
+        )
