@@ -119,17 +119,17 @@ class TapHomeDevice {
             let config = `\n        - id: ${this.deviceId}`
             if (this.climateMinTemperature) {
                 config += `\n          min_temperature: ${this.climateMinTemperature}`;
-            } else
-                if (this.climateMaxTemperature) {
-                    config += `\n          max_temperature: ${this.climateMaxTemperature}`;
-                } else
-                    if (this.climateHeatingSwitchIdingCoolingModeId) {
-                        config += `\n          heating_cooling_mode_id: ${this.climateHeatingSwitchIdingCoolingModeId}`;
-                    } else if (this.climateHeatingSwitchId) {
-                        config += `\n          heating_switch_id: ${this.climateHeatingSwitchId}`;
-                    } else if (this.climateCoolingSwitchId) {
-                        config += `\n          cooling_switch_id: ${this.climateCoolingSwitchId}`;
-                    }
+            } 
+            if (this.climateMaxTemperature) {
+                config += `\n          max_temperature: ${this.climateMaxTemperature}`;
+            } 
+            if (this.climateHeatingSwitchIdingCoolingModeId) {
+                config += `\n          heating_cooling_mode_id: ${this.climateHeatingSwitchIdingCoolingModeId}`;
+            } else if (this.climateHeatingSwitchId) {
+                config += `\n          heating_switch_id: ${this.climateHeatingSwitchId}`;
+            } else if (this.climateCoolingSwitchId) {
+                config += `\n          cooling_switch_id: ${this.climateCoolingSwitchId}`;
+            }
             return config;
         }
         return this.idConfig;
