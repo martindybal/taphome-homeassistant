@@ -119,17 +119,17 @@ class TapHomeDevice {
             let config = `\n        - id: ${this.deviceId}`
             if (this.climateMinTemperature) {
                 config += `\n          min_temperature: ${this.climateMinTemperature}`;
-            } else
-                if (this.climateMaxTemperature) {
-                    config += `\n          max_temperature: ${this.climateMaxTemperature}`;
-                } else
-                    if (this.climateHeatingSwitchIdingCoolingModeId) {
-                        config += `\n          heating_cooling_mode_id: ${this.climateHeatingSwitchIdingCoolingModeId}`;
-                    } else if (this.climateHeatingSwitchId) {
-                        config += `\n          heating_switch_id: ${this.climateHeatingSwitchId}`;
-                    } else if (this.climateCoolingSwitchId) {
-                        config += `\n          cooling_switch_id: ${this.climateCoolingSwitchId}`;
-                    }
+            } 
+            if (this.climateMaxTemperature) {
+                config += `\n          max_temperature: ${this.climateMaxTemperature}`;
+            } 
+            if (this.climateHeatingSwitchIdingCoolingModeId) {
+                config += `\n          heating_cooling_mode_id: ${this.climateHeatingSwitchIdingCoolingModeId}`;
+            } else if (this.climateHeatingSwitchId) {
+                config += `\n          heating_switch_id: ${this.climateHeatingSwitchId}`;
+            } else if (this.climateCoolingSwitchId) {
+                config += `\n          cooling_switch_id: ${this.climateCoolingSwitchId}`;
+            }
             return config;
         }
         return this.idConfig;
@@ -203,12 +203,25 @@ class TapHomeCore {
     loadFromCloudApi = async () => {
         this.devices = [];
         this.unsupportedDevices = [];
+        let apiUrl = this.apiUrl ?? 'https://cloudapi.taphome.com/api/cloudapi/v1';
 
-        let url = `https://cloudapi.taphome.com/api/cloudapi/v1/discovery/?token=${this.token}`;
-        let response = await fetch(url);
-        let json = await response.json();
+        let getAllDevicesValuesUrl = `${apiUrl}/getAllDevicesValues/?token=${this.token}`;
+        let getAllDevicesValuesResponse = await fetch(getAllDevicesValuesUrl);
+        
+        if (getAllDevicesValuesResponse.status == 401) {
+            alert('Core was not found. Please check your token and api_url.');
+            return;
+        }
+        else if (getAllDevicesValuesResponse.status != 200){
+            alert('Your core is not supported! Please upgrade your core.');
+            return;
+        }
 
-        for (const device of json.devices) {
+        let discoveryUrl = `${apiUrl}/discovery/?token=${this.token}`;
+        let discoveryResponse = await fetch(discoveryUrl);
+        let discoveryJson = await discoveryResponse.json();
+
+        for (const device of discoveryJson.devices) {
             let possibleEntityTypes: HomeAssistantEntityType[] = [];
             let deviceSupportValue = value => device.supportedValues.some(supportedValue => supportedValue.valueTypeId == value);
 
