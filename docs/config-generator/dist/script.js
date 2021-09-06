@@ -180,19 +180,21 @@ var TapHomeCore = /** @class */ (function () {
     function TapHomeCore(token, devices) {
         var _this = this;
         this.loadFromCloudApi = function () { return __awaiter(_this, void 0, void 0, function () {
-            var url, response, json, _loop_1, this_1, _i, _a, device;
-            return __generator(this, function (_b) {
-                switch (_b.label) {
+            var apiUrl, discoveryUrl, response, json, _loop_1, this_1, _i, _a, device;
+            var _b;
+            return __generator(this, function (_c) {
+                switch (_c.label) {
                     case 0:
                         this.devices = [];
                         this.unsupportedDevices = [];
-                        url = "https://cloudapi.taphome.com/api/cloudapi/v1/discovery/?token=" + this.token;
-                        return [4 /*yield*/, fetch(url)];
+                        apiUrl = (_b = this.apiUrl) !== null && _b !== void 0 ? _b : 'https://cloudapi.taphome.com/api/cloudapi/v1';
+                        discoveryUrl = apiUrl + "/discovery/?token=" + this.token;
+                        return [4 /*yield*/, fetch(discoveryUrl)];
                     case 1:
-                        response = _b.sent();
+                        response = _c.sent();
                         return [4 /*yield*/, response.json()];
                     case 2:
-                        json = _b.sent();
+                        json = _c.sent();
                         _loop_1 = function (device) {
                             var possibleEntityTypes = [];
                             var deviceSupportValue = function (value) { return device.supportedValues.some(function (supportedValue) { return supportedValue.valueTypeId == value; }); };
