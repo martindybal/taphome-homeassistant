@@ -147,10 +147,10 @@ var TapHomeDevice = /** @class */ (function () {
                 if (this.climateMinTemperature) {
                     config += "\n          min_temperature: " + this.climateMinTemperature;
                 }
-                else if (this.climateMaxTemperature) {
+                if (this.climateMaxTemperature) {
                     config += "\n          max_temperature: " + this.climateMaxTemperature;
                 }
-                else if (this.climateHeatingSwitchIdingCoolingModeId) {
+                if (this.climateHeatingSwitchIdingCoolingModeId) {
                     config += "\n          heating_cooling_mode_id: " + this.climateHeatingSwitchIdingCoolingModeId;
                 }
                 else if (this.climateHeatingSwitchId) {
