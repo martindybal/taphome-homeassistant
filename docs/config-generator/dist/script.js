@@ -180,7 +180,7 @@ var TapHomeCore = /** @class */ (function () {
     function TapHomeCore(token, devices) {
         var _this = this;
         this.loadFromCloudApi = function () { return __awaiter(_this, void 0, void 0, function () {
-            var apiUrl, discoveryUrl, response, json, _loop_1, this_1, _i, _a, device;
+            var apiUrl, getAllDevicesValuesUrl, getAllDevicesValuesResponse, discoveryUrl, discoveryResponse, discoveryJson, _loop_1, this_1, _i, _a, device;
             var _b;
             return __generator(this, function (_c) {
                 switch (_c.label) {
@@ -188,13 +188,25 @@ var TapHomeCore = /** @class */ (function () {
                         this.devices = [];
                         this.unsupportedDevices = [];
                         apiUrl = (_b = this.apiUrl) !== null && _b !== void 0 ? _b : 'https://cloudapi.taphome.com/api/cloudapi/v1';
+                        getAllDevicesValuesUrl = apiUrl + "/getAllDevicesValues/?token=" + this.token;
+                        return [4 /*yield*/, fetch(getAllDevicesValuesUrl)];
+                    case 1:
+                        getAllDevicesValuesResponse = _c.sent();
+                        if (getAllDevicesValuesResponse.status == 401) {
+                            alert('Core was not found. Please check your token and api_url.');
+                            return [2 /*return*/];
+                        }
+                        else if (getAllDevicesValuesResponse.status != 200) {
+                            alert('Your core is not supported! Please upgrade your core.');
+                            return [2 /*return*/];
+                        }
                         discoveryUrl = apiUrl + "/discovery/?token=" + this.token;
                         return [4 /*yield*/, fetch(discoveryUrl)];
-                    case 1:
-                        response = _c.sent();
-                        return [4 /*yield*/, response.json()];
                     case 2:
-                        json = _c.sent();
+                        discoveryResponse = _c.sent();
+                        return [4 /*yield*/, discoveryResponse.json()];
+                    case 3:
+                        discoveryJson = _c.sent();
                         _loop_1 = function (device) {
                             var possibleEntityTypes = [];
                             var deviceSupportValue = function (value) { return device.supportedValues.some(function (supportedValue) { return supportedValue.valueTypeId == value; }); };
@@ -260,7 +272,7 @@ var TapHomeCore = /** @class */ (function () {
                             taphomeDevice.isSelected = isSelected;
                         };
                         this_1 = this;
-                        for (_i = 0, _a = json.devices; _i < _a.length; _i++) {
+                        for (_i = 0, _a = discoveryJson.devices; _i < _a.length; _i++) {
                             device = _a[_i];
                             _loop_1(device);
                         }
