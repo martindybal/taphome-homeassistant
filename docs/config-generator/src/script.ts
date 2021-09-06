@@ -204,11 +204,24 @@ class TapHomeCore {
         this.devices = [];
         this.unsupportedDevices = [];
         let apiUrl = this.apiUrl ?? 'https://cloudapi.taphome.com/api/cloudapi/v1';
-        let discoveryUrl = `${apiUrl}/discovery/?token=${this.token}`;
-        let response = await fetch(discoveryUrl);
-        let json = await response.json();
 
-        for (const device of json.devices) {
+        let getAllDevicesValuesUrl = `${apiUrl}/getAllDevicesValues/?token=${this.token}`;
+        let getAllDevicesValuesResponse = await fetch(getAllDevicesValuesUrl);
+        
+        if (getAllDevicesValuesResponse.status == 401) {
+            alert('Core was not found. Please check your token and api_url.');
+            return;
+        }
+        else if (getAllDevicesValuesResponse.status != 200){
+            alert('Your core is not supported! Please upgrade your core.');
+            return;
+        }
+
+        let discoveryUrl = `${apiUrl}/discovery/?token=${this.token}`;
+        let discoveryResponse = await fetch(discoveryUrl);
+        let discoveryJson = await discoveryResponse.json();
+
+        for (const device of discoveryJson.devices) {
             let possibleEntityTypes: HomeAssistantEntityType[] = [];
             let deviceSupportValue = value => device.supportedValues.some(supportedValue => supportedValue.valueTypeId == value);
 
