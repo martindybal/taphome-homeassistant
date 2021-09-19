@@ -188,7 +188,7 @@ var TapHomeCore = /** @class */ (function () {
                         this.devices = [];
                         this.unsupportedDevices = [];
                         apiUrl = (_b = this.apiUrl) !== null && _b !== void 0 ? _b : 'https://cloudapi.taphome.com/api/cloudapi/v1';
-                        getAllDevicesValuesUrl = apiUrl + "/getAllDevicesValues/?token=" + this.token;
+                        getAllDevicesValuesUrl = apiUrl + "/getAllDevicesValues?token=" + this.token;
                         return [4 /*yield*/, fetch(getAllDevicesValuesUrl)];
                     case 1:
                         getAllDevicesValuesResponse = _c.sent();
@@ -200,7 +200,7 @@ var TapHomeCore = /** @class */ (function () {
                             alert('Your core is not supported! Please upgrade your core.');
                             return [2 /*return*/];
                         }
-                        discoveryUrl = apiUrl + "/discovery/?token=" + this.token;
+                        discoveryUrl = apiUrl + "/discovery?token=" + this.token;
                         return [4 /*yield*/, fetch(discoveryUrl)];
                     case 2:
                         discoveryResponse = _c.sent();
