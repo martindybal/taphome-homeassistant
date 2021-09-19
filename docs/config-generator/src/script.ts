@@ -205,7 +205,7 @@ class TapHomeCore {
         this.unsupportedDevices = [];
         let apiUrl = this.apiUrl ?? 'https://cloudapi.taphome.com/api/cloudapi/v1';
 
-        let getAllDevicesValuesUrl = `${apiUrl}/getAllDevicesValues/?token=${this.token}`;
+        let getAllDevicesValuesUrl = `${apiUrl}/getAllDevicesValues?token=${this.token}`;
         let getAllDevicesValuesResponse = await fetch(getAllDevicesValuesUrl);
         
         if (getAllDevicesValuesResponse.status == 401) {
@@ -217,7 +217,7 @@ class TapHomeCore {
             return;
         }
 
-        let discoveryUrl = `${apiUrl}/discovery/?token=${this.token}`;
+        let discoveryUrl = `${apiUrl}/discovery?token=${this.token}`;
         let discoveryResponse = await fetch(discoveryUrl);
         let discoveryJson = await discoveryResponse.json();
 
