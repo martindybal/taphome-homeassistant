@@ -280,7 +280,7 @@ class TapHomeClimate(TapHomeEntity[ThermostatState], ClimateEntity):
         if self._config_min_temperature is not None:
             return self._config_min_temperature
 
-        if self.taphome_state is not None:
+        if self.taphome_state is not None and self.taphome_state.min_temperature is not None:
             return self.taphome_state.min_temperature
 
         return 10
@@ -290,7 +290,7 @@ class TapHomeClimate(TapHomeEntity[ThermostatState], ClimateEntity):
         if self._config_max_temperature is not None:
             return self._config_max_temperature
 
-        if self.taphome_state is not None:
+        if self.taphome_state is not None and self.taphome_state.max_temperature is not None:
             return self.taphome_state.max_temperature
 
         return 30
