@@ -181,18 +181,17 @@ var TapHomeCore = /** @class */ (function () {
         var _this = this;
         this.loadFromCloudApi = function () { return __awaiter(_this, void 0, void 0, function () {
             var apiUrl, getAllDevicesValuesUrl, getAllDevicesValuesResponse, discoveryUrl, discoveryResponse, discoveryJson, _loop_1, this_1, _i, _a, device;
-            var _b;
-            return __generator(this, function (_c) {
-                switch (_c.label) {
+            return __generator(this, function (_b) {
+                switch (_b.label) {
                     case 0:
                         this.devices = [];
                         this.unsupportedDevices = [];
-                        apiUrl = (_b = this.apiUrl) !== null && _b !== void 0 ? _b : 'https://cloudapi.taphome.com/api/cloudapi/v1';
+                        apiUrl = 'https://cloudapi.taphome.com/api/cloudapi/v1';
                         getAllDevicesValuesUrl = apiUrl + "/getAllDevicesValues?token=" + this.token;
                         return [4 /*yield*/, fetch(getAllDevicesValuesUrl)];
                     case 1:
-                        getAllDevicesValuesResponse = _c.sent();
-                        if (getAllDevicesValuesResponse.status == 401) {
+                        getAllDevicesValuesResponse = _b.sent();
+                        if (getAllDevicesValuesResponse.status == 401 || getAllDevicesValuesResponse.status == 403) {
                             alert('Core was not found. Please check your token and api_url.');
                             return [2 /*return*/];
                         }
@@ -203,10 +202,10 @@ var TapHomeCore = /** @class */ (function () {
                         discoveryUrl = apiUrl + "/discovery?token=" + this.token;
                         return [4 /*yield*/, fetch(discoveryUrl)];
                     case 2:
-                        discoveryResponse = _c.sent();
+                        discoveryResponse = _b.sent();
                         return [4 /*yield*/, discoveryResponse.json()];
                     case 3:
-                        discoveryJson = _c.sent();
+                        discoveryJson = _b.sent();
                         _loop_1 = function (device) {
                             var possibleEntityTypes = [];
                             var deviceSupportValue = function (value) { return device.supportedValues.some(function (supportedValue) { return supportedValue.valueTypeId == value; }); };
