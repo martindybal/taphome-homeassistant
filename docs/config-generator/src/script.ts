@@ -203,12 +203,12 @@ class TapHomeCore {
     loadFromCloudApi = async () => {
         this.devices = [];
         this.unsupportedDevices = [];
-        let apiUrl = this.apiUrl ?? 'https://cloudapi.taphome.com/api/cloudapi/v1';
+        let apiUrl = 'https://cloudapi.taphome.com/api/cloudapi/v1';
 
         let getAllDevicesValuesUrl = `${apiUrl}/getAllDevicesValues?token=${this.token}`;
         let getAllDevicesValuesResponse = await fetch(getAllDevicesValuesUrl);
         
-        if (getAllDevicesValuesResponse.status == 401) {
+        if (getAllDevicesValuesResponse.status == 401 || getAllDevicesValuesResponse.status == 403) {
             alert('Core was not found. Please check your token and api_url.');
             return;
         }
