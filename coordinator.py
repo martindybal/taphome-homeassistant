@@ -149,6 +149,11 @@ class TapHomeDataUpdateCoordinator(DataUpdateCoordinator):
         else:
             for device_id in self._devices:
                 self._devices[device_id].taphome_state = None
+
+            # clear the last update timestamp so the device values get correctly updates next time the connection is re-established
+            # (when Taphome core is reset, the timestamp calculation gets reset as well, which may block further updates of device values until
+            # the new timestamp reaches the previous value)
+            self.last_update_devices_values_timestamp = 0;
             raise UpdateFailed()
 
     def get_device_data(
