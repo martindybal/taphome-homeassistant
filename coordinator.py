@@ -68,7 +68,6 @@ class TapHomeDataUpdateCoordinator(DataUpdateCoordinator):
     ):
         self.taphome_api_service = taphome_api_service
         self._was_devices_discovered = False
-        self.last_update_devices_values_timestamp = 0
         self._devices = {}
         update_interval = timedelta(seconds=update_interval)
         super().__init__(
@@ -128,32 +127,17 @@ class TapHomeDataUpdateCoordinator(DataUpdateCoordinator):
             await self.taphome_api_service.async_get_all_devices_values()
         )
         if all_devices_values is not None:
-            if (
-                self.last_update_devices_values_timestamp
-                < all_devices_values["timestamp"]
-            ):
-                self.last_update_devices_values_timestamp = all_devices_values[
-                    "timestamp"
-                ]
+            for device_value in all_devices_values["devices"]:
+                device = self.get_device_data(device_value["deviceId"])
 
-                for device_value in all_devices_values["devices"]:
-                    device = self.get_device_data(device_value["deviceId"])
-
-                    if device.taphome_state_type is not None:
-                        current_state = device.taphome_state_type(
-                            device_value["values"]
-                        )
-                        if not device.taphome_state == current_state:
-                            device.taphome_state = current_state
+                if device.taphome_state_type is not None:
+                    current_state = device.taphome_state_type(device_value["values"])
+                    if not device.taphome_state == current_state:
+                        device.taphome_state = current_state
 
         else:
             for device_id in self._devices:
                 self._devices[device_id].taphome_state = None
-
-            # clear the last update timestamp so the device values get correctly updates next time the connection is re-established
-            # (when Taphome core is reset, the timestamp calculation gets reset as well, which may block further updates of device values until
-            # the new timestamp reaches the previous value)
-            self.last_update_devices_values_timestamp = 0;
             raise UpdateFailed()
 
     def get_device_data(
