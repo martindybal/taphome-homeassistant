@@ -1,7 +1,7 @@
 {
   "domain": "taphome",
   "name": "TapHome",
-  "version": "2021.2.1-pre",
+  "version": "2021.3.1",
   "documentation": "https://github.com/martindybal/taphome-homeassistant",
   "issue_tracker": "https://github.com/martindybal/taphome-homeassistant/issues",
   "dependencies": [],
