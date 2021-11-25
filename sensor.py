@@ -5,6 +5,7 @@ import typing
 from homeassistant.components.sensor import (
     DOMAIN,
     STATE_CLASS_MEASUREMENT,
+    STATE_CLASS_TOTAL_INCREASING,
     SensorEntity,
 )
 from homeassistant.const import (
@@ -106,6 +107,15 @@ class TapHomeElectricCounterElectricityConsumptionSensorType(TapHomeSensorType):
             ENERGY_KILO_WATT_HOUR,
             True,
         )
+
+    """Override getter for state_class property"""
+    @TapHomeSensorType.state_class.getter
+    def state_class(self) -> str:
+        if self.was_measured is True:
+            # The correct value for ElectricityConsumption sensor should be STATE_CLASS_TOTAL_INCREASING,
+            # to be able to use this sensor as a Energy monitoring entity
+            return STATE_CLASS_TOTAL_INCREASING
+        return None
 
     def convert_taphome_to_ha(self, value: int) -> int:
         return round(value, 2)
