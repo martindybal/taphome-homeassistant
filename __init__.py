@@ -22,7 +22,9 @@ from homeassistant.const import (
     CONF_SENSORS,
     CONF_SWITCHES,
     CONF_TOKEN,
+    CONF_WEBHOOK_ID,
 )
+
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as config_validation
 from homeassistant.helpers.discovery import load_platform
@@ -78,6 +80,9 @@ CONFIG_SCHEMA = voluptuous.Schema(
                             voluptuous.Required(CONF_TOKEN): config_validation.string,
                             voluptuous.Optional(CONF_ID): config_validation.string,
                             voluptuous.Optional(CONF_API_URL): config_validation.string,
+                            voluptuous.Optional(
+                                CONF_WEBHOOK_URL
+                            ): config_validation.string,
                             voluptuous.Optional(
                                 CONF_UPDATE_INTERVAL
                             ): config_validation.positive_float,
@@ -154,6 +159,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigEntry) -> bool:
             "https://cloudapi.taphome.com/api/CloudApi/v1",
         )
 
+        webhook_url = read_from_config_or_default(core_config, CONF_WEBHOOK_URL, "")
+
         update_interval = read_from_config_or_default(
             core_config, CONF_UPDATE_INTERVAL, 10
         )
@@ -195,6 +202,14 @@ async def async_setup(hass: HomeAssistant, config: ConfigEntry) -> bool:
             config,
         )
 
+    # register webhook handler if webhook_url is specified
+    if webhook_url:
+        hass.components.webhook.async_register(
+            TAPHOME_PLATFORM, "Taphome", webhook_url, handle_webhook
+        )
+        # store reference to global coordinator object for later use by webhook handler
+        hass.data[TAPHOME_PLATFORM][TAPHOME_COORDINATOR] = coordinator
+
     return True
 
 
@@ -234,3 +249,27 @@ def map_add_entry_requests(
             config_entries,
         )
     )
+
+
+#
+# webhook handler
+#
+
+
+async def handle_webhook(hass, webhook_id, request):
+    """Handle incoming webhook - we will trigger an update poll here"""
+    _LOGGER.info("Taphome webhook triggered - webhook_id: %s", webhook_id)
+
+    # get access to coordinator instance
+    coordinator = hass.data[TAPHOME_PLATFORM][TAPHOME_COORDINATOR]
+
+    if coordinator:
+        try:
+            # ask for refresh with 8 seconds timeout
+            async with timeout(8):
+                await coordinator.async_refresh()
+                _LOGGER.info("Refresh of taphome finished")
+        except asyncio.TimeoutError:
+            _LOGGER.warn("Refresh of taphome state failed due to timeout!")
+        except NotImplementedError:
+            _LOGGER.warn("Not implemented!")
