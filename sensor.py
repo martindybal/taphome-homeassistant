@@ -337,7 +337,6 @@ class TapHomeSensorCreateRequest(TapHomeDataUpdateCoordinatorObject[TapHomeState
                 TapHomePulseCounterTotalImpulseCountSensorType(),
                 TapHomePulseCounterCurrentHourImpulseCountSensorType(),
                 TapHomePulseCounterLastMeasuredFrequencySensorType(),
-                TapHomePulseCounterLastMeasuredFrequencySensorType(),
                 TapHomeVariableType(),
             ]
 
