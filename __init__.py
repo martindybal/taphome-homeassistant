@@ -81,7 +81,7 @@ CONFIG_SCHEMA = voluptuous.Schema(
                             voluptuous.Optional(CONF_ID): config_validation.string,
                             voluptuous.Optional(CONF_API_URL): config_validation.string,
                             voluptuous.Optional(
-                                CONF_WEBHOOK_URL
+                                CONF_WEBHOOK_ID
                             ): config_validation.string,
                             voluptuous.Optional(
                                 CONF_UPDATE_INTERVAL
@@ -159,7 +159,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigEntry) -> bool:
             "https://cloudapi.taphome.com/api/CloudApi/v1",
         )
 
-        webhook_url = read_from_config_or_default(core_config, CONF_WEBHOOK_URL, "")
+        webhook_id = read_from_config_or_default(core_config, CONF_WEBHOOK_ID, "")
 
         update_interval = read_from_config_or_default(
             core_config, CONF_UPDATE_INTERVAL, 10
@@ -171,15 +171,15 @@ async def async_setup(hass: HomeAssistant, config: ConfigEntry) -> bool:
             hass, update_interval, taphome_api_service=tapHome_api_service
         )
 
-        # register webhook handler if webhook_url is specified
-        if webhook_url:
+        # register webhook handler if webhook_id is specified
+        if webhook_id:
             handle_webhook_lambda = lambda hass, webhook_id, request: handle_webhook(
                 coordinator, webhook_id
             )
 
             webhook_name = f"Taphome-{core_id}" if core_id else "Taphome"
             hass.components.webhook.async_register(
-                TAPHOME_PLATFORM, webhook_name, webhook_url, handle_webhook_lambda
+                TAPHOME_PLATFORM, webhook_name, webhook_id, handle_webhook_lambda
             )
 
         try:
