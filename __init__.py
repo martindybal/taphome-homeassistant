@@ -22,7 +22,9 @@ from homeassistant.const import (
     CONF_SENSORS,
     CONF_SWITCHES,
     CONF_TOKEN,
+    CONF_WEBHOOK_ID,
 )
+
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as config_validation
 from homeassistant.helpers.discovery import load_platform
@@ -78,6 +80,9 @@ CONFIG_SCHEMA = voluptuous.Schema(
                             voluptuous.Required(CONF_TOKEN): config_validation.string,
                             voluptuous.Optional(CONF_ID): config_validation.string,
                             voluptuous.Optional(CONF_API_URL): config_validation.string,
+                            voluptuous.Optional(
+                                CONF_WEBHOOK_ID
+                            ): config_validation.string,
                             voluptuous.Optional(
                                 CONF_UPDATE_INTERVAL
                             ): config_validation.positive_float,
@@ -154,8 +159,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigEntry) -> bool:
             "https://cloudapi.taphome.com/api/CloudApi/v1",
         )
 
+        webhook_id = read_from_config_or_default(core_config, CONF_WEBHOOK_ID, None)
+
         update_interval = read_from_config_or_default(
-            core_config, CONF_UPDATE_INTERVAL, 10
+            core_config,
+            CONF_UPDATE_INTERVAL,
+            get_update_interval_default_value(api_url, webhook_id),
         )
 
         tapHome_http_client = TapHomeHttpClientFactory().create(api_url, token)
@@ -163,6 +172,17 @@ async def async_setup(hass: HomeAssistant, config: ConfigEntry) -> bool:
         coordinator = TapHomeDataUpdateCoordinator(
             hass, update_interval, taphome_api_service=tapHome_api_service
         )
+
+        # register webhook handler if webhook_id is specified
+        if webhook_id:
+            handle_webhook_lambda = lambda hass, webhook_id, request: handle_webhook(
+                coordinator, webhook_id
+            )
+
+            webhook_name = f"Taphome-{core_id}" if core_id else "Taphome"
+            hass.components.webhook.async_register(
+                TAPHOME_PLATFORM, webhook_name, webhook_id, handle_webhook_lambda
+            )
 
         try:
             async with timeout(8):
@@ -196,6 +216,14 @@ async def async_setup(hass: HomeAssistant, config: ConfigEntry) -> bool:
         )
 
     return True
+
+
+def get_update_interval_default_value(api_url: str, webhook_id: str) -> int:
+    if webhook_id:
+        return 600
+    if "cloudapi.taphome.com" in api_url:
+        return 20
+    return 2  # local api
 
 
 def read_from_config_or_default(config: dict, key: str, default_value) -> typing.Any:
@@ -234,3 +262,23 @@ def map_add_entry_requests(
             config_entries,
         )
     )
+
+
+#
+# webhook handler
+#
+
+
+async def handle_webhook(coordinator, webhook_id):
+    """Handle incoming webhook - we will trigger an update poll here"""
+    _LOGGER.info(f"Taphome webhook triggered - webhook_id: {webhook_id}")
+
+    try:
+        # ask for refresh with 8 seconds timeout
+        async with timeout(8):
+            await coordinator.async_refresh()
+            _LOGGER.info("Refresh of taphome finished")
+    except asyncio.TimeoutError:
+        _LOGGER.warn("Refresh of taphome state failed due to timeout!")
+    except NotImplementedError:
+        _LOGGER.warn("Not implemented!")

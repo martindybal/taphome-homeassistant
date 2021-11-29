@@ -289,7 +289,7 @@ var TapHomeCore = /** @class */ (function () {
             if (selectedDevices.length === 0) {
                 return "";
             }
-            return "    - " + this.idConfig() + "token: " + this.token + this.apiUrlConfig() + this.updateIntervalConfig() + this.entitiesConfig(selectedDevices, HomeAssistantEntityType.light) + this.entitiesConfig(selectedDevices, HomeAssistantEntityType.cover) + this.entitiesConfig(selectedDevices, HomeAssistantEntityType.climate) + this.entitiesConfig(selectedDevices, HomeAssistantEntityType.switch) + this.entitiesConfig(selectedDevices, HomeAssistantEntityType.sensor) + this.entitiesConfig(selectedDevices, HomeAssistantEntityType.binarySensor) + "\n";
+            return "    - " + this.idConfig() + "token: " + this.token + this.apiUrlConfig() + this.webhookIdConfig() + this.entitiesConfig(selectedDevices, HomeAssistantEntityType.light) + this.entitiesConfig(selectedDevices, HomeAssistantEntityType.cover) + this.entitiesConfig(selectedDevices, HomeAssistantEntityType.climate) + this.entitiesConfig(selectedDevices, HomeAssistantEntityType.switch) + this.entitiesConfig(selectedDevices, HomeAssistantEntityType.sensor) + this.entitiesConfig(selectedDevices, HomeAssistantEntityType.binarySensor) + "\n";
         },
         enumerable: false,
         configurable: true
@@ -306,11 +306,11 @@ var TapHomeCore = /** @class */ (function () {
         }
         return "\n      api_url: " + this.apiUrl;
     };
-    TapHomeCore.prototype.updateIntervalConfig = function () {
-        if (!this.updateInterval) {
+    TapHomeCore.prototype.webhookIdConfig = function () {
+        if (!this.webhookId) {
             return "";
         }
-        return "\n      update_interval: " + this.updateInterval;
+        return "\n      webhook_id: " + this.webhookId;
     };
     TapHomeCore.prototype.entitiesConfig = function (selectedDevices, entityType) {
         var configSectionName = {};
