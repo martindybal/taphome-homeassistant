@@ -144,7 +144,7 @@ class TapHomeCore {
     id: string;
     token: string;
     apiUrl: string;
-    updateInterval: number;
+    webhookId: string;
     devices: TapHomeDevice[];
     unsupportedDevices: TapHomeDevice[];
 
@@ -159,7 +159,7 @@ class TapHomeCore {
         if (selectedDevices.length === 0) {
             return "";
         }
-        return `    - ${this.idConfig()}token: ${this.token}${this.apiUrlConfig()}${this.updateIntervalConfig()}${this.entitiesConfig(selectedDevices, HomeAssistantEntityType.light)}${this.entitiesConfig(selectedDevices, HomeAssistantEntityType.cover)}${this.entitiesConfig(selectedDevices, HomeAssistantEntityType.climate)}${this.entitiesConfig(selectedDevices, HomeAssistantEntityType.switch)}${this.entitiesConfig(selectedDevices, HomeAssistantEntityType.sensor)}${this.entitiesConfig(selectedDevices, HomeAssistantEntityType.binarySensor)}\n`
+        return `    - ${this.idConfig()}token: ${this.token}${this.apiUrlConfig()}${this.webhookIdConfig()}${this.entitiesConfig(selectedDevices, HomeAssistantEntityType.light)}${this.entitiesConfig(selectedDevices, HomeAssistantEntityType.cover)}${this.entitiesConfig(selectedDevices, HomeAssistantEntityType.climate)}${this.entitiesConfig(selectedDevices, HomeAssistantEntityType.switch)}${this.entitiesConfig(selectedDevices, HomeAssistantEntityType.sensor)}${this.entitiesConfig(selectedDevices, HomeAssistantEntityType.binarySensor)}\n`
     }
 
     private idConfig() {
@@ -176,11 +176,11 @@ class TapHomeCore {
         return `\n      api_url: ${this.apiUrl}`;
     }
 
-    private updateIntervalConfig() {
-        if (!this.updateInterval) {
+    private webhookIdConfig() {
+        if (!this.webhookId) {
             return "";
         }
-        return `\n      update_interval: ${this.updateInterval}`;
+        return `\n      webhook_id: ${this.webhookId}`;
     }
 
     private entitiesConfig(selectedDevices, entityType) {
