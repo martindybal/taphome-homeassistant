@@ -171,6 +171,17 @@ async def async_setup(hass: HomeAssistant, config: ConfigEntry) -> bool:
             hass, update_interval, taphome_api_service=tapHome_api_service
         )
 
+        # register webhook handler if webhook_url is specified
+        if webhook_url:
+            handle_webhook_lambda = lambda hass, webhook_id, request: handle_webhook(
+                coordinator, webhook_id
+            )
+
+            webhook_name = f"Taphome-{core_id}" if core_id else "Taphome"
+            hass.components.webhook.async_register(
+                TAPHOME_PLATFORM, webhook_name, webhook_url, handle_webhook_lambda
+            )
+
         try:
             async with timeout(8):
                 await coordinator.async_refresh()
@@ -201,14 +212,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigEntry) -> bool:
             {},
             config,
         )
-
-    # register webhook handler if webhook_url is specified
-    if webhook_url:
-        hass.components.webhook.async_register(
-            TAPHOME_PLATFORM, "Taphome", webhook_url, handle_webhook
-        )
-        # store reference to global coordinator object for later use by webhook handler
-        hass.data[TAPHOME_PLATFORM][TAPHOME_COORDINATOR] = coordinator
 
     return True
 
@@ -256,20 +259,16 @@ def map_add_entry_requests(
 #
 
 
-async def handle_webhook(hass, webhook_id, request):
+async def handle_webhook(coordinator, webhook_id):
     """Handle incoming webhook - we will trigger an update poll here"""
-    _LOGGER.info("Taphome webhook triggered - webhook_id: %s", webhook_id)
+    _LOGGER.info(f"Taphome webhook triggered - webhook_id: {webhook_id}")
 
-    # get access to coordinator instance
-    coordinator = hass.data[TAPHOME_PLATFORM][TAPHOME_COORDINATOR]
-
-    if coordinator:
-        try:
-            # ask for refresh with 8 seconds timeout
-            async with timeout(8):
-                await coordinator.async_refresh()
-                _LOGGER.info("Refresh of taphome finished")
-        except asyncio.TimeoutError:
-            _LOGGER.warn("Refresh of taphome state failed due to timeout!")
-        except NotImplementedError:
-            _LOGGER.warn("Not implemented!")
+    try:
+        # ask for refresh with 8 seconds timeout
+        async with timeout(8):
+            await coordinator.async_refresh()
+            _LOGGER.info("Refresh of taphome finished")
+    except asyncio.TimeoutError:
+        _LOGGER.warn("Refresh of taphome state failed due to timeout!")
+    except NotImplementedError:
+        _LOGGER.warn("Not implemented!")
