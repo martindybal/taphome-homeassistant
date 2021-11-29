@@ -1,7 +1,6 @@
 {
     "name": "TapHome",
     "render_readme": true,
-    "iot_class": "Local Polling",
     "homeassistant": "2021.7.0",
     "domains": [
         "binary_sensor",
