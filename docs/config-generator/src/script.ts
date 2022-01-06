@@ -155,11 +155,19 @@ class TapHomeCore {
     }
 
     get config() {
-        let selectedDevices = this.devices.filter(device => device.isSelected && device.entityType);
+        let selectedDevices = this.devices.filter(device => device.isSelected && device.entityType).sort((device1, device2) => device1.deviceId - device2.deviceId);
         if (selectedDevices.length === 0) {
             return "";
         }
-        return `    - ${this.idConfig()}token: ${this.token}${this.apiUrlConfig()}${this.webhookIdConfig()}${this.entitiesConfig(selectedDevices, HomeAssistantEntityType.light)}${this.entitiesConfig(selectedDevices, HomeAssistantEntityType.cover)}${this.entitiesConfig(selectedDevices, HomeAssistantEntityType.climate)}${this.entitiesConfig(selectedDevices, HomeAssistantEntityType.switch)}${this.entitiesConfig(selectedDevices, HomeAssistantEntityType.sensor)}${this.entitiesConfig(selectedDevices, HomeAssistantEntityType.binarySensor)}\n`
+
+        let config = `    - ${this.idConfig()}token: ${this.token}${this.apiUrlConfig()}${this.webhookIdConfig()}`;
+        for (let entityType in HomeAssistantEntityType) {
+            if (isNaN(Number(entityType))) {
+                config += `${this.entitiesConfig(selectedDevices, HomeAssistantEntityType[entityType])}`;
+            }
+        }
+
+        return config + '\n';
     }
 
     private idConfig() {
@@ -236,7 +244,7 @@ class TapHomeCore {
                     possibleEntityTypes.push(HomeAssistantEntityType.switch);
                 }
             }
-
+            
             if (deviceSupportValue(TapHomeValueType.blindsLevel)) {
                 possibleEntityTypes.push(HomeAssistantEntityType.cover);
             }
