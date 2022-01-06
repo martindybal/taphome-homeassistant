@@ -285,11 +285,17 @@ var TapHomeCore = /** @class */ (function () {
     }
     Object.defineProperty(TapHomeCore.prototype, "config", {
         get: function () {
-            var selectedDevices = this.devices.filter(function (device) { return device.isSelected && device.entityType; });
+            var selectedDevices = this.devices.filter(function (device) { return device.isSelected && device.entityType; }).sort(function (device1, device2) { return device1.deviceId - device2.deviceId; });
             if (selectedDevices.length === 0) {
                 return "";
             }
-            return "    - " + this.idConfig() + "token: " + this.token + this.apiUrlConfig() + this.webhookIdConfig() + this.entitiesConfig(selectedDevices, HomeAssistantEntityType.light) + this.entitiesConfig(selectedDevices, HomeAssistantEntityType.cover) + this.entitiesConfig(selectedDevices, HomeAssistantEntityType.climate) + this.entitiesConfig(selectedDevices, HomeAssistantEntityType.switch) + this.entitiesConfig(selectedDevices, HomeAssistantEntityType.sensor) + this.entitiesConfig(selectedDevices, HomeAssistantEntityType.binarySensor) + "\n";
+            var config = "    - " + this.idConfig() + "token: " + this.token + this.apiUrlConfig() + this.webhookIdConfig();
+            for (var entityType in HomeAssistantEntityType) {
+                if (isNaN(Number(entityType))) {
+                    config += "" + this.entitiesConfig(selectedDevices, HomeAssistantEntityType[entityType]);
+                }
+            }
+            return config + '\n';
         },
         enumerable: false,
         configurable: true
