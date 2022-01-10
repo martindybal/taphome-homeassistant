@@ -34,6 +34,8 @@ from .coordinator import TapHomeDataUpdateCoordinator
 from .taphome_entity import *
 from .taphome_sdk import *
 
+_LOGGER = logging.getLogger(__name__)
+
 
 class TapHomeSensorType:
     def __init__(
@@ -109,6 +111,7 @@ class TapHomeElectricCounterElectricityConsumptionSensorType(TapHomeSensorType):
         )
 
     """Override getter for state_class property"""
+
     @TapHomeSensorType.state_class.getter
     def state_class(self) -> str:
         if self.was_measured is True:
@@ -118,6 +121,10 @@ class TapHomeElectricCounterElectricityConsumptionSensorType(TapHomeSensorType):
         return None
 
     def convert_taphome_to_ha(self, value: int) -> int:
+        if type(value) == str:
+            _LOGGER.error(
+                f"TapHomeElectricCounterElectricityConsumptionSensorType value {value} is not expected"
+            )
         return round(value, 2)
 
 
