@@ -122,9 +122,7 @@ class TapHomeElectricCounterElectricityConsumptionSensorType(TapHomeSensorType):
 
     def convert_taphome_to_ha(self, value: int) -> int:
         if type(value) == str:
-            _LOGGER.error(
-                f"TapHomeElectricCounterElectricityConsumptionSensorType value {value} is not expected"
-            )
+            return None
         return round(value, 2)
 
 
