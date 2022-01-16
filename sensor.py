@@ -121,8 +121,6 @@ class TapHomeElectricCounterElectricityConsumptionSensorType(TapHomeSensorType):
         return None
 
     def convert_taphome_to_ha(self, value: int) -> int:
-        if type(value) == str:
-            return None
         return round(value, 2)
 
 
@@ -280,7 +278,10 @@ class TapHomeSensor(TapHomeEntity[TapHomeState], SensorEntity):
             sensor_value = self.taphome_state.get_device_value(sensor_type.value_type)
             if sensor_value is None:
                 return None
-            return sensor_type.convert_taphome_to_ha(sensor_value)
+            try:
+                return sensor_type.convert_taphome_to_ha(sensor_value)
+            except:
+                return None
 
     @property
     def device_class(self) -> str:
