@@ -237,12 +237,14 @@ class TapHomeClimate(TapHomeEntity[ThermostatState], ClimateEntity):
 
     def __init__(
         self,
-        core_id: str,
+        core_config: TapHomeCoreConfigEntry,
         config_entry: ClimateConfigEntry,
         tapHome_api_service: TapHomeApiService,
         coordinator: TapHomeDataUpdateCoordinator,
     ):
-        super().__init__(core_id, config_entry, DOMAIN, coordinator, ThermostatState)
+        super().__init__(
+            core_config, config_entry, DOMAIN, coordinator, ThermostatState
+        )
 
         self.thermostat_service = ThermostatService(tapHome_api_service)
         self.climate_controller = config_entry.create_climate_controller(
@@ -280,7 +282,10 @@ class TapHomeClimate(TapHomeEntity[ThermostatState], ClimateEntity):
         if self._config_min_temperature is not None:
             return self._config_min_temperature
 
-        if self.taphome_state is not None and self.taphome_state.min_temperature is not None:
+        if (
+            self.taphome_state is not None
+            and self.taphome_state.min_temperature is not None
+        ):
             return self.taphome_state.min_temperature
 
         return 10
@@ -290,7 +295,10 @@ class TapHomeClimate(TapHomeEntity[ThermostatState], ClimateEntity):
         if self._config_max_temperature is not None:
             return self._config_max_temperature
 
-        if self.taphome_state is not None and self.taphome_state.max_temperature is not None:
+        if (
+            self.taphome_state is not None
+            and self.taphome_state.max_temperature is not None
+        ):
             return self.taphome_state.max_temperature
 
         return 30
@@ -332,7 +340,7 @@ def setup_platform(
     climates = []
     for add_entry_request in add_entry_requests:
         climate = TapHomeClimate(
-            add_entry_request.core_id,
+            add_entry_request.core_config,
             add_entry_request.config_entry,
             add_entry_request.tapHome_api_service,
             add_entry_request.coordinator,

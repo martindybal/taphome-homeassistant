@@ -40,12 +40,12 @@ class TapHomeCover(TapHomeEntity[CoverState], CoverEntity):
 
     def __init__(
         self,
-        core_id: str,
+        core_config: TapHomeCoreConfigEntry,
         config_entry: TapHomeConfigEntry,
         coordinator: TapHomeDataUpdateCoordinator,
         cover_service: CoverService,
     ):
-        super().__init__(core_id, config_entry, DOMAIN, coordinator, CoverState)
+        super().__init__(core_config, config_entry, DOMAIN, coordinator, CoverState)
         self.cover_service = cover_service
         self._device_class = config_entry.device_class
         self._supported_features = None
@@ -164,7 +164,7 @@ def setup_platform(
     for add_entry_request in add_entry_requests:
         cover_service = CoverService(add_entry_request.tapHome_api_service)
         cover = TapHomeCover(
-            add_entry_request.core_id,
+            add_entry_request.core_config,
             add_entry_request.config_entry,
             add_entry_request.coordinator,
             cover_service,
