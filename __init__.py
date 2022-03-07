@@ -37,6 +37,7 @@ from .coordinator import TapHomeDataUpdateCoordinator
 from .cover import CoverConfigEntry
 from .sensor import SensorConfigEntry
 from .switch import SwitchConfigEntry
+from .taphome_core_config_entry import TapHomeCoreConfigEntry
 from .taphome_entity import TapHomeConfigEntry
 from .taphome_sdk import *
 
@@ -86,6 +87,9 @@ CONFIG_SCHEMA = voluptuous.Schema(
                             voluptuous.Optional(
                                 CONF_UPDATE_INTERVAL
                             ): config_validation.positive_float,
+                            voluptuous.Optional(
+                                USE_DESCRIPTION_AS_NAME
+                            ): config_validation.boolean,
                             voluptuous.Optional(
                                 CONF_LIGHTS, default=[]
                             ): config_validation.ensure_list,
@@ -153,6 +157,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigEntry) -> bool:
             None,
         )
 
+        use_description_as_name = read_from_config_or_default(
+            core_config, USE_DESCRIPTION_AS_NAME, False
+        )
+
+        core_config_entry = TapHomeCoreConfigEntry(core_id, use_description_as_name)
+
         api_url = read_from_config_or_default(
             core_config,
             CONF_API_URL,
@@ -200,7 +210,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigEntry) -> bool:
             config_entries = map_config_entries(domain.config_entry_type, domain_config)
 
             core_add_entry_requests = map_add_entry_requests(
-                core_id, config_entries, coordinator, tapHome_api_service
+                core_config_entry,
+                config_entries,
+                coordinator,
+                tapHome_api_service,
             )
             domain.add_entry_requests.extend(core_add_entry_requests)
 
@@ -245,7 +258,7 @@ def map_config_entries(
 
 
 def map_add_entry_requests(
-    core_id: str,
+    core_config_entry: TapHomeCoreConfigEntry,
     config_entries: typing.List[TapHomeConfigEntry],
     coordinator: TapHomeDataUpdateCoordinator,
     tapHome_api_service: TapHomeApiService,
@@ -253,7 +266,7 @@ def map_add_entry_requests(
     return list(
         map(
             lambda config_entry: AddEntryRequest(
-                core_id,
+                core_config_entry,
                 config_entry,
                 config_entry.id,
                 coordinator,
