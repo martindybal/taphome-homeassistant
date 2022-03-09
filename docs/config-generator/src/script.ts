@@ -80,6 +80,9 @@ class TapHomeDevice {
     climateHeatingSwitchId: number;
     climateCoolingSwitchId: number;
 
+    sensorUnitOfMeasurement: string;
+    sensorStateClass: string;
+
     constructor() {
         this.deviceId = undefined;
         this.name = "";
@@ -97,6 +100,8 @@ class TapHomeDevice {
             return this.deviceClassConfig;
         } else if (this.entityType === HomeAssistantEntityType.climate) {
             return this.climateConfig;
+        } else if (this.entityType === HomeAssistantEntityType.sensor) {
+            return this.sensorConfig;
         }
         return this.idConfig;
     }
@@ -108,7 +113,6 @@ class TapHomeDevice {
         }
         return this.idConfig;
     }
-
 
     private get climateConfig() {
         if (this.climateMinTemperature ||
@@ -129,6 +133,25 @@ class TapHomeDevice {
                 config += `\n          heating_switch_id: ${this.climateHeatingSwitchId}`;
             } else if (this.climateCoolingSwitchId) {
                 config += `\n          cooling_switch_id: ${this.climateCoolingSwitchId}`;
+            }
+            return config;
+        }
+        return this.idConfig;
+    }
+
+    private get sensorConfig() {
+        if (this.deviceClass ||
+            this.sensorUnitOfMeasurement ||
+            this.sensorStateClass) {
+            let config = `\n        - id: ${this.deviceId}`
+            if (this.deviceClass) {
+                config += `\n          device_class: ${this.deviceClass}`;
+            } 
+            if (this.sensorUnitOfMeasurement) {
+                config += `\n          unit_of_measurement: ${this.sensorUnitOfMeasurement}`;
+            } 
+            if (this.sensorStateClass) {
+                config += `\n          state_class: ${this.sensorStateClass}`;
             }
             return config;
         }
@@ -308,7 +331,7 @@ let ViewModel = class {
     }
 
     addCore() {
-        this.taphomeCores.push(new TapHomeCore("", []));
+        this.taphomeCores.push(new TapHomeCore("f281301b-2552-4f5b-bcfc-6490bd9e70f2", []));
     }
 
     loadFromConfig(config) {

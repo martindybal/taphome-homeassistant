@@ -120,6 +120,9 @@ var TapHomeDevice = /** @class */ (function () {
             else if (this.entityType === HomeAssistantEntityType.climate) {
                 return this.climateConfig;
             }
+            else if (this.entityType === HomeAssistantEntityType.sensor) {
+                return this.sensorConfig;
+            }
             return this.idConfig;
         },
         enumerable: false,
@@ -158,6 +161,28 @@ var TapHomeDevice = /** @class */ (function () {
                 }
                 else if (this.climateCoolingSwitchId) {
                     config += "\n          cooling_switch_id: " + this.climateCoolingSwitchId;
+                }
+                return config;
+            }
+            return this.idConfig;
+        },
+        enumerable: false,
+        configurable: true
+    });
+    Object.defineProperty(TapHomeDevice.prototype, "sensorConfig", {
+        get: function () {
+            if (this.deviceClass ||
+                this.sensorUnitOfMeasurement ||
+                this.sensorStateClass) {
+                var config = "\n        - id: " + this.deviceId;
+                if (this.deviceClass) {
+                    config += "\n          device_class: " + this.deviceClass;
+                }
+                if (this.sensorUnitOfMeasurement) {
+                    config += "\n          unit_of_measurement: " + this.sensorUnitOfMeasurement;
+                }
+                if (this.sensorStateClass) {
+                    config += "\n          state_class: " + this.sensorStateClass;
                 }
                 return config;
             }
@@ -338,7 +363,7 @@ var ViewModel = /** @class */ (function () {
         this.addCore();
     }
     class_1.prototype.addCore = function () {
-        this.taphomeCores.push(new TapHomeCore("", []));
+        this.taphomeCores.push(new TapHomeCore("f281301b-2552-4f5b-bcfc-6490bd9e70f2", []));
     };
     class_1.prototype.loadFromConfig = function (config) {
         //TODO Read config
