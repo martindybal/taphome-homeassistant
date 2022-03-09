@@ -273,7 +273,7 @@ class TapHomeSensor(TapHomeEntity[TapHomeState], SensorEntity):
         )
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the value of the sensor."""
         sensor_type = self._sensor_type
         if self.taphome_state is not None:
@@ -296,7 +296,7 @@ class TapHomeSensor(TapHomeEntity[TapHomeState], SensorEntity):
         return self._sensor_type.state_class
 
     @property
-    def unit_of_measurement(self) -> str:
+    def native_unit_of_measurement(self) -> str:
         """Return the unit of measurement of this entity, if any."""
         return self._sensor_type.unit_of_measurement
 
