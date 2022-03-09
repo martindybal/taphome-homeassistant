@@ -88,6 +88,9 @@ CONFIG_SCHEMA = voluptuous.Schema(
                                 CONF_UPDATE_INTERVAL
                             ): config_validation.positive_float,
                             voluptuous.Optional(
+                                USE_DESCRIPTION_AS_ENTITY_ID
+                            ): config_validation.boolean,
+                            voluptuous.Optional(
                                 USE_DESCRIPTION_AS_NAME
                             ): config_validation.boolean,
                             voluptuous.Optional(
@@ -157,11 +160,17 @@ async def async_setup(hass: HomeAssistant, config: ConfigEntry) -> bool:
             None,
         )
 
+        use_description_as_entity_id = read_from_config_or_default(
+            core_config, USE_DESCRIPTION_AS_ENTITY_ID, False
+        )
+
         use_description_as_name = read_from_config_or_default(
             core_config, USE_DESCRIPTION_AS_NAME, False
         )
 
-        core_config_entry = TapHomeCoreConfigEntry(core_id, use_description_as_name)
+        core_config_entry = TapHomeCoreConfigEntry(
+            core_id, use_description_as_entity_id, use_description_as_name
+        )
 
         api_url = read_from_config_or_default(
             core_config,

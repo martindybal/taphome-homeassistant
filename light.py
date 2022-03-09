@@ -24,12 +24,13 @@ class TapHomeLight(TapHomeEntity[LightState], LightEntity):
 
     def __init__(
         self,
+        hass: HomeAssistant,
         core_config: TapHomeCoreConfigEntry,
         config_entry: TapHomeConfigEntry,
         coordinator: TapHomeDataUpdateCoordinator,
         light_service: LightService,
     ):
-        super().__init__(core_config, config_entry, DOMAIN, coordinator, LightState)
+        super().__init__(hass, core_config, config_entry, DOMAIN, coordinator, LightState)
         self.light_service = light_service
         self._supported_features = None
 
@@ -119,6 +120,7 @@ def setup_platform(
     for add_entry_request in add_entry_requests:
         light_service = LightService(add_entry_request.tapHome_api_service)
         light = TapHomeLight(
+            hass,
             add_entry_request.core_config,
             add_entry_request.config_entry,
             add_entry_request.coordinator,
