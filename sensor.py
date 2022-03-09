@@ -166,9 +166,7 @@ class TapHomePulseCounterTotalImpulseCountSensorType(TapHomeSensorType):
     def __init__(self) -> None:
         super().__init__(
             ValueType.TotalImpulseCount,
-            None,
-            " ",
-            STATE_CLASS_TOTAL_INCREASING,
+            state_class=STATE_CLASS_TOTAL_INCREASING,
         )
 
 
@@ -176,9 +174,7 @@ class TapHomePulseCounterCurrentHourImpulseCountSensorType(TapHomeSensorType):
     def __init__(self) -> None:
         super().__init__(
             ValueType.CurrentHourImpulseCount,
-            None,
-            " ",
-            STATE_CLASS_MEASUREMENT,
+            state_class=STATE_CLASS_MEASUREMENT,
         )
 
 
@@ -199,9 +195,7 @@ class TapHomeVariableType(TapHomeSensorType):
     def __init__(self) -> None:
         super().__init__(
             ValueType.VariableState,
-            None,
-            " ",  # this is workaround for https://github.com/home-assistant/architecture/issues/478
-            STATE_CLASS_MEASUREMENT,
+            state_class=STATE_CLASS_MEASUREMENT,
         )
 
     def convert_taphome_to_ha(self, value: int) -> int:
