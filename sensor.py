@@ -7,17 +7,12 @@ from homeassistant.components.sensor import (
     STATE_CLASS_MEASUREMENT,
     STATE_CLASS_TOTAL,
     STATE_CLASS_TOTAL_INCREASING,
+    SensorDeviceClass,
     SensorEntity,
 )
 from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
     CONF_SENSORS,
-    DEVICE_CLASS_CO2,
-    DEVICE_CLASS_ENERGY,
-    DEVICE_CLASS_HUMIDITY,
-    DEVICE_CLASS_ILLUMINANCE,
-    DEVICE_CLASS_POWER,
-    DEVICE_CLASS_TEMPERATURE,
     ENERGY_KILO_WATT_HOUR,
     FREQUENCY_HERTZ,
     LIGHT_LUX,
@@ -42,7 +37,7 @@ class TapHomeSensorType:
     def __init__(
         self,
         value_type: ValueType,
-        device_class: str = None,
+        device_class: SensorDeviceClass = None,
         unit_of_measurement: str = None,
         state_class: str = None,
         last_reset: datetime = None,
@@ -61,7 +56,7 @@ class TapHomeHumiditySensorType(TapHomeSensorType):
     def __init__(self) -> None:
         super().__init__(
             ValueType.Humidity,
-            DEVICE_CLASS_HUMIDITY,
+            SensorDeviceClass.HUMIDITY,
             PERCENTAGE,
             STATE_CLASS_MEASUREMENT,
         )
@@ -74,7 +69,7 @@ class TapHomeTemperatureSensorType(TapHomeSensorType):
     def __init__(self) -> None:
         super().__init__(
             ValueType.RealTemperature,
-            DEVICE_CLASS_TEMPERATURE,
+            SensorDeviceClass.TEMPERATURE,
             TEMP_CELSIUS,
             STATE_CLASS_MEASUREMENT,
         )
@@ -87,7 +82,7 @@ class TapHomeElectricCounterElectricityDemandSensorType(TapHomeSensorType):
     def __init__(self) -> None:
         super().__init__(
             ValueType.ElectricityDemand,
-            DEVICE_CLASS_POWER,
+            SensorDeviceClass.POWER,
             POWER_KILO_WATT,
             STATE_CLASS_MEASUREMENT,
         )
@@ -100,7 +95,7 @@ class TapHomeElectricCounterElectricityConsumptionSensorType(TapHomeSensorType):
     def __init__(self) -> None:
         super().__init__(
             ValueType.ElectricityConsumption,
-            DEVICE_CLASS_ENERGY,
+            SensorDeviceClass.ENERGY,
             ENERGY_KILO_WATT_HOUR,
             STATE_CLASS_TOTAL_INCREASING,
         )
@@ -113,7 +108,7 @@ class TapHomeCo2SensorType(TapHomeSensorType):
     def __init__(self) -> None:
         super().__init__(
             ValueType.Co2,
-            DEVICE_CLASS_CO2,
+            SensorDeviceClass.CO2,
             CONCENTRATION_PARTS_PER_MILLION,
             STATE_CLASS_MEASUREMENT,
         )
@@ -126,7 +121,7 @@ class TapHomeBrightnessSensorType(TapHomeSensorType):
     def __init__(self) -> None:
         super().__init__(
             ValueType.SensorBrightness,
-            DEVICE_CLASS_ILLUMINANCE,
+            SensorDeviceClass.ILLUMINANCE,
             LIGHT_LUX,
             STATE_CLASS_MEASUREMENT,
         )
