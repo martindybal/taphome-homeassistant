@@ -102,6 +102,7 @@ class TapHomeBinarySensor(TapHomeEntity[TapHomeState], BinarySensorEntity):
 
     def __init__(
         self,
+        hass: HomeAssistant,
         core_config: TapHomeCoreConfigEntry,
         config_entry: BinarySensorConfigEntry,
         coordinator: TapHomeDataUpdateCoordinator,
@@ -112,6 +113,7 @@ class TapHomeBinarySensor(TapHomeEntity[TapHomeState], BinarySensorEntity):
         unique_id_determination = f"{DOMAIN}.{self._sensor_type.value_type.name}"
 
         super().__init__(
+            hass,
             core_config,
             config_entry,
             unique_id_determination,
@@ -140,12 +142,14 @@ class TapHomeBinarySensorCreateRequest(
 
     def __init__(
         self,
+        hass: HomeAssistant,
         core_config: TapHomeCoreConfigEntry,
         config_entry: BinarySensorConfigEntry,
         coordinator: TapHomeDataUpdateCoordinator,
         add_entities: AddEntitiesCallback,
     ):
         super().__init__(config_entry.id, coordinator, TapHomeState)
+        self._hass = hass
         self._core_config = core_config
         self._config_entry = config_entry
         self.coordinator = coordinator
@@ -175,6 +179,7 @@ class TapHomeBinarySensorCreateRequest(
                         sensor_type.device_class = self._config_entry.device_class
 
                     binary_sensor = TapHomeBinarySensor(
+                        self._hass,
                         self._core_config,
                         self._config_entry,
                         self.coordinator,
@@ -197,6 +202,7 @@ def setup_platform(
 
     for add_entry_request in add_entry_requests:
         TapHomeBinarySensorCreateRequest(
+            hass,
             add_entry_request._core_config,
             add_entry_request.config_entry,
             add_entry_request.coordinator,
