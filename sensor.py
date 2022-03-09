@@ -5,6 +5,7 @@ import typing
 from homeassistant.components.sensor import (
     DOMAIN,
     STATE_CLASS_MEASUREMENT,
+    STATE_CLASS_TOTAL,
     STATE_CLASS_TOTAL_INCREASING,
     SensorEntity,
 )
@@ -43,20 +44,14 @@ class TapHomeSensorType:
         value_type: ValueType,
         device_class: str = None,
         unit_of_measurement: str = None,
-        was_measured: bool = False,
+        state_class: str = None,
         last_reset: datetime = None,
     ) -> None:
         self.device_class = device_class
         self.value_type = value_type
         self.unit_of_measurement = unit_of_measurement
-        self.was_measured = was_measured
+        self.state_class = state_class
         self.last_reset = last_reset
-
-    @property
-    def state_class(self) -> str:
-        if self.was_measured is True:
-            return STATE_CLASS_MEASUREMENT
-        return None
 
     def convert_taphome_to_ha(self, value: int) -> int:
         return value
@@ -68,7 +63,7 @@ class TapHomeHumiditySensorType(TapHomeSensorType):
             ValueType.Humidity,
             DEVICE_CLASS_HUMIDITY,
             PERCENTAGE,
-            True,
+            STATE_CLASS_MEASUREMENT,
         )
 
     def convert_taphome_to_ha(self, value: int) -> int:
@@ -81,7 +76,7 @@ class TapHomeTemperatureSensorType(TapHomeSensorType):
             ValueType.RealTemperature,
             DEVICE_CLASS_TEMPERATURE,
             TEMP_CELSIUS,
-            True,
+            STATE_CLASS_MEASUREMENT,
         )
 
     def convert_taphome_to_ha(self, value: int) -> int:
@@ -94,7 +89,7 @@ class TapHomeElectricCounterElectricityDemandSensorType(TapHomeSensorType):
             ValueType.ElectricityDemand,
             DEVICE_CLASS_POWER,
             POWER_KILO_WATT,
-            True,
+            STATE_CLASS_MEASUREMENT,
         )
 
     def convert_taphome_to_ha(self, value: int) -> int:
@@ -107,18 +102,8 @@ class TapHomeElectricCounterElectricityConsumptionSensorType(TapHomeSensorType):
             ValueType.ElectricityConsumption,
             DEVICE_CLASS_ENERGY,
             ENERGY_KILO_WATT_HOUR,
-            True,
+            STATE_CLASS_TOTAL_INCREASING,
         )
-
-    """Override getter for state_class property"""
-
-    @TapHomeSensorType.state_class.getter
-    def state_class(self) -> str:
-        if self.was_measured is True:
-            # The correct value for ElectricityConsumption sensor should be STATE_CLASS_TOTAL_INCREASING,
-            # to be able to use this sensor as a Energy monitoring entity
-            return STATE_CLASS_TOTAL_INCREASING
-        return None
 
     def convert_taphome_to_ha(self, value: int) -> int:
         return round(value, 2)
@@ -130,7 +115,7 @@ class TapHomeCo2SensorType(TapHomeSensorType):
             ValueType.Co2,
             DEVICE_CLASS_CO2,
             CONCENTRATION_PARTS_PER_MILLION,
-            True,
+            STATE_CLASS_MEASUREMENT,
         )
 
     def convert_taphome_to_ha(self, value: int) -> int:
@@ -143,7 +128,7 @@ class TapHomeBrightnessSensorType(TapHomeSensorType):
             ValueType.SensorBrightness,
             DEVICE_CLASS_ILLUMINANCE,
             LIGHT_LUX,
-            True,
+            STATE_CLASS_MEASUREMENT,
         )
 
     def convert_taphome_to_ha(self, value: int) -> int:
@@ -157,7 +142,7 @@ class TapHomeWindSpeedSensorType(TapHomeSensorType):
             ValueType.WindSpeed,
             None,
             SPEED_KILOMETERS_PER_HOUR,
-            True,
+            STATE_CLASS_MEASUREMENT,
         )
 
     def convert_taphome_to_ha(self, value: int) -> int:
@@ -170,7 +155,7 @@ class TapHomeAnalogInputSensorType(TapHomeSensorType):
             ValueType.AnalogInputValue,
             None,
             PERCENTAGE,
-            True,
+            STATE_CLASS_MEASUREMENT,
         )
 
     def convert_taphome_to_ha(self, value: int) -> int:
@@ -183,7 +168,7 @@ class TapHomePulseCounterTotalImpulseCountSensorType(TapHomeSensorType):
             ValueType.TotalImpulseCount,
             None,
             " ",
-            True,
+            STATE_CLASS_TOTAL_INCREASING,
         )
 
 
@@ -193,7 +178,7 @@ class TapHomePulseCounterCurrentHourImpulseCountSensorType(TapHomeSensorType):
             ValueType.CurrentHourImpulseCount,
             None,
             " ",
-            True,
+            STATE_CLASS_MEASUREMENT,
         )
 
 
@@ -203,7 +188,7 @@ class TapHomePulseCounterLastMeasuredFrequencySensorType(TapHomeSensorType):
             ValueType.LastMeasuredFrequency,
             None,
             FREQUENCY_HERTZ,
-            True,
+            STATE_CLASS_MEASUREMENT,
         )
 
     def convert_taphome_to_ha(self, value: int) -> int:
@@ -216,7 +201,7 @@ class TapHomeVariableType(TapHomeSensorType):
             ValueType.VariableState,
             None,
             " ",  # this is workaround for https://github.com/home-assistant/architecture/issues/478
-            True,
+            STATE_CLASS_MEASUREMENT,
         )
 
     def convert_taphome_to_ha(self, value: int) -> int:
@@ -229,7 +214,9 @@ class SensorConfigEntry(TapHomeConfigEntry):
         self._device_class = self.get_optional("device_class", None)
         self._value_type = self.get_optional("value_type", None)
         self._unit_of_measurement = self.get_optional("unit_of_measurement", None)
-        self._was_measured = self.get_optional("was_measured", None)
+        self._state_class = self.get_optional("state_class", None)
+        if self.get_optional("was_measured", None) is True:
+            self._state_class = STATE_CLASS_MEASUREMENT
 
     @property
     def device_class(self) -> str:
@@ -244,8 +231,8 @@ class SensorConfigEntry(TapHomeConfigEntry):
         return self._unit_of_measurement
 
     @property
-    def was_measured(self) -> bool:
-        return self._was_measured
+    def state_class(self) -> str:
+        return self._state_class
 
 
 class TapHomeSensor(TapHomeEntity[TapHomeState], SensorEntity):
@@ -359,8 +346,8 @@ class TapHomeSensorCreateRequest(TapHomeDataUpdateCoordinatorObject[TapHomeState
                         sensor_type.unit_of_measurement = (
                             self._config_entry.unit_of_measurement
                         )
-                    if self._config_entry.was_measured is not None:
-                        sensor_type.was_measured = self._config_entry.was_measured
+                    if self._config_entry.state_class is not None:
+                        sensor_type.state_class = self._config_entry.state_class
 
                     sensor = TapHomeSensor(
                         self._hass,
