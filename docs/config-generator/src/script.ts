@@ -2,6 +2,7 @@ declare var Vue: any;
 
 enum HomeAssistantEntityType {
     binarySensor = "binary sensor",
+    button = "button",
     climate = "climate",
     cover = "cover",
     light = "light",
@@ -74,6 +75,9 @@ class TapHomeDevice {
 
     deviceClass: string;
 
+    defaultButtonAction: string;
+    buttonAction: string;
+
     climateMinTemperature: number;
     climateMaxTemperature: number;
     climateHeatingSwitchIdingCoolingModeId: number;
@@ -88,6 +92,9 @@ class TapHomeDevice {
         this.possibleEntityTypes = [];
         this.entityType = undefined;
         this.isSelected = true;
+
+        this.defaultButtonAction = "Press";
+        this.buttonAction = this.defaultButtonAction;
     }
 
     get config() {
@@ -97,6 +104,8 @@ class TapHomeDevice {
             return this.deviceClassConfig;
         } else if (this.entityType === HomeAssistantEntityType.climate) {
             return this.climateConfig;
+        } else if (this.entityType === HomeAssistantEntityType.button) {
+            return this.buttonConfig;
         }
         return this.idConfig;
     }
@@ -104,6 +113,21 @@ class TapHomeDevice {
     private get deviceClassConfig() {
         if (this.deviceClass) {
             let config = `\n        - id: ${this.deviceId}\n          device_class: ${this.deviceClass}`;
+            return config;
+        }
+        return this.idConfig;
+    }
+
+    private get buttonConfig() {
+        var hasCustomAction = this.buttonAction && this.buttonAction != this.defaultButtonAction;
+        if (hasCustomAction || this.deviceClass) {
+            let config = `\n        - id: ${this.deviceId}`;            
+            if(hasCustomAction){
+                config += `\n          action: ${this.buttonAction}`;
+            }
+            if(this.deviceClass){
+                config += `\n          device_class: ${this.deviceClass}`;
+            }
             return config;
         }
         return this.idConfig;
@@ -159,7 +183,7 @@ class TapHomeCore {
         if (selectedDevices.length === 0) {
             return "";
         }
-        return `    - ${this.idConfig()}token: ${this.token}${this.apiUrlConfig()}${this.webhookIdConfig()}${this.entitiesConfig(selectedDevices, HomeAssistantEntityType.light)}${this.entitiesConfig(selectedDevices, HomeAssistantEntityType.cover)}${this.entitiesConfig(selectedDevices, HomeAssistantEntityType.climate)}${this.entitiesConfig(selectedDevices, HomeAssistantEntityType.switch)}${this.entitiesConfig(selectedDevices, HomeAssistantEntityType.sensor)}${this.entitiesConfig(selectedDevices, HomeAssistantEntityType.binarySensor)}\n`
+        return `    - ${this.idConfig()}token: ${this.token}${this.apiUrlConfig()}${this.webhookIdConfig()}${this.entitiesConfig(selectedDevices, HomeAssistantEntityType.button)}${this.entitiesConfig(selectedDevices, HomeAssistantEntityType.light)}${this.entitiesConfig(selectedDevices, HomeAssistantEntityType.cover)}${this.entitiesConfig(selectedDevices, HomeAssistantEntityType.climate)}${this.entitiesConfig(selectedDevices, HomeAssistantEntityType.switch)}${this.entitiesConfig(selectedDevices, HomeAssistantEntityType.sensor)}${this.entitiesConfig(selectedDevices, HomeAssistantEntityType.binarySensor)}\n`
     }
 
     private idConfig() {
@@ -192,6 +216,7 @@ class TapHomeCore {
         configSectionName[HomeAssistantEntityType.multivalueSwitches] = "multivalue_switches";
         configSectionName[HomeAssistantEntityType.sensor] = "sensors";
         configSectionName[HomeAssistantEntityType.binarySensor] = "binary_sensors";
+        configSectionName[HomeAssistantEntityType.button] = "buttons";
 
         let entities = selectedDevices.filter((device) => device.entityType == entityType);
         if (entities.length === 0) {
@@ -264,6 +289,10 @@ class TapHomeCore {
                 deviceSupportValue(TapHomeValueType.reedContact) ||
                 deviceSupportValue(TapHomeValueType.variableState)) {
                 possibleEntityTypes.push(HomeAssistantEntityType.binarySensor);
+            }
+
+            if (deviceSupportValue(TapHomeValueType.buttonPressed)) {
+                possibleEntityTypes.push(HomeAssistantEntityType.button);
             }
 
             let entityType = possibleEntityTypes.length == 1 ? possibleEntityTypes[0] : undefined;
