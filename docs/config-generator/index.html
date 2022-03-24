@@ -36,6 +36,16 @@
 </head>
 
 <body>
+    <datalist id="button_actions">
+        <option>Press</option>
+        <option>LongPress</option>
+        <option>DoublePress</option>
+        <option>TripplePress</option>
+    </datalist>
+    <datalist id="button_device_classes">
+        <option>restart</option>
+        <option>update</option>
+    </datalist>
     <datalist id="switch_device_classes">
         <option>outlet</option>
         <option>switch</option>
@@ -179,6 +189,35 @@
                                                             {{ option }}
                                                         </option>
                                                     </select>
+                                                </div>
+                                            </div>
+                                            <div
+                                                v-if="device.entityType === HomeAssistantEntityType.button">
+                                                <div class="row mt-3">
+                                                    <label
+                                                        v-bind:for="'button-actions' + taphomeCore.token + device.deviceId"
+                                                        class="col-sm-5 col-form-label">
+                                                        Action
+                                                    </label>
+                                                    <div class="col-sm-7">
+                                                        <input
+                                                            v-bind:id="'button-actions' + taphomeCore.token + device.deviceId"
+                                                            class="form-select" v-model="device.buttonAction"
+                                                            v-bind:list="'button_actions'" />
+                                                    </div>
+                                                </div>
+                                                <div class="row mt-3">
+                                                    <label
+                                                        v-bind:for="'device-class' + taphomeCore.token + device.deviceId"
+                                                        class="col-sm-5 col-form-label">
+                                                        Device class
+                                                    </label>
+                                                    <div class="col-sm-7">
+                                                        <input
+                                                            v-bind:id="'device-class' + taphomeCore.token + device.deviceId"
+                                                            class="form-select" v-model="device.deviceClass"
+                                                            v-bind:list="device.entityType + '_device_classes'" />
+                                                    </div>
                                                 </div>
                                             </div>
                                             <div
