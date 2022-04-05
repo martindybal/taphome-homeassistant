@@ -12,16 +12,21 @@ class ButtonConfigEntry(TapHomeConfigEntry):
     def __init__(self, device_config: dict):
         super().__init__(device_config)
 
-        action_name = self.get_optional("action", ButtonAction.Press.name)
-        for action in ButtonAction:
-            if action.name.lower() == action_name.lower():
-                self._action = action
+        config_actions = self.get_optional("actions", None)
+        if config_actions is None:
+            self._actions = [ButtonAction.Press]
+        else:
+            self._actions = []
+            for config_action in config_actions:
+                for action in ButtonAction:
+                    if action.name.lower() == config_action.lower():
+                        self._actions.append(action)
 
         self._device_class = self.get_optional("device_class", None)
 
     @property
-    def action(self):
-        return self._action
+    def actions(self):
+        return self._actions
 
     @property
     def device_class(self):
@@ -36,13 +41,21 @@ class TapHomeButton(TapHomeEntity[dict], ButtonEntity):
         hass: HomeAssistant,
         core_config: TapHomeCoreConfigEntry,
         config_entry: ButtonConfigEntry,
+        action: ButtonAction,
         coordinator: TapHomeDataUpdateCoordinator,
         button_service: ButtonService,
     ):
-        super().__init__(hass, core_config, config_entry, DOMAIN, coordinator, dict)
+        super().__init__(
+            hass,
+            core_config,
+            config_entry,
+            f"{DOMAIN}.{action.name}",
+            coordinator,
+            dict,
+        )
 
         self._button_service = button_service
-        self._action = config_entry.action
+        self._action = action
         self._device_class = config_entry.device_class
 
     @property
@@ -71,13 +84,16 @@ def setup_platform(
     buttons = []
     for add_entry_request in add_entry_requests:
         button_service = ButtonService(add_entry_request.tapHome_api_service)
-        button = TapHomeButton(
-            hass,
-            add_entry_request.core_config,
-            add_entry_request.config_entry,
-            add_entry_request.coordinator,
-            button_service,
-        )
-        buttons.append(button)
+
+        for action in add_entry_request.config_entry.actions:
+            button = TapHomeButton(
+                hass,
+                add_entry_request.core_config,
+                add_entry_request.config_entry,
+                action,
+                add_entry_request.coordinator,
+                button_service,
+            )
+            buttons.append(button)
 
     add_entities(buttons)
