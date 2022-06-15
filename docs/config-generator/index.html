@@ -36,6 +36,16 @@
 </head>
 
 <body>
+    <datalist id="button_actions">
+        <option>Press</option>
+        <option>LongPress</option>
+        <option>DoublePress</option>
+        <option>TripplePress</option>
+    </datalist>
+    <datalist id="button_device_classes">
+        <option>restart</option>
+        <option>update</option>
+    </datalist>
     <datalist id="switch_device_classes">
         <option>outlet</option>
         <option>switch</option>
@@ -225,9 +235,79 @@
                                                         </option>
                                                     </select>
                                                 </div>
+                                            </div>                                            
+                                            <div v-if="device.entityType === HomeAssistantEntityType.button">
+                                                <div class="row mt-3">
+                                                    <label
+                                                        v-bind:for="'button-actions' + taphomeCore.token + device.deviceId"
+                                                        class="col-sm-5 col-form-label">
+                                                        Actions
+                                                    </label>
+                                                    <div class="col-sm-7">
+                                                        <div class="form-check">
+                                                            <input
+                                                                v-bind:id="'button-press-action' + taphomeCore.token + device.deviceId"
+                                                                class="form-check-input"
+                                                                v-model="device.buttonPressAction" type="checkbox" />
+                                                            <label
+                                                                v-bind:for="'button-press-action' + taphomeCore.token + device.deviceId"
+                                                                class="col-sm-5 form-check-label">
+                                                                Press
+                                                            </label>
+                                                        </div>
+                                                        <div class="form-check">
+                                                            <input
+                                                                v-bind:id="'button-long-press-action' + taphomeCore.token + device.deviceId"
+                                                                class="form-check-input"
+                                                                v-model="device.buttonLongPressAction"
+                                                                type="checkbox" />
+                                                            <label
+                                                                v-bind:for="'button-long-press-action' + taphomeCore.token + device.deviceId"
+                                                                class="col-sm-5 form-check-label">
+                                                                Long press
+                                                            </label>
+                                                        </div>
+                                                        <div class="form-check">
+                                                            <input
+                                                                v-bind:id="'button-double-press-action' + taphomeCore.token + device.deviceId"
+                                                                class="form-check-input"
+                                                                v-model="device.buttonDoublePressAction"
+                                                                type="checkbox" />
+                                                            <label
+                                                                v-bind:for="'button-double-press-action' + taphomeCore.token + device.deviceId"
+                                                                class="col-sm-5 form-check-label">
+                                                                Double press
+                                                            </label>
+                                                        </div>
+                                                        <div class="form-check">
+                                                            <input
+                                                                v-bind:id="'button-tripple-press-action' + taphomeCore.token + device.deviceId"
+                                                                class="form-check-input"
+                                                                v-model="device.buttonTripplePressAction"
+                                                                type="checkbox" />
+                                                            <label
+                                                                v-bind:for="'button-tripple-press-action' + taphomeCore.token + device.deviceId"
+                                                                class="col-sm-5 form-check-label">
+                                                                Tripple press
+                                                            </label>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="row mt-3">
+                                                    <label
+                                                        v-bind:for="'device-class' + taphomeCore.token + device.deviceId"
+                                                        class="col-sm-5 col-form-label">
+                                                        Device class
+                                                    </label>
+                                                    <div class="col-sm-7">
+                                                        <input
+                                                            v-bind:id="'device-class' + taphomeCore.token + device.deviceId"
+                                                            class="form-select" v-model="device.deviceClass"
+                                                            v-bind:list="device.entityType + '_device_classes'" />
+                                                    </div>
+                                                </div>
                                             </div>
-                                            <div v-if="device.entityType === HomeAssistantEntityType.switch || 
-                                                      device.entityType === HomeAssistantEntityType.cover">
+                                            <div v-if="device.entityType === HomeAssistantEntityType.switch || device.entityType === HomeAssistantEntityType.cover">
                                                 <div class="row mt-3">
                                                     <label
                                                         v-bind:for="'device_class' + taphomeCore.token + device.deviceId"

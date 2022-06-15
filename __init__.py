@@ -7,6 +7,7 @@ from async_timeout import timeout
 import voluptuous
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
+from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN
 from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
 from homeassistant.components.cover import DOMAIN as COVER_DOMAIN
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
@@ -31,6 +32,7 @@ from homeassistant.helpers.discovery import load_platform
 
 from .add_entry_request import AddEntryRequest
 from .binary_sensor import BinarySensorConfigEntry
+from .button import ButtonConfigEntry
 from .climate import ClimateConfigEntry
 from .const import *
 from .coordinator import TapHomeDataUpdateCoordinator
@@ -70,6 +72,7 @@ CONFIG_SCHEMA = voluptuous.Schema(
                     voluptuous.All(
                         config_validation.has_at_least_one_key(
                             CONF_LIGHTS,
+                            CONF_BUTTONS,
                             CONF_COVERS,
                             CONF_CLIMATES,
                             CONF_MULTIVALUE_SWITCHES,
@@ -95,6 +98,9 @@ CONFIG_SCHEMA = voluptuous.Schema(
                             ): config_validation.boolean,
                             voluptuous.Optional(
                                 CONF_LIGHTS, default=[]
+                            ): config_validation.ensure_list,
+                            voluptuous.Optional(
+                                CONF_BUTTONS, default=[]
                             ): config_validation.ensure_list,
                             voluptuous.Optional(
                                 CONF_COVERS, default=[]
@@ -143,6 +149,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigEntry) -> bool:
         DomainDefinition(
             BINARY_SENSOR_DOMAIN, CONF_BINARY_SENSORS, BinarySensorConfigEntry
         ),
+        DomainDefinition(BUTTON_DOMAIN, CONF_BUTTONS, ButtonConfigEntry),
         DomainDefinition(CLIMATE_DOMAIN, CONF_CLIMATES, ClimateConfigEntry),
         DomainDefinition(COVER_DOMAIN, CONF_COVERS, CoverConfigEntry),
         DomainDefinition(LIGHT_DOMAIN, CONF_LIGHTS, TapHomeConfigEntry),
