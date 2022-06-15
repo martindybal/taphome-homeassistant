@@ -408,7 +408,7 @@ var ViewModel = /** @class */ (function () {
         this.addCore();
     }
     class_1.prototype.addCore = function () {
-        this.taphomeCores.push(new TapHomeCore("f281301b-2552-4f5b-bcfc-6490bd9e70f2", []));
+        this.taphomeCores.push(new TapHomeCore("", []));
     };
     class_1.prototype.loadFromConfig = function (config) {
         //TODO Read config
