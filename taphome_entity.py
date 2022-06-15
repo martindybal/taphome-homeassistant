@@ -1,8 +1,10 @@
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.helpers.entity import async_generate_entity_id
 
 from .coordinator import *
+from .taphome_core_config_entry import TapHomeCoreConfigEntry
 from .taphome_sdk import *
 
 
@@ -40,7 +42,8 @@ class TapHomeConfigEntry:
 class TapHomeEntity(CoordinatorEntity, TapHomeDataUpdateCoordinatorObject[TState]):
     def __init__(
         self,
-        core_id: str,
+        hass: HomeAssistant,
+        core_config: TapHomeCoreConfigEntry,
         config: TapHomeConfigEntry,
         unique_id_determination: str,
         coordinator: TapHomeDataUpdateCoordinator,
@@ -49,15 +52,28 @@ class TapHomeEntity(CoordinatorEntity, TapHomeDataUpdateCoordinatorObject[TState
         self._taphome_device_id = config.id
 
         if config.unique_id == None:
-            unique_id_core_id = f".{core_id}" if core_id is not None else ""
+            unique_id_core_id = (
+                f".{core_config.id}" if core_config.id is not None else ""
+            )
             self._unique_id = f"taphome{unique_id_core_id}.{unique_id_determination}.{self._taphome_device_id}".lower()
         else:
             self._unique_id = config.unique_id
+
+        self._core_config = core_config
 
         TapHomeDataUpdateCoordinatorObject.__init__(
             self, self._taphome_device_id, coordinator, taphome_state_type
         )
         CoordinatorEntity.__init__(self, coordinator)
+
+        if (
+            self._core_config.use_description_as_entity_id
+            and self.taphome_device is not None
+        ):
+            ENTITY_ID_FORMAT = unique_id_determination + ".{}"
+            self.entity_id = async_generate_entity_id(
+                ENTITY_ID_FORMAT, self.taphome_device.description, hass=hass
+            )
 
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator. Coordinator call schedule_update_ha_state when is needed"""
@@ -78,6 +94,8 @@ class TapHomeEntity(CoordinatorEntity, TapHomeDataUpdateCoordinatorObject[TState
     @property
     def name(self):
         if not self.taphome_device is None:
+            if self._core_config.use_description_as_name:
+                return self.taphome_device.description
             return self.taphome_device.name
 
     @staticmethod

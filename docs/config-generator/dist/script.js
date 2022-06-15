@@ -37,6 +37,7 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
 var HomeAssistantEntityType;
 (function (HomeAssistantEntityType) {
     HomeAssistantEntityType["binarySensor"] = "binary sensor";
+    HomeAssistantEntityType["button"] = "button";
     HomeAssistantEntityType["climate"] = "climate";
     HomeAssistantEntityType["cover"] = "cover";
     HomeAssistantEntityType["light"] = "light";
@@ -108,6 +109,7 @@ var TapHomeDevice = /** @class */ (function () {
         this.possibleEntityTypes = [];
         this.entityType = undefined;
         this.isSelected = true;
+        this.buttonPressAction = true;
     }
     Object.defineProperty(TapHomeDevice.prototype, "config", {
         get: function () {
@@ -120,6 +122,12 @@ var TapHomeDevice = /** @class */ (function () {
             else if (this.entityType === HomeAssistantEntityType.climate) {
                 return this.climateConfig;
             }
+            else if (this.entityType === HomeAssistantEntityType.sensor) {
+                return this.sensorConfig;
+            }
+            else if (this.entityType === HomeAssistantEntityType.button) {
+                return this.buttonConfig;
+            }
             return this.idConfig;
         },
         enumerable: false,
@@ -129,6 +137,36 @@ var TapHomeDevice = /** @class */ (function () {
         get: function () {
             if (this.deviceClass) {
                 var config = "\n        - id: " + this.deviceId + "\n          device_class: " + this.deviceClass;
+                return config;
+            }
+            return this.idConfig;
+        },
+        enumerable: false,
+        configurable: true
+    });
+    Object.defineProperty(TapHomeDevice.prototype, "buttonConfig", {
+        get: function () {
+            var hasCustomAction = this.buttonLongPressAction || this.buttonDoublePressAction || this.buttonTripplePressAction;
+            if (hasCustomAction || this.deviceClass) {
+                var config = "\n        - id: " + this.deviceId;
+                if (hasCustomAction) {
+                    config += "\n          actions:";
+                    if (this.buttonPressAction) {
+                        config += "\n            - Press";
+                    }
+                    if (this.buttonLongPressAction) {
+                        config += "\n            - LongPress";
+                    }
+                    if (this.buttonDoublePressAction) {
+                        config += "\n            - DoublePress";
+                    }
+                    if (this.buttonTripplePressAction) {
+                        config += "\n            - TripplePress";
+                    }
+                }
+                if (this.deviceClass) {
+                    config += "\n          device_class: " + this.deviceClass;
+                }
                 return config;
             }
             return this.idConfig;
@@ -158,6 +196,28 @@ var TapHomeDevice = /** @class */ (function () {
                 }
                 else if (this.climateCoolingSwitchId) {
                     config += "\n          cooling_switch_id: " + this.climateCoolingSwitchId;
+                }
+                return config;
+            }
+            return this.idConfig;
+        },
+        enumerable: false,
+        configurable: true
+    });
+    Object.defineProperty(TapHomeDevice.prototype, "sensorConfig", {
+        get: function () {
+            if (this.deviceClass ||
+                this.sensorUnitOfMeasurement ||
+                this.sensorStateClass) {
+                var config = "\n        - id: " + this.deviceId;
+                if (this.deviceClass) {
+                    config += "\n          device_class: " + this.deviceClass;
+                }
+                if (this.sensorUnitOfMeasurement) {
+                    config += "\n          unit_of_measurement: " + this.sensorUnitOfMeasurement;
+                }
+                if (this.sensorStateClass) {
+                    config += "\n          state_class: " + this.sensorStateClass;
                 }
                 return config;
             }
@@ -246,6 +306,9 @@ var TapHomeCore = /** @class */ (function () {
                                 deviceSupportValue(TapHomeValueType.variableState)) {
                                 possibleEntityTypes.push(HomeAssistantEntityType.binarySensor);
                             }
+                            if (deviceSupportValue(TapHomeValueType.buttonPressed)) {
+                                possibleEntityTypes.push(HomeAssistantEntityType.button);
+                            }
                             var entityType = possibleEntityTypes.length == 1 ? possibleEntityTypes[0] : undefined;
                             var isSelected = void 0;
                             var deviceCollection = void 0;
@@ -327,6 +390,7 @@ var TapHomeCore = /** @class */ (function () {
         configSectionName[HomeAssistantEntityType.multivalueSwitches] = "multivalue_switches";
         configSectionName[HomeAssistantEntityType.sensor] = "sensors";
         configSectionName[HomeAssistantEntityType.binarySensor] = "binary_sensors";
+        configSectionName[HomeAssistantEntityType.button] = "buttons";
         var entities = selectedDevices.filter(function (device) { return device.entityType == entityType; });
         if (entities.length === 0) {
             return "";

@@ -7,6 +7,7 @@ from async_timeout import timeout
 import voluptuous
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
+from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN
 from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
 from homeassistant.components.cover import DOMAIN as COVER_DOMAIN
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
@@ -31,12 +32,14 @@ from homeassistant.helpers.discovery import load_platform
 
 from .add_entry_request import AddEntryRequest
 from .binary_sensor import BinarySensorConfigEntry
+from .button import ButtonConfigEntry
 from .climate import ClimateConfigEntry
 from .const import *
 from .coordinator import TapHomeDataUpdateCoordinator
 from .cover import CoverConfigEntry
 from .sensor import SensorConfigEntry
 from .switch import SwitchConfigEntry
+from .taphome_core_config_entry import TapHomeCoreConfigEntry
 from .taphome_entity import TapHomeConfigEntry
 from .taphome_sdk import *
 
@@ -69,6 +72,7 @@ CONFIG_SCHEMA = voluptuous.Schema(
                     voluptuous.All(
                         config_validation.has_at_least_one_key(
                             CONF_LIGHTS,
+                            CONF_BUTTONS,
                             CONF_COVERS,
                             CONF_CLIMATES,
                             CONF_MULTIVALUE_SWITCHES,
@@ -87,7 +91,16 @@ CONFIG_SCHEMA = voluptuous.Schema(
                                 CONF_UPDATE_INTERVAL
                             ): config_validation.positive_float,
                             voluptuous.Optional(
+                                USE_DESCRIPTION_AS_ENTITY_ID
+                            ): config_validation.boolean,
+                            voluptuous.Optional(
+                                USE_DESCRIPTION_AS_NAME
+                            ): config_validation.boolean,
+                            voluptuous.Optional(
                                 CONF_LIGHTS, default=[]
+                            ): config_validation.ensure_list,
+                            voluptuous.Optional(
+                                CONF_BUTTONS, default=[]
                             ): config_validation.ensure_list,
                             voluptuous.Optional(
                                 CONF_COVERS, default=[]
@@ -136,6 +149,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigEntry) -> bool:
         DomainDefinition(
             BINARY_SENSOR_DOMAIN, CONF_BINARY_SENSORS, BinarySensorConfigEntry
         ),
+        DomainDefinition(BUTTON_DOMAIN, CONF_BUTTONS, ButtonConfigEntry),
         DomainDefinition(CLIMATE_DOMAIN, CONF_CLIMATES, ClimateConfigEntry),
         DomainDefinition(COVER_DOMAIN, CONF_COVERS, CoverConfigEntry),
         DomainDefinition(LIGHT_DOMAIN, CONF_LIGHTS, TapHomeConfigEntry),
@@ -151,6 +165,18 @@ async def async_setup(hass: HomeAssistant, config: ConfigEntry) -> bool:
             core_config,
             CONF_ID,
             None,
+        )
+
+        use_description_as_entity_id = read_from_config_or_default(
+            core_config, USE_DESCRIPTION_AS_ENTITY_ID, False
+        )
+
+        use_description_as_name = read_from_config_or_default(
+            core_config, USE_DESCRIPTION_AS_NAME, False
+        )
+
+        core_config_entry = TapHomeCoreConfigEntry(
+            core_id, use_description_as_entity_id, use_description_as_name
         )
 
         api_url = read_from_config_or_default(
@@ -200,7 +226,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigEntry) -> bool:
             config_entries = map_config_entries(domain.config_entry_type, domain_config)
 
             core_add_entry_requests = map_add_entry_requests(
-                core_id, config_entries, coordinator, tapHome_api_service
+                core_config_entry,
+                config_entries,
+                coordinator,
+                tapHome_api_service,
             )
             domain.add_entry_requests.extend(core_add_entry_requests)
 
@@ -245,7 +274,7 @@ def map_config_entries(
 
 
 def map_add_entry_requests(
-    core_id: str,
+    core_config_entry: TapHomeCoreConfigEntry,
     config_entries: typing.List[TapHomeConfigEntry],
     coordinator: TapHomeDataUpdateCoordinator,
     tapHome_api_service: TapHomeApiService,
@@ -253,7 +282,7 @@ def map_add_entry_requests(
     return list(
         map(
             lambda config_entry: AddEntryRequest(
-                core_id,
+                core_config_entry,
                 config_entry,
                 config_entry.id,
                 coordinator,

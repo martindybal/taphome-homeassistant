@@ -2,6 +2,7 @@ declare var Vue: any;
 
 enum HomeAssistantEntityType {
     binarySensor = "binary sensor",
+    button = "button",
     climate = "climate",
     cover = "cover",
     light = "light",
@@ -74,11 +75,19 @@ class TapHomeDevice {
 
     deviceClass: string;
 
+    buttonPressAction: boolean;
+    buttonLongPressAction: boolean;
+    buttonDoublePressAction: boolean;
+    buttonTripplePressAction: boolean;
+
     climateMinTemperature: number;
     climateMaxTemperature: number;
     climateHeatingSwitchIdingCoolingModeId: number;
     climateHeatingSwitchId: number;
     climateCoolingSwitchId: number;
+
+    sensorUnitOfMeasurement: string;
+    sensorStateClass: string;
 
     constructor() {
         this.deviceId = undefined;
@@ -88,6 +97,8 @@ class TapHomeDevice {
         this.possibleEntityTypes = [];
         this.entityType = undefined;
         this.isSelected = true;
+
+        this.buttonPressAction = true;
     }
 
     get config() {
@@ -97,6 +108,10 @@ class TapHomeDevice {
             return this.deviceClassConfig;
         } else if (this.entityType === HomeAssistantEntityType.climate) {
             return this.climateConfig;
+        } else if (this.entityType === HomeAssistantEntityType.sensor) {
+            return this.sensorConfig;
+        } else if (this.entityType === HomeAssistantEntityType.button) {
+            return this.buttonConfig;
         }
         return this.idConfig;
     }
@@ -108,7 +123,33 @@ class TapHomeDevice {
         }
         return this.idConfig;
     }
-
+    
+    private get buttonConfig() {
+        var hasCustomAction = this.buttonLongPressAction || this.buttonDoublePressAction || this.buttonTripplePressAction;
+        if (hasCustomAction || this.deviceClass) {
+            let config = `\n        - id: ${this.deviceId}`;
+            if (hasCustomAction) {
+                config += `\n          actions:`;
+                if (this.buttonPressAction) {
+                    config += `\n            - Press`;
+                }
+                if (this.buttonLongPressAction) {
+                    config += `\n            - LongPress`;
+                }
+                if (this.buttonDoublePressAction) {
+                    config += `\n            - DoublePress`;
+                }
+                if (this.buttonTripplePressAction) {
+                    config += `\n            - TripplePress`;
+                }
+            }
+            if (this.deviceClass) {
+                config += `\n          device_class: ${this.deviceClass}`;
+            }
+            return config;
+        }
+        return this.idConfig;
+    }
 
     private get climateConfig() {
         if (this.climateMinTemperature ||
@@ -119,16 +160,35 @@ class TapHomeDevice {
             let config = `\n        - id: ${this.deviceId}`
             if (this.climateMinTemperature) {
                 config += `\n          min_temperature: ${this.climateMinTemperature}`;
-            } 
+            }
             if (this.climateMaxTemperature) {
                 config += `\n          max_temperature: ${this.climateMaxTemperature}`;
-            } 
+            }
             if (this.climateHeatingSwitchIdingCoolingModeId) {
                 config += `\n          heating_cooling_mode_id: ${this.climateHeatingSwitchIdingCoolingModeId}`;
             } else if (this.climateHeatingSwitchId) {
                 config += `\n          heating_switch_id: ${this.climateHeatingSwitchId}`;
             } else if (this.climateCoolingSwitchId) {
                 config += `\n          cooling_switch_id: ${this.climateCoolingSwitchId}`;
+            }
+            return config;
+        }
+        return this.idConfig;
+    }
+
+    private get sensorConfig() {
+        if (this.deviceClass ||
+            this.sensorUnitOfMeasurement ||
+            this.sensorStateClass) {
+            let config = `\n        - id: ${this.deviceId}`
+            if (this.deviceClass) {
+                config += `\n          device_class: ${this.deviceClass}`;
+            } 
+            if (this.sensorUnitOfMeasurement) {
+                config += `\n          unit_of_measurement: ${this.sensorUnitOfMeasurement}`;
+            } 
+            if (this.sensorStateClass) {
+                config += `\n          state_class: ${this.sensorStateClass}`;
             }
             return config;
         }
@@ -200,6 +260,7 @@ class TapHomeCore {
         configSectionName[HomeAssistantEntityType.multivalueSwitches] = "multivalue_switches";
         configSectionName[HomeAssistantEntityType.sensor] = "sensors";
         configSectionName[HomeAssistantEntityType.binarySensor] = "binary_sensors";
+        configSectionName[HomeAssistantEntityType.button] = "buttons";
 
         let entities = selectedDevices.filter((device) => device.entityType == entityType);
         if (entities.length === 0) {
@@ -215,12 +276,12 @@ class TapHomeCore {
 
         let getAllDevicesValuesUrl = `${apiUrl}/getAllDevicesValues?token=${this.token}`;
         let getAllDevicesValuesResponse = await fetch(getAllDevicesValuesUrl);
-        
+
         if (getAllDevicesValuesResponse.status == 401 || getAllDevicesValuesResponse.status == 403) {
             alert('Core was not found. Please check your token and api_url.');
             return;
         }
-        else if (getAllDevicesValuesResponse.status != 200){
+        else if (getAllDevicesValuesResponse.status != 200) {
             alert('Your core is not supported! Please upgrade your core.');
             return;
         }
@@ -272,6 +333,10 @@ class TapHomeCore {
                 deviceSupportValue(TapHomeValueType.reedContact) ||
                 deviceSupportValue(TapHomeValueType.variableState)) {
                 possibleEntityTypes.push(HomeAssistantEntityType.binarySensor);
+            }
+
+            if (deviceSupportValue(TapHomeValueType.buttonPressed)) {
+                possibleEntityTypes.push(HomeAssistantEntityType.button);
             }
 
             let entityType = possibleEntityTypes.length == 1 ? possibleEntityTypes[0] : undefined;
