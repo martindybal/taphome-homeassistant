@@ -75,8 +75,10 @@ class TapHomeDevice {
 
     deviceClass: string;
 
-    defaultButtonAction: string;
-    buttonAction: string;
+    buttonPressAction: boolean;
+    buttonLongPressAction: boolean;
+    buttonDoublePressAction: boolean;
+    buttonTripplePressAction: boolean;
 
     climateMinTemperature: number;
     climateMaxTemperature: number;
@@ -93,8 +95,7 @@ class TapHomeDevice {
         this.entityType = undefined;
         this.isSelected = true;
 
-        this.defaultButtonAction = "Press";
-        this.buttonAction = this.defaultButtonAction;
+        this.buttonPressAction = true;
     }
 
     get config() {
@@ -117,22 +118,33 @@ class TapHomeDevice {
         }
         return this.idConfig;
     }
-
+    
     private get buttonConfig() {
-        var hasCustomAction = this.buttonAction && this.buttonAction != this.defaultButtonAction;
+        var hasCustomAction = this.buttonLongPressAction || this.buttonDoublePressAction || this.buttonTripplePressAction;
         if (hasCustomAction || this.deviceClass) {
-            let config = `\n        - id: ${this.deviceId}`;            
-            if(hasCustomAction){
-                config += `\n          action: ${this.buttonAction}`;
+            let config = `\n        - id: ${this.deviceId}`;
+            if (hasCustomAction) {
+                config += `\n          actions:`;
+                if (this.buttonPressAction) {
+                    config += `\n            - Press`;
+                }
+                if (this.buttonLongPressAction) {
+                    config += `\n            - LongPress`;
+                }
+                if (this.buttonDoublePressAction) {
+                    config += `\n            - DoublePress`;
+                }
+                if (this.buttonTripplePressAction) {
+                    config += `\n            - TripplePress`;
+                }
             }
-            if(this.deviceClass){
+            if (this.deviceClass) {
                 config += `\n          device_class: ${this.deviceClass}`;
             }
             return config;
         }
         return this.idConfig;
     }
-
 
     private get climateConfig() {
         if (this.climateMinTemperature ||
@@ -143,10 +155,10 @@ class TapHomeDevice {
             let config = `\n        - id: ${this.deviceId}`
             if (this.climateMinTemperature) {
                 config += `\n          min_temperature: ${this.climateMinTemperature}`;
-            } 
+            }
             if (this.climateMaxTemperature) {
                 config += `\n          max_temperature: ${this.climateMaxTemperature}`;
-            } 
+            }
             if (this.climateHeatingSwitchIdingCoolingModeId) {
                 config += `\n          heating_cooling_mode_id: ${this.climateHeatingSwitchIdingCoolingModeId}`;
             } else if (this.climateHeatingSwitchId) {
@@ -240,12 +252,12 @@ class TapHomeCore {
 
         let getAllDevicesValuesUrl = `${apiUrl}/getAllDevicesValues?token=${this.token}`;
         let getAllDevicesValuesResponse = await fetch(getAllDevicesValuesUrl);
-        
+
         if (getAllDevicesValuesResponse.status == 401 || getAllDevicesValuesResponse.status == 403) {
             alert('Core was not found. Please check your token and api_url.');
             return;
         }
-        else if (getAllDevicesValuesResponse.status != 200){
+        else if (getAllDevicesValuesResponse.status != 200) {
             alert('Your core is not supported! Please upgrade your core.');
             return;
         }

@@ -99,8 +99,10 @@
                                         placeholder="00000000-0000-0000-0000-000000000000" v-model="taphomeCore.token"
                                         v-bind:class="{ 'is-invalid': !taphomeCore.token }" autofocus>
                                     <small class="form-text">
-                                        <a target="_blank" href="https://taphome.com/en/support/601227274">TapHome api doc</a>.
-                                        CloudApi is used for discover devices. You can disable it later if you are using local api for Home Assistant
+                                        <a target="_blank" href="https://taphome.com/en/support/601227274">TapHome api
+                                            doc</a>.
+                                        CloudApi is used for discover devices. You can disable it later if you are using
+                                        local api for Home Assistant
                                     </small>
                                 </div>
 
@@ -114,11 +116,11 @@
                                 </label>
                                 <div class="col-9">
                                     <input class="form-control" v-bind:id="'id' + taphomeCore.token"
-                                        placeholder="mycore"
-                                        v-model="taphomeCore.id">
+                                        placeholder="mycore" v-model="taphomeCore.id">
                                     <small class="form-text">
-                                        <span v-if="taphomeCores.length <= 1">Optional.</span> 
-                                        <span v-if="taphomeCores.length > 1">Required. You're using multiple cores</span> 
+                                        <span v-if="taphomeCores.length <= 1">Optional.</span>
+                                        <span v-if="taphomeCores.length > 1">Required. You're using multiple
+                                            cores</span>
                                         Id of core is used in logs and unique_id
                                     </small>
                                 </div>
@@ -144,16 +146,22 @@
                                 <div class="col-9">
                                     <input class="form-control" v-bind:id="'webhook_id' + taphomeCore.token"
                                         placeholder="" v-model="taphomeCore.webhookId">
-                                        
+
                                     <strong class="form-text" v-if="taphomeCore.webhookId">
-                                        enable webhooks in Taphome configuration (Settings/Expose Devices/TapHome API/Enable Web Hook) and set "Web Hook URL" to the following format: 'http://{home_assistant_host}:8123/api/webhook/{{taphomeCore.webhookId}}' <br /> 
-                                        where '{home_assistant_host}' is the IP address or DNS name of your home assistant instance. <br />
+                                        enable webhooks in Taphome configuration (Settings/Expose Devices/TapHome
+                                        API/Enable Web Hook) and set "Web Hook URL" to the following format:
+                                        'http://{home_assistant_host}:8123/api/webhook/{{taphomeCore.webhookId}}' <br />
+                                        where '{home_assistant_host}' is the IP address or DNS name of your home
+                                        assistant instance. <br />
                                         E.g. 'http://homeassistant.local:8123/api/webhook/{{taphomeCore.webhookId}}'
                                         <br />
                                     </strong>
                                     <small class="form-text" v-if="!taphomeCore.webhookId">
-                                        Optional. Local api with webhook is best combination for you. The value of this property specifies the Webhook ID, which may be called from outside to initiate Taphome integration refresh devices data. You can use "taphome" or any  identification string.
-                                        If the 'webhook_id' property is not specified, webhook feature will be disabled. 
+                                        Optional. Local api with webhook is best combination for you. The value of this
+                                        property specifies the Webhook ID, which may be called from outside to initiate
+                                        Taphome integration refresh devices data. You can use "taphome" or any
+                                        identification string.
+                                        If the 'webhook_id' property is not specified, webhook feature will be disabled.
                                     </small>
                                 </div>
                             </div>
@@ -191,19 +199,62 @@
                                                     </select>
                                                 </div>
                                             </div>
-                                            <div
-                                                v-if="device.entityType === HomeAssistantEntityType.button">
+                                            
+                                            <div v-if="device.entityType === HomeAssistantEntityType.button">
                                                 <div class="row mt-3">
                                                     <label
                                                         v-bind:for="'button-actions' + taphomeCore.token + device.deviceId"
                                                         class="col-sm-5 col-form-label">
-                                                        Action
+                                                        Actions
                                                     </label>
                                                     <div class="col-sm-7">
-                                                        <input
-                                                            v-bind:id="'button-actions' + taphomeCore.token + device.deviceId"
-                                                            class="form-select" v-model="device.buttonAction"
-                                                            v-bind:list="'button_actions'" />
+                                                        <div class="form-check">
+                                                            <input
+                                                                v-bind:id="'button-press-action' + taphomeCore.token + device.deviceId"
+                                                                class="form-check-input"
+                                                                v-model="device.buttonPressAction" type="checkbox" />
+                                                            <label
+                                                                v-bind:for="'button-press-action' + taphomeCore.token + device.deviceId"
+                                                                class="col-sm-5 form-check-label">
+                                                                Press
+                                                            </label>
+                                                        </div>
+                                                        <div class="form-check">
+                                                            <input
+                                                                v-bind:id="'button-long-press-action' + taphomeCore.token + device.deviceId"
+                                                                class="form-check-input"
+                                                                v-model="device.buttonLongPressAction"
+                                                                type="checkbox" />
+                                                            <label
+                                                                v-bind:for="'button-long-press-action' + taphomeCore.token + device.deviceId"
+                                                                class="col-sm-5 form-check-label">
+                                                                Long press
+                                                            </label>
+                                                        </div>
+                                                        <div class="form-check">
+                                                            <input
+                                                                v-bind:id="'button-double-press-action' + taphomeCore.token + device.deviceId"
+                                                                class="form-check-input"
+                                                                v-model="device.buttonDoublePressAction"
+                                                                type="checkbox" />
+                                                            <label
+                                                                v-bind:for="'button-double-press-action' + taphomeCore.token + device.deviceId"
+                                                                class="col-sm-5 form-check-label">
+                                                                Double press
+                                                            </label>
+                                                        </div>
+                                                        <div class="form-check">
+                                                            <input
+                                                                v-bind:id="'button-tripple-press-action' + taphomeCore.token + device.deviceId"
+                                                                class="form-check-input"
+                                                                v-model="device.buttonTripplePressAction"
+                                                                type="checkbox" />
+                                                            <label
+                                                                v-bind:for="'button-tripple-press-action' + taphomeCore.token + device.deviceId"
+                                                                class="col-sm-5 form-check-label">
+                                                                Tripple press
+                                                            </label>
+                                                        </div>
                                                     </div>
                                                 </div>
                                                 <div class="row mt-3">
