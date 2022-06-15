@@ -62,6 +62,43 @@
         <option>shutter</option>
         <option>window</option>
     </datalist>
+    <datalist id="sensor_device_classes">
+        <option>apparent_power</option>
+        <option>aqi</option>
+        <option>battery</option>
+        <option>carbon_dioxide</option>
+        <option>carbon_monoxide</option>
+        <option>current</option>
+        <option>date</option>
+        <option>energy</option>
+        <option>frequency</option>
+        <option>gas</option>
+        <option>humidity</option>
+        <option>illuminance</option>
+        <option>monetary</option>
+        <option>nitrogen_dioxide</option>
+        <option>nitrogen_monoxide</option>
+        <option>nitrous_oxide</option>
+        <option>ozone</option>
+        <option>pm1</option>
+        <option>pm10</option>
+        <option>pm25</option>
+        <option>power</option>
+        <option>power_factor</option>
+        <option>pressure</option>
+        <option>reactive_power</option>
+        <option>signal_strength</option>
+        <option>sulphur_dioxide</option>
+        <option>temperature</option>
+        <option>timestamp</option>
+        <option>volatile_organic_compounds</option>
+        <option>voltage</option>
+    </datalist>
+    <datalist id="sensor_state_classes">
+        <option>measurement</option>
+        <option>total</option>
+        <option>total_increasing</option>
+    </datalist>
     <div id="app" class="container-fluid row h-100">
         <div class="col-8">
             <div class="accordion">
@@ -198,8 +235,7 @@
                                                         </option>
                                                     </select>
                                                 </div>
-                                            </div>
-                                            
+                                            </div>                                            
                                             <div v-if="device.entityType === HomeAssistantEntityType.button">
                                                 <div class="row mt-3">
                                                     <label
@@ -271,17 +307,16 @@
                                                     </div>
                                                 </div>
                                             </div>
-                                            <div
-                                                v-if="device.entityType === HomeAssistantEntityType.switch || device.entityType === HomeAssistantEntityType.cover">
+                                            <div v-if="device.entityType === HomeAssistantEntityType.switch || device.entityType === HomeAssistantEntityType.cover">
                                                 <div class="row mt-3">
                                                     <label
-                                                        v-bind:for="'device-class' + taphomeCore.token + device.deviceId"
+                                                        v-bind:for="'device_class' + taphomeCore.token + device.deviceId"
                                                         class="col-sm-5 col-form-label">
                                                         Device class
                                                     </label>
                                                     <div class="col-sm-7">
                                                         <input
-                                                            v-bind:id="'device-class' + taphomeCore.token + device.deviceId"
+                                                            v-bind:id="'device_class' + taphomeCore.token + device.deviceId"
                                                             class="form-select" v-model="device.deviceClass"
                                                             v-bind:list="device.entityType + '_device_classes'" />
                                                     </div>
@@ -295,7 +330,7 @@
                                                     <div class="col-sm-7">
                                                         <input
                                                             v-bind:id="'climate-min_temperature' + taphomeCore.token + device.deviceId"
-                                                            class="form-select" v-model="device.climateMinTemperature"
+                                                            class="form-control" v-model="device.climateMinTemperature"
                                                             placeholder="10" />
                                                         <small class="form-text">
                                                             Minimum temperature. TapHome don't provide me information
@@ -311,7 +346,7 @@
                                                     <div class="col-sm-7">
                                                         <input
                                                             v-bind:id="'climate-max_temperature' + taphomeCore.token + device.deviceId"
-                                                            class="form-select" v-model="device.climateMaxTemperature"
+                                                            class="form-control" v-model="device.climateMaxTemperature"
                                                             placeholder="30" />
                                                         <small class="form-text">
                                                             Maximum temperature. TapHome don't provide me information
@@ -367,6 +402,90 @@
                                                         </small>
                                                     </div>
                                                 </div>
+                                            </div>
+
+                                            <div v-if="device.entityType === HomeAssistantEntityType.sensor">
+                                                <div
+                                                    v-if="device.supportedValues.some(supportedValue => supportedValue.valueTypeId == TapHomeValueType.humidity)">
+                                                    Humidity (%)
+                                                </div>
+                                                <div
+                                                    v-if="device.supportedValues.some(supportedValue => supportedValue.valueTypeId == TapHomeValueType.realTemperature)">
+                                                    Temperature (°C)
+                                                </div>
+                                                <div
+                                                    v-if="device.supportedValues.some(supportedValue => supportedValue.valueTypeId == TapHomeValueType.electricityDemand)">
+                                                    Power (kW)
+                                                </div>
+                                                <div
+                                                    v-if="device.supportedValues.some(supportedValue => supportedValue.valueTypeId == TapHomeValueType.electricityConsumption)">
+                                                    Energy (kWh)
+                                                </div>
+                                                <div
+                                                    v-if="device.supportedValues.some(supportedValue => supportedValue.valueTypeId == TapHomeValueType.co2)">
+                                                    carbon_dioxide (ppm)
+                                                </div>
+                                                <div
+                                                    v-if="device.supportedValues.some(supportedValue => supportedValue.valueTypeId == TapHomeValueType.sensorBrightness)">
+                                                    illuminance (lx)
+                                                </div>
+                                                <div
+                                                    v-if="device.supportedValues.some(supportedValue => supportedValue.valueTypeId == TapHomeValueType.windSpeed)">
+                                                    None - WindSpeed (km/h)
+                                                </div>
+                                                <div
+                                                    v-if="device.supportedValues.some(supportedValue => supportedValue.valueTypeId == TapHomeValueType.analogInputValue)">
+                                                    None - AnalogInputValue (%)
+                                                </div>
+                                                <div
+                                                    v-if="device.supportedValues.some(supportedValue => supportedValue.valueTypeId == TapHomeValueType.totalImpulseCount)">
+                                                    None - TotalImpulseCount
+                                                </div>
+                                                <div
+                                                    v-if="device.supportedValues.some(supportedValue => supportedValue.valueTypeId == TapHomeValueType.currentHourImpulseCount)">
+                                                    None - CurrentHourImpulseCount
+                                                </div>
+                                                <div
+                                                    v-if="device.supportedValues.some(supportedValue => supportedValue.valueTypeId == TapHomeValueType.lastMeasuredFrequency)">
+                                                    None - LastMeasuredFrequency (Hz)
+                                                </div>
+                                                <div
+                                                    v-if="device.supportedValues.some(supportedValue => supportedValue.valueTypeId == TapHomeValueType.variableState)">
+                                                    <div class="row mt-3">
+                                                        <label
+                                                            v-bind:for="'device_class' + taphomeCore.token + device.deviceId"
+                                                            class="col-sm-5 col-form-label">device_class</label>
+                                                        <div class="col-sm-7">
+                                                            <input
+                                                                v-bind:id="'device_class' + taphomeCore.token + device.deviceId"
+                                                                class="form-select" v-model="device.deviceClass"
+                                                                v-bind:list="'sensor_device_classes'" />
+                                                        </div>
+                                                    </div>
+                                                    <div class="row mt-3">
+                                                        <label
+                                                            v-bind:for="'unit_of_measurement' + taphomeCore.token + device.deviceId"
+                                                            class="col-sm-5 col-form-label">unit_of_measurement</label>
+                                                        <div class="col-sm-7">
+                                                            <input
+                                                                v-bind:id="'unit_of_measurement' + taphomeCore.token + device.deviceId"
+                                                                class="form-control"
+                                                                v-model="device.sensorUnitOfMeasurement" />
+                                                        </div>
+                                                    </div>
+                                                    <div class="row mt-3">
+                                                        <label
+                                                            v-bind:for="'state_class' + taphomeCore.token + device.deviceId"
+                                                            class="col-sm-5 col-form-label">state_class</label>
+                                                        <div class="col-sm-7">
+                                                            <input
+                                                                v-bind:id="'state_class' + taphomeCore.token + device.deviceId"
+                                                                class="form-select" v-model="device.sensorStateClass"
+                                                                v-bind:list="'sensor_state_classes'" />
+                                                        </div>
+                                                    </div>
+                                                </div>
+
                                             </div>
                                         </div>
                                     </div>
