@@ -33,12 +33,15 @@ class CoverService:
             _LOGGER.error(f"TapHome async_get_state for {device.id} failed")
             return None
 
-    def async_set_level(self, device: Device, position) -> None:
+    def async_set_level(self, device: Device, position, tilt=None) -> None:
         values = [
             self.taphome_api_service.create_device_value(
                 ValueType.BlindsLevel, position
             )
         ]
+
+        if tilt is not None:
+            values.append(self.taphome_api_service.create_device_value(ValueType.BlindsSlope, tilt))
 
         return self.taphome_api_service.async_set_device_values(device.id, values)
 
