@@ -109,8 +109,7 @@ var TapHomeDevice = /** @class */ (function () {
         this.possibleEntityTypes = [];
         this.entityType = undefined;
         this.isSelected = true;
-        this.defaultButtonAction = "Press";
-        this.buttonAction = this.defaultButtonAction;
+        this.buttonPressAction = true;
     }
     Object.defineProperty(TapHomeDevice.prototype, "config", {
         get: function () {
@@ -144,11 +143,23 @@ var TapHomeDevice = /** @class */ (function () {
     });
     Object.defineProperty(TapHomeDevice.prototype, "buttonConfig", {
         get: function () {
-            var hasCustomAction = this.buttonAction && this.buttonAction != this.defaultButtonAction;
+            var hasCustomAction = this.buttonLongPressAction || this.buttonDoublePressAction || this.buttonTripplePressAction;
             if (hasCustomAction || this.deviceClass) {
                 var config = "\n        - id: " + this.deviceId;
                 if (hasCustomAction) {
-                    config += "\n          action: " + this.buttonAction;
+                    config += "\n          actions:";
+                    if (this.buttonPressAction) {
+                        config += "\n            - Press";
+                    }
+                    if (this.buttonLongPressAction) {
+                        config += "\n            - LongPress";
+                    }
+                    if (this.buttonDoublePressAction) {
+                        config += "\n            - DoublePress";
+                    }
+                    if (this.buttonTripplePressAction) {
+                        config += "\n            - TripplePress";
+                    }
                 }
                 if (this.deviceClass) {
                     config += "\n          device_class: " + this.deviceClass;
