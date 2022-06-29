@@ -211,7 +211,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigEntry) -> bool:
             )
 
         try:
-            async with timeout(8):
+            async with timeout(20):
                 await coordinator.async_refresh()
                 if not coordinator.last_update_success:
                     _LOGGER.warn("TapHome devices was not discovered during startup")
