@@ -51,7 +51,7 @@ class TapHomeButton(TapHomeEntity[dict], ButtonEntity):
             config_entry,
             f"{DOMAIN}.{action.name}",
             coordinator,
-            dict,
+            TapHomeState,
         )
 
         self._button_service = button_service
