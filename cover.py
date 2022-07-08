@@ -131,12 +131,8 @@ class TapHomeCover(TapHomeEntity[CoverState], CoverEntity):
             if self.current_cover_tilt_position is not None:
                 if taphome_position == 0:
                     taphome_tilt = 0
-                    print("taphome_tilt = 0")
-                    print(taphome_position)
                 else:
                     taphome_tilt = 1 - self.convert_ha_percentage_to_taphome(self.current_cover_tilt_position)
-                    print("taphome_tilt")
-                    print(taphome_position)
 
             async with UpdateTapHomeState(self) as state:
                 await self.cover_service.async_set_level(
