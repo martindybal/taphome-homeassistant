@@ -47,6 +47,7 @@ class TapHomeSensorType:
         self.unit_of_measurement = unit_of_measurement
         self.state_class = state_class
         self.last_reset = last_reset
+        self.unique_name = value_type.name
 
     def convert_taphome_to_ha(self, value: int) -> int:
         return value
@@ -237,7 +238,7 @@ class TapHomeSensor(TapHomeEntity[TapHomeState], SensorEntity):
     ):
         assert sensor_type is not None
         self._sensor_type = sensor_type
-        unique_id_determination = f"{DOMAIN}.{self._sensor_type.value_type.name}"
+        unique_id_determination = f"{DOMAIN}.{self._sensor_type.unique_name}"
 
         super().__init__(
             hass,
