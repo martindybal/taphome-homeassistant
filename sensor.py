@@ -1,6 +1,7 @@
 """TapHome sensor integration."""
 import datetime
 import typing
+import time
 
 from homeassistant.components.sensor import (
     DOMAIN,
@@ -21,6 +22,7 @@ from homeassistant.const import (
     SPEED_KILOMETERS_PER_HOUR,
     TEMP_CELSIUS,
 )
+
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -91,6 +93,58 @@ class TapHomeElectricCounterElectricityDemandSensorType(TapHomeSensorType):
     def convert_taphome_to_ha(self, value: int) -> int:
         return round(value, 3)
 
+
+# this class calculates instantaneous electricity demand from derivation of electricity consumption
+class TapHomeElectricCounterCalculatedElectricityDemandSensorType(TapHomeSensorType):
+    def __init__(self) -> None:
+        super().__init__(
+            ValueType.ElectricityConsumption,
+            SensorDeviceClass.POWER,
+            POWER_KILO_WATT,
+            STATE_CLASS_MEASUREMENT,
+        )
+
+        # create unique name for this type of electricity demand sensor
+        # (so we can register two different types of electricity demand sensor type at once)
+        self.unique_name = self.unique_name + "_calc"
+
+        # previous value measurement + timestamp
+        self.prev_value = 0.0
+        self.prev_value_time_us = 0
+        self.last_diff = None
+
+    def convert_taphome_to_ha(self, value: int) -> int:
+        # get the current time in microseconds
+        curr_time_us = time.time_ns() / 1000
+
+        # did we have a previous measurement?
+        if self.prev_value_time_us != 0:
+
+            # time difference in seconds between two measurements in microseconds
+            time_diff_us = curr_time_us - self.prev_value_time_us
+
+            # we have to be measuring at least 25 seconds
+            if time_diff_us > 25 * 1000000:
+
+                # calculate the difference between this value and previous value
+                diff = value - self.prev_value
+                # scale difference to an hour (we should get a number in kW)
+                diff = diff * 3600 * 1000000 / time_diff_us
+                # keep new values
+                self.prev_value = value
+                self.prev_value_time_us = curr_time_us
+                self.last_diff = diff
+                # _LOGGER.error(f"Calculated consumption: {diff} kW")
+        else:
+            # keep the current value and timestamp
+            # as initial value
+            self.prev_value = value
+            self.prev_value_time_us = curr_time_us
+
+        if self.last_diff is None:
+            return None
+        else:
+            return round(self.last_diff, 3)
 
 class TapHomeElectricCounterElectricityConsumptionSensorType(TapHomeSensorType):
     def __init__(self) -> None:
@@ -316,6 +370,7 @@ class TapHomeSensorCreateRequest(TapHomeDataUpdateCoordinatorObject[TapHomeState
                 TapHomeHumiditySensorType(),
                 TapHomeTemperatureSensorType(),
                 TapHomeElectricCounterElectricityDemandSensorType(),
+                TapHomeElectricCounterCalculatedElectricityDemandSensorType(),
                 TapHomeElectricCounterElectricityConsumptionSensorType(),
                 TapHomeCo2SensorType(),
                 TapHomeBrightnessSensorType(),
