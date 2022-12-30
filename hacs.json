@@ -4,12 +4,14 @@
     "homeassistant": "2021.7.0",
     "domains": [
         "binary_sensor",
+        "button",
         "climate",
         "cover",
+        "fan",
         "light",
+        "select",
         "sensor",
-        "switch",
-        "select"
+        "switch"
     ],
     "content_in_root": true
 }
