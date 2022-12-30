@@ -8,6 +8,7 @@
 - Lights - switch, brightness, RGB
 - Sensors - Humidity, Temperature, Variable, Motion, Generic reed contact, Electric counter (consumption, demand), Brightness, Co2, Wind speed, Pulse counter (total impulse, current hour impulse, frequency)
 - Switches - power outlet, digital out
+- Fan - AO for air recuperation, HVAC dampers
 
 ## Quick start
 

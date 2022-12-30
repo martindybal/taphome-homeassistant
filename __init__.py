@@ -10,6 +10,7 @@ from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAI
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN
 from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
 from homeassistant.components.cover import DOMAIN as COVER_DOMAIN
+from homeassistant.components.fan import DOMAIN as FAN_DOMAIN
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.components.select import DOMAIN as SELECT_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
@@ -75,6 +76,7 @@ CONFIG_SCHEMA = voluptuous.Schema(
                             CONF_BUTTONS,
                             CONF_COVERS,
                             CONF_CLIMATES,
+                            CONF_FAN,
                             CONF_MULTIVALUE_SWITCHES,
                             CONF_SWITCHES,
                             CONF_SENSORS,
@@ -107,6 +109,9 @@ CONFIG_SCHEMA = voluptuous.Schema(
                             ): config_validation.ensure_list,
                             voluptuous.Optional(
                                 CONF_CLIMATES, default=[]
+                            ): config_validation.ensure_list,
+                            voluptuous.Optional(
+                                CONF_FAN, default=[]
                             ): config_validation.ensure_list,
                             voluptuous.Optional(
                                 CONF_MULTIVALUE_SWITCHES, default=[]
@@ -153,6 +158,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigEntry) -> bool:
         DomainDefinition(CLIMATE_DOMAIN, CONF_CLIMATES, ClimateConfigEntry),
         DomainDefinition(COVER_DOMAIN, CONF_COVERS, CoverConfigEntry),
         DomainDefinition(LIGHT_DOMAIN, CONF_LIGHTS, TapHomeConfigEntry),
+        DomainDefinition(FAN_DOMAIN, CONF_FAN, TapHomeConfigEntry),
         DomainDefinition(SELECT_DOMAIN, CONF_MULTIVALUE_SWITCHES, TapHomeConfigEntry),
         DomainDefinition(SENSOR_DOMAIN, CONF_SENSORS, SensorConfigEntry),
         DomainDefinition(SWITCH_DOMAIN, CONF_SWITCHES, SwitchConfigEntry),
