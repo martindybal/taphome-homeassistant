@@ -4,8 +4,8 @@ import typing
 from homeassistant.components.cover import (
     ATTR_POSITION,
     ATTR_TILT_POSITION,
-    DEVICE_CLASS_BLIND,
-    DEVICE_CLASS_SHADE,
+    CoverEntity,
+    CoverDeviceClass,
     DOMAIN,
     SUPPORT_CLOSE,
     SUPPORT_CLOSE_TILT,
@@ -13,7 +13,6 @@ from homeassistant.components.cover import (
     SUPPORT_OPEN_TILT,
     SUPPORT_SET_POSITION,
     SUPPORT_SET_TILT_POSITION,
-    CoverEntity,
 )
 from homeassistant.const import CONF_COVERS
 from homeassistant.core import HomeAssistant
@@ -79,9 +78,9 @@ class TapHomeCover(TapHomeEntity[CoverState], CoverEntity):
 
             if self._device_class is None:
                 if self._supported_features & SUPPORT_SET_TILT_POSITION:
-                    self._device_class = DEVICE_CLASS_BLIND
+                    self._device_class = CoverDeviceClass.BLIND
                 else:
-                    self._device_class = DEVICE_CLASS_SHADE
+                    self._device_class = CoverDeviceClass.SHADE
 
         return self._supported_features
 
@@ -132,7 +131,9 @@ class TapHomeCover(TapHomeEntity[CoverState], CoverEntity):
                 if taphome_position == 0:
                     taphome_tilt = 0
                 else:
-                    taphome_tilt = 1 - self.convert_ha_percentage_to_taphome(self.current_cover_tilt_position)
+                    taphome_tilt = 1 - self.convert_ha_percentage_to_taphome(
+                        self.current_cover_tilt_position
+                    )
 
             async with UpdateTapHomeState(self) as state:
                 await self.cover_service.async_set_level(

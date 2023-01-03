@@ -2,8 +2,7 @@
 import typing
 
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_CONNECTIVITY,
-    DEVICE_CLASS_MOTION,
+    BinarySensorDeviceClass,
     DOMAIN,
     BinarySensorEntity,
 )
@@ -44,7 +43,7 @@ class TapHomeIsAliveSensor(BinarySensorEntity):
     @property
     def device_class(self):
         """Return type of binary sensor from component DEVICE_CLASSES."""
-        return DEVICE_CLASS_CONNECTIVITY
+        return BinarySensorDeviceClass.CONNECTIVITY
 
     @property
     def is_on(self) -> bool:
@@ -62,7 +61,7 @@ class TapHomeMotionBinarySensorType(TapHomeBinarySensorType):
     def __init__(self) -> None:
         super().__init__(
             ValueType.Motion,
-            DEVICE_CLASS_MOTION,
+            BinarySensorDeviceClass.MOTION,
         )
 
 
