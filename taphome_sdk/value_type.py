@@ -53,3 +53,4 @@ class ValueType(Enum):
     PWMOutputState = 72
     BatteryPercentageRemaining = 73
     BlindCommandState = 74
+    CorrelatedColorTemperature = 89

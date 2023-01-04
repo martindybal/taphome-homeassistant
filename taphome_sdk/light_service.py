@@ -1,8 +1,8 @@
 from .device import Device
 from .switch_states import SwitchStates
 from .taphome_api_service import TapHomeApiService
-from .value_type import ValueType
 from .taphome_device_state import TapHomeState
+from .value_type import ValueType
 
 
 class LightState(TapHomeState):
@@ -21,6 +21,10 @@ class LightState(TapHomeState):
         if self.brightness is None:
             self.brightness = self.get_device_value(ValueType.HueBrightness)
 
+        self.color_temperature = self.get_device_value(
+            ValueType.CorrelatedColorTemperature
+        )
+
 
 class LightService:
     def __init__(self, tapHomeApiService: TapHomeApiService):
@@ -34,7 +38,12 @@ class LightService:
         return LightState(light_values)
 
     def async_turn_on(
-        self, device: Device, brightness=None, hue=None, saturation=None
+        self,
+        device: Device,
+        brightness=None,
+        color_temp=None,
+        hue=None,
+        saturation=None,
     ) -> None:
         values = [
             self.tapHomeApiService.create_device_value(
@@ -55,6 +64,13 @@ class LightService:
                         ValueType.HueBrightnessDesiredValue, brightness
                     )
                 )
+
+        if color_temp is not None:
+            values.append(
+                self.tapHomeApiService.create_device_value(
+                    ValueType.CorrelatedColorTemperature, color_temp
+                )
+            )
 
         if hue is not None:
             values.append(
