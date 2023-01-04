@@ -84,7 +84,6 @@ class TapHomeLight(TapHomeEntity[LightState], LightEntity):
     @property
     def min_color_temp_kelvin(self) -> int:
         """Return the warmest color_temp_kelvin that this light supports."""
-
         if not self.taphome_device is None:
             return self.taphome_device.supported_values[
                 ValueType.CorrelatedColorTemperature
