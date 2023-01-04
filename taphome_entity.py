@@ -1,7 +1,7 @@
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.helpers.entity import async_generate_entity_id
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .coordinator import *
 from .taphome_core_config_entry import TapHomeCoreConfigEntry
