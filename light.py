@@ -1,12 +1,16 @@
 """TapHome light integration."""
+from __future__ import annotations
+
 import typing
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
+    ATTR_COLOR_TEMP_KELVIN,
     ATTR_HS_COLOR,
     DOMAIN,
     SUPPORT_BRIGHTNESS,
     SUPPORT_COLOR,
+    SUPPORT_COLOR_TEMP,
     LightEntity,
 )
 from homeassistant.const import CONF_LIGHTS
@@ -30,8 +34,11 @@ class TapHomeLight(TapHomeEntity[LightState], LightEntity):
         coordinator: TapHomeDataUpdateCoordinator,
         light_service: LightService,
     ):
-        super().__init__(hass, core_config, config_entry, DOMAIN, coordinator, LightState)
+        super().__init__(
+            hass, core_config, config_entry, DOMAIN, coordinator, LightState
+        )
         self.light_service = light_service
+        self._supported_features = None
         self._supported_features = None
 
     @property
@@ -43,11 +50,14 @@ class TapHomeLight(TapHomeEntity[LightState], LightEntity):
         if self._supported_features is None:
             self._supported_features = 0
 
-            if self.taphome_state.hue is not None:
-                self._supported_features = self._supported_features | SUPPORT_COLOR
-
             if self.taphome_state.brightness is not None:
                 self._supported_features = self._supported_features | SUPPORT_BRIGHTNESS
+
+            if self.taphome_state.color_temperature is not None:
+                self._supported_features = self._supported_features | SUPPORT_COLOR_TEMP
+
+            if self.taphome_state.hue is not None:
+                self._supported_features = self._supported_features | SUPPORT_COLOR
 
         return self._supported_features
 
@@ -66,6 +76,23 @@ class TapHomeLight(TapHomeEntity[LightState], LightEntity):
             )
 
     @property
+    def color_temp_kelvin(self) -> int | None:
+        """Return the CT color value in Kelvin."""
+        if not self.taphome_state is None:
+            return self.taphome_state.color_temperature
+
+    # Issue #130 Discovery didn't contain min/max yet.
+    @property
+    def min_color_temp_kelvin(self) -> int:
+        """Return the warmest color_temp_kelvin that this light supports."""
+        return 1800
+
+    @property
+    def max_color_temp_kelvin(self) -> int:
+        """Return the coldest color_temp_kelvin that this light supports."""
+        return 4100
+
+    @property
     def hs_color(self):
         """Return the hs color value."""
         if not self.taphome_state is None:
@@ -82,6 +109,10 @@ class TapHomeLight(TapHomeEntity[LightState], LightEntity):
                 kwargs[ATTR_BRIGHTNESS]
             )
 
+        color_temp = None
+        if ATTR_COLOR_TEMP_KELVIN in kwargs:
+            color_temp = kwargs[ATTR_COLOR_TEMP_KELVIN]
+
         hue, saturation = None, None
         if ATTR_HS_COLOR in kwargs:
             (hue, saturation) = kwargs[ATTR_HS_COLOR]
@@ -89,11 +120,13 @@ class TapHomeLight(TapHomeEntity[LightState], LightEntity):
 
         async with UpdateTapHomeState(self) as state:
             await self.light_service.async_turn_on(
-                self.taphome_device, brightness, hue, saturation
+                self.taphome_device, brightness, color_temp, hue, saturation
             )
             state.switch_state = SwitchStates.ON
             if brightness is not None:
                 state.brightness = brightness
+            if color_temp is not None:
+                state.color_temp = color_temp
             if hue is not None:
                 state.hue = hue
             if saturation is not None:
