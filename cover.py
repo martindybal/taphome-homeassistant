@@ -4,8 +4,6 @@ import typing
 from homeassistant.components.cover import (
     ATTR_POSITION,
     ATTR_TILT_POSITION,
-    CoverEntity,
-    CoverDeviceClass,
     DOMAIN,
     SUPPORT_CLOSE,
     SUPPORT_CLOSE_TILT,
@@ -13,6 +11,8 @@ from homeassistant.components.cover import (
     SUPPORT_OPEN_TILT,
     SUPPORT_SET_POSITION,
     SUPPORT_SET_TILT_POSITION,
+    CoverDeviceClass,
+    CoverEntity,
 )
 from homeassistant.const import CONF_COVERS
 from homeassistant.core import HomeAssistant

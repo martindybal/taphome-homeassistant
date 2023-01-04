@@ -1,8 +1,8 @@
 from .device import Device
-from .taphome_api_service import TapHomeApiService
-from .value_type import ValueType
-from .taphome_device_state import TapHomeState
 from .switch_states import SwitchStates
+from .taphome_api_service import TapHomeApiService
+from .taphome_device_state import TapHomeState
+from .value_type import ValueType
 
 
 class FanState(TapHomeState):
