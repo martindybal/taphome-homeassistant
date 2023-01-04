@@ -1,9 +1,11 @@
 """TapHome button integration."""
 import typing
+
 from homeassistant.components.button import DOMAIN, ButtonEntity
 from homeassistant.core import HomeAssistant
+
 from .add_entry_request import AddEntryRequest
-from .const import TAPHOME_PLATFORM, CONF_BUTTONS
+from .const import CONF_BUTTONS, TAPHOME_PLATFORM
 from .taphome_entity import *
 from .taphome_sdk import *
 

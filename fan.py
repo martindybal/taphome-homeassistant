@@ -1,8 +1,9 @@
 """TapHome fan integration."""
 from __future__ import annotations
 
-from homeassistant.components.fan import DOMAIN, FanEntity, SUPPORT_SET_SPEED
+from typing import Any, Optional
 
+from homeassistant.components.fan import DOMAIN, SUPPORT_SET_SPEED, FanEntity
 from homeassistant.core import HomeAssistant
 
 from .add_entry_request import AddEntryRequest
@@ -10,11 +11,6 @@ from .const import CONF_FAN, TAPHOME_PLATFORM
 from .coordinator import *
 from .taphome_entity import *
 from .taphome_sdk import *
-
-from typing import (
-    Any,
-    Optional,
-)
 
 
 class TapHomeFan(TapHomeEntity[FanState], FanEntity):
