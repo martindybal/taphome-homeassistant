@@ -26,7 +26,6 @@ from homeassistant.const import (
     CONF_TOKEN,
     CONF_WEBHOOK_ID,
 )
-
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as config_validation
 from homeassistant.helpers.discovery import load_platform
