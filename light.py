@@ -81,16 +81,22 @@ class TapHomeLight(TapHomeEntity[LightState], LightEntity):
         if not self.taphome_state is None:
             return self.taphome_state.color_temperature
 
-    # Issue #130 Discovery didn't contain min/max yet.
     @property
     def min_color_temp_kelvin(self) -> int:
         """Return the warmest color_temp_kelvin that this light supports."""
-        return 1800
+
+        if not self.taphome_device is None:
+            return self.taphome_device.supported_values[
+                ValueType.CorrelatedColorTemperature
+            ].min_value
 
     @property
     def max_color_temp_kelvin(self) -> int:
         """Return the coldest color_temp_kelvin that this light supports."""
-        return 4100
+        if not self.taphome_device is None:
+            return self.taphome_device.supported_values[
+                ValueType.CorrelatedColorTemperature
+            ].max_value
 
     @property
     def hs_color(self):
