@@ -51,52 +51,32 @@ class LightService:
             )
         else:
             values = []
-            if brightness is not None:
+
+            def append_value(value_type: ValueType, value):
                 values.append(
-                    self.tapHomeApiService.create_device_value(
-                        ValueType.SwitchState, SwitchStates.ON.value
-                    )
+                    self.tapHomeApiService.create_device_value(value_type, value)
                 )
+
+            if brightness is not None:
+                append_value(ValueType.SwitchState, SwitchStates.ON.value)
+
                 if device.supports_value(ValueType.AnalogOutputDesiredValue):
-                    values.append(
-                        self.tapHomeApiService.create_device_value(
-                            ValueType.AnalogOutputDesiredValue, brightness
-                        )
-                    )
+                    append_value(ValueType.AnalogOutputDesiredValue, brightness)
                 elif device.supports_value(ValueType.HueBrightnessDesiredValue):
-                    values.append(
-                        self.tapHomeApiService.create_device_value(
-                            ValueType.HueBrightnessDesiredValue, brightness
-                        )
-                    )
+                    append_value(ValueType.HueBrightnessDesiredValue, brightness)
 
             if color_temp is not None:
-                values.append(
-                    self.tapHomeApiService.create_device_value(
-                        ValueType.CorrelatedColorTemperature, color_temp
-                    )
-                )
+                append_value(ValueType.CorrelatedColorTemperature, color_temp)
 
             if hue is not None:
-                values.append(
-                    self.tapHomeApiService.create_device_value(
-                        ValueType.HueDegrees, hue
-                    )
-                )
+                append_value(ValueType.HueDegrees, hue)
 
             if saturation is not None:
-                values.append(
-                    self.tapHomeApiService.create_device_value(
-                        ValueType.Saturation, saturation
-                    )
-                )
+                append_value(ValueType.Saturation, saturation)
 
             return self.tapHomeApiService.async_set_device_values(device.id, values)
 
     def async_turn_off(self, device: Device) -> None:
-        values = [
-            self.tapHomeApiService.create_device_value(
-                ValueType.SwitchState, SwitchStates.OFF.value
-            )
-        ]
-        return self.tapHomeApiService.async_set_device_values(device.id, values)
+        return self.tapHomeApiService.async_set_device_value(
+            device.id, ValueType.SwitchState, SwitchStates.OFF.value
+        )
