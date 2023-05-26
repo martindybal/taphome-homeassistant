@@ -127,14 +127,15 @@ class TapHomeLight(TapHomeEntity[LightState], LightEntity):
             await self.light_service.async_turn_on(
                 self.taphome_device, brightness, color_temp, hue, saturation
             )
-            state.switch_state = SwitchStates.ON
-            if brightness is not None:
+            if brightness or (brightness is color_temp is hue is saturation is None):
+                state.switch_state = SwitchStates.ON
+            if brightness:
                 state.brightness = brightness
-            if color_temp is not None:
+            if color_temp:
                 state.color_temp = color_temp
-            if hue is not None:
+            if hue:
                 state.hue = hue
-            if saturation is not None:
+            if saturation:
                 state.saturation = saturation
 
     async def async_turn_off(self, **kwargs):
