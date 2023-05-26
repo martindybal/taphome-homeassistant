@@ -74,6 +74,14 @@ class TapHomeApiService:
             )
             return None
 
+    def async_set_device_value(
+        self, device_id: int, value_type: ValueType, value
+    ) -> None:
+        return self.async_set_device_values(
+            device_id,
+            [self.create_device_value(value_type, value)],
+        )
+
     async def async_set_device_values(self, device_id: int, values: list) -> None:
         json = None
         was_values_changed = False
