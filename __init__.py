@@ -11,6 +11,7 @@ from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN
 from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
 from homeassistant.components.cover import DOMAIN as COVER_DOMAIN
 from homeassistant.components.fan import DOMAIN as FAN_DOMAIN
+from homeassistant.components.humidifier import DOMAIN as HUMIDIFIER_DOMAIN
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.components.select import DOMAIN as SELECT_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
@@ -34,6 +35,7 @@ from .add_entry_request import AddEntryRequest
 from .binary_sensor import BinarySensorConfigEntry
 from .button import ButtonConfigEntry
 from .climate import ClimateConfigEntry
+from .humidifier import HumidifierConfigEntry
 from .const import *
 from .coordinator import TapHomeDataUpdateCoordinator
 from .cover import CoverConfigEntry
@@ -76,6 +78,7 @@ CONFIG_SCHEMA = voluptuous.Schema(
                             CONF_COVERS,
                             CONF_CLIMATES,
                             CONF_FAN,
+                            CONF_HUMIDIFIER,
                             CONF_MULTIVALUE_SWITCHES,
                             CONF_SWITCHES,
                             CONF_SENSORS,
@@ -113,6 +116,9 @@ CONFIG_SCHEMA = voluptuous.Schema(
                                 CONF_FAN, default=[]
                             ): config_validation.ensure_list,
                             voluptuous.Optional(
+                                CONF_HUMIDIFIER, default=[]
+                            ): config_validation.ensure_list,
+                            voluptuous.Optional(
                                 CONF_MULTIVALUE_SWITCHES, default=[]
                             ): config_validation.ensure_list,
                             voluptuous.Optional(
@@ -135,7 +141,6 @@ CONFIG_SCHEMA = voluptuous.Schema(
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigEntry) -> bool:
-
     if CONF_LANGUAGE in config[TAPHOME_PLATFORM]:
         _LOGGER.warning(
             "TapHome language setting is not supported any more. You can renema entities as you wish. This options'll be removed in future, please remove it from your config"
@@ -158,6 +163,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigEntry) -> bool:
         DomainDefinition(COVER_DOMAIN, CONF_COVERS, CoverConfigEntry),
         DomainDefinition(LIGHT_DOMAIN, CONF_LIGHTS, TapHomeConfigEntry),
         DomainDefinition(FAN_DOMAIN, CONF_FAN, TapHomeConfigEntry),
+        DomainDefinition(HUMIDIFIER_DOMAIN, CONF_HUMIDIFIER, HumidifierConfigEntry),
         DomainDefinition(SELECT_DOMAIN, CONF_MULTIVALUE_SWITCHES, TapHomeConfigEntry),
         DomainDefinition(SENSOR_DOMAIN, CONF_SENSORS, SensorConfigEntry),
         DomainDefinition(SWITCH_DOMAIN, CONF_SWITCHES, SwitchConfigEntry),

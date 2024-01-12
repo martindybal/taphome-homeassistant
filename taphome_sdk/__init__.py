@@ -2,6 +2,7 @@ from .button_service import ButtonAction, ButtonService
 from .cover_service import CoverService, CoverState
 from .device import Device
 from .fan_service import FanService, FanState
+from .humidifier_service import HumidifierService, HumidifierState
 from .light_service import LightService, LightState
 from .location import Location
 from .multi_value_switch_service import MultiValueSwitchService, MultiValueSwitchState
