@@ -272,7 +272,7 @@ class TapHomeCore {
     loadFromCloudApi = async () => {
         this.devices = [];
         this.unsupportedDevices = [];
-        let apiUrl = 'https://cloudapi.taphome.com/api/cloudapi/v1';
+        let apiUrl = 'https://api.taphome.com/api/TapHomeApi/v1';
 
         let getAllDevicesValuesUrl = `${apiUrl}/getAllDevicesValues?token=${this.token}`;
         let getAllDevicesValuesResponse = await fetch(getAllDevicesValuesUrl);

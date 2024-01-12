@@ -168,7 +168,7 @@
                                 </label>
                                 <div class="col-9">
                                     <input class="form-control" v-bind:id="'api_url' + taphomeCore.token"
-                                        placeholder="https://cloudapi.taphome.com/api/cloudapi/v1"
+                                        placeholder="https://api.taphome.com/api/TapHomeApi/v1"
                                         v-model="taphomeCore.apiUrl">
                                     <small class="form-text">
                                         Optional. Local api is preferred way "http://192.168.0.198/api/cloudapi/v1".
@@ -502,7 +502,7 @@
                                         class="accordion-collapse collapse show">
                                         <div class="accordion-body">
                                             <div v-for="device in taphomeCore.unsupportedDevices">
-                                                <a v-bind:href="'https://cloudapi.taphome.com/api/cloudapi/v1/getDeviceValue/'+ device.deviceId + '?token=' + taphomeCore.token"
+                                                <a v-bind:href="'https://api.taphome.com/api/TapHomeApi/v1/getDeviceValue/'+ device.deviceId + '?token=' + taphomeCore.token"
                                                     target="_blank">
                                                     {{ device.deviceId }} - {{ device.name }}
                                                 </a>

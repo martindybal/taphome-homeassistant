@@ -246,7 +246,7 @@ var TapHomeCore = /** @class */ (function () {
                     case 0:
                         this.devices = [];
                         this.unsupportedDevices = [];
-                        apiUrl = 'https://cloudapi.taphome.com/api/cloudapi/v1';
+                        apiUrl = 'https://api.taphome.com/api/TapHomeApi/v1';
                         getAllDevicesValuesUrl = apiUrl + "/getAllDevicesValues?token=" + this.token;
                         return [4 /*yield*/, fetch(getAllDevicesValuesUrl)];
                     case 1:

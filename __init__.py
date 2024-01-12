@@ -187,7 +187,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigEntry) -> bool:
         api_url = read_from_config_or_default(
             core_config,
             CONF_API_URL,
-            "https://cloudapi.taphome.com/api/CloudApi/v1",
+            "https://api.taphome.com/api/TapHomeApi/v1",
         )
 
         webhook_id = read_from_config_or_default(core_config, CONF_WEBHOOK_ID, None)
@@ -255,7 +255,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigEntry) -> bool:
 def get_update_interval_default_value(api_url: str, webhook_id: str) -> int:
     if webhook_id:
         return 600
-    if "cloudapi.taphome.com" in api_url:
+    if "api.taphome.com" in api_url:
         return 20
     return 2  # local api
 
