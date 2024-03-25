@@ -16,6 +16,7 @@ from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.components.select import DOMAIN as SELECT_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
+from homeassistant.components.valve import DOMAIN as VALVE_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_BINARY_SENSORS,
@@ -35,10 +36,10 @@ from .add_entry_request import AddEntryRequest
 from .binary_sensor import BinarySensorConfigEntry
 from .button import ButtonConfigEntry
 from .climate import ClimateConfigEntry
-from .humidifier import HumidifierConfigEntry
 from .const import *
 from .coordinator import TapHomeDataUpdateCoordinator
 from .cover import CoverConfigEntry
+from .humidifier import HumidifierConfigEntry
 from .sensor import SensorConfigEntry
 from .switch import SwitchConfigEntry
 from .taphome_core_config_entry import TapHomeCoreConfigEntry
@@ -80,6 +81,7 @@ CONFIG_SCHEMA = voluptuous.Schema(
                             CONF_FAN,
                             CONF_HUMIDIFIER,
                             CONF_MULTIVALUE_SWITCHES,
+                            CONF_VALVE,
                             CONF_SWITCHES,
                             CONF_SENSORS,
                             CONF_BINARY_SENSORS,
@@ -130,6 +132,9 @@ CONFIG_SCHEMA = voluptuous.Schema(
                             voluptuous.Optional(
                                 CONF_BINARY_SENSORS, default=[]
                             ): config_validation.ensure_list,
+                            voluptuous.Optional(
+                                CONF_VALVE, default=[]
+                            ): config_validation.ensure_list,
                         },
                     )
                 ],
@@ -163,6 +168,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigEntry) -> bool:
         DomainDefinition(COVER_DOMAIN, CONF_COVERS, CoverConfigEntry),
         DomainDefinition(LIGHT_DOMAIN, CONF_LIGHTS, TapHomeConfigEntry),
         DomainDefinition(FAN_DOMAIN, CONF_FAN, TapHomeConfigEntry),
+        DomainDefinition(VALVE_DOMAIN, CONF_VALVE, TapHomeConfigEntry),
         DomainDefinition(HUMIDIFIER_DOMAIN, CONF_HUMIDIFIER, HumidifierConfigEntry),
         DomainDefinition(SELECT_DOMAIN, CONF_MULTIVALUE_SWITCHES, TapHomeConfigEntry),
         DomainDefinition(SENSOR_DOMAIN, CONF_SENSORS, SensorConfigEntry),
