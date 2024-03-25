@@ -59,7 +59,7 @@ class TapHomeHumidifier(TapHomeEntity[HumidifierState], HumidifierEntity):
         """Returns if the device is on or not."""
         if not self.taphome_state is None:
             return TapHomeEntity.convert_taphome_percentage_to_ha(
-                self.taphome_state.humidity
+                self.taphome_state.percentage
             )
 
     @property
@@ -67,7 +67,7 @@ class TapHomeHumidifier(TapHomeEntity[HumidifierState], HumidifierEntity):
         """Returns if the device is on or not."""
         if not self.taphome_state is None:
             return TapHomeEntity.convert_taphome_percentage_to_ha(
-                self.taphome_state.humidity
+                self.taphome_state.percentage
             )
 
     @property

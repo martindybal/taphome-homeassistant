@@ -14,3 +14,4 @@ from .taphome_http_client_factory import TapHomeHttpClientFactory
 from .thermostat_service import ThermostatService, ThermostatState
 from .value_change_result import ValueChangeResult
 from .value_type import ValueType
+from .valve_service import ValveService, ValveState
