@@ -11,6 +11,16 @@ from .taphome_entity import *
 from .taphome_sdk import *
 
 
+class ValveConfigEntry(TapHomeConfigEntry):
+    def __init__(self, device_config: dict):
+        super().__init__(device_config)
+        self._device_class = self.get_optional("device_class", None)
+
+    @property
+    def device_class(self):
+        return self._device_class
+
+
 class TapHomeValve(TapHomeEntity[ValveState], ValveEntity):
     """Representation of an valve"""
 
@@ -18,7 +28,7 @@ class TapHomeValve(TapHomeEntity[ValveState], ValveEntity):
         self,
         hass: HomeAssistant,
         core_config: TapHomeCoreConfigEntry,
-        config_entry: TapHomeConfigEntry,
+        config_entry: ValveConfigEntry,
         coordinator: TapHomeDataUpdateCoordinator,
         valve_service: ValveService,
     ):
@@ -26,11 +36,17 @@ class TapHomeValve(TapHomeEntity[ValveState], ValveEntity):
             hass, core_config, config_entry, DOMAIN, coordinator, ValveState
         )
         self.valve_service = valve_service
+        self._device_class = config_entry.device_class
         self._attr_supported_features = (
             ValveEntityFeature.OPEN
             | ValveEntityFeature.CLOSE
             | ValveEntityFeature.SET_POSITION
         )
+
+    @property
+    def device_class(self):
+        """Return the class of this device, from component DEVICE_CLASSES."""
+        return self._device_class
 
     @property
     def reports_position(self) -> bool:

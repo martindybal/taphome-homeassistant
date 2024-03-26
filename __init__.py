@@ -45,6 +45,7 @@ from .switch import SwitchConfigEntry
 from .taphome_core_config_entry import TapHomeCoreConfigEntry
 from .taphome_entity import TapHomeConfigEntry
 from .taphome_sdk import *
+from .valve import ValveConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -168,7 +169,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigEntry) -> bool:
         DomainDefinition(COVER_DOMAIN, CONF_COVERS, CoverConfigEntry),
         DomainDefinition(LIGHT_DOMAIN, CONF_LIGHTS, TapHomeConfigEntry),
         DomainDefinition(FAN_DOMAIN, CONF_FAN, TapHomeConfigEntry),
-        DomainDefinition(VALVE_DOMAIN, CONF_VALVE, TapHomeConfigEntry),
+        DomainDefinition(VALVE_DOMAIN, CONF_VALVE, ValveConfigEntry),
         DomainDefinition(HUMIDIFIER_DOMAIN, CONF_HUMIDIFIER, HumidifierConfigEntry),
         DomainDefinition(SELECT_DOMAIN, CONF_MULTIVALUE_SWITCHES, TapHomeConfigEntry),
         DomainDefinition(SENSOR_DOMAIN, CONF_SENSORS, SensorConfigEntry),
