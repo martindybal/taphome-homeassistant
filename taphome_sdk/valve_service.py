@@ -17,6 +17,9 @@ class ValveService:
         )
         return ValveState(valve_values)
 
+    def support_set_position(self, device: Device) -> None:
+        return self.percentage_service.support_set_position(device)
+
     def async_turn_on(self, device: Device) -> None:
         return self.percentage_service.async_turn_on(device)
 
