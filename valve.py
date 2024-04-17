@@ -39,7 +39,6 @@ class TapHomeValve(TapHomeEntity[ValveState], ValveEntity):
         self._device_class = config_entry.device_class
 
         self._attr_supported_features = ValveEntityFeature.OPEN | ValveEntityFeature.CLOSE
-
         if self.valve_service.support_set_position(self.taphome_device):
             self._attr_supported_features = self._attr_supported_features | ValveEntityFeature.SET_POSITION
 
