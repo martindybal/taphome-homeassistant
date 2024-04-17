@@ -1,4 +1,5 @@
 from .device import Device
+from .switch_service import SwitchService
 from .switch_states import SwitchStates
 from .taphome_api_service import TapHomeApiService
 from .taphome_device_state import TapHomeState
@@ -13,8 +14,10 @@ class PercentageState(TapHomeState):
         super().__init__(percentage_values)
         if self.get_device_value(ValueType.AnalogOutputValue) is not None:
             self.create_analog_state()
-        else:
+        elif self.get_device_value(ValueType.BlindsLevel) is not None:
             self.create_blind_state()
+        elif self.get_device_value(ValueType.SwitchState) is not None:
+            self.create_switch_state()
 
     def create_analog_state(self) -> None:
         self.percentage = self.get_device_value(ValueType.AnalogOutputValue)
@@ -25,18 +28,27 @@ class PercentageState(TapHomeState):
         switch_state = self.percentage != 0
         self.switch_state = SwitchStates(switch_state)
 
+    def create_switch_state(self) -> None:
+        self.switch_state = SwitchStates(self.get_device_value(ValueType.SwitchState))
+        self.percentage = 1 if self.switch_state == SwitchStates.ON else 0
+
 
 class PercentageService:
     def __init__(self, taphome_api_service: TapHomeApiService):
         self.taphome_api_service = taphome_api_service
         self.analog_percentage_service = AnalogPercentageService(taphome_api_service)
         self.blind_percentage_service = BlindPercentageService(taphome_api_service)
+        self.switch_percentage_service = SwitchPercentageService(taphome_api_service)
 
     async def async_get_state(self, device: Device) -> PercentageState:
         percentage_values = await self.taphome_api_service.async_get_device_values(
             device.deviceId
         )
         return PercentageState(percentage_values)
+
+    def support_set_position(self, device: Device) -> None:
+        percentage_service = self._get_percentage_service(device)
+        return percentage_service.support_set_position
 
     def async_turn_on(self, device: Device) -> None:
         percentage_service = self._get_percentage_service(device)
@@ -55,11 +67,17 @@ class PercentageService:
             return self.analog_percentage_service
         elif device.supports_value(ValueType.BlindsLevel):
             return self.blind_percentage_service
+        elif device.supports_value(ValueType.SwitchState):
+            return self.switch_percentage_service
 
 
 class AnalogPercentageService:
     def __init__(self, taphome_api_service: TapHomeApiService):
         self.taphome_api_service = taphome_api_service
+
+    @property
+    def support_set_position(self):
+        return True
 
     def async_turn_on(self, device: Device) -> None:
         values = [
@@ -97,6 +115,10 @@ class BlindPercentageService:
     def __init__(self, taphome_api_service: TapHomeApiService):
         self.taphome_api_service = taphome_api_service
 
+    @property
+    def support_set_position(self):
+        return True
+
     def async_turn_on(self, device: Device) -> None:
         return self.async_set_percentage(device, 1)
 
@@ -111,3 +133,23 @@ class BlindPercentageService:
         ]
 
         return self.taphome_api_service.async_set_device_values(device.id, values)
+
+class SwitchPercentageService:
+    def __init__(self, taphome_api_service: TapHomeApiService):
+        self.switch_service = SwitchService(taphome_api_service)
+
+    @property
+    def support_set_position(self):
+        return False
+
+    def async_turn_on(self, device: Device) -> None:
+        return self.switch_service.async_turn(SwitchStates.ON, device)
+
+    def async_turn_off(self, device: Device) -> None:
+        return self.switch_service.async_turn(SwitchStates.OFF, device)
+
+    def async_set_percentage(self, device: Device, percentage=None) -> None:
+        if percentage == 0:
+            return self.async_turn_off(device)
+        else:
+            return self.async_turn_on(device)
