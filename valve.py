@@ -37,11 +37,11 @@ class TapHomeValve(TapHomeEntity[ValveState], ValveEntity):
         )
         self.valve_service = valve_service
         self._device_class = config_entry.device_class
-        self._attr_supported_features = (
-            ValveEntityFeature.OPEN
-            | ValveEntityFeature.CLOSE
-            | ValveEntityFeature.SET_POSITION
-        )
+
+        self._attr_supported_features = ValveEntityFeature.OPEN | ValveEntityFeature.CLOSE
+
+        if self.valve_service.support_set_position(self.taphome_device):
+            self._attr_supported_features = self._attr_supported_features | ValveEntityFeature.SET_POSITION
 
     @property
     def device_class(self):
@@ -55,6 +55,12 @@ class TapHomeValve(TapHomeEntity[ValveState], ValveEntity):
         return True
 
     @property
+    def is_closed(self) -> bool | None:
+        """Return if the valve is closed or not."""
+        if not self.taphome_state is None:
+            return self.taphome_state.switch_state == SwitchStates.OFF
+
+    @property
     def current_valve_position(self) -> int | None:
         """Return current position of valve."""
         if not self.taphome_state is None:
@@ -65,9 +71,11 @@ class TapHomeValve(TapHomeEntity[ValveState], ValveEntity):
     async def async_open_valve(self) -> None:
         """For valves that can set position, this method should be left unimplemented and only set_valve_position is required."""
         # this causes a bug / unintended behavior . After switching on, the last value is not used, but 100%
+        await self.valve_service.async_turn_on(self.taphome_device)
 
     async def async_close_valve(self) -> None:
         """For valves that can set position, this method should be left unimplemented and only set_valve_position is required."""
+        await self.valve_service.async_turn_off(self.taphome_device)
 
     async def async_set_valve_position(self, position: int) -> None:
         """Move the valve to a specific position."""
