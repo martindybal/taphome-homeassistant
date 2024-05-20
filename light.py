@@ -1,4 +1,5 @@
 """TapHome light integration."""
+
 from __future__ import annotations
 
 import typing
@@ -8,9 +9,7 @@ from homeassistant.components.light import (
     ATTR_COLOR_TEMP_KELVIN,
     ATTR_HS_COLOR,
     DOMAIN,
-    SUPPORT_BRIGHTNESS,
-    SUPPORT_COLOR,
-    SUPPORT_COLOR_TEMP,
+    ColorMode,
     LightEntity,
 )
 from homeassistant.const import CONF_LIGHTS
@@ -51,13 +50,17 @@ class TapHomeLight(TapHomeEntity[LightState], LightEntity):
             self._supported_features = 0
 
             if self.taphome_state.brightness is not None:
-                self._supported_features = self._supported_features | SUPPORT_BRIGHTNESS
+                self._supported_features = (
+                    self._supported_features | ColorMode.BRIGHTNESS
+                )
 
             if self.taphome_state.color_temperature is not None:
-                self._supported_features = self._supported_features | SUPPORT_COLOR_TEMP
+                self._supported_features = (
+                    self._supported_features | ColorMode.COLOR_TEMP
+                )
 
             if self.taphome_state.hue is not None:
-                self._supported_features = self._supported_features | SUPPORT_COLOR
+                self._supported_features = self._supported_features | ColorMode.HS
 
         return self._supported_features
 

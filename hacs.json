@@ -8,10 +8,12 @@
         "climate",
         "cover",
         "fan",
+        "humidifier",
         "light",
         "select",
         "sensor",
-        "switch"
+        "switch",
+        "valve"
     ],
     "content_in_root": true
 }
