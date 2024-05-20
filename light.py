@@ -37,32 +37,32 @@ class TapHomeLight(TapHomeEntity[LightState], LightEntity):
             hass, core_config, config_entry, DOMAIN, coordinator, LightState
         )
         self.light_service = light_service
-        self._supported_features = None
-        self._supported_features = None
+        self._supported_color_modes: set[ColorMode] | None = None
 
     @property
-    def supported_features(self):
-        """Flag supported features."""
-        if self._supported_features is None and self.taphome_state is None:
-            return 0
+    def supported_color_modes(self) -> set[ColorMode]:
+        """Flag supported color modes."""
+        if self.taphome_state is None:
+            return [ColorMode.ONOFF]
 
-        if self._supported_features is None:
-            self._supported_features = 0
+        return [self.color_mode]
 
-            if self.taphome_state.brightness is not None:
-                self._supported_features = (
-                    self._supported_features | ColorMode.BRIGHTNESS
-                )
+    @property
+    def color_mode(self) -> ColorMode | None:
+        """Return the current color mode."""
+        if self.taphome_state is None:
+            return ColorMode.UNKNOWN
 
-            if self.taphome_state.color_temperature is not None:
-                self._supported_features = (
-                    self._supported_features | ColorMode.COLOR_TEMP
-                )
+        if self.taphome_state.color_temperature is not None:
+            return ColorMode.COLOR_TEMP
 
-            if self.taphome_state.hue is not None:
-                self._supported_features = self._supported_features | ColorMode.HS
+        if self.taphome_state.hue is not None:
+            return ColorMode.HS
 
-        return self._supported_features
+        if self.taphome_state.brightness is not None:
+            return ColorMode.BRIGHTNESS
+
+        return ColorMode.ONOFF
 
     @property
     def is_on(self):
