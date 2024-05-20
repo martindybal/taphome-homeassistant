@@ -1,4 +1,5 @@
 """TapHome integration."""
+
 import asyncio
 import logging
 import typing
@@ -17,6 +18,7 @@ from homeassistant.components.select import DOMAIN as SELECT_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.components.valve import DOMAIN as VALVE_DOMAIN
+from homeassistant.components.webhook import async_register as async_register_webhook
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_BINARY_SENSORS,
@@ -224,8 +226,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigEntry) -> bool:
             )
 
             webhook_name = f"Taphome-{core_id}" if core_id else "Taphome"
-            hass.components.webhook.async_register(
-                TAPHOME_PLATFORM, webhook_name, webhook_id, handle_webhook_lambda
+            async_register_webhook(
+                hass, TAPHOME_PLATFORM, webhook_name, webhook_id, handle_webhook_lambda
             )
 
         try:
