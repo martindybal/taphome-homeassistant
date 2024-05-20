@@ -249,7 +249,7 @@ class TapHomeSensor(TapHomeEntity[TapHomeState], SensorEntity):
         sensor_type = self._sensor_type
         if self.taphome_state is not None:
             sensor_value = self.taphome_state.get_device_value(sensor_type.value_type)
-            if sensor_value is None:
+            if sensor_value is None or sensor_value == "NaN":
                 return None
             try:
                 return sensor_type.convert_taphome_to_ha(sensor_value)
