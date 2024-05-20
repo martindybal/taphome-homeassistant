@@ -1,25 +1,20 @@
 """TapHome sensor integration."""
+
 import datetime
 import typing
 
-from homeassistant.components.sensor import (
-    DOMAIN,
-    STATE_CLASS_MEASUREMENT,
-    STATE_CLASS_TOTAL,
-    STATE_CLASS_TOTAL_INCREASING,
-    SensorDeviceClass,
-    SensorEntity,
-)
+from homeassistant.components.sensor import DOMAIN, SensorDeviceClass, SensorEntity
+from homeassistant.components.sensor.const import SensorStateClass
 from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
     CONF_SENSORS,
-    ENERGY_KILO_WATT_HOUR,
-    FREQUENCY_HERTZ,
     LIGHT_LUX,
     PERCENTAGE,
-    POWER_KILO_WATT,
-    SPEED_KILOMETERS_PER_HOUR,
-    TEMP_CELSIUS,
+    UnitOfEnergy,
+    UnitOfFrequency,
+    UnitOfPower,
+    UnitOfSpeed,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -39,7 +34,7 @@ class TapHomeSensorType:
         value_type: ValueType,
         device_class: SensorDeviceClass = None,
         unit_of_measurement: str = None,
-        state_class: str = None,
+        state_class: SensorStateClass = None,
         last_reset: datetime = None,
     ) -> None:
         self.device_class = device_class
@@ -58,7 +53,7 @@ class TapHomeHumiditySensorType(TapHomeSensorType):
             ValueType.Humidity,
             SensorDeviceClass.HUMIDITY,
             PERCENTAGE,
-            STATE_CLASS_MEASUREMENT,
+            SensorStateClass.MEASUREMENT,
         )
 
     def convert_taphome_to_ha(self, value: int) -> int:
@@ -70,8 +65,8 @@ class TapHomeTemperatureSensorType(TapHomeSensorType):
         super().__init__(
             ValueType.RealTemperature,
             SensorDeviceClass.TEMPERATURE,
-            TEMP_CELSIUS,
-            STATE_CLASS_MEASUREMENT,
+            UnitOfTemperature.CELSIUS,
+            SensorStateClass.MEASUREMENT,
         )
 
     def convert_taphome_to_ha(self, value: int) -> int:
@@ -83,8 +78,8 @@ class TapHomeElectricCounterElectricityDemandSensorType(TapHomeSensorType):
         super().__init__(
             ValueType.ElectricityDemand,
             SensorDeviceClass.POWER,
-            POWER_KILO_WATT,
-            STATE_CLASS_MEASUREMENT,
+            UnitOfPower.KILO_WATT,
+            SensorStateClass.MEASUREMENT,
         )
 
     def convert_taphome_to_ha(self, value: int) -> int:
@@ -96,8 +91,8 @@ class TapHomeElectricCounterElectricityConsumptionSensorType(TapHomeSensorType):
         super().__init__(
             ValueType.ElectricityConsumption,
             SensorDeviceClass.ENERGY,
-            ENERGY_KILO_WATT_HOUR,
-            STATE_CLASS_TOTAL_INCREASING,
+            UnitOfEnergy.KILO_WATT_HOUR,
+            SensorStateClass.TOTAL_INCREASING,
         )
 
     def convert_taphome_to_ha(self, value: int) -> int:
@@ -110,7 +105,7 @@ class TapHomeCo2SensorType(TapHomeSensorType):
             ValueType.Co2,
             SensorDeviceClass.CO2,
             CONCENTRATION_PARTS_PER_MILLION,
-            STATE_CLASS_MEASUREMENT,
+            SensorStateClass.MEASUREMENT,
         )
 
     def convert_taphome_to_ha(self, value: int) -> int:
@@ -123,7 +118,7 @@ class TapHomeBrightnessSensorType(TapHomeSensorType):
             ValueType.SensorBrightness,
             SensorDeviceClass.ILLUMINANCE,
             LIGHT_LUX,
-            STATE_CLASS_MEASUREMENT,
+            SensorStateClass.MEASUREMENT,
         )
 
     def convert_taphome_to_ha(self, value: int) -> int:
@@ -136,8 +131,8 @@ class TapHomeWindSpeedSensorType(TapHomeSensorType):
         super().__init__(
             ValueType.WindSpeed,
             None,
-            SPEED_KILOMETERS_PER_HOUR,
-            STATE_CLASS_MEASUREMENT,
+            UnitOfSpeed.KILOMETERS_PER_HOUR,
+            SensorStateClass.MEASUREMENT,
         )
 
     def convert_taphome_to_ha(self, value: int) -> int:
@@ -150,7 +145,7 @@ class TapHomeAnalogInputSensorType(TapHomeSensorType):
             ValueType.AnalogInputValue,
             None,
             PERCENTAGE,
-            STATE_CLASS_MEASUREMENT,
+            SensorStateClass.MEASUREMENT,
         )
 
     def convert_taphome_to_ha(self, value: int) -> int:
@@ -161,7 +156,7 @@ class TapHomePulseCounterTotalImpulseCountSensorType(TapHomeSensorType):
     def __init__(self) -> None:
         super().__init__(
             ValueType.TotalImpulseCount,
-            state_class=STATE_CLASS_TOTAL_INCREASING,
+            state_class=SensorStateClass.TOTAL_INCREASING,
         )
 
 
@@ -169,7 +164,7 @@ class TapHomePulseCounterCurrentHourImpulseCountSensorType(TapHomeSensorType):
     def __init__(self) -> None:
         super().__init__(
             ValueType.CurrentHourImpulseCount,
-            state_class=STATE_CLASS_MEASUREMENT,
+            state_class=SensorStateClass.MEASUREMENT,
         )
 
 
@@ -178,8 +173,8 @@ class TapHomePulseCounterLastMeasuredFrequencySensorType(TapHomeSensorType):
         super().__init__(
             ValueType.LastMeasuredFrequency,
             None,
-            FREQUENCY_HERTZ,
-            STATE_CLASS_MEASUREMENT,
+            UnitOfFrequency.HERTZ,
+            SensorStateClass.MEASUREMENT,
         )
 
     def convert_taphome_to_ha(self, value: int) -> int:
@@ -190,7 +185,7 @@ class TapHomeVariableType(TapHomeSensorType):
     def __init__(self) -> None:
         super().__init__(
             ValueType.VariableState,
-            state_class=STATE_CLASS_MEASUREMENT,
+            state_class=SensorStateClass.MEASUREMENT,
         )
 
     def convert_taphome_to_ha(self, value: int) -> int:
@@ -205,7 +200,7 @@ class SensorConfigEntry(TapHomeConfigEntry):
         self._unit_of_measurement = self.get_optional("unit_of_measurement", None)
         self._state_class = self.get_optional("state_class", None)
         if self.get_optional("was_measured", None) is True:
-            self._state_class = STATE_CLASS_MEASUREMENT
+            self._state_class = SensorStateClass.MEASUREMENT
 
     @property
     def device_class(self) -> str:

@@ -1,9 +1,10 @@
 """Provides the taphome DataUpdateCoordinator."""
+
 # from .switch import TapHomeSwitch
 from datetime import timedelta
 import logging
 from types import TracebackType
-from typing import Generic, Type, TypeVar
+from typing import Generic, TypeVar
 
 from aiohttp.client_reqrep import ClientResponseError
 
@@ -101,7 +102,7 @@ class TapHomeDataUpdateCoordinator(DataUpdateCoordinator):
             await self.async_update_devices_values()
             return self._devices
 
-        except (ClientResponseError) as ex:
+        except ClientResponseError as ex:
             if ex.status == 501:
                 raise NotImplementedError()  # NotImplementedError is reraised to fail integration loading. Core don't support get all devices api endpoint
             else:
@@ -193,7 +194,7 @@ class UpdateTapHomeState(object):
 
     async def __aexit__(
         self,
-        exc_type: Type[BaseException],
+        exc_type: type[BaseException],
         exc_val: BaseException,
         exc_tb: TracebackType,
     ) -> None:

@@ -1,18 +1,14 @@
 """TapHome cover integration."""
+
 import typing
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
     ATTR_TILT_POSITION,
     DOMAIN,
-    SUPPORT_CLOSE,
-    SUPPORT_CLOSE_TILT,
-    SUPPORT_OPEN,
-    SUPPORT_OPEN_TILT,
-    SUPPORT_SET_POSITION,
-    SUPPORT_SET_TILT_POSITION,
     CoverDeviceClass,
     CoverEntity,
+    CoverEntityFeature,
 )
 from homeassistant.const import CONF_COVERS
 from homeassistant.core import HomeAssistant
@@ -60,7 +56,11 @@ class TapHomeCover(TapHomeEntity[CoverState], CoverEntity):
     @property
     def supported_features(self):
         """Flag supported features."""
-        default = SUPPORT_OPEN | SUPPORT_CLOSE | SUPPORT_SET_POSITION
+        default = (
+            CoverEntityFeature.OPEN
+            | CoverEntityFeature.CLOSE
+            | CoverEntityFeature.SET_POSITION
+        )
 
         if self._supported_features is None and self.taphome_state is None:
             return default
@@ -71,13 +71,13 @@ class TapHomeCover(TapHomeEntity[CoverState], CoverEntity):
             if self.taphome_state.blinds_slope is not None:
                 self._supported_features = (
                     self._supported_features
-                    | SUPPORT_OPEN_TILT
-                    | SUPPORT_CLOSE_TILT
-                    | SUPPORT_SET_TILT_POSITION
+                    | CoverEntityFeature.OPEN_TILT
+                    | CoverEntityFeature.CLOSE_TILT
+                    | CoverEntityFeature.SET_TILT_POSITION
                 )
 
             if self._device_class is None:
-                if self._supported_features & SUPPORT_SET_TILT_POSITION:
+                if self._supported_features & CoverEntityFeature.SET_TILT_POSITION:
                     self._device_class = CoverDeviceClass.BLIND
                 else:
                     self._device_class = CoverDeviceClass.SHADE

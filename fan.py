@@ -1,9 +1,10 @@
 """TapHome fan integration."""
+
 from __future__ import annotations
 
-from typing import Any, Optional
+from typing import Any
 
-from homeassistant.components.fan import DOMAIN, SUPPORT_SET_SPEED, FanEntity
+from homeassistant.components.fan import DOMAIN, FanEntity, FanEntityFeature
 from homeassistant.core import HomeAssistant
 
 from .add_entry_request import AddEntryRequest
@@ -26,7 +27,7 @@ class TapHomeFan(TapHomeEntity[FanState], FanEntity):
     ):
         super().__init__(hass, core_config, config_entry, DOMAIN, coordinator, FanState)
         self.fan_service = fan_service
-        self._attr_supported_features = SUPPORT_SET_SPEED
+        self._attr_supported_features = FanEntityFeature.SET_SPEED
 
     @property
     def is_on(self):
