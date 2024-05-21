@@ -1,5 +1,23 @@
 # Changelog
 
+## 2024.5.0
+- New Valve entity type.
+- New Humidifier entity type.
+- Resolved breaking changes of Home Assistant Core
+
+## 2023.5.0
+- Dual whites support
+- Discovery minimum and maximum temperature for climates
+- Allow change color temperature without turn on light
+
+## 2023.1.0
+- New Fan entity type.
+- Preserve existing tilt value when adjusting blind position
+
+## 2021.3.1
+- Webhooks (remote triggers from Taphome to force update of the whole Taphome context)
+- Fix TapHomeElectricCounterElectricityDemandSensorType
+
 ## 2021.2.1-pre
 - Support for new api endpoint `GetAllDevicesValues`
 - Support for local api. Cloud api is not needed anymore
