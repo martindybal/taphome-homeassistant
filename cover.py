@@ -24,10 +24,15 @@ class CoverConfigEntry(TapHomeConfigEntry):
     def __init__(self, device_config: dict):
         super().__init__(device_config)
         self._device_class = self.get_optional("device_class", None)
+        self._close_threshold = self.get_optional("close_threshold", 100)
 
     @property
     def device_class(self):
         return self._device_class
+
+    @property
+    def close_threshold(self):
+        return self._close_threshold
 
 
 class TapHomeCover(TapHomeEntity[CoverState], CoverEntity):
@@ -37,7 +42,7 @@ class TapHomeCover(TapHomeEntity[CoverState], CoverEntity):
         self,
         hass: HomeAssistant,
         core_config: TapHomeCoreConfigEntry,
-        config_entry: TapHomeConfigEntry,
+        config_entry: CoverConfigEntry,
         coordinator: TapHomeDataUpdateCoordinator,
         cover_service: CoverService,
     ):
@@ -46,6 +51,7 @@ class TapHomeCover(TapHomeEntity[CoverState], CoverEntity):
         )
         self.cover_service = cover_service
         self._device_class = config_entry.device_class
+        self._close_threshold = config_entry.close_threshold
         self._supported_features = None
 
     @property
@@ -87,9 +93,9 @@ class TapHomeCover(TapHomeEntity[CoverState], CoverEntity):
     @property
     def is_closed(self):
         """Return if the cover is closed or not."""
-        if self.current_cover_position is None:
+        if self.taphome_state.blinds_level is None:
             return None
-        return self.current_cover_position == 0
+        return self.taphome_state.blinds_level >= self._close_threshold / 100
 
     @property
     def current_cover_position(self):
