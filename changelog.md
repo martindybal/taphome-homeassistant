@@ -1,5 +1,8 @@
 # Changelog
 
+## 2024.8.0
+- Introduce `close_threshold` for covers
+
 ## 2024.5.0
 - New Valve entity type.
 - New Humidifier entity type.
