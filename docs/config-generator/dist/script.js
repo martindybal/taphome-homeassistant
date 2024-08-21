@@ -116,8 +116,11 @@ var TapHomeDevice = /** @class */ (function () {
             if (!this.isSelected) {
                 return "";
             }
-            else if (this.entityType === HomeAssistantEntityType.switch || this.entityType === HomeAssistantEntityType.cover) {
+            else if (this.entityType === HomeAssistantEntityType.switch) {
                 return this.deviceClassConfig;
+            }
+            else if (this.entityType === HomeAssistantEntityType.cover) {
+                return this.coverConfig;
             }
             else if (this.entityType === HomeAssistantEntityType.climate) {
                 return this.climateConfig;
@@ -137,6 +140,23 @@ var TapHomeDevice = /** @class */ (function () {
         get: function () {
             if (this.deviceClass) {
                 var config = "\n        - id: " + this.deviceId + "\n          device_class: " + this.deviceClass;
+                return config;
+            }
+            return this.idConfig;
+        },
+        enumerable: false,
+        configurable: true
+    });
+    Object.defineProperty(TapHomeDevice.prototype, "coverConfig", {
+        get: function () {
+            if (this.deviceClass || this.coverCloseThreshold) {
+                var config = "\n        - id: " + this.deviceId;
+                if (this.deviceClass) {
+                    config += "\n          device_class: " + this.deviceClass;
+                }
+                if (this.coverCloseThreshold) {
+                    config += "\n          close_threshold: " + this.coverCloseThreshold;
+                }
                 return config;
             }
             return this.idConfig;

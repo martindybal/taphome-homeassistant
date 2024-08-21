@@ -80,6 +80,8 @@ class TapHomeDevice {
     buttonDoublePressAction: boolean;
     buttonTripplePressAction: boolean;
 
+    coverCloseThreshold: number;
+    
     climateMinTemperature: number;
     climateMaxTemperature: number;
     climateHeatingSwitchIdingCoolingModeId: number;
@@ -104,8 +106,10 @@ class TapHomeDevice {
     get config() {
         if (!this.isSelected) {
             return "";
-        } else if (this.entityType === HomeAssistantEntityType.switch || this.entityType === HomeAssistantEntityType.cover) {
+        } else if (this.entityType === HomeAssistantEntityType.switch) {
             return this.deviceClassConfig;
+        } else if (this.entityType === HomeAssistantEntityType.cover) {
+            return this.coverConfig;
         } else if (this.entityType === HomeAssistantEntityType.climate) {
             return this.climateConfig;
         } else if (this.entityType === HomeAssistantEntityType.sensor) {
@@ -119,6 +123,21 @@ class TapHomeDevice {
     private get deviceClassConfig() {
         if (this.deviceClass) {
             let config = `\n        - id: ${this.deviceId}\n          device_class: ${this.deviceClass}`;
+            return config;
+        }
+        return this.idConfig;
+    }
+
+    private get coverConfig() {
+        if (this.deviceClass || this.coverCloseThreshold) {
+            let config = `\n        - id: ${this.deviceId}`;
+            if (this.deviceClass) {
+                config += `\n          device_class: ${this.deviceClass}`;
+            }
+            if (this.coverCloseThreshold) {
+                config += `\n          close_threshold: ${this.coverCloseThreshold}`;
+            }
+
             return config;
         }
         return this.idConfig;

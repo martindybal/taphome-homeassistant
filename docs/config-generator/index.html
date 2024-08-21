@@ -322,6 +322,25 @@
                                                     </div>
                                                 </div>
                                             </div>
+                                            <div v-if="device.entityType === HomeAssistantEntityType.cover">
+                                                <div class="row mt-3">
+                                                    <label
+                                                        v-bind:for="'close_threshold' + taphomeCore.token + device.deviceId"
+                                                        class="col-sm-5 col-form-label">
+                                                        Close threshold
+                                                    </label>
+                                                    <div class="col-sm-7">
+                                                        <input
+                                                            type="number" min="0" max="100" placeholder="100"
+                                                            v-bind:id="'close_threshold' + taphomeCore.token + device.deviceId"
+                                                            class="form-control" v-model="device.coverCloseThreshold"" />
+                                                            <small class="form-text">
+                                                                Represents the threshold level at which the cover is considered fully closed.
+                                                                For instance, this is appropriate for roller shutter when shaded 80%.
+                                                            </small>
+                                                    </div>
+                                                </div>
+                                            </div>
                                             <div v-if="device.entityType === HomeAssistantEntityType.climate">
                                                 <div class="row mt-3">
                                                     <label
