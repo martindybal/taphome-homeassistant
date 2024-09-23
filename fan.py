@@ -27,7 +27,11 @@ class TapHomeFan(TapHomeEntity[FanState], FanEntity):
     ):
         super().__init__(hass, core_config, config_entry, DOMAIN, coordinator, FanState)
         self.fan_service = fan_service
-        self._attr_supported_features = FanEntityFeature.SET_SPEED
+        self._attr_supported_features = (
+            FanEntityFeature.TURN_ON
+            | FanEntityFeature.TURN_OFF
+            | FanEntityFeature.SET_SPEED
+        )
 
     @property
     def is_on(self):
