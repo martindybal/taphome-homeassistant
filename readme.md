@@ -43,6 +43,13 @@ This repository is under the [GPL v3 with Commons Clause](https://github.com/mar
 
 ## Contributing
 1. [Set up Home Assistant development environment](https://developers.home-assistant.io/docs/development_environment)
-1. Clone this repository into `<config_dir>/custom_components/taphome/`
+1. Clone this repository
+1. Mount repository into dev container
+```
+  "mounts": [
+    "source=/Users/martin/Repos/taphome-homeassistant,target=${containerWorkspaceFolder}/config/custom_components/taphome/,type=bind,consistency=cached"
+  ],
+```
+1. The Home Assistant's devcontainer needs to get rebuilt via the `Dev Containers: Rebuild Container` with: Shift+Command+P(Mac) / Ctrl+Shift+P (Windows/Linux).
 1. Find a [good first issue](https://github.com/martindybal/taphome-homeassistant/issues?q=is%3Aissue+is%3Aopen+label%3A"good+first+issue") for you.
 1. Solve it and send me pull request :-)
