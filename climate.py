@@ -257,7 +257,11 @@ class TapHomeClimate(TapHomeEntity[ThermostatState], ClimateEntity):
         self._config_min_temperature = config_entry.min_temperature
         self._config_max_temperature = config_entry.max_temperature
 
-        self._supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
+        self._supported_features = (
+            ClimateEntityFeature.TURN_ON
+            | ClimateEntityFeature.TURN_OFF
+            | ClimateEntityFeature.TARGET_TEMPERATURE
+        )
 
     @property
     def supported_features(self):

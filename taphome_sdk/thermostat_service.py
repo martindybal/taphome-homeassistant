@@ -17,6 +17,7 @@ class ThermostatState(TapHomeState):
 
         self.desired_temperature = self.get_device_value(ValueType.DesiredTemperature)
         self.real_temperature = self.get_device_value(ValueType.RealTemperature)
+        self.real_humidity = self.get_device_value(ValueType.Humidity)
         self.min_temperature = self.get_device_value(ValueType.MinTemperature)
         self.max_temperature = self.get_device_value(ValueType.MaxTemperature)
 
