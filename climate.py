@@ -275,11 +275,21 @@ class TapHomeClimate(TapHomeEntity[ThermostatState], ClimateEntity):
     def target_temperature(self):
         if self.taphome_state is not None:
             return self.taphome_state.desired_temperature
+        return None
 
     @property
     def current_temperature(self):
         if self.taphome_state is not None:
             return self.taphome_state.real_temperature
+        return None
+
+    @property
+    def current_humidity(self):
+        if self.taphome_state is not None:
+            return self.convert_taphome_percentage_to_ha(
+                self.taphome_state.real_humidity
+            )
+        return None
 
     @property
     def min_temp(self):
