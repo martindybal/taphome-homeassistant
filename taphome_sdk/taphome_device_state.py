@@ -16,10 +16,12 @@ class TapHomeState:
 
     def get_device_value(self, vylue_type: ValueType):
         try:
-            return next(
+            value = next(
                 device_value
                 for device_value in self._device_values
                 if device_value["valueTypeId"] == vylue_type.value
             )["value"]
         except:
             return None
+        else:
+            return value if value != "NaN" else None
