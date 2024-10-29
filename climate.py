@@ -3,12 +3,14 @@
 import logging
 import typing
 
-from homeassistant.components.climate import ClimateEntity
-from homeassistant.components.climate.const import (
-    DOMAIN,
+from homeassistant.components.climate import (
+    ATTR_HVAC_MODE,
+    DOMAIN as CLIMATE_DOMAIN,
+    ClimateEntity,
     ClimateEntityFeature,
     HVACMode,
 )
+
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 
@@ -243,7 +245,12 @@ class TapHomeClimate(TapHomeEntity[ThermostatState], ClimateEntity):
         coordinator: TapHomeDataUpdateCoordinator,
     ):
         super().__init__(
-            hass, core_config, config_entry, DOMAIN, coordinator, ThermostatState
+            hass,
+            core_config,
+            config_entry,
+            CLIMATE_DOMAIN,
+            coordinator,
+            ThermostatState,
         )
 
         self.thermostat_service = ThermostatService(tapHome_api_service)
@@ -321,6 +328,10 @@ class TapHomeClimate(TapHomeEntity[ThermostatState], ClimateEntity):
                 self.taphome_device, new_target_temperature
             )
             state.desired_temperature = new_target_temperature
+
+        new_hvac_mode = kwargs.get(ATTR_HVAC_MODE)
+        if new_hvac_mode is not None:
+            await self.async_set_hvac_mode(new_hvac_mode)
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode):
         """Set new target hvac mode."""
