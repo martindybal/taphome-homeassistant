@@ -142,7 +142,7 @@ class TapHomeModeClimateController(
 
     @property
     def hvac_modes(self) -> list[HVACMode]:
-        return [HVACMode.OFF, HVACMode.HEAT, HVACMode.Cool, HVACMode.HEAT_COOL]
+        return [HVACMode.OFF, HVACMode.HEAT, HVACMode.COOL, HVACMode.HEAT_COOL]
 
     @property
     def hvac_mode(self) -> HVACMode | None:
@@ -150,7 +150,7 @@ class TapHomeModeClimateController(
             modes = {
                 0: HVACMode.OFF,
                 1: HVACMode.HEAT,
-                2: HVACMode.Cool,
+                2: HVACMode.COOL,
                 3: HVACMode.HEAT_COOL,
             }
             return modes.get(self.taphome_state.multi_value_switch_state, None)
