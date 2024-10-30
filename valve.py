@@ -1,4 +1,5 @@
 """TapHome valve integration."""
+
 from __future__ import annotations
 
 from homeassistant.components.valve import DOMAIN, ValveEntity, ValveEntityFeature
@@ -38,9 +39,13 @@ class TapHomeValve(TapHomeEntity[ValveState], ValveEntity):
         self.valve_service = valve_service
         self._device_class = config_entry.device_class
 
-        self._attr_supported_features = ValveEntityFeature.OPEN | ValveEntityFeature.CLOSE
+        self._attr_supported_features = (
+            ValveEntityFeature.OPEN | ValveEntityFeature.CLOSE
+        )
         if self.valve_service.support_set_position(self.taphome_device):
-            self._attr_supported_features = self._attr_supported_features | ValveEntityFeature.SET_POSITION
+            self._attr_supported_features = (
+                self._attr_supported_features | ValveEntityFeature.SET_POSITION
+            )
 
     @property
     def device_class(self):
@@ -62,7 +67,9 @@ class TapHomeValve(TapHomeEntity[ValveState], ValveEntity):
     @property
     def current_valve_position(self) -> int | None:
         """Return current position of valve."""
-        if not self.taphome_state is None:
+        if not self.taphome_state is None and self.valve_service.support_set_position(
+            self.taphome_device
+        ):
             return TapHomeEntity.convert_taphome_percentage_to_ha(
                 self.taphome_state.percentage
             )
