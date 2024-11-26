@@ -23,7 +23,7 @@ class ValveConfigEntry(TapHomeConfigEntry):
 
 
 class TapHomeValve(TapHomeEntity[ValveState], ValveEntity):
-    """Representation of an valve"""
+    """Representation of an valve."""
 
     def __init__(
         self,
@@ -61,18 +61,21 @@ class TapHomeValve(TapHomeEntity[ValveState], ValveEntity):
     @property
     def is_closed(self) -> bool | None:
         """Return if the valve is closed or not."""
-        if not self.taphome_state is None:
+        if self.taphome_state is not None:
             return self.taphome_state.switch_state == SwitchStates.OFF
+        return None
 
     @property
     def current_valve_position(self) -> int | None:
         """Return current position of valve."""
-        if not self.taphome_state is None and self.valve_service.support_set_position(
+        if self.taphome_state is not None and self.valve_service.support_set_position(
             self.taphome_device
         ):
             return TapHomeEntity.convert_taphome_percentage_to_ha(
                 self.taphome_state.percentage
             )
+            
+        return None
 
     async def async_open_valve(self) -> None:
         """For valves that can set position, this method should be left unimplemented and only set_valve_position is required."""

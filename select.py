@@ -1,4 +1,5 @@
 """TapHome light integration."""
+
 import typing
 
 from homeassistant.components.select import DOMAIN, SelectEntity
@@ -57,7 +58,8 @@ class TapHomeSelect(TapHomeEntity[MultiValueSwitchState], SelectEntity):
 
     @property
     def options(self) -> list[str]:
-        return list(map(lambda option: option.text, self.taphome_options))
+        if self.taphome_device is not None:
+            return list(map(lambda option: option.text, self.taphome_options))
 
     @property
     def current_option(self) -> str:
@@ -71,7 +73,6 @@ class TapHomeSelect(TapHomeEntity[MultiValueSwitchState], SelectEntity):
         taphome_option = self.get_opinion_by_text(option)
 
         async with UpdateTapHomeState(self) as state:
-
             await self.multi_value_switch_service.async_set_value(
                 taphome_option.value, self.taphome_device
             )
