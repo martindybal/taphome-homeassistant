@@ -1,4 +1,5 @@
 """TapHome switch integration."""
+
 import typing
 
 from homeassistant.components.switch import DOMAIN, SwitchEntity
