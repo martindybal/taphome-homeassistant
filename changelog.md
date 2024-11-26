@@ -1,5 +1,9 @@
 # Changelog
 
+## 2024.11.0
+- Add support for new TapHome 2024.2 variable types
+- New Time entity type.
+
 ## 2024.8.0
 - Introduce `close_threshold` for covers
 

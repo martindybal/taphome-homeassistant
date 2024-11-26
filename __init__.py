@@ -17,6 +17,7 @@ from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.components.select import DOMAIN as SELECT_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
+from homeassistant.components.time import DOMAIN as TIME_DOMAIN
 from homeassistant.components.valve import DOMAIN as VALVE_DOMAIN
 from homeassistant.components.webhook import async_register as async_register_webhook
 from homeassistant.config_entries import ConfigEntry
@@ -88,6 +89,7 @@ CONFIG_SCHEMA = voluptuous.Schema(
                             CONF_SWITCHES,
                             CONF_SENSORS,
                             CONF_BINARY_SENSORS,
+                            CONF_TIMES,
                         ),
                         {
                             voluptuous.Required(CONF_TOKEN): config_validation.string,
@@ -138,6 +140,9 @@ CONFIG_SCHEMA = voluptuous.Schema(
                             voluptuous.Optional(
                                 CONF_VALVE, default=[]
                             ): config_validation.ensure_list,
+                            voluptuous.Optional(
+                                CONF_TIMES, default=[]
+                            ): config_validation.ensure_list,
                         },
                     )
                 ],
@@ -176,6 +181,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigEntry) -> bool:
         DomainDefinition(SELECT_DOMAIN, CONF_MULTIVALUE_SWITCHES, TapHomeConfigEntry),
         DomainDefinition(SENSOR_DOMAIN, CONF_SENSORS, SensorConfigEntry),
         DomainDefinition(SWITCH_DOMAIN, CONF_SWITCHES, SwitchConfigEntry),
+        DomainDefinition(TIME_DOMAIN, CONF_TIMES, TapHomeConfigEntry),
     ]
 
     for core_config in config[TAPHOME_PLATFORM][CONF_CORES]:
