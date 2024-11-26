@@ -12,6 +12,7 @@
 - Switches - power outlet, digital out
 - MultiValueSwitches
 - Valves - DO, AO
+- Time - variable with time conversion
 
 ## Quick start
 
