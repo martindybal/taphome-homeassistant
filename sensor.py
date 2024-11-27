@@ -414,7 +414,6 @@ class TapHomeSensorCreateRequest(TapHomeDataUpdateCoordinatorObject[TapHomeState
                 TapHomeCo2SensorType(),
                 TapHomeBrightnessSensorType(),
                 TapHomeWindSpeedSensorType(),
-                TapHomeWindDirectionSensorType(),
                 TapHomeAnalogInputSensorType(),
                 TapHomePulseCounterTotalImpulseCountSensorType(),
                 TapHomePulseCounterCurrentHourImpulseCountSensorType(),
