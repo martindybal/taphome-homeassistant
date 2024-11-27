@@ -12,7 +12,7 @@ from homeassistant.core import callback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import TAPHOME_PLATFORM
-from .taphome_sdk import *
+from .taphome_sdk.taphome_api_service import Device, TapHomeApiService
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -70,6 +70,7 @@ class TapHomeDataUpdateCoordinator(DataUpdateCoordinator):
         self.taphome_api_service = taphome_api_service
         self._was_devices_discovered = False
         self._devices = {}
+        self._last_all_devices_values = {}
         update_interval = timedelta(seconds=update_interval)
         super().__init__(
             hass, _LOGGER, name=TAPHOME_PLATFORM, update_interval=update_interval
@@ -84,6 +85,7 @@ class TapHomeDataUpdateCoordinator(DataUpdateCoordinator):
     ) -> None:
         device = self.get_device_data(taphome_device_id)
         device.taphome_state_type = taphome_state_type
+        self.restore_last_known_device_state(taphome_device_id)
         device.attach_taphome_device_change_handler(taphome_device_change_handler)
         device.attach_taphome_state_change_handler(taphome_state_change_handler)
 
@@ -99,12 +101,15 @@ class TapHomeDataUpdateCoordinator(DataUpdateCoordinator):
         """Fetch data from TapHome."""
         try:
             await self.async_discovery_devices()
-            await self.async_update_devices_values()
+            await self.async_refresh_all_devices_values()
             return self._devices
 
         except ClientResponseError as ex:
             if ex.status == 501:
-                raise NotImplementedError()  # NotImplementedError is reraised to fail integration loading. Core don't support get all devices api endpoint
+                _LOGGER.error(
+                    "Core don't support get all devices api endpoint. Please update your TapHome Core"
+                )
+                raise NotImplementedError  # NotImplementedError is reraised to fail integration loading.
             else:
                 exception_info = f"{ex.code} - {ex.request_info.url} {ex.message}"
                 raise UpdateFailed(
@@ -112,7 +117,7 @@ class TapHomeDataUpdateCoordinator(DataUpdateCoordinator):
                 ) from ex
 
         except Exception as ex:
-            raise UpdateFailed() from ex
+            raise UpdateFailed from ex
 
     async def async_discovery_devices(self) -> None:
         if not self._was_devices_discovered:
@@ -123,28 +128,43 @@ class TapHomeDataUpdateCoordinator(DataUpdateCoordinator):
                     device.taphome_device = taphome_device
                 self._was_devices_discovered = True
 
-    async def async_update_devices_values(self) -> None:
-        all_devices_values = (
+    async def async_refresh_all_devices_values(self) -> None:
+        self._last_all_devices_values = (
             await self.taphome_api_service.async_get_all_devices_values()
         )
-        if all_devices_values is not None:
-            for device_value in all_devices_values["devices"]:
-                device = self.get_device_data(device_value["deviceId"])
-
-                if device.taphome_state_type is not None:
-                    current_state = device.taphome_state_type(device_value["values"])
-                    if not device.taphome_state == current_state:
-                        device.taphome_state = current_state
-
+        if self._last_all_devices_values is not None:
+            self.update_devices_values(self._last_all_devices_values)
         else:
-            for device_id in self._devices:
-                self._devices[device_id].taphome_state = None
-            raise UpdateFailed()
+            for device in self._devices.items():
+                device.taphome_state = None
+            raise UpdateFailed
+
+    def update_devices_values(self, new_values: dict):
+        for new_device_value in new_values["devices"]:
+            self.update_device_values(new_device_value)
+        self.async_set_updated_data(self._devices)
+
+    def restore_last_known_device_state(self, device_id: str):
+        for device in self._last_all_devices_values["devices"]:
+            if device_id == device["deviceId"]:
+                self.update_device_values(device)
+
+    def update_device_values(self, new_device_value):
+        new_device_id = new_device_value["deviceId"]
+        new_device_values = new_device_value["values"]
+
+        device = self.get_device_data(new_device_id)
+
+        # taphome_state_type je zaregistrován až později, proto zde nic není při prvním loadu
+        if device.taphome_state_type is not None:
+            current_state = device.taphome_state_type(new_device_values)
+            if device.taphome_state != current_state:
+                device.taphome_state = current_state
 
     def get_device_data(
         self, taphome_device_id: int
     ) -> TapHomeDataUpdateCoordinatorDevice:
-        if not taphome_device_id in self._devices:
+        if taphome_device_id not in self._devices:
             self._devices[taphome_device_id] = TapHomeDataUpdateCoordinatorDevice()
         return self._devices[taphome_device_id]
 
@@ -176,12 +196,12 @@ class TapHomeDataUpdateCoordinatorObject(Generic[TState]):
 
     @callback
     def handle_taphome_device_change(self) -> None:
-        """This method is called when taphome_device is changed"""
+        """This method is called when taphome_device is changed."""
         pass
 
     @callback
     def handle_taphome_state_change(self) -> None:
-        """This method is called when taphome_state is changed"""
+        """This method is called when taphome_state is changed."""
         pass
 
 
