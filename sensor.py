@@ -3,18 +3,27 @@
 import datetime
 import typing
 
-from homeassistant.components.sensor import DOMAIN, SensorDeviceClass, SensorEntity
+from homeassistant.components.sensor import (
+    DOMAIN as SENSOR_DOMAIN,
+    SensorDeviceClass,
+    SensorEntity,
+)
 from homeassistant.components.sensor.const import SensorStateClass
 from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
     CONF_SENSORS,
     LIGHT_LUX,
     PERCENTAGE,
+    UnitOfElectricCurrent,
+    UnitOfElectricPotential,
     UnitOfEnergy,
     UnitOfFrequency,
     UnitOfPower,
+    UnitOfPressure,
     UnitOfSpeed,
     UnitOfTemperature,
+    UnitOfVolume,
+    UnitOfVolumetricFlux,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -181,6 +190,97 @@ class TapHomePulseCounterLastMeasuredFrequencySensorType(TapHomeSensorType):
         return round(value, 1)
 
 
+class TapHomeGasConsumptionSensorType(TapHomeSensorType):
+    def __init__(self) -> None:
+        super().__init__(
+            ValueType.GasConsumption,
+            SensorDeviceClass.GAS,
+            UnitOfVolume.CUBIC_METERS,
+            SensorStateClass.TOTAL_INCREASING,
+        )
+
+    def convert_taphome_to_ha(self, value: int) -> int:
+        return round(value, 2)
+
+
+class TapHomeRainfallRateSensorType(TapHomeSensorType):
+    def __init__(self) -> None:
+        super().__init__(
+            ValueType.RainfallRate,
+            SensorDeviceClass.PRECIPITATION_INTENSITY,
+            UnitOfVolumetricFlux.MM_PER_HOUR,
+            SensorStateClass.MEASUREMENT,
+        )
+
+    def convert_taphome_to_ha(self, value: int) -> int:
+        return round(value, 1)
+
+
+class TapHomeWaterPressureSensorType(TapHomeSensorType):
+    def __init__(self) -> None:
+        super().__init__(
+            ValueType.WaterPressure,
+            SensorDeviceClass.PRESSURE,
+            UnitOfPressure.BAR,
+            SensorStateClass.MEASUREMENT,
+        )
+
+    def convert_taphome_to_ha(self, value: int) -> int:
+        return round(value, 2)
+
+
+class TapHomeLightIntensitySensorType(TapHomeSensorType):
+    def __init__(self) -> None:
+        super().__init__(
+            ValueType.LightIntensity,
+            SensorDeviceClass.ILLUMINANCE,
+            LIGHT_LUX,
+            SensorStateClass.MEASUREMENT,
+        )
+
+    def convert_taphome_to_ha(self, value: int) -> int:
+        return round(value, 0)
+
+
+class TapHomeBatteryPercentageSensorType(TapHomeSensorType):
+    def __init__(self) -> None:
+        super().__init__(
+            ValueType.BatteryPercentageRemaining,
+            SensorDeviceClass.BATTERY,
+            PERCENTAGE,
+            SensorStateClass.MEASUREMENT,
+        )
+
+    def convert_taphome_to_ha(self, value: int) -> int:
+        return round(value, 1)
+
+
+class TapHomeElectricVoltageSensorType(TapHomeSensorType):
+    def __init__(self) -> None:
+        super().__init__(
+            ValueType.ElectricVoltage,
+            SensorDeviceClass.VOLTAGE,
+            UnitOfElectricPotential.VOLT,
+            SensorStateClass.MEASUREMENT,
+        )
+
+    def convert_taphome_to_ha(self, value: int) -> int:
+        return round(value, 1)
+
+
+class TapHomeElectricCurrentSensorType(TapHomeSensorType):
+    def __init__(self) -> None:
+        super().__init__(
+            ValueType.ElectricCurrent,
+            SensorDeviceClass.CURRENT,
+            UnitOfElectricCurrent.AMPERE,
+            SensorStateClass.MEASUREMENT,
+        )
+
+    def convert_taphome_to_ha(self, value: int) -> int:
+        return round(value, 1)
+
+
 class TapHomeVariableType(TapHomeSensorType):
     def __init__(self) -> None:
         super().__init__(
@@ -232,7 +332,7 @@ class TapHomeSensor(TapHomeEntity[TapHomeState], SensorEntity):
     ):
         assert sensor_type is not None
         self._sensor_type = sensor_type
-        unique_id_determination = f"{DOMAIN}.{self._sensor_type.value_type.name}"
+        unique_id_determination = f"{SENSOR_DOMAIN}.{self._sensor_type.value_type.name}"
 
         super().__init__(
             hass,
@@ -314,10 +414,18 @@ class TapHomeSensorCreateRequest(TapHomeDataUpdateCoordinatorObject[TapHomeState
                 TapHomeCo2SensorType(),
                 TapHomeBrightnessSensorType(),
                 TapHomeWindSpeedSensorType(),
+                TapHomeWindDirectionSensorType(),
                 TapHomeAnalogInputSensorType(),
                 TapHomePulseCounterTotalImpulseCountSensorType(),
                 TapHomePulseCounterCurrentHourImpulseCountSensorType(),
                 TapHomePulseCounterLastMeasuredFrequencySensorType(),
+                TapHomeGasConsumptionSensorType(),
+                TapHomeRainfallRateSensorType(),
+                TapHomeWaterPressureSensorType(),
+                TapHomeLightIntensitySensorType(),
+                TapHomeBatteryPercentageSensorType(),
+                TapHomeElectricVoltageSensorType(),
+                TapHomeElectricCurrentSensorType(),
                 TapHomeVariableType(),
             ]
 
