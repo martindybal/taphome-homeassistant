@@ -4,6 +4,7 @@ import asyncio
 import logging
 import typing
 
+from aiohttp.web import Request
 from async_timeout import timeout
 import voluptuous
 
@@ -155,8 +156,8 @@ CONFIG_SCHEMA = voluptuous.Schema(
 
 async def async_setup(hass: HomeAssistant, config: ConfigEntry) -> bool:
     if CONF_LANGUAGE in config[TAPHOME_PLATFORM]:
-        _LOGGER.warning(
-            "TapHome language setting is not supported any more. You can renema entities as you wish. This options'll be removed in future, please remove it from your config"
+        _LOGGER.error(
+            "TapHome language setting is not supported any more. You can rename entities as you wish. This options'll be removed in future, please remove it from your config"
         )
 
     if len(config[TAPHOME_PLATFORM][CONF_CORES]) > 1:
@@ -225,26 +226,21 @@ async def async_setup(hass: HomeAssistant, config: ConfigEntry) -> bool:
             hass, update_interval, taphome_api_service=tapHome_api_service
         )
 
+        try:
+            await coordinator.async_refresh()
+        except NotImplementedError:
+            return False
+
         # register webhook handler if webhook_id is specified
         if webhook_id:
-            handle_webhook_lambda = lambda hass, webhook_id, request: handle_webhook(
-                coordinator, webhook_id
-            )
+
+            def handle_webhook_lambda(hass, webhook_id, request):
+                return handle_webhook(coordinator, webhook_id, request)
 
             webhook_name = f"Taphome-{core_id}" if core_id else "Taphome"
             async_register_webhook(
                 hass, TAPHOME_PLATFORM, webhook_name, webhook_id, handle_webhook_lambda
             )
-
-        try:
-            async with timeout(8):
-                await coordinator.async_refresh()
-                if not coordinator.last_update_success:
-                    _LOGGER.warn("TapHome devices was not discovered during startup")
-        except asyncio.TimeoutError:
-            _LOGGER.warn("TapHome devices was not discovered during startup")
-        except NotImplementedError:
-            return False
 
         hass.data[TAPHOME_PLATFORM] = {}
         for domain in domains:
@@ -324,16 +320,10 @@ def map_add_entry_requests(
 #
 
 
-async def handle_webhook(coordinator, webhook_id):
-    """Handle incoming webhook - we will trigger an update poll here"""
-    _LOGGER.info(f"Taphome webhook triggered - webhook_id: {webhook_id}")
-
-    try:
-        # ask for refresh with 8 seconds timeout
-        async with timeout(8):
-            await coordinator.async_refresh()
-            _LOGGER.info("Refresh of taphome finished")
-    except asyncio.TimeoutError:
-        _LOGGER.warn("Refresh of taphome state failed due to timeout!")
-    except NotImplementedError:
-        _LOGGER.warn("Not implemented!")
+async def handle_webhook(
+    coordinator: TapHomeDataUpdateCoordinator, webhook_id, request: Request
+):
+    """Handle incoming webhook - we will trigger an update poll here."""
+    _LOGGER.info("Taphome webhook triggered - webhook_id: %s", webhook_id)
+    all_devices_values = await request.json()
+    coordinator.update_devices_values(all_devices_values)
