@@ -1,4 +1,5 @@
 """TapHome binary_sensor integration."""
+
 import typing
 
 from homeassistant.components.binary_sensor import (
@@ -70,6 +71,30 @@ class TapHomeReedContactBinarySensorType(TapHomeBinarySensorType):
         super().__init__(
             ValueType.ReedContact,
             None,
+        )
+
+
+class TapHomeSmokeBinarySensorType(TapHomeBinarySensorType):
+    def __init__(self) -> None:
+        super().__init__(
+            ValueType.Smoke,
+            BinarySensorDeviceClass.SMOKE,
+        )
+
+
+class TapHomeFloodBinarySensorType(TapHomeBinarySensorType):
+    def __init__(self) -> None:
+        super().__init__(
+            ValueType.FloodState,
+            BinarySensorDeviceClass.MOISTURE,
+        )
+
+
+class TapHomeIsWindowOpenBinarySensorType(TapHomeBinarySensorType):
+    def __init__(self) -> None:
+        super().__init__(
+            ValueType.IsWindowOpen,
+            BinarySensorDeviceClass.WINDOW,
         )
 
 
@@ -169,6 +194,9 @@ class TapHomeBinarySensorCreateRequest(
                 TapHomeMotionBinarySensorType(),
                 TapHomeReedContactBinarySensorType(),
                 TapHomeVariableBinarySensorType(),
+                TapHomeSmokeBinarySensorType(),
+                TapHomeFloodBinarySensorType(),
+                TapHomeIsWindowOpenBinarySensorType(),
             ]
 
             binary_sensors = []
