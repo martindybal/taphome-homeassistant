@@ -208,7 +208,7 @@ class TapHomeRainfallRateSensorType(TapHomeSensorType):
         super().__init__(
             ValueType.RainfallRate,
             SensorDeviceClass.PRECIPITATION_INTENSITY,
-            UnitOfVolumetricFlux.MM_PER_HOUR,
+            UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR,
             SensorStateClass.MEASUREMENT,
         )
 
