@@ -1,5 +1,4 @@
 import logging
-import typing
 
 from .device import Device
 from .location import Location
@@ -24,7 +23,7 @@ class TapHomeApiService:
     ):
         self.taphome_api_service = taphome_api_service
 
-    async def async_discovery_devices(self) -> typing.List[Device]:
+    async def async_discovery_devices(self) -> list[Device]:
         json = {}
         try:
             json = await self.taphome_api_service.async_api_get("discovery")
@@ -33,10 +32,12 @@ class TapHomeApiService:
                 try:
                     devices.append(Device.create(device))
                 except Exception:
-                    _LOGGER.error(f"TapHome Device.create failed \n {device} \n {json}")
+                    _LOGGER.error(
+                        "TapHome Device.create failed \n %s \n %s", device, json
+                    )
             return devices
         except Exception:
-            _LOGGER.error(f"TapHome request async_discovery_devices failed: {json}")
+            _LOGGER.error("TapHome request async_discovery_devices failed: %s", json)
 
     async def async_get_location(self):
         json = {}
@@ -44,7 +45,7 @@ class TapHomeApiService:
             json = await self.taphome_api_service.async_api_get("location")
             return Location.create(json)
         except Exception:
-            _LOGGER.error(f"TapHome request async_get_location failed: {json}")
+            _LOGGER.error("TapHome request async_get_location failed: %s", json)
 
     async def async_get_all_devices_values(self) -> dict:
         deviceInfo = None
@@ -53,11 +54,11 @@ class TapHomeApiService:
         except Exception as ex:
             if hasattr(ex, "status") and ex.status == 501:
                 _LOGGER.error(
-                    f"TapHome request failed: Request not supported by core! Please update your core to 2021.2 or newer"
+                    "TapHome request failed: Request not supported by core! Please update your core to 2021.2 or newer"
                 )
                 raise
             _LOGGER.error(
-                f"TapHome request async_get_all_devices_values failed:{deviceInfo}"
+                "TapHome request async_get_all_devices_values failed: %s", deviceInfo
             )
             return None
 
@@ -70,7 +71,7 @@ class TapHomeApiService:
             return deviceInfo["values"]
         except Exception:
             _LOGGER.error(
-                f"TapHome request async_get_device_values failed: {deviceInfo}"
+                "TapHome request async_get_device_values failed: %s", deviceInfo
             )
             return None
 
@@ -103,7 +104,9 @@ class TapHomeApiService:
             ):
                 was_values_changed = True
         except Exception:
-            _LOGGER.error(f"async_set_device_values for {device_id} fails {json}")
+            _LOGGER.error(
+                "TapHome async_set_device_values for %s fails %s", device_id, json
+            )
 
         if not was_values_changed:
             raise TapHomeApiValueFailChangedException(device_id, values)
