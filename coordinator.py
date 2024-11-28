@@ -1,6 +1,9 @@
 """Provides the taphome DataUpdateCoordinator."""
 
+from aiohttp.web import Request
+
 # from .switch import TapHomeSwitch
+import copy
 from datetime import timedelta
 import logging
 from types import TracebackType
@@ -8,7 +11,7 @@ from typing import Generic, TypeVar
 
 from aiohttp.client_reqrep import ClientResponseError
 
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import TAPHOME_PLATFORM
@@ -25,8 +28,9 @@ class TapHomeDataUpdateCoordinatorDevice:
         self._taphome_device_change_listeners = []
         self._taphome_state_change_listeners = []
         self._taphome_device = None
-        self._taphome_state = None
-        self.taphome_state_type = None
+        self._taphome_values = None
+        self._taphome_state_types = []
+        self._taphome_states = {}
 
     @property
     def taphome_device(self):
@@ -45,13 +49,30 @@ class TapHomeDataUpdateCoordinatorDevice:
             taphome_device_change_handler()
 
     @property
-    def taphome_state(self):
-        return self._taphome_state
+    def taphome_values(self):
+        return self._taphome_values
 
-    @taphome_state.setter
-    def taphome_state(self, new_state):
-        self._taphome_state = new_state
+    @taphome_values.setter
+    def taphome_values(self, new_state):
+        self._taphome_values = new_state
+        self.update_taphome_states()
         self.invoke_taphome_state_change()
+
+    def get_state(self, state_type):
+        if state_type not in self._taphome_state_types:
+            self._taphome_state_types.append(state_type)
+
+        if state_type not in self._taphome_states:
+            self.update_taphome_state(state_type)
+        return self._taphome_states[state_type]
+
+    def update_taphome_states(self):
+        for state_type in self._taphome_state_types:
+            self.update_taphome_state(state_type)
+
+    def update_taphome_state(self, state_type):
+        state = None if self.taphome_values is None else state_type(self.taphome_values)
+        self._taphome_states[state_type] = state
 
     def attach_taphome_state_change_handler(self, taphome_state_change_handler):
         self._taphome_state_change_listeners.append(taphome_state_change_handler)
@@ -70,7 +91,6 @@ class TapHomeDataUpdateCoordinator(DataUpdateCoordinator):
         self.taphome_api_service = taphome_api_service
         self._was_devices_discovered = False
         self._devices = {}
-        self._last_all_devices_values = {}
         update_interval = timedelta(seconds=update_interval)
         super().__init__(
             hass, _LOGGER, name=TAPHOME_PLATFORM, update_interval=update_interval
@@ -79,13 +99,10 @@ class TapHomeDataUpdateCoordinator(DataUpdateCoordinator):
     def register_entity(
         self,
         taphome_device_id: int,
-        taphome_state_type,
         taphome_device_change_handler,
         taphome_state_change_handler,
     ) -> None:
         device = self.get_device_data(taphome_device_id)
-        device.taphome_state_type = taphome_state_type
-        self.restore_last_known_device_state(taphome_device_id)
         device.attach_taphome_device_change_handler(taphome_device_change_handler)
         device.attach_taphome_state_change_handler(taphome_state_change_handler)
 
@@ -93,9 +110,9 @@ class TapHomeDataUpdateCoordinator(DataUpdateCoordinator):
         device = self.get_device_data(taphome_device_id)
         return device.taphome_device
 
-    def get_state(self, taphome_device_id: int):
+    def get_state(self, taphome_device_id: int, state_type):
         device = self.get_device_data(taphome_device_id)
-        return device.taphome_state
+        return device.get_state(state_type)
 
     async def _async_update_data(self):
         """Fetch data from TapHome."""
@@ -129,37 +146,49 @@ class TapHomeDataUpdateCoordinator(DataUpdateCoordinator):
                 self._was_devices_discovered = True
 
     async def async_refresh_all_devices_values(self) -> None:
-        self._last_all_devices_values = (
+        last_all_devices_values = (
             await self.taphome_api_service.async_get_all_devices_values()
         )
-        if self._last_all_devices_values is not None:
-            self.update_devices_values(self._last_all_devices_values)
+        if last_all_devices_values is not None:
+            self.update_devices_values(last_all_devices_values, True)
         else:
             for device in self._devices.items():
                 device.taphome_state = None
             raise UpdateFailed
 
-    def update_devices_values(self, new_values: dict):
-        for new_device_value in new_values["devices"]:
-            self.update_device_values(new_device_value)
+    async def handle_webhook(
+        self, hass: HomeAssistant, webhook_id: str, request: Request
+    ):
+        """Handle incoming webhook - we will trigger an update poll here."""
+        _LOGGER.info("Taphome webhook triggered - webhook_id: %s", webhook_id)
+        all_devices_values = await request.json()
+        self.update_devices_values(all_devices_values)
+
+    def update_devices_values(self, changed_values: dict, force: bool = False):
+        for changed_device in changed_values["devices"]:
+            device_id = changed_device["deviceId"]
+            device_changed_values = changed_device["values"]
+            device = self.get_device_data(device_id)
+            device_new_values = (
+                device_changed_values
+                if force
+                else self.apply_changes(device, device_changed_values)
+            )
+            if device.taphome_values != device_new_values:
+                device.taphome_values = device_new_values
         self.async_set_updated_data(self._devices)
 
-    def restore_last_known_device_state(self, device_id: str):
-        for device in self._last_all_devices_values["devices"]:
-            if device_id == device["deviceId"]:
-                self.update_device_values(device)
+    def apply_changes(
+        self, device: TapHomeDataUpdateCoordinatorDevice, device_changed_values: dict
+    ):
+        new_values = copy.deepcopy(device.taphome_values)
+        for changed_value in device_changed_values:
+            for value_entry in new_values:
+                if value_entry["valueTypeId"] == changed_value["valueTypeId"]:
+                    value_entry["value"] = changed_value["value"]
+                    break
 
-    def update_device_values(self, new_device_value):
-        new_device_id = new_device_value["deviceId"]
-        new_device_values = new_device_value["values"]
-
-        device = self.get_device_data(new_device_id)
-
-        # taphome_state_type je zaregistrován až později, proto zde nic není při prvním loadu
-        if device.taphome_state_type is not None:
-            current_state = device.taphome_state_type(new_device_values)
-            if device.taphome_state != current_state:
-                device.taphome_state = current_state
+        return new_values
 
     def get_device_data(
         self, taphome_device_id: int
@@ -177,18 +206,20 @@ class TapHomeDataUpdateCoordinatorObject(Generic[TState]):
         taphome_state_type,
     ):
         self._taphome_device_id = taphome_device_id
+        self._taphome_state_type = taphome_state_type
         self.coordinator = coordinator
 
         coordinator.register_entity(
             taphome_device_id,
-            taphome_state_type,
             self.handle_taphome_device_change,
             self.handle_taphome_state_change,
         )
 
     @property
     def taphome_state(self) -> TState:
-        return self.coordinator.get_state(self._taphome_device_id)
+        return self.coordinator.get_state(
+            self._taphome_device_id, self._taphome_state_type
+        )
 
     @property
     def taphome_device(self) -> Device:
