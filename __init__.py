@@ -1,11 +1,7 @@
 """TapHome integration."""
 
-import asyncio
 import logging
 import typing
-
-from aiohttp.web import Request
-from async_timeout import timeout
 import voluptuous
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
@@ -233,13 +229,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigEntry) -> bool:
 
         # register webhook handler if webhook_id is specified
         if webhook_id:
-
-            def handle_webhook_lambda(hass, webhook_id, request):
-                return handle_webhook(coordinator, webhook_id, request)
-
             webhook_name = f"Taphome-{core_id}" if core_id else "Taphome"
             async_register_webhook(
-                hass, TAPHOME_PLATFORM, webhook_name, webhook_id, handle_webhook_lambda
+                hass,
+                TAPHOME_PLATFORM,
+                webhook_name,
+                webhook_id,
+                coordinator.handle_webhook,
             )
 
         hass.data[TAPHOME_PLATFORM] = {}
@@ -313,17 +309,3 @@ def map_add_entry_requests(
             config_entries,
         )
     )
-
-
-#
-# webhook handler
-#
-
-
-async def handle_webhook(
-    coordinator: TapHomeDataUpdateCoordinator, webhook_id, request: Request
-):
-    """Handle incoming webhook - we will trigger an update poll here."""
-    _LOGGER.info("Taphome webhook triggered - webhook_id: %s", webhook_id)
-    all_devices_values = await request.json()
-    coordinator.update_devices_values(all_devices_values)
