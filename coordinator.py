@@ -141,8 +141,9 @@ class TapHomeDataUpdateCoordinator(DataUpdateCoordinator):
             discovery_devices = await self.taphome_api_service.async_discovery_devices()
             if discovery_devices is not None:
                 for taphome_device in discovery_devices:
-                    device = self.get_device_data(taphome_device.id)
+                    device = TapHomeDataUpdateCoordinatorDevice()
                     device.taphome_device = taphome_device
+                    self._devices[taphome_device.id] = device
                 self._was_devices_discovered = True
 
     async def async_refresh_all_devices_values(self) -> None:
@@ -194,7 +195,12 @@ class TapHomeDataUpdateCoordinator(DataUpdateCoordinator):
         self, taphome_device_id: int
     ) -> TapHomeDataUpdateCoordinatorDevice:
         if taphome_device_id not in self._devices:
-            self._devices[taphome_device_id] = TapHomeDataUpdateCoordinatorDevice()
+            _LOGGER.error(
+                "No device with id %s has been exposed in the TapHome API",
+                taphome_device_id,
+            )
+            # return an empty object to preserve backward compactability.
+            return TapHomeDataUpdateCoordinatorDevice()
         return self._devices[taphome_device_id]
 
 
