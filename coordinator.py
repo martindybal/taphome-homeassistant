@@ -105,7 +105,7 @@ class TapHomeDataUpdateCoordinator(DataUpdateCoordinator):
         device = self.get_device_data(taphome_device_id)
         if device is None:
             _LOGGER.error(
-                "No device with id %s has been exposed in the TapHome API",
+                "TapHome register entity failed. Device with id %s has not been exposed in the TapHome API",
                 taphome_device_id,
             )
         else:
