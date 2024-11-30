@@ -3,6 +3,8 @@
 ## 2024.11.0
 - Add support for new TapHome 2024.2 variable types
 - New Time entity type.
+- Notify user when using device not exposed in TapHome API
+- Improved communication with TapHome Core for better efficiency: data is now refreshed using webhook updates.
 
 ## 2024.8.0
 - Introduce `close_threshold` for covers
