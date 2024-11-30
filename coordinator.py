@@ -103,15 +103,25 @@ class TapHomeDataUpdateCoordinator(DataUpdateCoordinator):
         taphome_state_change_handler,
     ) -> None:
         device = self.get_device_data(taphome_device_id)
-        device.attach_taphome_device_change_handler(taphome_device_change_handler)
-        device.attach_taphome_state_change_handler(taphome_state_change_handler)
+        if device is None:
+            _LOGGER.error(
+                "No device with id %s has been exposed in the TapHome API",
+                taphome_device_id,
+            )
+        else:
+            device.attach_taphome_device_change_handler(taphome_device_change_handler)
+            device.attach_taphome_state_change_handler(taphome_state_change_handler)
 
     def get_device(self, taphome_device_id: int) -> Device:
         device = self.get_device_data(taphome_device_id)
+        if device is None:
+            return None
         return device.taphome_device
 
     def get_state(self, taphome_device_id: int, state_type):
         device = self.get_device_data(taphome_device_id)
+        if device is None:
+            return None
         return device.get_state(state_type)
 
     async def _async_update_data(self):
@@ -195,12 +205,7 @@ class TapHomeDataUpdateCoordinator(DataUpdateCoordinator):
         self, taphome_device_id: int
     ) -> TapHomeDataUpdateCoordinatorDevice:
         if taphome_device_id not in self._devices:
-            _LOGGER.error(
-                "No device with id %s has been exposed in the TapHome API",
-                taphome_device_id,
-            )
-            # return an empty object to preserve backward compactability.
-            return TapHomeDataUpdateCoordinatorDevice()
+            return None
         return self._devices[taphome_device_id]
 
 
