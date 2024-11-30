@@ -138,12 +138,12 @@ class TapHomeDataUpdateCoordinator(DataUpdateCoordinator):
                 )
                 raise NotImplementedError  # NotImplementedError is reraised to fail integration loading.
             else:
-                exception_info = f"{ex.code} - {ex.request_info.url} {ex.message}"
-                raise UpdateFailed(
-                    f"Invalid response from API: {exception_info}"
-                ) from ex
+                exception_message = f"Invalid response from API: {ex.code} - {ex.request_info.url} {ex.message}"
+                _LOGGER.error(exception_message)
+                raise UpdateFailed(exception_message) from ex
 
         except Exception as ex:
+            _LOGGER.exception("TapHome data update failed")
             raise UpdateFailed from ex
 
     async def async_discovery_devices(self) -> None:
