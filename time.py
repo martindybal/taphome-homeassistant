@@ -39,7 +39,7 @@ class TapHomeTime(TapHomeEntity[TimeState], TimeEntity):
         )
         self.time_service = time_service
 
-    @cached_property
+    @property
     def native_value(self) -> time | None:
         """Return the value reported by the time."""
         if self.taphome_state is None:
