@@ -280,17 +280,6 @@ def read_from_config_or_default(config: dict, key: str, default_value) -> typing
         return default_value
 
 
-# def map_config_entries(
-#     config_entry, platform_config: list
-# ) -> list[TapHomeConfigEntry]:
-#     return list(
-#         map(
-#             lambda device_config: config_entry(device_config),
-#             platform_config,
-#         )
-#     )
-
-
 def map_config_entries(config_entry, platform_config: list) -> list[TapHomeConfigEntry]:
     return list(map(config_entry, platform_config))
 
@@ -301,15 +290,13 @@ def map_add_entry_requests(
     coordinator: TapHomeDataUpdateCoordinator,
     tapHome_api_service: TapHomeApiService,
 ) -> list[AddEntryRequest]:
-    return list(
-        map(
-            lambda config_entry: AddEntryRequest(
-                core_config_entry,
-                config_entry,
-                config_entry.id,
-                coordinator,
-                tapHome_api_service,
-            ),
-            config_entries,
+    return [
+        AddEntryRequest(
+            core_config_entry,
+            config_entry,
+            config_entry.id,
+            coordinator,
+            tapHome_api_service,
         )
-    )
+        for config_entry in config_entries
+    ]

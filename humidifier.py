@@ -52,7 +52,7 @@ class TapHomeHumidifier(TapHomeEntity[HumidifierState], HumidifierEntity):
     @property
     def is_on(self):
         """Returns if the device is on or not."""
-        if not self.taphome_state is None:
+        if self.taphome_state is not None:
             return self.taphome_state.switch_state == SwitchStates.ON
 
     @property

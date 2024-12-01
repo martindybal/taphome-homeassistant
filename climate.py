@@ -148,7 +148,7 @@ class TapHomeModeClimateController(
 
     @property
     def hvac_mode(self) -> HVACMode | None:
-        if not self.taphome_state is None:
+        if self.taphome_state is not None:
             modes = {
                 0: HVACMode.OFF,
                 1: HVACMode.HEAT,
