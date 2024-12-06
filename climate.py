@@ -300,14 +300,43 @@ class TapHomeClimate(TapHomeEntity[ThermostatState], ClimateEntity):
 
     @property
     def min_temp(self):
+        if self.taphome_device is not None:
+            min_value = self.taphome_device.supported_values[
+                ValueType.TemperatureSetPoint
+            ].min_value
+
+            # This's can be removed after 2024.2 release. Just return min_value to simplify code
+            if min_value is not None:
+                if self._config_min_temperature is not None:
+                    _LOGGER.error(
+                        "TapHome 2024.2 exposes thermostat service setting. So climate %s min_temperature from configuration is ignored",
+                        self._taphome_device_id,
+                    )
+                return min_value
+
         if self._config_min_temperature is not None:
             return self._config_min_temperature
         return 10
 
     @property
     def max_temp(self):
+        if self.taphome_device is not None:
+            max_value = self.taphome_device.supported_values[
+                ValueType.TemperatureSetPoint
+            ].max_value
+
+            # This's can be removed after 2024.2 release. Just return max_value to simplify code
+            if max_value is not None:
+                if self._config_max_temperature is not None:
+                    _LOGGER.error(
+                        "TapHome 2024.2 exposes thermostat service setting. So climate %s max_temperature from configuration is ignored",
+                        self._taphome_device_id,
+                    )
+                return max_value
+
         if self._config_max_temperature is not None:
             return self._config_max_temperature
+
         return 30
 
     @property
