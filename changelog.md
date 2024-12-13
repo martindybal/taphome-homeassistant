@@ -1,7 +1,8 @@
 # Changelog
 
-## 2024.11.0
+## 2024.12.0
 - Add support for new TapHome 2024.2 variable types
+- TapHome 2024.2 exposes climathermostat service setting. So min/max temperature from config can be ignored.
 - New Time entity type.
 - Notify user when using device not exposed in TapHome API
 - Improved communication with TapHome Core for better efficiency: data is now refreshed using webhook updates.
