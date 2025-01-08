@@ -205,7 +205,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigEntry) -> bool:
         api_url = read_from_config_or_default(
             core_config,
             CONF_API_URL,
-            "https://cloudapi.taphome.com/api/CloudApi/v1",
+            "https://api.taphome.com/api/TapHomeApi/v1",
         )
 
         webhook_id = read_from_config_or_default(core_config, CONF_WEBHOOK_ID, None)
