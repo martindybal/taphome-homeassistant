@@ -281,6 +281,19 @@ class TapHomeElectricCurrentSensorType(TapHomeSensorType):
         return round(value, 1)
 
 
+class TapHomePercentagesSensorType(TapHomeSensorType):
+    def __init__(self) -> None:
+        super().__init__(
+            ValueType.Percentages,
+            None,
+            PERCENTAGE,
+            SensorStateClass.MEASUREMENT,
+        )
+
+    def convert_taphome_to_ha(self, value: int) -> int:
+        return TapHomeEntity.convert_taphome_percentage_to_ha(value)
+
+
 class TapHomeVariableType(TapHomeSensorType):
     def __init__(self) -> None:
         super().__init__(
@@ -426,6 +439,7 @@ class TapHomeSensorCreateRequest(TapHomeDataUpdateCoordinatorObject[TapHomeState
                 TapHomeElectricVoltageSensorType(),
                 TapHomeElectricCurrentSensorType(),
                 TapHomeVariableType(),
+                TapHomePercentagesSensorType(),
             ]
 
             sensors = []
