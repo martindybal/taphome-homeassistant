@@ -442,6 +442,15 @@ class TapHomeSensorCreateRequest(TapHomeDataUpdateCoordinatorObject[TapHomeState
                 TapHomePercentagesSensorType(),
             ]
 
+            if self._config_entry.value_type:
+                supported_sensor_types.append(
+                    TapHomeSensorType(
+                        ValueType(self._config_entry.value_type),
+                        self._config_entry.device_class,
+                        SensorStateClass.MEASUREMENT,
+                    )
+                )
+
             sensors = []
             for sensor_type in supported_sensor_types:
                 if self.taphome_device.supports_value(sensor_type.value_type):
