@@ -55,8 +55,7 @@ class TapHomeValve(TapHomeEntity[ValveState], ValveEntity):
     @property
     def reports_position(self) -> bool:
         """Return True if entity reports position, False otherwise."""
-        # TapHome always knows state of valve
-        return True
+        return self.valve_service.support_set_position(self.taphome_device)
 
     @property
     def is_closed(self) -> bool | None:
@@ -74,7 +73,6 @@ class TapHomeValve(TapHomeEntity[ValveState], ValveEntity):
             return TapHomeEntity.convert_taphome_percentage_to_ha(
                 self.taphome_state.percentage
             )
-            
         return None
 
     async def async_open_valve(self) -> None:
