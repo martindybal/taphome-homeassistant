@@ -42,7 +42,7 @@ class PercentageService:
 
     async def async_get_state(self, device: Device) -> PercentageState:
         percentage_values = await self.taphome_api_service.async_get_device_values(
-            device.deviceId
+            device.id
         )
         return PercentageState(percentage_values)
 
