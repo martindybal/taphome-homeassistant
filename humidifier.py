@@ -139,7 +139,7 @@ def setup_platform(
     ]
     humidifiers = []
     for add_entry_request in add_entry_requests:
-        humidifier_service = HumidifierService(add_entry_request.tapHome_api_service)
+        humidifier_service = HumidifierService(add_entry_request.taphome_api_service)
         humidifier = TapHomeHumidifier(
             hass,
             add_entry_request.core_config,

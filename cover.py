@@ -180,7 +180,7 @@ def setup_platform(
     ]
     covers = []
     for add_entry_request in add_entry_requests:
-        cover_service = CoverService(add_entry_request.tapHome_api_service)
+        cover_service = CoverService(add_entry_request.taphome_api_service)
         cover = TapHomeCover(
             hass,
             add_entry_request.core_config,

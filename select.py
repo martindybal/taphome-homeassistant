@@ -97,7 +97,7 @@ def setup_platform(
     ]
     selects = []
     for add_entry_request in add_entry_requests:
-        select_service = MultiValueSwitchService(add_entry_request.tapHome_api_service)
+        select_service = MultiValueSwitchService(add_entry_request.taphome_api_service)
         select = TapHomeSelect(
             hass,
             add_entry_request.core_config,

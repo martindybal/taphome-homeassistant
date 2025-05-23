@@ -90,7 +90,7 @@ def setup_platform(
     ]
     fans = []
     for add_entry_request in add_entry_requests:
-        fan_service = FanService(add_entry_request.tapHome_api_service)
+        fan_service = FanService(add_entry_request.taphome_api_service)
         fan = TapHomeFan(
             hass,
             add_entry_request.core_config,

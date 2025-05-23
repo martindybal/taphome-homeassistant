@@ -216,10 +216,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigEntry) -> bool:
             get_update_interval_default_value(api_url, webhook_id),
         )
 
-        tapHome_http_client = TapHomeHttpClientFactory().create(api_url, token)
-        tapHome_api_service = TapHomeApiService(tapHome_http_client)
+        taphome_http_client = TapHomeHttpClientFactory().create(api_url, token)
+        taphome_api_service = TapHomeApiService(taphome_http_client)
         coordinator = TapHomeDataUpdateCoordinator(
-            hass, update_interval, taphome_api_service=tapHome_api_service
+            hass, update_interval, taphome_api_service=taphome_api_service
         )
 
         try:
@@ -247,7 +247,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigEntry) -> bool:
                 core_config_entry,
                 config_entries,
                 coordinator,
-                tapHome_api_service,
+                taphome_api_service,
             )
             domain.add_entry_requests.extend(core_add_entry_requests)
 
@@ -288,7 +288,7 @@ def map_add_entry_requests(
     core_config_entry: TapHomeCoreConfigEntry,
     config_entries: list[TapHomeConfigEntry],
     coordinator: TapHomeDataUpdateCoordinator,
-    tapHome_api_service: TapHomeApiService,
+    taphome_api_service: TapHomeApiService,
 ) -> list[AddEntryRequest]:
     return [
         AddEntryRequest(
@@ -296,7 +296,7 @@ def map_add_entry_requests(
             config_entry,
             config_entry.id,
             coordinator,
-            tapHome_api_service,
+            taphome_api_service,
         )
         for config_entry in config_entries
     ]

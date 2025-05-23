@@ -160,7 +160,7 @@ def setup_platform(
     ]
     lights = []
     for add_entry_request in add_entry_requests:
-        light_service = LightService(add_entry_request.tapHome_api_service)
+        light_service = LightService(add_entry_request.taphome_api_service)
         light = TapHomeLight(
             hass,
             add_entry_request.core_config,

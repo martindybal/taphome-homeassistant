@@ -11,13 +11,13 @@ class AddEntryRequest:
         config_entry: TapHomeConfigEntry,
         taphome_device_id: int,
         coordinator: TapHomeDataUpdateCoordinator,
-        tapHome_api_service: TapHomeApiService,
+        taphome_api_service: TapHomeApiService,
     ):
         self._core_config = core_config
         self._config_entry = config_entry
         self._taphome_device_id = taphome_device_id
         self._coordinator = coordinator
-        self._tapHome_api_service = tapHome_api_service
+        self._taphome_api_service = taphome_api_service
 
     @property
     def core_config(self):
@@ -32,5 +32,5 @@ class AddEntryRequest:
         return self._coordinator
 
     @property
-    def tapHome_api_service(self):
-        return self._tapHome_api_service
+    def taphome_api_service(self):
+        return self._taphome_api_service

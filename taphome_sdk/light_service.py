@@ -27,12 +27,12 @@ class LightState(TapHomeState):
 
 
 class LightService:
-    def __init__(self, tapHomeApiService: TapHomeApiService):
-        self.tapHomeApiService = tapHomeApiService
+    def __init__(self, taphome_api_service: TapHomeApiService):
+        self.taphome_api_service = taphome_api_service
 
     async def async_get_state(self, device: Device) -> LightState:
-        light_values = await self.tapHomeApiService.async_get_device_values(
-            device.deviceId
+        light_values = await self.taphome_api_service.async_get_device_values(
+            device.id
         )
 
         return LightState(light_values)
@@ -46,7 +46,7 @@ class LightService:
         saturation=None,
     ) -> None:
         if brightness is color_temp is hue is saturation is None:
-            return self.tapHomeApiService.async_set_device_value(
+            return self.taphome_api_service.async_set_device_value(
                 device.id, ValueType.SwitchState, SwitchStates.ON.value
             )
         else:
@@ -54,7 +54,7 @@ class LightService:
 
             def append_value(value_type: ValueType, value):
                 values.append(
-                    self.tapHomeApiService.create_device_value(value_type, value)
+                    self.taphome_api_service.create_device_value(value_type, value)
                 )
 
             if brightness is not None:
@@ -74,9 +74,9 @@ class LightService:
             if saturation is not None:
                 append_value(ValueType.Saturation, saturation)
 
-            return self.tapHomeApiService.async_set_device_values(device.id, values)
+            return self.taphome_api_service.async_set_device_values(device.id, values)
 
     def async_turn_off(self, device: Device) -> None:
-        return self.tapHomeApiService.async_set_device_value(
+        return self.taphome_api_service.async_set_device_value(
             device.id, ValueType.SwitchState, SwitchStates.OFF.value
         )

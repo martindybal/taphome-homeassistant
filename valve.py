@@ -106,7 +106,7 @@ def setup_platform(
     add_entry_requests: list[AddEntryRequest] = hass.data[TAPHOME_PLATFORM][CONF_VALVE]
     valves = []
     for add_entry_request in add_entry_requests:
-        valve_service = ValveService(add_entry_request.tapHome_api_service)
+        valve_service = ValveService(add_entry_request.taphome_api_service)
         valve = TapHomeValve(
             hass,
             add_entry_request.core_config,
