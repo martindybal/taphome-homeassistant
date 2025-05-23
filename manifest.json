@@ -1,14 +1,13 @@
 {
-  "domain": "taphome",
-  "name": "TapHome",
-  "version": "2025.2.0",
-  "iot_class": "local_push",
-  "documentation": "https://github.com/martindybal/taphome-homeassistant",
-  "issue_tracker": "https://github.com/martindybal/taphome-homeassistant/issues",
-  "dependencies": [],
-  "codeowners": [
-    "@martindybal"
-  ],
-  "integration_type": "hub",
-  "requirements": []
+    "domain": "taphome",
+    "name": "TapHome",
+    "version": "2025.2.0",
+    "iot_class": "local_push",
+    "documentation": "https://github.com/martindybal/taphome-homeassistant",
+    "issue_tracker": "https://github.com/martindybal/taphome-homeassistant/issues",
+    "dependencies": [],
+    "codeowners": ["@martindybal"],
+    "integration_type": "hub",
+    "config_flow": true,
+    "requirements": []
 }

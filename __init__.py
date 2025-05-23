@@ -265,6 +265,17 @@ async def async_setup(hass: HomeAssistant, config: ConfigEntry) -> bool:
     return True
 
 
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Set up TapHome from a config entry."""
+    config = {TAPHOME_PLATFORM: {CONF_CORES: [entry.data]}}
+    return await async_setup(hass, config)
+
+
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Unload a TapHome config entry."""
+    return True
+
+
 def get_update_interval_default_value(api_url: str, webhook_id: str) -> int:
     if webhook_id:
         return 600
