@@ -11,6 +11,7 @@ class ValveService:
     def __init__(self, taphome_api_service: TapHomeApiService):
         self.taphome_api_service = taphome_api_service
         self.percentage_service = PercentageService(taphome_api_service)
+        self.taphome_api_service = taphome_api_service
 
     async def async_get_state(self, device: Device) -> ValveState:
         valve_values = await self.taphome_api_service.async_get_device_values(
