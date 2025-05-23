@@ -10,10 +10,11 @@ class FanState(PercentageState):
 class FanService:
     def __init__(self, taphome_api_service: TapHomeApiService):
         self.percentage_service = PercentageService(taphome_api_service)
+        self.taphome_api_service = taphome_api_service
 
     async def async_get_state(self, device: Device) -> FanState:
         fan_values = await self.taphome_api_service.async_get_device_values(
-            device.deviceId
+            device.id
         )
         return FanState(fan_values)
 
