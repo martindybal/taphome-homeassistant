@@ -6,8 +6,9 @@ from homeassistant.core import HomeAssistant
 
 from .add_entry_request import AddEntryRequest
 from .const import CONF_BUTTONS, TAPHOME_PLATFORM
-from .taphome_entity import *
-from .taphome_sdk import *
+from .taphome_core_config_entry import TapHomeCoreConfigEntry
+from .taphome_entity import TapHomeConfigEntry, TapHomeEntity
+from .taphome_sdk import ButtonAction, ButtonService, TapHomeState
 
 
 class ButtonConfigEntry(TapHomeConfigEntry):

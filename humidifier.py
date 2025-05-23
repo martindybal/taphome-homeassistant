@@ -14,9 +14,10 @@ from homeassistant.core import HomeAssistant
 
 from .add_entry_request import AddEntryRequest
 from .const import CONF_HUMIDIFIER, TAPHOME_PLATFORM
-from .coordinator import *
-from .taphome_entity import *
-from .taphome_sdk import *
+from .coordinator import TapHomeDataUpdateCoordinator, UpdateTapHomeState
+from .taphome_core_config_entry import TapHomeCoreConfigEntry
+from .taphome_entity import TapHomeConfigEntry, TapHomeEntity
+from .taphome_sdk import HumidifierService, HumidifierState, SwitchStates, ValueType
 
 
 class HumidifierConfigEntry(TapHomeConfigEntry):

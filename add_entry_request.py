@@ -1,7 +1,7 @@
 from .coordinator import TapHomeDataUpdateCoordinator
 from .taphome_core_config_entry import TapHomeCoreConfigEntry
 from .taphome_entity import TapHomeConfigEntry
-from .taphome_sdk import *
+from .taphome_sdk import TapHomeApiService
 
 
 class AddEntryRequest:
