@@ -10,5 +10,6 @@
     "@martindybal"
   ],
   "integration_type": "hub",
-  "requirements": []
-}
+  "requirements": [],
+  "config_flow": true
+ }
