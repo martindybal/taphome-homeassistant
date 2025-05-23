@@ -9,6 +9,7 @@ class HumidifierState(PercentageState):
 
 class HumidifierService:
     def __init__(self, taphome_api_service: TapHomeApiService):
+        self.taphome_api_service = taphome_api_service
         self.percentage_service = PercentageService(taphome_api_service)
         self.taphome_api_service = taphome_api_service
 

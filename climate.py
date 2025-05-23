@@ -96,11 +96,11 @@ class TapHomeSwitchClimateController(
         self,
         taphome_device_id: int,
         on_hvac_mode,
-        tapHome_api_service: TapHomeApiService,
+        taphome_api_service: TapHomeApiService,
         coordinator: TapHomeDataUpdateCoordinator,
     ) -> None:
         super().__init__(taphome_device_id, SwitchState, coordinator)
-        self.switch_service = SwitchService(tapHome_api_service)
+        self.switch_service = SwitchService(taphome_api_service)
         self.on_hvac_mode = on_hvac_mode
 
     @property
@@ -136,11 +136,11 @@ class TapHomeModeClimateController(
     def __init__(
         self,
         taphome_device_id: int,
-        tapHome_api_service: TapHomeApiService,
+        taphome_api_service: TapHomeApiService,
         coordinator: TapHomeDataUpdateCoordinator,
     ) -> None:
         super().__init__(taphome_device_id, MultiValueSwitchState, coordinator)
-        self.multi_value_switch_service = MultiValueSwitchService(tapHome_api_service)
+        self.multi_value_switch_service = MultiValueSwitchService(taphome_api_service)
 
     @property
     def hvac_modes(self) -> list[HVACMode]:
@@ -191,7 +191,7 @@ class ClimateConfigEntry(TapHomeConfigEntry):
 
     def create_climate_controller(
         self,
-        tapHome_api_service: TapHomeApiService,
+        taphome_api_service: TapHomeApiService,
         coordinator: TapHomeDataUpdateCoordinator,
     ) -> TapHomeClimateController:
         if isinstance(self._device_config, dict):
@@ -199,20 +199,20 @@ class ClimateConfigEntry(TapHomeConfigEntry):
                 return TapHomeSwitchClimateController(
                     self._device_config["heating_switch_id"],
                     HVACMode.HEAT,
-                    tapHome_api_service,
+                    taphome_api_service,
                     coordinator,
                 )
             if "cooling_switch_id" in self._device_config:
                 return TapHomeSwitchClimateController(
                     self._device_config["cooling_switch_id"],
                     HVACMode.COOL,
-                    tapHome_api_service,
+                    taphome_api_service,
                     coordinator,
                 )
             if "heating_cooling_mode_id" in self._device_config:
                 return TapHomeModeClimateController(
                     self._device_config["heating_cooling_mode_id"],
-                    tapHome_api_service,
+                    taphome_api_service,
                     coordinator,
                 )
 
@@ -241,7 +241,7 @@ class TapHomeClimate(TapHomeEntity[ThermostatState], ClimateEntity):
         hass: HomeAssistant,
         core_config: TapHomeCoreConfigEntry,
         config_entry: ClimateConfigEntry,
-        tapHome_api_service: TapHomeApiService,
+        taphome_api_service: TapHomeApiService,
         coordinator: TapHomeDataUpdateCoordinator,
     ):
         super().__init__(
@@ -253,9 +253,9 @@ class TapHomeClimate(TapHomeEntity[ThermostatState], ClimateEntity):
             ThermostatState,
         )
 
-        self.thermostat_service = ThermostatService(tapHome_api_service)
+        self.thermostat_service = ThermostatService(taphome_api_service)
         self.climate_controller = config_entry.create_climate_controller(
-            tapHome_api_service, coordinator
+            taphome_api_service, coordinator
         )
         self.climate_controller.add_hvac_mode_changed_listener(
             self.handle_taphome_state_change
@@ -383,7 +383,7 @@ def setup_platform(
             hass,
             add_entry_request.core_config,
             add_entry_request.config_entry,
-            add_entry_request.tapHome_api_service,
+            add_entry_request.taphome_api_service,
             add_entry_request.coordinator,
         )
         climates.append(climate)

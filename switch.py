@@ -77,7 +77,7 @@ def setup_platform(
     ]
     switches = []
     for add_entry_request in add_entry_requests:
-        switch_service = SwitchService(add_entry_request.tapHome_api_service)
+        switch_service = SwitchService(add_entry_request.taphome_api_service)
         switch = TapHomeSwitch(
             hass,
             add_entry_request.core_config,

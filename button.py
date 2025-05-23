@@ -85,7 +85,7 @@ def setup_platform(
     ]
     buttons = []
     for add_entry_request in add_entry_requests:
-        button_service = ButtonService(add_entry_request.tapHome_api_service)
+        button_service = ButtonService(add_entry_request.taphome_api_service)
 
         for action in add_entry_request.config_entry.actions:
             button = TapHomeButton(

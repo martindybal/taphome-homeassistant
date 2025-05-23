@@ -50,7 +50,7 @@ class TapHomeApiService:
             _LOGGER.exception("TapHome request async_get_location failed: %s", json)
 
     async def async_get_all_devices_values(self) -> dict:
-        deviceInfo = None
+        device_info = None
         try:
             return await self.taphome_api_service.async_api_get("getAllDevicesValues")
         except Exception as ex:
@@ -60,20 +60,20 @@ class TapHomeApiService:
                 )
                 raise
             _LOGGER.exception(
-                "TapHome request async_get_all_devices_values failed: %s", deviceInfo
+                "TapHome request async_get_all_devices_values failed: %s", device_info
             )
             return None
 
     async def async_get_device_values(self, device_id: int) -> dict:
-        deviceInfo = None
+        device_info = None
         try:
-            deviceInfo = await self.taphome_api_service.async_api_get(
+            device_info = await self.taphome_api_service.async_api_get(
                 f"getDeviceValue/{device_id}"
             )
-            return deviceInfo["values"]
+            return device_info["values"]
         except Exception:
             _LOGGER.exception(
-                "TapHome request async_get_device_values failed: %s", deviceInfo
+                "TapHome request async_get_device_values failed: %s", device_info
             )
             return None
 
@@ -90,12 +90,12 @@ class TapHomeApiService:
         was_values_changed = False
 
         try:
-            requestBody = {
+            request_body = {
                 "deviceId": device_id,
                 "values": values,
             }
             json = await self.taphome_api_service.async_api_post(
-                "setDeviceValue", requestBody
+                "setDeviceValue", request_body
             )
             results = json["valuesChanged"]
 
