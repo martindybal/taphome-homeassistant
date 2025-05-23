@@ -27,7 +27,7 @@ class ThermostatService:
     async def async_get_state(self, device: Device) -> ThermostatState:
         try:
             thermostat_values = await self.taphome_api_service.async_get_device_values(
-                device.deviceId
+                device.id
             )
 
             return ThermostatState(thermostat_values)

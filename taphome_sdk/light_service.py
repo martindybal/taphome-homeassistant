@@ -32,7 +32,7 @@ class LightService:
 
     async def async_get_state(self, device: Device) -> LightState:
         light_values = await self.tapHomeApiService.async_get_device_values(
-            device.deviceId
+            device.id
         )
 
         return LightState(light_values)
