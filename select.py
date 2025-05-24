@@ -7,9 +7,10 @@ from homeassistant.core import HomeAssistant
 
 from .add_entry_request import AddEntryRequest
 from .const import CONF_MULTIVALUE_SWITCHES, TAPHOME_PLATFORM
-from .coordinator import TapHomeDataUpdateCoordinator
-from .taphome_entity import *
-from .taphome_sdk import *
+from .coordinator import TapHomeDataUpdateCoordinator, UpdateTapHomeState
+from .taphome_core_config_entry import TapHomeCoreConfigEntry
+from .taphome_entity import TapHomeConfigEntry, TapHomeEntity
+from .taphome_sdk import MultiValueSwitchService, MultiValueSwitchState, ValueType
 
 
 class TapHomeSelectOption:

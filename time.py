@@ -1,11 +1,12 @@
 """TapHome time integration."""
 
-from datetime import time
-from functools import cached_property
 import logging
 import typing
+from datetime import time
+from functools import cached_property
 
-from homeassistant.components.time import DOMAIN as TIME_DOMAIN, TimeEntity
+from homeassistant.components.time import DOMAIN as TIME_DOMAIN
+from homeassistant.components.time import TimeEntity
 from homeassistant.core import HomeAssistant
 
 from .add_entry_request import AddEntryRequest

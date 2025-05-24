@@ -13,9 +13,13 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .add_entry_request import AddEntryRequest
 from .const import TAPHOME_PLATFORM
-from .coordinator import TapHomeDataUpdateCoordinator
-from .taphome_entity import *
-from .taphome_sdk import *
+from .coordinator import (
+    TapHomeDataUpdateCoordinator,
+    TapHomeDataUpdateCoordinatorObject,
+)
+from .taphome_core_config_entry import TapHomeCoreConfigEntry
+from .taphome_entity import TapHomeConfigEntry, TapHomeEntity
+from .taphome_sdk import TapHomeState, ValueType
 
 
 class TapHomeIsAliveSensor(BinarySensorEntity):

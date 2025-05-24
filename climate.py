@@ -5,20 +5,36 @@ import typing
 
 from homeassistant.components.climate import (
     ATTR_HVAC_MODE,
-    DOMAIN as CLIMATE_DOMAIN,
     ClimateEntity,
     ClimateEntityFeature,
     HVACMode,
 )
-
+from homeassistant.components.climate import (
+    DOMAIN as CLIMATE_DOMAIN,
+)
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 
 from .add_entry_request import AddEntryRequest
 from .const import CONF_CLIMATES, TAPHOME_PLATFORM
-from .coordinator import TapHomeDataUpdateCoordinator
-from .taphome_entity import *
-from .taphome_sdk import *
+from .coordinator import (
+    TapHomeDataUpdateCoordinator,
+    TapHomeDataUpdateCoordinatorObject,
+    TState,
+    UpdateTapHomeState,
+)
+from .taphome_core_config_entry import TapHomeCoreConfigEntry
+from .taphome_entity import TapHomeConfigEntry, TapHomeEntity
+from .taphome_sdk import (
+    MultiValueSwitchService,
+    MultiValueSwitchState,
+    SwitchService,
+    SwitchState,
+    TapHomeApiService,
+    ThermostatService,
+    ThermostatState,
+    ValueType,
+)
 
 _LOGGER = logging.getLogger(__name__)
 

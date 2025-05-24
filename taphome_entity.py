@@ -3,9 +3,12 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .coordinator import *
+from .coordinator import (
+    TapHomeDataUpdateCoordinator,
+    TapHomeDataUpdateCoordinatorObject,
+    TState,
+)
 from .taphome_core_config_entry import TapHomeCoreConfigEntry
-from .taphome_sdk import *
 
 
 class TapHomeConfigEntry:

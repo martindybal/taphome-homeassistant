@@ -1,5 +1,5 @@
-from enum import Enum
 import logging
+from enum import Enum
 
 from .device import Device
 from .taphome_api_service import TapHomeApiService
