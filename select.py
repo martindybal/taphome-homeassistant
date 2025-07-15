@@ -1,15 +1,13 @@
 """TapHome light integration."""
 
-import typing
-
-from homeassistant.components.select import DOMAIN, SelectEntity
+from homeassistant.components.select import DOMAIN as SELECT_DOMAIN, SelectEntity
 from homeassistant.core import HomeAssistant
 
 from .add_entry_request import AddEntryRequest
 from .const import CONF_MULTIVALUE_SWITCHES, TAPHOME_PLATFORM
-from .coordinator import TapHomeDataUpdateCoordinator
-from .taphome_entity import *
-from .taphome_sdk import *
+from .coordinator import TapHomeDataUpdateCoordinator, UpdateTapHomeState
+from .taphome_entity import TapHomeConfigEntry, TapHomeCoreConfigEntry, TapHomeEntity
+from .taphome_sdk import MultiValueSwitchService, MultiValueSwitchState, ValueType
 
 
 class TapHomeSelectOption:
@@ -27,7 +25,7 @@ class TapHomeSelectOption:
 
 
 class TapHomeSelect(TapHomeEntity[MultiValueSwitchState], SelectEntity):
-    """Representation of an select"""
+    """Representation of an select."""
 
     def __init__(
         self,
@@ -38,7 +36,12 @@ class TapHomeSelect(TapHomeEntity[MultiValueSwitchState], SelectEntity):
         multi_value_switch_service: MultiValueSwitchService,
     ):
         super().__init__(
-            hass, core_config, config_entry, DOMAIN, coordinator, MultiValueSwitchState
+            hass,
+            core_config,
+            config_entry,
+            SELECT_DOMAIN,
+            coordinator,
+            MultiValueSwitchState,
         )
         self.multi_value_switch_service = multi_value_switch_service
         # this should be load from TapHome or config. TapHome don't provide such information but they promissed it to me
@@ -49,17 +52,17 @@ class TapHomeSelect(TapHomeEntity[MultiValueSwitchState], SelectEntity):
             allowed_values = self.taphome_device.supported_values[
                 ValueType.MultiValueSwitchState
             ].allowed_values
-            return list(
-                map(
-                    lambda value: TapHomeSelectOption(value["value"], value["name"]),
-                    filter(lambda value: value["isEnabled"], allowed_values),
-                )
-            )
+            return [
+                TapHomeSelectOption(value["value"], value["name"])
+                for value in filter(lambda value: value["isEnabled"], allowed_values)
+            ]
+        return None
 
     @property
     def options(self) -> list[str]:
         if self.taphome_device is not None:
-            return list(map(lambda option: option.text, self.taphome_options))
+            return [option.text for option in self.taphome_options]
+        return None
 
     @property
     def current_option(self) -> str:
@@ -67,6 +70,7 @@ class TapHomeSelect(TapHomeEntity[MultiValueSwitchState], SelectEntity):
             return self.get_opinion_by_value(
                 self.taphome_state.multi_value_switch_state
             ).text
+        return None
 
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
@@ -92,7 +96,7 @@ def setup_platform(
     discovery_info=None,
 ) -> None:
     """Set up the select platform."""
-    add_entry_requests: typing.List[AddEntryRequest] = hass.data[TAPHOME_PLATFORM][
+    add_entry_requests: list[AddEntryRequest] = hass.data[TAPHOME_PLATFORM][
         CONF_MULTIVALUE_SWITCHES
     ]
     selects = []

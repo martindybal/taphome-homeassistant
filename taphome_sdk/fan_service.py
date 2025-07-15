@@ -14,9 +14,7 @@ class FanService:
         self.taphome_api_service = taphome_api_service
 
     async def async_get_state(self, device: Device) -> FanState:
-        fan_values = await self.taphome_api_service.async_get_device_values(
-            device.id
-        )
+        fan_values = await self.taphome_api_service.async_get_device_values(device.id)
         return FanState(fan_values)
 
     def async_turn_on(self, device: Device) -> None:

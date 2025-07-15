@@ -1,7 +1,7 @@
 """TapHome sensor integration."""
 
-import datetime
-import typing
+from datetime import datetime
+import logging
 
 from homeassistant.components.sensor import (
     DOMAIN as SENSOR_DOMAIN,
@@ -25,14 +25,19 @@ from homeassistant.const import (
     UnitOfVolume,
     UnitOfVolumetricFlux,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .add_entry_request import AddEntryRequest
 from .const import TAPHOME_PLATFORM
 from .coordinator import TapHomeDataUpdateCoordinator
-from .taphome_entity import *
-from .taphome_sdk import *
+from .taphome_entity import (
+    TapHomeConfigEntry,
+    TapHomeCoreConfigEntry,
+    TapHomeDataUpdateCoordinatorObject,
+    TapHomeEntity,
+)
+from .taphome_sdk import TapHomeState, ValueType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -42,9 +47,9 @@ class TapHomeSensorType:
         self,
         value_type: ValueType,
         device_class: SensorDeviceClass = None,
-        unit_of_measurement: str = None,
+        unit_of_measurement: str | None = None,
         state_class: SensorStateClass = None,
-        last_reset: datetime = None,
+        last_reset: datetime | None = None,
     ) -> None:
         self.device_class = device_class
         self.value_type = value_type
@@ -333,7 +338,7 @@ class SensorConfigEntry(TapHomeConfigEntry):
 
 
 class TapHomeSensor(TapHomeEntity[TapHomeState], SensorEntity):
-    """Representation of an sensor"""
+    """Representation of an sensor."""
 
     def __init__(
         self,
@@ -366,8 +371,9 @@ class TapHomeSensor(TapHomeEntity[TapHomeState], SensorEntity):
                 return None
             try:
                 return sensor_type.convert_taphome_to_ha(sensor_value)
-            except:
+            except (ValueError, TypeError, ArithmeticError):
                 return None
+        return None
 
     @property
     def device_class(self) -> str:
@@ -391,7 +397,7 @@ class TapHomeSensor(TapHomeEntity[TapHomeState], SensorEntity):
 
 
 class TapHomeSensorCreateRequest(TapHomeDataUpdateCoordinatorObject[TapHomeState]):
-    """Create TapHomeSensors from SensorConfigEntry when devices is discovered"""
+    """Create TapHomeSensors from SensorConfigEntry when devices is discovered."""
 
     def __init__(
         self,
@@ -419,7 +425,7 @@ class TapHomeSensorCreateRequest(TapHomeDataUpdateCoordinatorObject[TapHomeState
         if self.taphome_device is not None:
             self._was_entities_created = True
 
-            supported_sensor_types: typing.List[TapHomeSensorType] = [
+            supported_sensor_types: list[TapHomeSensorType] = [
                 TapHomeHumiditySensorType(),
                 TapHomeTemperatureSensorType(),
                 TapHomeElectricCounterElectricityDemandSensorType(),
@@ -481,7 +487,7 @@ def setup_platform(
     discovery_info=None,
 ) -> None:
     """Set up the sensor platform."""
-    add_entry_requests: typing.List[AddEntryRequest] = hass.data[TAPHOME_PLATFORM][
+    add_entry_requests: list[AddEntryRequest] = hass.data[TAPHOME_PLATFORM][
         CONF_SENSORS
     ]
     for add_entry_request in add_entry_requests:

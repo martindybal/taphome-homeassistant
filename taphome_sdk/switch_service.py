@@ -32,8 +32,8 @@ class SwitchService:
                 return None
 
             return SwitchState(switch_values)
-        except:
-            _LOGGER.error(f"TapHome async_get_state for {device.id} failed")
+        except Exception:
+            _LOGGER.exception("TapHome async_get_state for %s failed", device.id)
             return None
 
     def async_turn(self, switch_state: SwitchStates, device: Device) -> None:

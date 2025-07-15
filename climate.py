@@ -15,30 +15,44 @@ from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 
 from .add_entry_request import AddEntryRequest
 from .const import CONF_CLIMATES, TAPHOME_PLATFORM
-from .coordinator import TapHomeDataUpdateCoordinator
-from .taphome_entity import *
-from .taphome_sdk import *
+from .coordinator import TapHomeDataUpdateCoordinator, UpdateTapHomeState
+from .taphome_entity import (
+    TapHomeConfigEntry,
+    TapHomeCoreConfigEntry,
+    TapHomeDataUpdateCoordinatorObject,
+    TapHomeEntity,
+    TState,
+    callback,
+)
+from .taphome_sdk import (
+    MultiValueSwitchService,
+    MultiValueSwitchState,
+    SwitchService,
+    SwitchState,
+    SwitchStates,
+    TapHomeApiService,
+    ThermostatService,
+    ThermostatState,
+    ValueType,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
 
-class TapHomeClimateController(Generic[TState]):
+class TapHomeClimateController(typing.Generic[TState]):
     def __init__(self) -> None:
         self._listeners: list[CALLBACK_TYPE] = []
 
     @property
     def hvac_mode(self) -> HVACMode | None:
         """Return current operation ie. heat, cool, idle."""
-        pass
 
     @property
     def hvac_modes(self) -> list[HVACMode]:
         """Return the list of available operation/controller modes."""
-        pass
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode):
         """Set new target hvac mode."""
-        pass
 
     @callback
     def add_hvac_mode_changed_listener(
@@ -88,6 +102,10 @@ class TapHomeCoordinatorObjectClimateController(
         self._invoke_hvac_mode_changed(last_state)
 
 
+class UnknownHvacModeError(Exception):
+    """Exception raised when an unknown HVAC mode is encountered."""
+
+
 class TapHomeSwitchClimateController(
     TapHomeCoordinatorObjectClimateController[SwitchState]
 ):
@@ -108,8 +126,7 @@ class TapHomeSwitchClimateController(
             return None
         if self.taphome_state.switch_state == SwitchStates.ON:
             return self.on_hvac_mode
-        else:
-            return HVACMode.OFF
+        return HVACMode.OFF
 
     @property
     def hvac_modes(self) -> list[HVACMode]:
@@ -122,7 +139,7 @@ class TapHomeSwitchClimateController(
         elif hvac_mode == self.on_hvac_mode:
             switch_state = SwitchStates.ON
         else:
-            raise Exception(f"Unknown hvac mode: {hvac_mode}")
+            raise UnknownHvacModeError(f"Unknown hvac mode: {hvac_mode}")
 
         async with UpdateTapHomeState(self) as state:
             await self.switch_service.async_turn(switch_state, self.taphome_device)
@@ -155,6 +172,7 @@ class TapHomeModeClimateController(
                 3: HVACMode.HEAT_COOL,
             }
             return modes.get(self.taphome_state.multi_value_switch_state, None)
+        return None
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode):
         modes = {
@@ -163,7 +181,7 @@ class TapHomeModeClimateController(
             HVACMode.COOL: 2,
             HVACMode.HEAT_COOL: 3,
         }
-        multi_value_switch_state = modes.get(hvac_mode, None)
+        multi_value_switch_state = modes.get(hvac_mode)
 
         async with UpdateTapHomeState(self) as state:
             await self.multi_value_switch_service.async_set_value(
@@ -233,7 +251,7 @@ class ClimateConfigEntry(TapHomeConfigEntry):
 
 
 class TapHomeClimate(TapHomeEntity[ThermostatState], ClimateEntity):
-    """Representation of an climate"""
+    """Representation of an climate."""
 
     def __init__(
         self,

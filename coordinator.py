@@ -1,7 +1,5 @@
 """Provides the taphome DataUpdateCoordinator."""
 
-from aiohttp.web import Request
-
 # from .switch import TapHomeSwitch
 import copy
 from datetime import timedelta
@@ -10,6 +8,7 @@ from types import TracebackType
 from typing import Generic, TypeVar
 
 from aiohttp.client_reqrep import ClientResponseError
+from aiohttp.web import Request
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -76,9 +75,9 @@ class TapHomeDataUpdateCoordinatorDevice:
             state = (
                 None if self.taphome_values is None else state_type(self.taphome_values)
             )
-        except Exception as e:
-            _LOGGER.error(
-                f"Error update_taphome_state for device {self.taphome_device.id}: {e}"
+        except Exception:
+            _LOGGER.exception(
+                "Error update_taphome_state for device %s", self.taphome_device.id
             )
             state = None
         self._taphome_states[state_type] = state
@@ -138,18 +137,16 @@ class TapHomeDataUpdateCoordinator(DataUpdateCoordinator):
         try:
             await self.async_discovery_devices()
             await self.async_refresh_all_devices_values()
-            return self._devices
-
+            return self._devices  # noqa: TRY300
         except ClientResponseError as ex:
             if ex.status == 501:
                 _LOGGER.error(
                     "Core don't support get all devices api endpoint. Please update your TapHome Core"
                 )
-                raise NotImplementedError  # NotImplementedError is reraised to fail integration loading.
-            else:
-                exception_message = f"Invalid response from API: {ex.code} - {ex.request_info.url} {ex.message}"
-                _LOGGER.error(exception_message)
-                raise UpdateFailed(exception_message) from ex
+                raise NotImplementedError from ex  # NotImplementedError is reraised to fail integration loading.
+            exception_message = f"Invalid response from API: {ex.code} - {ex.request_info.url} {ex.message}"
+            _LOGGER.error(exception_message)
+            raise UpdateFailed(exception_message) from ex
 
         except Exception as ex:
             _LOGGER.exception("TapHome data update failed")
@@ -247,12 +244,11 @@ class TapHomeDataUpdateCoordinatorObject(Generic[TState]):
 
     @callback
     def handle_taphome_device_change(self) -> None:
-        """This method is called when taphome_device is changed."""
-        pass
+        """Handle taphome_device change."""
 
     @callback
     def handle_taphome_values_change(self, last_values: dict | None = None) -> None:
-        """This method is called when taphome_values is changed."""
+        """Handle change when taphome_values is updated."""
         last_state = (
             None if last_values is None else self._taphome_state_type(last_values)
         )
@@ -260,11 +256,10 @@ class TapHomeDataUpdateCoordinatorObject(Generic[TState]):
 
     @callback
     def handle_taphome_state_change(self, last_state: TState | None) -> None:
-        """This method is called when taphome_state is changed."""
-        pass
+        """Handle changes when taphome_state is updated."""
 
 
-class UpdateTapHomeState(object):
+class UpdateTapHomeState:
     def __init__(self, coordinator_object: TapHomeDataUpdateCoordinatorObject[TState]):
         self._coordinator_object = coordinator_object
         self._last_state: TState | None = None
@@ -275,9 +270,9 @@ class UpdateTapHomeState(object):
 
     async def __aexit__(
         self,
-        exc_type: type[BaseException],
-        exc_val: BaseException,
-        exc_tb: TracebackType,
+        exc_type: type[BaseException] | None,
+        exc_val: BaseException | None,
+        exc_tb: TracebackType | None,
     ) -> None:
         if exc_type is None:
             self._coordinator_object.handle_taphome_state_change(self._last_state)

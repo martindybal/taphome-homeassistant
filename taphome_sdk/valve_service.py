@@ -14,9 +14,7 @@ class ValveService:
         self.taphome_api_service = taphome_api_service
 
     async def async_get_state(self, device: Device) -> ValveState:
-        valve_values = await self.taphome_api_service.async_get_device_values(
-            device.id
-        )
+        valve_values = await self.taphome_api_service.async_get_device_values(device.id)
         return ValveState(valve_values)
 
     def support_set_position(self, device: Device) -> None:

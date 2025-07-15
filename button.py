@@ -1,13 +1,17 @@
 """TapHome button integration."""
-import typing
 
 from homeassistant.components.button import DOMAIN, ButtonEntity
 from homeassistant.core import HomeAssistant
 
 from .add_entry_request import AddEntryRequest
 from .const import CONF_BUTTONS, TAPHOME_PLATFORM
-from .taphome_entity import *
-from .taphome_sdk import *
+from .taphome_entity import (
+    TapHomeConfigEntry,
+    TapHomeCoreConfigEntry,
+    TapHomeDataUpdateCoordinator,
+    TapHomeEntity,
+)
+from .taphome_sdk import ButtonAction, ButtonService, TapHomeState
 
 
 class ButtonConfigEntry(TapHomeConfigEntry):
@@ -36,7 +40,7 @@ class ButtonConfigEntry(TapHomeConfigEntry):
 
 
 class TapHomeButton(TapHomeEntity[dict], ButtonEntity):
-    """Representation of an button"""
+    """Representation of an button."""
 
     def __init__(
         self,
@@ -62,7 +66,7 @@ class TapHomeButton(TapHomeEntity[dict], ButtonEntity):
 
     @property
     def available(self):
-        return not self.taphome_device is None
+        return self.taphome_device is not None
 
     @property
     def device_class(self):
@@ -80,7 +84,7 @@ def setup_platform(
     discovery_info=None,
 ) -> None:
     """Set up the button platform."""
-    add_entry_requests: typing.List[AddEntryRequest] = hass.data[TAPHOME_PLATFORM][
+    add_entry_requests: list[AddEntryRequest] = hass.data[TAPHOME_PLATFORM][
         CONF_BUTTONS
     ]
     buttons = []

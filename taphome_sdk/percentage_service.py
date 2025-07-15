@@ -65,10 +65,11 @@ class PercentageService:
     def _get_percentage_service(self, device: Device) -> None:
         if device.supports_value(ValueType.AnalogOutputDesiredValue):
             return self.analog_percentage_service
-        elif device.supports_value(ValueType.BlindsLevel):
+        if device.supports_value(ValueType.BlindsLevel):
             return self.blind_percentage_service
-        elif device.supports_value(ValueType.SwitchState):
+        if device.supports_value(ValueType.SwitchState):
             return self.switch_percentage_service
+        return None
 
 
 class AnalogPercentageService:
@@ -98,17 +99,16 @@ class AnalogPercentageService:
     def async_set_percentage(self, device: Device, percentage=None) -> None:
         if percentage == 0:
             return self.async_turn_off(device)
-        else:
-            values = [
-                self.taphome_api_service.create_device_value(
-                    ValueType.SwitchState, SwitchStates.ON.value
-                ),
-                self.taphome_api_service.create_device_value(
-                    ValueType.AnalogOutputDesiredValue, percentage
-                ),
-            ]
+        values = [
+            self.taphome_api_service.create_device_value(
+                ValueType.SwitchState, SwitchStates.ON.value
+            ),
+            self.taphome_api_service.create_device_value(
+                ValueType.AnalogOutputDesiredValue, percentage
+            ),
+        ]
 
-            return self.taphome_api_service.async_set_device_values(device.id, values)
+        return self.taphome_api_service.async_set_device_values(device.id, values)
 
 
 class BlindPercentageService:
@@ -134,6 +134,7 @@ class BlindPercentageService:
 
         return self.taphome_api_service.async_set_device_values(device.id, values)
 
+
 class SwitchPercentageService:
     def __init__(self, taphome_api_service: TapHomeApiService):
         self.switch_service = SwitchService(taphome_api_service)
@@ -151,5 +152,4 @@ class SwitchPercentageService:
     def async_set_percentage(self, device: Device, percentage=None) -> None:
         if percentage == 0:
             return self.async_turn_off(device)
-        else:
-            return self.async_turn_on(device)
+        return self.async_turn_on(device)

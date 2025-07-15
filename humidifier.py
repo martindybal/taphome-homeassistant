@@ -5,18 +5,22 @@ from __future__ import annotations
 from typing import Any
 
 from homeassistant.components.humidifier import (
-    DOMAIN,
-    HumidifierDeviceClass,
+    DOMAIN as HUMIDIFIER_DOMAIN,
+    HumidifierAction,
     HumidifierEntity,
 )
-from homeassistant.components.humidifier.const import HumidifierAction
 from homeassistant.core import HomeAssistant
 
 from .add_entry_request import AddEntryRequest
 from .const import CONF_HUMIDIFIER, TAPHOME_PLATFORM
-from .coordinator import *
-from .taphome_entity import *
-from .taphome_sdk import *
+from .coordinator import UpdateTapHomeState
+from .taphome_entity import (
+    TapHomeConfigEntry,
+    TapHomeCoreConfigEntry,
+    TapHomeDataUpdateCoordinator,
+    TapHomeEntity,
+)
+from .taphome_sdk import HumidifierService, HumidifierState, SwitchStates, ValueType
 
 
 class HumidifierConfigEntry(TapHomeConfigEntry):
@@ -42,7 +46,12 @@ class TapHomeHumidifier(TapHomeEntity[HumidifierState], HumidifierEntity):
         humidifier_service: HumidifierService,
     ):
         super().__init__(
-            hass, core_config, config_entry, DOMAIN, coordinator, HumidifierState
+            hass,
+            core_config,
+            config_entry,
+            HUMIDIFIER_DOMAIN,
+            coordinator,
+            HumidifierState,
         )
         self.config = config_entry
         self._attr_action = HumidifierAction.HUMIDIFYING
@@ -54,22 +63,25 @@ class TapHomeHumidifier(TapHomeEntity[HumidifierState], HumidifierEntity):
         """Returns if the device is on or not."""
         if self.taphome_state is not None:
             return self.taphome_state.switch_state == SwitchStates.ON
+        return None
 
     @property
     def target_humidity(self) -> int | None:
         """Returns if the device is on or not."""
-        if not self.taphome_state is None:
+        if self.taphome_state is not None:
             return TapHomeEntity.convert_taphome_percentage_to_ha(
                 self.taphome_state.percentage
             )
+        return None
 
     @property
     def current_humidity(self) -> int | None:
         """Returns if the device is on or not."""
-        if not self.taphome_state is None:
+        if self.taphome_state is not None:
             return TapHomeEntity.convert_taphome_percentage_to_ha(
                 self.taphome_state.percentage
             )
+        return None
 
     @property
     def min_humidity(self) -> int | None:
@@ -78,12 +90,13 @@ class TapHomeHumidifier(TapHomeEntity[HumidifierState], HumidifierEntity):
         if self.config.min_humidity is not None:
             return self.config.min_humidity
 
-        if not self.taphome_device is None:
+        if self.taphome_device is not None:
             return TapHomeEntity.convert_taphome_percentage_to_ha(
                 self.taphome_device.supported_values[
                     ValueType.AnalogOutputDesiredValue
                 ].min_value
             )
+        return None
 
     @property
     def max_humidity(self) -> int | None:
@@ -91,12 +104,13 @@ class TapHomeHumidifier(TapHomeEntity[HumidifierState], HumidifierEntity):
         if self.config.max_humidity is not None:
             return self.config.max_humidity
 
-        if not self.taphome_device is None:
+        if self.taphome_device is not None:
             return TapHomeEntity.convert_taphome_percentage_to_ha(
                 self.taphome_device.supported_values[
                     ValueType.AnalogOutputDesiredValue
                 ].max_value
             )
+        return None
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
@@ -134,7 +148,7 @@ def setup_platform(
     discovery_info=None,
 ) -> None:
     """Set up the fan platform."""
-    add_entry_requests: typing.List[AddEntryRequest] = hass.data[TAPHOME_PLATFORM][
+    add_entry_requests: list[AddEntryRequest] = hass.data[TAPHOME_PLATFORM][
         CONF_HUMIDIFIER
     ]
     humidifiers = []

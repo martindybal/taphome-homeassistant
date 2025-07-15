@@ -30,9 +30,11 @@ class CoverService:
             )
 
             return CoverState(cover_values)
-        except:
-            _LOGGER.error(f"TapHome async_get_state for {device.id} failed")
-            return None
+        except Exception:
+            _LOGGER.exception(
+                "TapHome async_get_state for device %s failed",
+                device.id,
+            )
 
     def async_set_level(self, device: Device, position, tilt=None) -> None:
         values = [
