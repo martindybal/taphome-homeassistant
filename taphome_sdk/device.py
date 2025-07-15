@@ -48,12 +48,16 @@ class Device:
         id: int,
         name: str,
         description: str,
+        zone: str | None,
+        category: str | None,
         type: str,
         supported_values,
     ):
         self._id = id
         self._name = name
         self._description = description
+        self._zone = zone
+        self._category = category
         self._type = type
         self._supported_values = supported_values
 
@@ -62,6 +66,8 @@ class Device:
         id = device["deviceId"]
         name = device["name"]
         description = device["description"]
+        zone = device.get("zone")
+        category = device.get("category")
         type = device["type"]
         supported_values = {}
         for supported_value in device["supportedValues"]:
@@ -77,7 +83,7 @@ class Device:
 
             except Exception:
                 _LOGGER.warning(f"{supported_value} is not a valid ValueType")
-        return Device(id, name, description, type, supported_values)
+        return Device(id, name, description, zone, category, type, supported_values)
 
     @property
     def id(self):
@@ -90,6 +96,14 @@ class Device:
     @property
     def description(self):
         return self._description
+
+    @property
+    def zone(self):
+        return self._zone
+
+    @property
+    def category(self):
+        return self._category
 
     @property
     def type(self):
