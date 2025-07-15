@@ -72,7 +72,15 @@ class TapHomeDataUpdateCoordinatorDevice:
             self.update_taphome_state(state_type)
 
     def update_taphome_state(self, state_type):
-        state = None if self.taphome_values is None else state_type(self.taphome_values)
+        try:
+            state = (
+                None if self.taphome_values is None else state_type(self.taphome_values)
+            )
+        except Exception as e:
+            _LOGGER.error(
+                f"Error update_taphome_state for device {self.taphome_device.id}: {e}"
+            )
+            state = None
         self._taphome_states[state_type] = state
 
     def attach_taphome_state_change_handler(self, taphome_state_change_handler):
