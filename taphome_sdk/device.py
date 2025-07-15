@@ -1,5 +1,4 @@
 import logging
-from typing import Optional
 
 from .value_type import ValueType
 
@@ -12,8 +11,8 @@ class SupportedValue:
         value_type: ValueType,
         read_only: bool,
         allowed_values: list[dict],
-        min_value: Optional[int],
-        max_value: Optional[int],
+        min_value: int | None,
+        max_value: int | None,
     ) -> None:
         self._value_type = value_type
         self._read_only = read_only
@@ -34,11 +33,11 @@ class SupportedValue:
         return self._allowed_values
 
     @property
-    def min_value(self) -> Optional[int]:
+    def min_value(self) -> int | None:
         return self._min_value
 
     @property
-    def max_value(self) -> Optional[int]:
+    def max_value(self) -> int | None:
         return self._max_value
 
 
@@ -63,12 +62,12 @@ class Device:
 
     @staticmethod
     def create(device: dict):
-        id = device["deviceId"]
+        deviceId = device["deviceId"]
         name = device["name"]
         description = device["description"]
         zone = device.get("zone")
         category = device.get("category")
-        type = device["type"]
+        deviceType = device["type"]
         supported_values = {}
         for supported_value in device["supportedValues"]:
             try:
@@ -81,9 +80,11 @@ class Device:
                     value_type, read_only, allowed_values, min_value, max_value
                 )
 
-            except Exception:
-                _LOGGER.warning(f"{supported_value} is not a valid ValueType")
-        return Device(id, name, description, zone, category, type, supported_values)
+            except ValueError:
+                _LOGGER.warning("%s is not a valid ValueType", supported_value)
+        return Device(
+            deviceId, name, description, zone, category, deviceType, supported_values
+        )
 
     @property
     def id(self):

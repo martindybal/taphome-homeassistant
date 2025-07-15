@@ -1,7 +1,5 @@
 """TapHome binary_sensor integration."""
 
-import typing
-
 from homeassistant.components.binary_sensor import (
     DOMAIN,
     BinarySensorDeviceClass,
@@ -14,8 +12,14 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .add_entry_request import AddEntryRequest
 from .const import TAPHOME_PLATFORM
 from .coordinator import TapHomeDataUpdateCoordinator
-from .taphome_entity import *
-from .taphome_sdk import *
+from .taphome_entity import (
+    TapHomeConfigEntry,
+    TapHomeCoreConfigEntry,
+    TapHomeDataUpdateCoordinatorObject,
+    TapHomeEntity,
+    callback,
+)
+from .taphome_sdk import TapHomeState, ValueType
 
 
 class TapHomeIsAliveSensor(BinarySensorEntity):
@@ -53,7 +57,7 @@ class TapHomeIsAliveSensor(BinarySensorEntity):
 
 
 class TapHomeBinarySensorType:
-    def __init__(self, value_type: ValueType, device_class: str = None) -> None:
+    def __init__(self, value_type: ValueType, device_class: str | None = None) -> None:
         self.value_type = value_type
         self.device_class = device_class
 
@@ -122,7 +126,7 @@ class BinarySensorConfigEntry(TapHomeConfigEntry):
 
 
 class TapHomeBinarySensor(TapHomeEntity[TapHomeState], BinarySensorEntity):
-    """Representation of an binary sensor"""
+    """Representation of an binary sensor."""
 
     def __init__(
         self,
@@ -157,12 +161,13 @@ class TapHomeBinarySensor(TapHomeEntity[TapHomeState], BinarySensorEntity):
             sensor_type = self._sensor_type
             sensor_value = self.taphome_state.get_device_value(sensor_type.value_type)
             return TapHomeEntity.convert_taphome_bool_to_ha(sensor_value)
+        return None
 
 
 class TapHomeBinarySensorCreateRequest(
     TapHomeDataUpdateCoordinatorObject[TapHomeState]
 ):
-    """Create TapHomeBinarySensor from BinarySensorConfigEntry when devices is discovered"""
+    """Create TapHomeBinarySensor from BinarySensorConfigEntry when devices is discovered."""
 
     def __init__(
         self,
@@ -190,7 +195,7 @@ class TapHomeBinarySensorCreateRequest(
         if self.taphome_device is not None:
             self._was_entities_created = True
 
-            supported_sensor_types: typing.List[TapHomeBinarySensorType] = [
+            supported_sensor_types: list[TapHomeBinarySensorType] = [
                 TapHomeMotionBinarySensorType(),
                 TapHomeReedContactBinarySensorType(),
                 TapHomeVariableBinarySensorType(),
@@ -231,14 +236,14 @@ def setup_platform(
     discovery_info=None,
 ) -> None:
     """Set up the binary sensor platform."""
-    add_entry_requests: typing.List[AddEntryRequest] = hass.data[TAPHOME_PLATFORM][
+    add_entry_requests: list[AddEntryRequest] = hass.data[TAPHOME_PLATFORM][
         CONF_BINARY_SENSORS
     ]
 
     for add_entry_request in add_entry_requests:
         TapHomeBinarySensorCreateRequest(
             hass,
-            add_entry_request._core_config,
+            add_entry_request.core_config,
             add_entry_request.config_entry,
             add_entry_request.coordinator,
             add_entities,
@@ -248,9 +253,9 @@ def setup_platform(
     is_alive_sensors = []
     for domain in hass.data[TAPHOME_PLATFORM]:
         for add_entry_request in hass.data[TAPHOME_PLATFORM][domain]:
-            cores[add_entry_request._core_config] = add_entry_request.coordinator
+            cores[add_entry_request.core_config] = add_entry_request.coordinator
 
     # todo prověřit
-    for core_config in cores:
-        is_alive_sensors.append(TapHomeIsAliveSensor(core_config, cores[core_config]))
+    for core_config, coordinator in cores.items():
+        is_alive_sensors.append(TapHomeIsAliveSensor(core_config, coordinator))
     add_entities(is_alive_sensors)

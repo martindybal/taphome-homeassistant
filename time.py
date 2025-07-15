@@ -1,9 +1,7 @@
 """TapHome time integration."""
 
 from datetime import time
-from functools import cached_property
 import logging
-import typing
 
 from homeassistant.components.time import DOMAIN as TIME_DOMAIN, TimeEntity
 from homeassistant.core import HomeAssistant
@@ -78,9 +76,7 @@ def setup_platform(
     discovery_info=None,
 ) -> None:
     """Set up the time platform."""
-    add_entry_requests: typing.List[AddEntryRequest] = hass.data[TAPHOME_PLATFORM][
-        CONF_TIMES
-    ]
+    add_entry_requests: list[AddEntryRequest] = hass.data[TAPHOME_PLATFORM][CONF_TIMES]
 
     times = [
         TapHomeTime(

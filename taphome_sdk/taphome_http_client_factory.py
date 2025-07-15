@@ -15,7 +15,7 @@ class TapHomeHttpClientFactory:
         async def async_api_get(self, endpoint: str):
             async with aiohttp.ClientSession() as session:
                 request_url = self.__get_request_url(endpoint)
-                _LOGGER.debug(f"TapHome get {request_url}")
+                _LOGGER.debug("TapHome get %s", request_url)
                 headers = self.__get_authorization_header()
                 async with session.get(request_url, headers=headers) as response:
                     return await self.__get_json(response)
@@ -23,7 +23,7 @@ class TapHomeHttpClientFactory:
         async def async_api_post(self, endpoint: str, body):
             async with aiohttp.ClientSession() as session:
                 request_url = self.__get_request_url(endpoint)
-                _LOGGER.debug(f"TapHome post {request_url}")
+                _LOGGER.debug("TapHome post %s", request_url)
                 headers = self.__get_authorization_header()
                 async with session.post(
                     request_url, headers=headers, json=body
@@ -34,17 +34,22 @@ class TapHomeHttpClientFactory:
             try:
                 if response.status == 200:
                     return await response.json()
-                else:
-                    raise ClientResponseError(
-                        response.request_info,
-                        response.history,
-                        status=response.status,
-                        message=response.reason,
-                        headers=response.headers,
-                    )
+                raise ClientResponseError(
+                    response.request_info,
+                    response.history,
+                    status=response.status,
+                    message=response.reason,
+                    headers=response.headers,
+                )
             except:
-                _LOGGER.warning(
-                    f"request {response.url} {response.request_info.headers}\nstatus {response.status} {response.reason}\nheaders {response.headers}\ntext {await response.text()}\n"
+                _LOGGER.debug(
+                    "Request %s %s\nstatus %s %s\nheaders %s\ntext %s\n",
+                    response.url,
+                    response.request_info.headers,
+                    response.status,
+                    response.reason,
+                    response.headers,
+                    await response.text(),
                 )
                 raise
 

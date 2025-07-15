@@ -31,8 +31,8 @@ class TimeService:
                 return None
 
             return TimeState(time_values)
-        except:
-            _LOGGER.error("TapHome async_get_state for %s failed", device.id)
+        except Exception:
+            _LOGGER.exception("TapHome async_get_state for %s failed", device.id)
             return None
 
     def async_set_value(self, total_seconds: int, device: Device) -> None:

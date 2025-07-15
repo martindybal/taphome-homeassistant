@@ -1,4 +1,8 @@
+import logging
+
 from .value_type import ValueType
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class TapHomeState:
@@ -14,17 +18,16 @@ class TapHomeState:
 
         return False
 
-    def get_device_bool_value(self, vylue_type: ValueType) -> bool | None:
-        return self.get_device_value(vylue_type) == 1
+    def get_device_bool_value(self, value_type: ValueType) -> bool | None:
+        return self.get_device_value(value_type) == 1
 
-    def get_device_value(self, vylue_type: ValueType) -> float | None:
-        try:
-            value = next(
-                device_value
+    def get_device_value(self, value_type: ValueType) -> float | None:
+        value = next(
+            (
+                device_value["value"]
                 for device_value in self._device_values
-                if device_value["valueTypeId"] == vylue_type.value
-            )["value"]
-        except:
-            return None
-        else:
-            return value if value != "NaN" else None
+                if device_value.get("valueTypeId") == value_type.value
+            ),
+            None,
+        )
+        return None if value == "NaN" else value

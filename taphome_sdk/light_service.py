@@ -31,9 +31,7 @@ class LightService:
         self.taphome_api_service = taphome_api_service
 
     async def async_get_state(self, device: Device) -> LightState:
-        light_values = await self.taphome_api_service.async_get_device_values(
-            device.id
-        )
+        light_values = await self.taphome_api_service.async_get_device_values(device.id)
 
         return LightState(light_values)
 
@@ -49,32 +47,31 @@ class LightService:
             return self.taphome_api_service.async_set_device_value(
                 device.id, ValueType.SwitchState, SwitchStates.ON.value
             )
-        else:
-            values = []
+        values = []
 
-            def append_value(value_type: ValueType, value):
-                values.append(
-                    self.taphome_api_service.create_device_value(value_type, value)
-                )
+        def append_value(value_type: ValueType, value):
+            values.append(
+                self.taphome_api_service.create_device_value(value_type, value)
+            )
 
-            if brightness is not None:
-                append_value(ValueType.SwitchState, SwitchStates.ON.value)
+        if brightness is not None:
+            append_value(ValueType.SwitchState, SwitchStates.ON.value)
 
-                if device.supports_value(ValueType.AnalogOutputDesiredValue):
-                    append_value(ValueType.AnalogOutputDesiredValue, brightness)
-                elif device.supports_value(ValueType.HueBrightnessDesiredValue):
-                    append_value(ValueType.HueBrightnessDesiredValue, brightness)
+            if device.supports_value(ValueType.AnalogOutputDesiredValue):
+                append_value(ValueType.AnalogOutputDesiredValue, brightness)
+            elif device.supports_value(ValueType.HueBrightnessDesiredValue):
+                append_value(ValueType.HueBrightnessDesiredValue, brightness)
 
-            if color_temp is not None:
-                append_value(ValueType.CorrelatedColorTemperature, color_temp)
+        if color_temp is not None:
+            append_value(ValueType.CorrelatedColorTemperature, color_temp)
 
-            if hue is not None:
-                append_value(ValueType.HueDegrees, hue)
+        if hue is not None:
+            append_value(ValueType.HueDegrees, hue)
 
-            if saturation is not None:
-                append_value(ValueType.Saturation, saturation)
+        if saturation is not None:
+            append_value(ValueType.Saturation, saturation)
 
-            return self.taphome_api_service.async_set_device_values(device.id, values)
+        return self.taphome_api_service.async_set_device_values(device.id, values)
 
     def async_turn_off(self, device: Device) -> None:
         return self.taphome_api_service.async_set_device_value(
