@@ -98,6 +98,11 @@ class TapHomeEntity(CoordinatorEntity, TapHomeDataUpdateCoordinatorObject[TState
                 return self.taphome_device.description
             return self.taphome_device.name
 
+    @property
+    def extra_state_attributes(self) -> dict:
+        """Return entity specific state attributes."""
+        return {"taphome_id": self._taphome_device_id}
+
     @staticmethod
     def convert_taphome_byte_to_ha(value: int):
         """Convert 0..1 to 0..255 scale."""
