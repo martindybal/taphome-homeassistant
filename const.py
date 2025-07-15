@@ -1,3 +1,5 @@
+"""Constants used by the TapHome integration."""
+
 TAPHOME_PLATFORM = "taphome"
 
 TAPHOME_API_SERVICE = f"{TAPHOME_PLATFORM}_TapHomeApiService"

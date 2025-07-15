@@ -1,3 +1,5 @@
+"""Helper for controlling simple on/off switches."""
+
 import logging
 
 from .device import Device
@@ -10,19 +12,26 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class SwitchState(TapHomeState):
+    """State representation for a switch device."""
+
     def __init__(
         self,
         switch_values: dict,
     ):
+        """Create state from ``switch_values``."""
         super().__init__(switch_values)
         self.switch_state = SwitchStates(self.get_device_value(ValueType.SwitchState))
 
 
 class SwitchService:
+    """Service for operating simple switches."""
+
     def __init__(self, taphome_api_service: TapHomeApiService):
+        """Initialize with the TapHome API service."""
         self.taphome_api_service = taphome_api_service
 
     async def async_get_state(self, device: Device):
+        """Return ``SwitchState`` for ``device`` if available."""
         try:
             switch_values = await self.taphome_api_service.async_get_device_values(
                 device.id
@@ -37,6 +46,7 @@ class SwitchService:
             return None
 
     def async_turn(self, switch_state: SwitchStates, device: Device) -> None:
+        """Set ``device`` to the provided ``switch_state``."""
         values = [
             self.taphome_api_service.create_device_value(
                 ValueType.SwitchState, switch_state.value

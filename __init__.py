@@ -71,12 +71,15 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class DomainDefinition:
+    """Configuration holder for a Home Assistant platform domain."""
+
     def __init__(
         self,
         name: str,
         config_key: str,
         config_entry_type,
-    ):
+    ) -> None:
+        """Initialize domain with its configuration mapping."""
         self.name = name
         self.config_key = config_key
         self.config_entry_type = config_entry_type
@@ -139,6 +142,7 @@ CONFIG_SCHEMA = vol.Schema(
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigEntry) -> bool:
+    """Set up the TapHome integration."""
     if CONF_LANGUAGE in config[TAPHOME_PLATFORM]:
         _LOGGER.error(
             "TapHome language setting is not supported any more. You can rename entities as you wish. This options'll be removed in future, please remove it from your config"
@@ -254,6 +258,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigEntry) -> bool:
 
 
 def get_update_interval_default_value(api_url: str, webhook_id: str) -> int:
+    """Return polling interval in seconds based on API configuration."""
     if webhook_id:
         return 600
     if "cloudapi.taphome.com" in api_url:
@@ -262,12 +267,14 @@ def get_update_interval_default_value(api_url: str, webhook_id: str) -> int:
 
 
 def read_from_config_or_default(config: dict, key: str, default_value) -> typing.Any:
+    """Return ``config[key]`` if available otherwise ``default_value``."""
     if key in config:
         return config[key]
     return default_value
 
 
 def map_config_entries(config_entry, platform_config: list) -> list[TapHomeConfigEntry]:
+    """Instantiate ``config_entry`` objects for each configuration item."""
     return list(map(config_entry, platform_config))
 
 
@@ -277,6 +284,7 @@ def map_add_entry_requests(
     coordinator: TapHomeDataUpdateCoordinator,
     taphome_api_service: TapHomeApiService,
 ) -> list[AddEntryRequest]:
+    """Create ``AddEntryRequest`` objects for each config entry."""
     return [
         AddEntryRequest(
             core_config_entry,

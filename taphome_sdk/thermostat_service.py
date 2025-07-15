@@ -1,3 +1,5 @@
+"""Thermostat services for the TapHome platform."""
+
 import logging
 
 from .device import Device
@@ -9,10 +11,13 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class ThermostatState(TapHomeState):
+    """State representation for a thermostat device."""
+
     def __init__(
         self,
         thermostat_values: dict,
     ):
+        """Create state from ``thermostat_values``."""
         super().__init__(thermostat_values)
 
         self.desired_temperature = self.get_device_value(ValueType.TemperatureSetPoint)
@@ -21,10 +26,14 @@ class ThermostatState(TapHomeState):
 
 
 class ThermostatService:
+    """Service for controlling TapHome thermostats."""
+
     def __init__(self, taphome_api_service: TapHomeApiService):
+        """Initialize with the TapHome API service."""
         self.taphome_api_service = taphome_api_service
 
     async def async_get_state(self, device: Device) -> ThermostatState:
+        """Return ``ThermostatState`` for ``device`` if available."""
         try:
             thermostat_values = await self.taphome_api_service.async_get_device_values(
                 device.id
@@ -38,6 +47,7 @@ class ThermostatService:
     def async_set_desired_temperature(
         self, device: Device, desired_temperature
     ) -> None:
+        """Set the desired temperature on ``device``."""
         values = [
             self.taphome_api_service.create_device_value(
                 ValueType.TemperatureSetPoint, desired_temperature

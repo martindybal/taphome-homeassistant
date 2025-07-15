@@ -30,7 +30,8 @@ class TapHomeLight(TapHomeEntity[LightState], LightEntity):
         config_entry: TapHomeConfigEntry,
         coordinator: TapHomeDataUpdateCoordinator,
         light_service: LightService,
-    ):
+    ) -> None:
+        """Initialize TapHome light entity."""
         super().__init__(
             hass, core_config, config_entry, LIGHT_DOMAIN, coordinator, LightState
         )

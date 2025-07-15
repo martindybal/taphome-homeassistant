@@ -26,7 +26,8 @@ class TapHomeTime(TapHomeEntity[TimeState], TimeEntity):
         config_entry: TapHomeConfigEntry,
         coordinator: TapHomeDataUpdateCoordinator,
         time_service: TimeService,
-    ):
+    ) -> None:
+        """Initialize TapHome time entity."""
         super().__init__(
             hass,
             core_config,
@@ -45,14 +46,14 @@ class TapHomeTime(TapHomeEntity[TimeState], TimeEntity):
         return self.seconds_to_time(self.taphome_state.total_seconds)
 
     async def async_set_value(self, value: time) -> None:
-        """Update the current value."""
-
+        """Persist new time value on the device."""
         total_seconds = value.hour * 3600 + value.minute * 60 + value.second
         async with UpdateTapHomeState(self) as state:
             await self.time_service.async_set_value(total_seconds, self.taphome_device)
             state.total_seconds = total_seconds
 
     def seconds_to_time(self, seconds: int) -> time | None:
+        """Convert second count to a ``time`` instance."""
         one_day_total_seconds = 86400
         if seconds > one_day_total_seconds:
             _LOGGER.error(

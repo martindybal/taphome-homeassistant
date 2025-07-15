@@ -1,3 +1,5 @@
+"""Common entity abstractions for the TapHome integration."""
+
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.entity import async_generate_entity_id
@@ -14,7 +16,10 @@ from .taphome_sdk import OperationModes, ValueType
 
 
 class TapHomeConfigEntry:
-    def __init__(self, device_config: dict):
+    """Wrapper over raw device configuration data."""
+
+    def __init__(self, device_config: dict) -> None:
+        """Store device configuration and extract mandatory fields."""
         self._device_config = device_config
         if isinstance(device_config, int):
             self._id = device_config
@@ -25,19 +30,23 @@ class TapHomeConfigEntry:
 
     @property
     def id(self):
+        """Return TapHome device identifier."""
         return self._id
 
     @property
     def unique_id(self):
+        """Return Home Assistant unique identifier if defined."""
         return self._unique_id
 
     def get_required(self, key: str):
+        """Return value for ``key`` or raise if missing."""
         if isinstance(self._device_config, dict):
             if key in self._device_config:
                 return self._device_config[key]
         raise ConfigEntryNotReady
 
     def get_optional(self, key: str, default):
+        """Return value for ``key`` or ``default`` if not present."""
         if isinstance(self._device_config, dict):
             if key in self._device_config:
                 return self._device_config[key]
@@ -45,6 +54,8 @@ class TapHomeConfigEntry:
 
 
 class TapHomeEntity(CoordinatorEntity, TapHomeDataUpdateCoordinatorObject[TState]):
+    """Base class for all TapHome entities."""
+
     def __init__(
         self,
         hass: HomeAssistant,
@@ -53,7 +64,8 @@ class TapHomeEntity(CoordinatorEntity, TapHomeDataUpdateCoordinatorObject[TState
         unique_id_determination: str,
         coordinator: TapHomeDataUpdateCoordinator,
         taphome_state_type,
-    ):
+    ) -> None:
+        """Initialize shared entity state."""
         self._taphome_device_id = config.id
 
         if config.unique_id is None:
@@ -81,23 +93,27 @@ class TapHomeEntity(CoordinatorEntity, TapHomeDataUpdateCoordinatorObject[TState
             )
 
     def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator. Coordinator call schedule_update_ha_state when is needed."""
+        """Handle updated data from the coordinator."""
 
     @callback
     def handle_taphome_state_change(self, last_state: TState | None) -> None:
-        if self.hass is not None:  # chack if entity was added to hass
+        """Schedule state update when TapHome state changes."""
+        if self.hass is not None:  # check if entity was added to hass
             self.schedule_update_ha_state()
 
     @property
     def unique_id(self):
+        """Return the entity unique identifier."""
         return self._unique_id
 
     @property
     def available(self):
+        """Return ``True`` if the entity is ready for use."""
         return self.taphome_state is not None and self.taphome_device is not None
 
     @property
     def name(self):
+        """Return the display name of the entity."""
         if self.taphome_device is not None:
             if self._core_config.use_description_as_name:
                 return self.taphome_device.description
@@ -106,6 +122,7 @@ class TapHomeEntity(CoordinatorEntity, TapHomeDataUpdateCoordinatorObject[TState
 
     @property
     def operation_mode(self):
+        """Return current operation mode if available."""
         if self.taphome_state is not None:
             return OperationModes.create(
                 self.taphome_state.get_device_value(ValueType.OperationMode)
@@ -162,6 +179,7 @@ class TapHomeEntity(CoordinatorEntity, TapHomeDataUpdateCoordinatorObject[TState
 
     @staticmethod
     def convert_taphome_bool_to_ha(value: int):
+        """Convert 0/1 values to boolean."""
         if value == 1:
             return True
         if value == 0:

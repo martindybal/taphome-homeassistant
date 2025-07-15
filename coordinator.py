@@ -23,7 +23,10 @@ TState = TypeVar("TState")
 
 
 class TapHomeDataUpdateCoordinatorDevice:
-    def __init__(self):
+    """Internal container for device data and listeners."""
+
+    def __init__(self) -> None:
+        """Initialize device container."""
         self._taphome_device_change_listeners = []
         self._taphome_state_change_listeners = []
         self._taphome_device = None
@@ -33,6 +36,7 @@ class TapHomeDataUpdateCoordinatorDevice:
 
     @property
     def taphome_device(self):
+        """Return the cached TapHome device."""
         return self._taphome_device
 
     @taphome_device.setter
@@ -41,14 +45,17 @@ class TapHomeDataUpdateCoordinatorDevice:
         self.invoke_taphome_device_change()
 
     def attach_taphome_device_change_handler(self, taphome_device_change_handler):
+        """Subscribe to device change notifications."""
         self._taphome_device_change_listeners.append(taphome_device_change_handler)
 
     def invoke_taphome_device_change(self):
+        """Notify listeners that device reference has changed."""
         for taphome_device_change_handler in self._taphome_device_change_listeners:
             taphome_device_change_handler()
 
     @property
     def taphome_values(self):
+        """Return the latest values for the device."""
         return self._taphome_values
 
     @taphome_values.setter
@@ -59,6 +66,7 @@ class TapHomeDataUpdateCoordinatorDevice:
         self.invoke_taphome_state_change(last_values)
 
     def get_state(self, state_type):
+        """Return cached state instance of ``state_type``."""
         if state_type not in self._taphome_state_types:
             self._taphome_state_types.append(state_type)
 
@@ -67,10 +75,12 @@ class TapHomeDataUpdateCoordinatorDevice:
         return self._taphome_states[state_type]
 
     def update_taphome_states(self):
+        """Recompute all registered state objects."""
         for state_type in self._taphome_state_types:
             self.update_taphome_state(state_type)
 
     def update_taphome_state(self, state_type):
+        """Refresh cached state of given type from latest values."""
         try:
             state = (
                 None if self.taphome_values is None else state_type(self.taphome_values)
@@ -83,9 +93,11 @@ class TapHomeDataUpdateCoordinatorDevice:
         self._taphome_states[state_type] = state
 
     def attach_taphome_state_change_handler(self, taphome_state_change_handler):
+        """Subscribe to state change notifications."""
         self._taphome_state_change_listeners.append(taphome_state_change_handler)
 
     def invoke_taphome_state_change(self, last_values: dict | None = None):
+        """Notify state change listeners."""
         for taphome_state_change_handler in self._taphome_state_change_listeners:
             taphome_state_change_handler(last_values)
 
@@ -95,7 +107,8 @@ class TapHomeDataUpdateCoordinator(DataUpdateCoordinator):
 
     def __init__(
         self, hass, update_interval: int, taphome_api_service: TapHomeApiService
-    ):
+    ) -> None:
+        """Initialize coordinator with API service and polling interval."""
         self.taphome_api_service = taphome_api_service
         self._was_devices_discovered = False
         self._devices = {}
@@ -110,6 +123,7 @@ class TapHomeDataUpdateCoordinator(DataUpdateCoordinator):
         taphome_device_change_handler,
         taphome_state_change_handler,
     ) -> None:
+        """Register entity callbacks for a given TapHome device."""
         device = self.get_device_data(taphome_device_id)
         if device is None:
             _LOGGER.error(
@@ -121,12 +135,14 @@ class TapHomeDataUpdateCoordinator(DataUpdateCoordinator):
             device.attach_taphome_state_change_handler(taphome_state_change_handler)
 
     def get_device(self, taphome_device_id: int) -> Device:
+        """Return TapHome device instance for ``taphome_device_id``."""
         device = self.get_device_data(taphome_device_id)
         if device is None:
             return None
         return device.taphome_device
 
     def get_state(self, taphome_device_id: int, state_type):
+        """Return cached state object for ``taphome_device_id``."""
         device = self.get_device_data(taphome_device_id)
         if device is None:
             return None
@@ -153,6 +169,7 @@ class TapHomeDataUpdateCoordinator(DataUpdateCoordinator):
             raise UpdateFailed from ex
 
     async def async_discovery_devices(self) -> None:
+        """Discover devices exposed by the TapHome core."""
         if not self._was_devices_discovered:
             discovery_devices = await self.taphome_api_service.async_discovery_devices()
             if discovery_devices is not None:
@@ -163,6 +180,7 @@ class TapHomeDataUpdateCoordinator(DataUpdateCoordinator):
                 self._was_devices_discovered = True
 
     async def async_refresh_all_devices_values(self) -> None:
+        """Refresh values for all registered devices."""
         last_all_devices_values = (
             await self.taphome_api_service.async_get_all_devices_values()
         )
@@ -182,6 +200,7 @@ class TapHomeDataUpdateCoordinator(DataUpdateCoordinator):
         self.update_devices_values(all_devices_values)
 
     def update_devices_values(self, changed_values: dict, force: bool = False):
+        """Update cached values for all devices."""
         for changed_device in changed_values["devices"]:
             device_id = changed_device["deviceId"]
             device_changed_values = changed_device["values"]
@@ -198,6 +217,7 @@ class TapHomeDataUpdateCoordinator(DataUpdateCoordinator):
     def apply_changes(
         self, device: TapHomeDataUpdateCoordinatorDevice, device_changed_values: dict
     ):
+        """Merge ``device_changed_values`` into cached values."""
         new_values = copy.deepcopy(device.taphome_values)
         for changed_value in device_changed_values:
             for value_entry in new_values:
@@ -210,18 +230,22 @@ class TapHomeDataUpdateCoordinator(DataUpdateCoordinator):
     def get_device_data(
         self, taphome_device_id: int
     ) -> TapHomeDataUpdateCoordinatorDevice:
+        """Return internal device container for ``taphome_device_id``."""
         if taphome_device_id not in self._devices:
             return None
         return self._devices[taphome_device_id]
 
 
 class TapHomeDataUpdateCoordinatorObject(Generic[TState]):
+    """Base mixin that exposes TapHome device and state via a coordinator."""
+
     def __init__(
         self,
         taphome_device_id: int,
         coordinator: TapHomeDataUpdateCoordinator,
         taphome_state_type,
-    ):
+    ) -> None:
+        """Bind TapHome device and coordinator together."""
         self._taphome_device_id = taphome_device_id
         self._taphome_state_type = taphome_state_type
         self.coordinator = coordinator
@@ -234,12 +258,14 @@ class TapHomeDataUpdateCoordinatorObject(Generic[TState]):
 
     @property
     def taphome_state(self) -> TState:
+        """Return the latest state for this device."""
         return self.coordinator.get_state(
             self._taphome_device_id, self._taphome_state_type
         )
 
     @property
     def taphome_device(self) -> Device:
+        """Return the TapHome device representation."""
         return self.coordinator.get_device(self._taphome_device_id)
 
     @callback
@@ -260,11 +286,17 @@ class TapHomeDataUpdateCoordinatorObject(Generic[TState]):
 
 
 class UpdateTapHomeState:
-    def __init__(self, coordinator_object: TapHomeDataUpdateCoordinatorObject[TState]):
+    """Context manager for temporarily storing last TapHome state."""
+
+    def __init__(
+        self, coordinator_object: TapHomeDataUpdateCoordinatorObject[TState]
+    ) -> None:
+        """Initialize context with reference to coordinator object."""
         self._coordinator_object = coordinator_object
         self._last_state: TState | None = None
 
     async def __aenter__(self):
+        """Return current state and store it for later comparison."""
         self._last_state = self._coordinator_object.taphome_state
         return self._coordinator_object.taphome_state
 
@@ -274,5 +306,6 @@ class UpdateTapHomeState:
         exc_val: BaseException | None,
         exc_tb: TracebackType | None,
     ) -> None:
+        """Invoke state change handler on successful exit."""
         if exc_type is None:
             self._coordinator_object.handle_taphome_state_change(self._last_state)
