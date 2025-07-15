@@ -10,7 +10,6 @@ from homeassistant.components.climate import (
     ClimateEntityFeature,
     HVACMode,
 )
-
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 
@@ -374,7 +373,7 @@ def setup_platform(
     discovery_info=None,
 ) -> None:
     """Set up the climate platform."""
-    add_entry_requests: typing.List[AddEntryRequest] = hass.data[TAPHOME_PLATFORM][
+    add_entry_requests: list[AddEntryRequest] = hass.data[TAPHOME_PLATFORM][
         CONF_CLIMATES
     ]
     climates = []
