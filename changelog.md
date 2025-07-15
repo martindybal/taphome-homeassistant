@@ -6,7 +6,11 @@
 ## 2025.7
 - Added entity state attributes
     - `taphome_id` to easily find an entity in taphome.
-    - `operation_mode` to indicate Auto or Manual mode.
+    - `taphome_name` the TapHome device name.
+    - `taphome_description` the TapHome device description.
+    - `taphome_category` the TapHome device category name.
+    - `taphome_zone` the TapHome device zone name.
+    - `taphome_operation_mode` to indicate Auto or Manual mode.
 
 ## 2024.12.0
 - Add support for new TapHome 2024.2 variable types
