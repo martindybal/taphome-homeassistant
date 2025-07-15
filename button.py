@@ -15,7 +15,10 @@ from .taphome_sdk import ButtonAction, ButtonService, TapHomeState
 
 
 class ButtonConfigEntry(TapHomeConfigEntry):
-    def __init__(self, device_config: dict):
+    """Configuration options for TapHome buttons."""
+
+    def __init__(self, device_config: dict) -> None:
+        """Initialize button config entry."""
         super().__init__(device_config)
 
         config_actions = self.get_optional("actions", None)
@@ -32,10 +35,12 @@ class ButtonConfigEntry(TapHomeConfigEntry):
 
     @property
     def actions(self):
+        """Return list of supported button actions."""
         return self._actions
 
     @property
     def device_class(self):
+        """Return Home Assistant button device class if configured."""
         return self._device_class
 
 
@@ -50,7 +55,8 @@ class TapHomeButton(TapHomeEntity[dict], ButtonEntity):
         action: ButtonAction,
         coordinator: TapHomeDataUpdateCoordinator,
         button_service: ButtonService,
-    ):
+    ) -> None:
+        """Initialize TapHome button entity."""
         super().__init__(
             hass,
             core_config,
@@ -66,6 +72,7 @@ class TapHomeButton(TapHomeEntity[dict], ButtonEntity):
 
     @property
     def available(self):
+        """Return True if the TapHome device is present."""
         return self.taphome_device is not None
 
     @property
@@ -74,6 +81,7 @@ class TapHomeButton(TapHomeEntity[dict], ButtonEntity):
         return self._device_class
 
     async def async_press(self) -> None:
+        """Send press command to the TapHome device."""
         await self._button_service.async_press(self.taphome_device, self._action)
 
 

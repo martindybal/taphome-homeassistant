@@ -17,12 +17,16 @@ from .taphome_sdk import SwitchService, SwitchState, SwitchStates
 
 
 class SwitchConfigEntry(TapHomeConfigEntry):
-    def __init__(self, device_config: dict):
+    """Configuration for TapHome switch device."""
+
+    def __init__(self, device_config: dict) -> None:
+        """Initialize switch config entry."""
         super().__init__(device_config)
         self._device_class = self.get_optional("device_class", None)
 
     @property
     def device_class(self):
+        """Return Home Assistant switch device class if configured."""
         return self._device_class
 
 
@@ -36,7 +40,8 @@ class TapHomeSwitch(TapHomeEntity[SwitchState], SwitchEntity):
         config_entry: SwitchConfigEntry,
         coordinator: TapHomeDataUpdateCoordinator,
         switch_service: SwitchService,
-    ):
+    ) -> None:
+        """Initialize TapHome switch entity."""
         super().__init__(
             hass, core_config, config_entry, SWITCH_DOMAIN, coordinator, SwitchState
         )
@@ -64,6 +69,7 @@ class TapHomeSwitch(TapHomeEntity[SwitchState], SwitchEntity):
         await self.async_turn(SwitchStates.OFF)
 
     async def async_turn(self, switch_state: SwitchStates):
+        """Change the switch state on the TapHome device."""
         async with UpdateTapHomeState(self) as state:
             await self.switch_service.async_turn(switch_state, self.taphome_device)
             state.switch_state = switch_state

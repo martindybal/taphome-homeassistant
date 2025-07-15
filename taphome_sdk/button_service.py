@@ -1,3 +1,5 @@
+"""Provide support for handling button presses on TapHome devices."""
+
 from enum import Enum
 import logging
 
@@ -9,6 +11,8 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class ButtonAction(Enum):
+    """Enumeration of available button press actions."""
+
     Press = 1
     LongPress = 2
     DoublePress = 3
@@ -16,12 +20,16 @@ class ButtonAction(Enum):
 
 
 class ButtonService:
+    """Send button press commands to a TapHome device."""
+
     def __init__(self, taphome_api_service: TapHomeApiService):
+        """Initialize the service with the TapHome API instance."""
         self.taphome_api_service = taphome_api_service
 
     def async_press(
         self, device: Device, action: ButtonAction = ButtonAction.Press
     ) -> None:
+        """Trigger the desired button ``action`` on ``device``."""
         values = [
             self.taphome_api_service.create_device_value(
                 ValueType.ButtonPressed, action.value

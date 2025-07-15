@@ -33,7 +33,8 @@ class TapHomeFan(TapHomeEntity[FanState], FanEntity):
         config_entry: TapHomeConfigEntry,
         coordinator: TapHomeDataUpdateCoordinator,
         fan_service: FanService,
-    ):
+    ) -> None:
+        """Initialize TapHome fan entity."""
         super().__init__(
             hass, core_config, config_entry, FAN_DOMAIN, coordinator, FanState
         )
