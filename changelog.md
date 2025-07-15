@@ -3,6 +3,11 @@
 ## 2025.2.0
 - Added support for `value_type` in sensor and binary sensor configurations, allowing users to define custom sensors for any device.
 
+## 2025.7
+- Added entity state attributes
+    - `taphome_id` to easily find an entity in taphome.
+    - `operation_mode` to indicate Auto or Manual mode.
+
 ## 2024.12.0
 - Add support for new TapHome 2024.2 variable types
 - TapHome 2024.2 exposes climathermostat service setting. So min/max temperature from config can be ignored.

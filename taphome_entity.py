@@ -91,7 +91,6 @@ class TapHomeEntity(CoordinatorEntity, TapHomeDataUpdateCoordinatorObject[TState
     def available(self):
         return not self.taphome_state is None and not self.taphome_device is None
 
-    @property
     def name(self):
         if not self.taphome_device is None:
             if self._core_config.use_description_as_name:
@@ -99,9 +98,20 @@ class TapHomeEntity(CoordinatorEntity, TapHomeDataUpdateCoordinatorObject[TState
             return self.taphome_device.name
 
     @property
+    def operation_mode(self):
+        if self.taphome_state is not None:
+            return OperationModes.create(
+                self.taphome_state.get_device_value(ValueType.OperationMode)
+            )
+        return None
+
+    @property
     def extra_state_attributes(self) -> dict:
         """Return entity specific state attributes."""
-        return {"taphome_id": self._taphome_device_id}
+        attributes = {"taphome_id": self._taphome_device_id}
+        if self.operation_mode is not None:
+            attributes["operation_mode"] = self.operation_mode.name.lower()
+        return attributes
 
     @staticmethod
     def convert_taphome_byte_to_ha(value: int):
