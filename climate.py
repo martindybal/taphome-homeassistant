@@ -23,7 +23,7 @@ from .taphome_sdk import *
 _LOGGER = logging.getLogger(__name__)
 
 
-class TapHomeClimateController:
+class TapHomeClimateController(Generic[TState]):
     def __init__(self) -> None:
         self._listeners: list[CALLBACK_TYPE] = []
 
@@ -48,12 +48,12 @@ class TapHomeClimateController:
         """Listen for data updates."""
         self._listeners.append(update_callback)
 
-    def _invoke_hvac_mode_changed(self) -> None:
+    def _invoke_hvac_mode_changed(self, last_state: TState | None) -> None:
         for update_callback in self._listeners:
-            update_callback()
+            update_callback(last_state)
 
 
-class TapHomeNoneClimateController(TapHomeClimateController):
+class TapHomeNoneClimateController(TapHomeClimateController[dict]):
     def __init__(self) -> None:
         super().__init__()
 
@@ -70,7 +70,7 @@ class TapHomeNoneClimateController(TapHomeClimateController):
 
 
 class TapHomeCoordinatorObjectClimateController(
-    TapHomeClimateController, TapHomeDataUpdateCoordinatorObject[TState]
+    TapHomeClimateController[TState], TapHomeDataUpdateCoordinatorObject[TState]
 ):
     def __init__(
         self,
@@ -85,8 +85,8 @@ class TapHomeCoordinatorObjectClimateController(
         self.coordinator = coordinator
 
     @callback
-    def handle_taphome_state_change(self) -> None:
-        self._invoke_hvac_mode_changed()
+    def handle_taphome_state_change(self, last_state: TState | None) -> None:
+        self._invoke_hvac_mode_changed(last_state)
 
 
 class TapHomeSwitchClimateController(

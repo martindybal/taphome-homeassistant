@@ -4,6 +4,7 @@
 - Added support for `value_type` in sensor and binary sensor configurations, allowing users to define custom sensors for any device.
 
 ## 2025.7
+- Added detection of cover movement based on the blindsIsMoving state, enabling tracking of opening and closing directions.
 - Added entity state attributes
     - `taphome_id` to easily find an entity in taphome.
     - `taphome_name` the TapHome device name.

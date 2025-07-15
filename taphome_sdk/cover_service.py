@@ -16,6 +16,7 @@ class CoverState(TapHomeState):
         super().__init__(switch_values)
         self.blinds_level = self.get_device_value(ValueType.BlindsLevel)
         self.blinds_slope = self.get_device_value(ValueType.BlindsSlope)
+        self.blinds_is_moving = self.get_device_bool_value(ValueType.BlindsIsMoving)
 
 
 class CoverService:
@@ -41,7 +42,11 @@ class CoverService:
         ]
 
         if tilt is not None:
-            values.append(self.taphome_api_service.create_device_value(ValueType.BlindsSlope, tilt))
+            values.append(
+                self.taphome_api_service.create_device_value(
+                    ValueType.BlindsSlope, tilt
+                )
+            )
 
         return self.taphome_api_service.async_set_device_values(device.id, values)
 

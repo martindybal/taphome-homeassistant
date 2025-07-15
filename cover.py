@@ -1,5 +1,6 @@
 """TapHome cover integration."""
 
+import copy
 import typing
 
 from homeassistant.components.cover import (
@@ -11,7 +12,7 @@ from homeassistant.components.cover import (
     CoverEntityFeature,
 )
 from homeassistant.const import CONF_COVERS
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 
 from .add_entry_request import AddEntryRequest
 from .const import TAPHOME_PLATFORM
@@ -47,12 +48,19 @@ class TapHomeCover(TapHomeEntity[CoverState], CoverEntity):
         cover_service: CoverService,
     ):
         super().__init__(
-            hass, core_config, config_entry, DOMAIN, coordinator, CoverState
+            hass,
+            core_config,
+            config_entry,
+            DOMAIN,
+            coordinator,
+            CoverState,
         )
         self.cover_service = cover_service
         self._device_class = config_entry.device_class
         self._close_threshold = config_entry.close_threshold
         self._supported_features = None
+        self._is_opening = False
+        self._is_closing = False
 
     @property
     def device_class(self):
@@ -91,13 +99,6 @@ class TapHomeCover(TapHomeEntity[CoverState], CoverEntity):
         return self._supported_features
 
     @property
-    def is_closed(self):
-        """Return if the cover is closed or not."""
-        if self.taphome_state.blinds_level is None:
-            return None
-        return self.taphome_state.blinds_level >= self._close_threshold / 100
-
-    @property
     def current_cover_position(self):
         if (
             not self.taphome_state is None
@@ -116,6 +117,26 @@ class TapHomeCover(TapHomeEntity[CoverState], CoverEntity):
             return self.convert_taphome_percentage_to_ha(
                 1 - self.taphome_state.blinds_slope
             )
+
+    @property
+    def is_closed(self):
+        """Return if the cover is closed or not."""
+        if self.taphome_state.blinds_level is None:
+            return None
+        return self.taphome_state.blinds_level >= self._close_threshold / 100
+
+    @property
+    def is_opening(self) -> bool:
+        return self._is_opening
+
+    @property
+    def is_closing(self) -> bool:
+        return self._is_closing
+
+    @callback
+    def handle_taphome_state_change(self, last_state: CoverState) -> None:
+        self.handle_moving(self.taphome_state, last_state)
+        super().handle_taphome_state_change(last_state)
 
     async def async_open_cover(self, **kwargs):
         """Open the cover."""
@@ -142,10 +163,29 @@ class TapHomeCover(TapHomeEntity[CoverState], CoverEntity):
                     )
 
             async with UpdateTapHomeState(self) as state:
+                last_state = copy.deepcopy(state)
                 await self.cover_service.async_set_level(
                     self.taphome_device, taphome_position, taphome_tilt
                 )
+                state.blinds_is_moving = True
                 state.blinds_level = taphome_position
+                self.handle_moving(state, last_state)
+
+    def handle_moving(self, current_state: CoverState, last_state: CoverState) -> None:
+        if (
+            current_state is not None
+            and last_state is not None
+            and current_state.blinds_is_moving
+        ):
+            if current_state.blinds_level > last_state.blinds_level:
+                self._is_closing = True
+                self._is_opening = False
+            elif current_state.blinds_level < last_state.blinds_level:
+                self._is_opening = True
+                self._is_closing = False
+        else:
+            self._is_opening = False
+            self._is_closing = False
 
     async def async_open_cover_tilt(self, **kwargs):
         """Open the cover tilt."""
