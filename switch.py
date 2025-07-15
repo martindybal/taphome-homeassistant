@@ -1,16 +1,19 @@
 """TapHome switch integration."""
 
-import typing
-
-from homeassistant.components.switch import DOMAIN, SwitchEntity
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchEntity
 from homeassistant.const import CONF_SWITCHES
 from homeassistant.core import HomeAssistant
 
 from .add_entry_request import AddEntryRequest
 from .const import TAPHOME_PLATFORM
-from .coordinator import *
-from .taphome_entity import *
-from .taphome_sdk import *
+from .coordinator import UpdateTapHomeState
+from .taphome_entity import (
+    TapHomeConfigEntry,
+    TapHomeCoreConfigEntry,
+    TapHomeDataUpdateCoordinator,
+    TapHomeEntity,
+)
+from .taphome_sdk import SwitchService, SwitchState, SwitchStates
 
 
 class SwitchConfigEntry(TapHomeConfigEntry):
@@ -24,7 +27,7 @@ class SwitchConfigEntry(TapHomeConfigEntry):
 
 
 class TapHomeSwitch(TapHomeEntity[SwitchState], SwitchEntity):
-    """Representation of an switch"""
+    """Representation of an switch."""
 
     def __init__(
         self,
@@ -35,7 +38,7 @@ class TapHomeSwitch(TapHomeEntity[SwitchState], SwitchEntity):
         switch_service: SwitchService,
     ):
         super().__init__(
-            hass, core_config, config_entry, DOMAIN, coordinator, SwitchState
+            hass, core_config, config_entry, SWITCH_DOMAIN, coordinator, SwitchState
         )
         self.switch_service = switch_service
         self._device_class = config_entry.device_class
@@ -48,8 +51,9 @@ class TapHomeSwitch(TapHomeEntity[SwitchState], SwitchEntity):
     @property
     def is_on(self):
         """Returns if the switch entity is on or not."""
-        if not self.taphome_state is None:
+        if self.taphome_state is not None:
             return self.taphome_state.switch_state == SwitchStates.ON
+        return None
 
     async def async_turn_on(self, **kwargs):
         """Turn device on."""
@@ -72,7 +76,7 @@ def setup_platform(
     discovery_info=None,
 ) -> None:
     """Set up the switch platform."""
-    add_entry_requests: typing.List[AddEntryRequest] = hass.data[TAPHOME_PLATFORM][
+    add_entry_requests: list[AddEntryRequest] = hass.data[TAPHOME_PLATFORM][
         CONF_SWITCHES
     ]
     switches = []

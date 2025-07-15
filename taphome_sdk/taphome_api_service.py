@@ -27,19 +27,23 @@ class TapHomeApiService:
         json = {}
         try:
             json = await self.taphome_api_service.async_api_get("discovery")
-            devices = []
-            for device in json["devices"]:
-                try:
-                    devices.append(Device.create(device))
-                except Exception:
-                    _LOGGER.exception(
-                        "TapHome Device.create failed \n %s \n %s", device, json
-                    )
-            return devices
+            return self._map_devices(json)
+
         except Exception:
             _LOGGER.exception(
                 "TapHome request async_discovery_devices failed: %s", json
             )
+
+    def _map_devices(self, json) -> list[Device]:
+        devices = []
+        for device in json["devices"]:
+            try:
+                devices.append(Device.create(device))
+            except Exception:
+                _LOGGER.exception(
+                    "TapHome Device.create failed \n %s \n %s", device, json
+                )
+        return devices
 
     async def async_get_location(self):
         json = {}

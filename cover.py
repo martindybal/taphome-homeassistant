@@ -1,12 +1,11 @@
 """TapHome cover integration."""
 
 import copy
-import typing
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
     ATTR_TILT_POSITION,
-    DOMAIN,
+    DOMAIN as COVER_DOMAIN,
     CoverDeviceClass,
     CoverEntity,
     CoverEntityFeature,
@@ -16,9 +15,14 @@ from homeassistant.core import HomeAssistant, callback
 
 from .add_entry_request import AddEntryRequest
 from .const import TAPHOME_PLATFORM
-from .coordinator import *
-from .taphome_entity import *
-from .taphome_sdk import *
+from .coordinator import UpdateTapHomeState
+from .taphome_entity import (
+    TapHomeConfigEntry,
+    TapHomeCoreConfigEntry,
+    TapHomeDataUpdateCoordinator,
+    TapHomeEntity,
+)
+from .taphome_sdk import CoverService, CoverState
 
 
 class CoverConfigEntry(TapHomeConfigEntry):
@@ -37,7 +41,7 @@ class CoverConfigEntry(TapHomeConfigEntry):
 
 
 class TapHomeCover(TapHomeEntity[CoverState], CoverEntity):
-    """Representation of an cover"""
+    """Representation of an cover."""
 
     def __init__(
         self,
@@ -51,7 +55,7 @@ class TapHomeCover(TapHomeEntity[CoverState], CoverEntity):
             hass,
             core_config,
             config_entry,
-            DOMAIN,
+            COVER_DOMAIN,
             coordinator,
             CoverState,
         )
@@ -101,22 +105,24 @@ class TapHomeCover(TapHomeEntity[CoverState], CoverEntity):
     @property
     def current_cover_position(self):
         if (
-            not self.taphome_state is None
+            self.taphome_state is not None
             and self.taphome_state.blinds_level is not None
         ):
             return self.convert_taphome_percentage_to_ha(
                 1 - self.taphome_state.blinds_level
             )
+        return None
 
     @property
     def current_cover_tilt_position(self):
         if (
-            not self.taphome_state is None
+            self.taphome_state is not None
             and self.taphome_state.blinds_slope is not None
         ):
             return self.convert_taphome_percentage_to_ha(
                 1 - self.taphome_state.blinds_slope
             )
+        return None
 
     @property
     def is_closed(self):
@@ -215,9 +221,7 @@ def setup_platform(
     discovery_info=None,
 ) -> None:
     """Set up the cover platform."""
-    add_entry_requests: typing.List[AddEntryRequest] = hass.data[TAPHOME_PLATFORM][
-        CONF_COVERS
-    ]
+    add_entry_requests: list[AddEntryRequest] = hass.data[TAPHOME_PLATFORM][CONF_COVERS]
     covers = []
     for add_entry_request in add_entry_requests:
         cover_service = CoverService(add_entry_request.taphome_api_service)

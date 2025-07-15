@@ -31,8 +31,8 @@ class ThermostatService:
             )
 
             return ThermostatState(thermostat_values)
-        except:
-            _LOGGER.error(f"TapHome async_get_state for {device.id} failed")
+        except Exception:
+            _LOGGER.exception("TapHome async_get_state for %s failed", device.id)
             return None
 
     def async_set_desired_temperature(

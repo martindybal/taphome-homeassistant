@@ -2,7 +2,8 @@
 
 import logging
 import typing
-import voluptuous
+
+import voluptuous as vol
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN
@@ -29,14 +30,29 @@ from homeassistant.const import (
     CONF_WEBHOOK_ID,
 )
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as config_validation
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.discovery import load_platform
 
 from .add_entry_request import AddEntryRequest
 from .binary_sensor import BinarySensorConfigEntry
 from .button import ButtonConfigEntry
 from .climate import ClimateConfigEntry
-from .const import *
+from .const import (
+    CONF_API_URL,
+    CONF_BUTTONS,
+    CONF_CLIMATES,
+    CONF_CORES,
+    CONF_FAN,
+    CONF_HUMIDIFIER,
+    CONF_LANGUAGE,
+    CONF_MULTIVALUE_SWITCHES,
+    CONF_TIMES,
+    CONF_UPDATE_INTERVAL,
+    CONF_VALVE,
+    TAPHOME_PLATFORM,
+    USE_DESCRIPTION_AS_ENTITY_ID,
+    USE_DESCRIPTION_AS_NAME,
+)
 from .coordinator import TapHomeDataUpdateCoordinator
 from .cover import CoverConfigEntry
 from .humidifier import HumidifierConfigEntry
@@ -44,7 +60,7 @@ from .sensor import SensorConfigEntry
 from .switch import SwitchConfigEntry
 from .taphome_core_config_entry import TapHomeCoreConfigEntry
 from .taphome_entity import TapHomeConfigEntry
-from .taphome_sdk import *
+from .taphome_sdk import TapHomeApiService, TapHomeHttpClientFactory
 from .valve import ValveConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
@@ -67,14 +83,14 @@ class DomainDefinition:
         self.add_entry_requests = []
 
 
-CONFIG_SCHEMA = voluptuous.Schema(
+CONFIG_SCHEMA = vol.Schema(
     {
-        TAPHOME_PLATFORM: voluptuous.Schema(
+        TAPHOME_PLATFORM: vol.Schema(
             {
-                voluptuous.Optional(CONF_LANGUAGE): config_validation.string,
+                vol.Optional(CONF_LANGUAGE): cv.string,
                 CONF_CORES: [
-                    voluptuous.All(
-                        config_validation.has_at_least_one_key(
+                    vol.All(
+                        cv.has_at_least_one_key(
                             CONF_LIGHTS,
                             CONF_BUTTONS,
                             CONF_COVERS,
@@ -89,64 +105,36 @@ CONFIG_SCHEMA = voluptuous.Schema(
                             CONF_TIMES,
                         ),
                         {
-                            voluptuous.Required(CONF_TOKEN): config_validation.string,
-                            voluptuous.Optional(CONF_ID): config_validation.string,
-                            voluptuous.Optional(CONF_API_URL): config_validation.string,
-                            voluptuous.Optional(
-                                CONF_WEBHOOK_ID
-                            ): config_validation.string,
-                            voluptuous.Optional(
-                                CONF_UPDATE_INTERVAL
-                            ): config_validation.positive_float,
-                            voluptuous.Optional(
-                                USE_DESCRIPTION_AS_ENTITY_ID
-                            ): config_validation.boolean,
-                            voluptuous.Optional(
-                                USE_DESCRIPTION_AS_NAME
-                            ): config_validation.boolean,
-                            voluptuous.Optional(
-                                CONF_LIGHTS, default=[]
-                            ): config_validation.ensure_list,
-                            voluptuous.Optional(
-                                CONF_BUTTONS, default=[]
-                            ): config_validation.ensure_list,
-                            voluptuous.Optional(
-                                CONF_COVERS, default=[]
-                            ): config_validation.ensure_list,
-                            voluptuous.Optional(
-                                CONF_CLIMATES, default=[]
-                            ): config_validation.ensure_list,
-                            voluptuous.Optional(
-                                CONF_FAN, default=[]
-                            ): config_validation.ensure_list,
-                            voluptuous.Optional(
-                                CONF_HUMIDIFIER, default=[]
-                            ): config_validation.ensure_list,
-                            voluptuous.Optional(
+                            vol.Required(CONF_TOKEN): cv.string,
+                            vol.Optional(CONF_ID): cv.string,
+                            vol.Optional(CONF_API_URL): cv.string,
+                            vol.Optional(CONF_WEBHOOK_ID): cv.string,
+                            vol.Optional(CONF_UPDATE_INTERVAL): cv.positive_float,
+                            vol.Optional(USE_DESCRIPTION_AS_ENTITY_ID): cv.boolean,
+                            vol.Optional(USE_DESCRIPTION_AS_NAME): cv.boolean,
+                            vol.Optional(CONF_LIGHTS, default=[]): cv.ensure_list,
+                            vol.Optional(CONF_BUTTONS, default=[]): cv.ensure_list,
+                            vol.Optional(CONF_COVERS, default=[]): cv.ensure_list,
+                            vol.Optional(CONF_CLIMATES, default=[]): cv.ensure_list,
+                            vol.Optional(CONF_FAN, default=[]): cv.ensure_list,
+                            vol.Optional(CONF_HUMIDIFIER, default=[]): cv.ensure_list,
+                            vol.Optional(
                                 CONF_MULTIVALUE_SWITCHES, default=[]
-                            ): config_validation.ensure_list,
-                            voluptuous.Optional(
-                                CONF_SWITCHES, default=[]
-                            ): config_validation.ensure_list,
-                            voluptuous.Optional(
-                                CONF_SENSORS, default=[]
-                            ): config_validation.ensure_list,
-                            voluptuous.Optional(
+                            ): cv.ensure_list,
+                            vol.Optional(CONF_SWITCHES, default=[]): cv.ensure_list,
+                            vol.Optional(CONF_SENSORS, default=[]): cv.ensure_list,
+                            vol.Optional(
                                 CONF_BINARY_SENSORS, default=[]
-                            ): config_validation.ensure_list,
-                            voluptuous.Optional(
-                                CONF_VALVE, default=[]
-                            ): config_validation.ensure_list,
-                            voluptuous.Optional(
-                                CONF_TIMES, default=[]
-                            ): config_validation.ensure_list,
+                            ): cv.ensure_list,
+                            vol.Optional(CONF_VALVE, default=[]): cv.ensure_list,
+                            vol.Optional(CONF_TIMES, default=[]): cv.ensure_list,
                         },
                     )
                 ],
             }
         )
     },
-    extra=voluptuous.ALLOW_EXTRA,
+    extra=vol.ALLOW_EXTRA,
 )
 
 
@@ -158,9 +146,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigEntry) -> bool:
 
     if len(config[TAPHOME_PLATFORM][CONF_CORES]) > 1:
         for core_config in config[TAPHOME_PLATFORM][CONF_CORES]:
-            if not CONF_ID in core_config:
+            if CONF_ID not in core_config:
                 _LOGGER.error(
-                    "You have to specify a 'name' if you are using multiple cores."
+                    "You have to specify a 'name' if you are using multiple cores"
                 )
                 return False
 
@@ -276,8 +264,7 @@ def get_update_interval_default_value(api_url: str, webhook_id: str) -> int:
 def read_from_config_or_default(config: dict, key: str, default_value) -> typing.Any:
     if key in config:
         return config[key]
-    else:
-        return default_value
+    return default_value
 
 
 def map_config_entries(config_entry, platform_config: list) -> list[TapHomeConfigEntry]:

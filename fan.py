@@ -4,18 +4,27 @@ from __future__ import annotations
 
 from typing import Any
 
-from homeassistant.components.fan import DOMAIN, FanEntity, FanEntityFeature
+from homeassistant.components.fan import (
+    DOMAIN as FAN_DOMAIN,
+    FanEntity,
+    FanEntityFeature,
+)
 from homeassistant.core import HomeAssistant
 
 from .add_entry_request import AddEntryRequest
 from .const import CONF_FAN, TAPHOME_PLATFORM
-from .coordinator import *
-from .taphome_entity import *
-from .taphome_sdk import *
+from .coordinator import UpdateTapHomeState
+from .taphome_entity import (
+    TapHomeConfigEntry,
+    TapHomeCoreConfigEntry,
+    TapHomeDataUpdateCoordinator,
+    TapHomeEntity,
+)
+from .taphome_sdk import FanService, FanState, SwitchStates
 
 
 class TapHomeFan(TapHomeEntity[FanState], FanEntity):
-    """Representation of an fan"""
+    """Representation of an fan."""
 
     def __init__(
         self,
@@ -25,7 +34,9 @@ class TapHomeFan(TapHomeEntity[FanState], FanEntity):
         coordinator: TapHomeDataUpdateCoordinator,
         fan_service: FanService,
     ):
-        super().__init__(hass, core_config, config_entry, DOMAIN, coordinator, FanState)
+        super().__init__(
+            hass, core_config, config_entry, FAN_DOMAIN, coordinator, FanState
+        )
         self.fan_service = fan_service
         self._attr_supported_features = (
             FanEntityFeature.TURN_ON
@@ -36,16 +47,18 @@ class TapHomeFan(TapHomeEntity[FanState], FanEntity):
     @property
     def is_on(self):
         """Returns if the fan entity is on or not."""
-        if not self.taphome_state is None:
+        if self.taphome_state is not None:
             return self.taphome_state.switch_state == SwitchStates.ON
+        return None
 
     @property
     def percentage(self) -> int | None:
         """Return the current speed."""
-        if not self.taphome_state is None:
+        if self.taphome_state is not None:
             return TapHomeEntity.convert_taphome_percentage_to_ha(
                 self.taphome_state.percentage
             )
+        return None
 
     async def async_turn_on(
         self,
@@ -85,9 +98,7 @@ def setup_platform(
     discovery_info=None,
 ) -> None:
     """Set up the fan platform."""
-    add_entry_requests: typing.List[AddEntryRequest] = hass.data[TAPHOME_PLATFORM][
-        CONF_FAN
-    ]
+    add_entry_requests: list[AddEntryRequest] = hass.data[TAPHOME_PLATFORM][CONF_FAN]
     fans = []
     for add_entry_request in add_entry_requests:
         fan_service = FanService(add_entry_request.taphome_api_service)

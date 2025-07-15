@@ -3,9 +3,14 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .coordinator import *
+from .coordinator import (
+    TapHomeDataUpdateCoordinator,
+    TapHomeDataUpdateCoordinatorObject,
+    TState,
+    callback,
+)
 from .taphome_core_config_entry import TapHomeCoreConfigEntry
-from .taphome_sdk import *
+from .taphome_sdk import OperationModes, ValueType
 
 
 class TapHomeConfigEntry:
@@ -30,7 +35,7 @@ class TapHomeConfigEntry:
         if isinstance(self._device_config, dict):
             if key in self._device_config:
                 return self._device_config[key]
-        raise ConfigEntryNotReady()
+        raise ConfigEntryNotReady
 
     def get_optional(self, key: str, default):
         if isinstance(self._device_config, dict):
@@ -51,7 +56,7 @@ class TapHomeEntity(CoordinatorEntity, TapHomeDataUpdateCoordinatorObject[TState
     ):
         self._taphome_device_id = config.id
 
-        if config.unique_id == None:
+        if config.unique_id is None:
             unique_id_core_id = (
                 f".{core_config.id}" if core_config.id is not None else ""
             )
@@ -76,7 +81,7 @@ class TapHomeEntity(CoordinatorEntity, TapHomeDataUpdateCoordinatorObject[TState
             )
 
     def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator. Coordinator call schedule_update_ha_state when is needed"""
+        """Handle updated data from the coordinator. Coordinator call schedule_update_ha_state when is needed."""
 
     @callback
     def handle_taphome_state_change(self, last_state: TState | None) -> None:
@@ -89,14 +94,15 @@ class TapHomeEntity(CoordinatorEntity, TapHomeDataUpdateCoordinatorObject[TState
 
     @property
     def available(self):
-        return not self.taphome_state is None and not self.taphome_device is None
+        return self.taphome_state is not None and self.taphome_device is not None
 
     @property
     def name(self):
-        if not self.taphome_device is None:
+        if self.taphome_device is not None:
             if self._core_config.use_description_as_name:
                 return self.taphome_device.description
             return self.taphome_device.name
+        return None
 
     @property
     def operation_mode(self):
@@ -158,7 +164,6 @@ class TapHomeEntity(CoordinatorEntity, TapHomeDataUpdateCoordinatorObject[TState
     def convert_taphome_bool_to_ha(value: int):
         if value == 1:
             return True
-        elif value == 0:
+        if value == 0:
             return False
-        else:
-            return None
+        return None

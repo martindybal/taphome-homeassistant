@@ -2,13 +2,11 @@
 
 from __future__ import annotations
 
-import typing
-
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP_KELVIN,
     ATTR_HS_COLOR,
-    DOMAIN,
+    DOMAIN as LIGHT_DOMAIN,
     ColorMode,
     LightEntity,
 )
@@ -17,13 +15,13 @@ from homeassistant.core import HomeAssistant
 
 from .add_entry_request import AddEntryRequest
 from .const import TAPHOME_PLATFORM
-from .coordinator import *
-from .taphome_entity import *
-from .taphome_sdk import *
+from .coordinator import TapHomeDataUpdateCoordinator, UpdateTapHomeState
+from .taphome_entity import TapHomeConfigEntry, TapHomeCoreConfigEntry, TapHomeEntity
+from .taphome_sdk import LightService, LightState, SwitchStates, ValueType
 
 
 class TapHomeLight(TapHomeEntity[LightState], LightEntity):
-    """Representation of an light"""
+    """Representation of an light."""
 
     def __init__(
         self,
@@ -34,7 +32,7 @@ class TapHomeLight(TapHomeEntity[LightState], LightEntity):
         light_service: LightService,
     ):
         super().__init__(
-            hass, core_config, config_entry, DOMAIN, coordinator, LightState
+            hass, core_config, config_entry, LIGHT_DOMAIN, coordinator, LightState
         )
         self.light_service = light_service
         self._supported_color_modes: set[ColorMode] | None = None
@@ -67,47 +65,53 @@ class TapHomeLight(TapHomeEntity[LightState], LightEntity):
     @property
     def is_on(self):
         """Returns if the light entity is on or not."""
-        if not self.taphome_state is None:
+        if self.taphome_state is not None:
             return self.taphome_state.switch_state == SwitchStates.ON
+        return None
 
     @property
     def brightness(self):
         """Return the brightness of this light between 0..255."""
-        if not self.taphome_state is None:
+        if self.taphome_state is not None:
             return TapHomeEntity.convert_taphome_byte_to_ha(
                 self.taphome_state.brightness
             )
+        return None
 
     @property
     def color_temp_kelvin(self) -> int | None:
         """Return the CT color value in Kelvin."""
-        if not self.taphome_state is None:
+        if self.taphome_state is not None:
             return self.taphome_state.color_temperature
+        return None
 
     @property
     def min_color_temp_kelvin(self) -> int:
         """Return the warmest color_temp_kelvin that this light supports."""
-        if not self.taphome_device is None:
+        if self.taphome_device is not None:
             return self.taphome_device.supported_values[
                 ValueType.CorrelatedColorTemperature
             ].min_value
+        return None
 
     @property
     def max_color_temp_kelvin(self) -> int:
         """Return the coldest color_temp_kelvin that this light supports."""
-        if not self.taphome_device is None:
+        if self.taphome_device is not None:
             return self.taphome_device.supported_values[
                 ValueType.CorrelatedColorTemperature
             ].max_value
+        return None
 
     @property
     def hs_color(self):
         """Return the hs color value."""
-        if not self.taphome_state is None:
+        if self.taphome_state is not None:
             saturation = TapHomeEntity.convert_taphome_percentage_to_ha(
                 self.taphome_state.saturation
             )
             return (self.taphome_state.hue, saturation)
+        return None
 
     async def async_turn_on(self, **kwargs):
         """Turn device on."""
@@ -155,9 +159,7 @@ def setup_platform(
     discovery_info=None,
 ) -> None:
     """Set up the light platform."""
-    add_entry_requests: typing.List[AddEntryRequest] = hass.data[TAPHOME_PLATFORM][
-        CONF_LIGHTS
-    ]
+    add_entry_requests: list[AddEntryRequest] = hass.data[TAPHOME_PLATFORM][CONF_LIGHTS]
     lights = []
     for add_entry_request in add_entry_requests:
         light_service = LightService(add_entry_request.taphome_api_service)

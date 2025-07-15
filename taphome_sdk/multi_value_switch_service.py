@@ -30,8 +30,8 @@ class MultiValueSwitchService:
                 await self.taphome_api_service.async_get_device_values(device.id)
             )
             return MultiValueSwitchState(multi_value_switch_values)
-        except:
-            _LOGGER.error(f"TapHome async_get_state for {device.id} failed")
+        except Exception:
+            _LOGGER.exception("TapHome async_get_state for %s failed", device.id)
             return None
 
     def async_set_value(self, value: int, device: Device) -> ValueChangeResult:
