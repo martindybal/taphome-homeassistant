@@ -54,9 +54,10 @@ class TapHomeDataUpdateCoordinatorDevice:
 
     @taphome_values.setter
     def taphome_values(self, new_state):
+        last_values = self._taphome_values
         self._taphome_values = new_state
         self.update_taphome_states()
-        self.invoke_taphome_state_change()
+        self.invoke_taphome_state_change(last_values)
 
     def get_state(self, state_type):
         if state_type not in self._taphome_state_types:
@@ -77,9 +78,9 @@ class TapHomeDataUpdateCoordinatorDevice:
     def attach_taphome_state_change_handler(self, taphome_state_change_handler):
         self._taphome_state_change_listeners.append(taphome_state_change_handler)
 
-    def invoke_taphome_state_change(self):
+    def invoke_taphome_state_change(self, last_values: dict | None = None):
         for taphome_state_change_handler in self._taphome_state_change_listeners:
-            taphome_state_change_handler()
+            taphome_state_change_handler(last_values)
 
 
 class TapHomeDataUpdateCoordinator(DataUpdateCoordinator):
@@ -223,7 +224,7 @@ class TapHomeDataUpdateCoordinatorObject(Generic[TState]):
         coordinator.register_entity(
             taphome_device_id,
             self.handle_taphome_device_change,
-            self.handle_taphome_state_change,
+            self.handle_taphome_values_change,
         )
 
     @property
@@ -242,7 +243,15 @@ class TapHomeDataUpdateCoordinatorObject(Generic[TState]):
         pass
 
     @callback
-    def handle_taphome_state_change(self) -> None:
+    def handle_taphome_values_change(self, last_values: dict | None = None) -> None:
+        """This method is called when taphome_values is changed."""
+        last_state = (
+            None if last_values is None else self._taphome_state_type(last_values)
+        )
+        self.handle_taphome_state_change(last_state)
+
+    @callback
+    def handle_taphome_state_change(self, last_state: TState | None) -> None:
         """This method is called when taphome_state is changed."""
         pass
 
@@ -250,8 +259,10 @@ class TapHomeDataUpdateCoordinatorObject(Generic[TState]):
 class UpdateTapHomeState(object):
     def __init__(self, coordinator_object: TapHomeDataUpdateCoordinatorObject[TState]):
         self._coordinator_object = coordinator_object
+        self._last_state: TState | None = None
 
     async def __aenter__(self):
+        self._last_state = self._coordinator_object.taphome_state
         return self._coordinator_object.taphome_state
 
     async def __aexit__(
@@ -261,4 +272,4 @@ class UpdateTapHomeState(object):
         exc_tb: TracebackType,
     ) -> None:
         if exc_type is None:
-            self._coordinator_object.handle_taphome_state_change()
+            self._coordinator_object.handle_taphome_state_change(self._last_state)

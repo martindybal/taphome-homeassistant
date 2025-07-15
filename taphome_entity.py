@@ -79,7 +79,7 @@ class TapHomeEntity(CoordinatorEntity, TapHomeDataUpdateCoordinatorObject[TState
         """Handle updated data from the coordinator. Coordinator call schedule_update_ha_state when is needed"""
 
     @callback
-    def handle_taphome_state_change(self) -> None:
+    def handle_taphome_state_change(self, last_state: TState | None) -> None:
         if self.hass is not None:  # chack if entity was added to hass
             self.schedule_update_ha_state()
 

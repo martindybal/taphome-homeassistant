@@ -14,7 +14,10 @@ class TapHomeState:
 
         return False
 
-    def get_device_value(self, vylue_type: ValueType):
+    def get_device_bool_value(self, vylue_type: ValueType) -> bool | None:
+        return self.get_device_value(vylue_type) == 1
+
+    def get_device_value(self, vylue_type: ValueType) -> float | None:
         try:
             value = next(
                 device_value
