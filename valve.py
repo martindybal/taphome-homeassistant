@@ -13,12 +13,16 @@ from .taphome_sdk import SwitchStates, ValveService, ValveState
 
 
 class ValveConfigEntry(TapHomeConfigEntry):
-    def __init__(self, device_config: dict):
+    """Configuration options for TapHome valve devices."""
+
+    def __init__(self, device_config: dict) -> None:
+        """Initialize valve config entry."""
         super().__init__(device_config)
         self._device_class = self.get_optional("device_class", None)
 
     @property
     def device_class(self):
+        """Return Home Assistant valve device class if configured."""
         return self._device_class
 
 
@@ -32,7 +36,8 @@ class TapHomeValve(TapHomeEntity[ValveState], ValveEntity):
         config_entry: ValveConfigEntry,
         coordinator: TapHomeDataUpdateCoordinator,
         valve_service: ValveService,
-    ):
+    ) -> None:
+        """Initialize TapHome valve entity."""
         super().__init__(
             hass, core_config, config_entry, DOMAIN, coordinator, ValveState
         )
@@ -86,7 +91,6 @@ class TapHomeValve(TapHomeEntity[ValveState], ValveEntity):
 
     async def async_set_valve_position(self, position: int) -> None:
         """Move the valve to a specific position."""
-
         position = TapHomeEntity.convert_ha_percentage_to_taphome(position)
 
         async with UpdateTapHomeState(self) as state:

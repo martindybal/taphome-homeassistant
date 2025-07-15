@@ -26,17 +26,22 @@ from .taphome_sdk import CoverService, CoverState
 
 
 class CoverConfigEntry(TapHomeConfigEntry):
-    def __init__(self, device_config: dict):
+    """Configuration options specific to TapHome covers."""
+
+    def __init__(self, device_config: dict) -> None:
+        """Initialize cover config entry."""
         super().__init__(device_config)
         self._device_class = self.get_optional("device_class", None)
         self._close_threshold = self.get_optional("close_threshold", 100)
 
     @property
     def device_class(self):
+        """Return Home Assistant cover device class if configured."""
         return self._device_class
 
     @property
     def close_threshold(self):
+        """Return threshold determining closed state."""
         return self._close_threshold
 
 
@@ -50,7 +55,8 @@ class TapHomeCover(TapHomeEntity[CoverState], CoverEntity):
         config_entry: CoverConfigEntry,
         coordinator: TapHomeDataUpdateCoordinator,
         cover_service: CoverService,
-    ):
+    ) -> None:
+        """Initialize TapHome cover entity."""
         super().__init__(
             hass,
             core_config,
@@ -104,6 +110,7 @@ class TapHomeCover(TapHomeEntity[CoverState], CoverEntity):
 
     @property
     def current_cover_position(self):
+        """Return current cover position as a percentage."""
         if (
             self.taphome_state is not None
             and self.taphome_state.blinds_level is not None
@@ -115,6 +122,7 @@ class TapHomeCover(TapHomeEntity[CoverState], CoverEntity):
 
     @property
     def current_cover_tilt_position(self):
+        """Return current tilt position as a percentage."""
         if (
             self.taphome_state is not None
             and self.taphome_state.blinds_slope is not None
@@ -133,14 +141,17 @@ class TapHomeCover(TapHomeEntity[CoverState], CoverEntity):
 
     @property
     def is_opening(self) -> bool:
+        """Return ``True`` while the cover is opening."""
         return self._is_opening
 
     @property
     def is_closing(self) -> bool:
+        """Return ``True`` while the cover is closing."""
         return self._is_closing
 
     @callback
     def handle_taphome_state_change(self, last_state: CoverState) -> None:
+        """Handle updates of TapHome cover state."""
         self.handle_moving(self.taphome_state, last_state)
         super().handle_taphome_state_change(last_state)
 
@@ -178,6 +189,7 @@ class TapHomeCover(TapHomeEntity[CoverState], CoverEntity):
                 self.handle_moving(state, last_state)
 
     def handle_moving(self, current_state: CoverState, last_state: CoverState) -> None:
+        """Update internal moving flags according to state change."""
         if (
             current_state is not None
             and last_state is not None

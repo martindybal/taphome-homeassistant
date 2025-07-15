@@ -1,3 +1,5 @@
+"""Public exports for the TapHome Python SDK."""
+
 # ruff: noqa: F401
 from .button_service import ButtonAction, ButtonService
 from .cover_service import CoverService, CoverState

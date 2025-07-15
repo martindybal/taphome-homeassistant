@@ -23,13 +23,16 @@ from .taphome_sdk import TapHomeState, ValueType
 
 
 class TapHomeIsAliveSensor(BinarySensorEntity):
+    """Binary sensor reporting availability of the TapHome core."""
+
     sensor_value_type = ValueType.Motion
 
     def __init__(
         self,
         core_config: TapHomeCoreConfigEntry,
         coordinator: TapHomeDataUpdateCoordinator,
-    ):
+    ) -> None:
+        """Initialize is-alive sensor for a given core."""
         self._core_config = core_config
         self.coordinator = coordinator
 
@@ -38,10 +41,12 @@ class TapHomeIsAliveSensor(BinarySensorEntity):
 
     @property
     def unique_id(self):
+        """Return entity unique identifier."""
         return self._unique_id
 
     @property
     def name(self):
+        """Return human readable name for this sensor."""
         core_id = f" {self._core_config.id}" if self._core_config.id is not None else ""
         return f"TapHome{core_id} is alive sensor"
 
@@ -57,13 +62,19 @@ class TapHomeIsAliveSensor(BinarySensorEntity):
 
 
 class TapHomeBinarySensorType:
+    """Data describing a TapHome binary sensor type."""
+
     def __init__(self, value_type: ValueType, device_class: str | None = None) -> None:
+        """Store basic information about a binary sensor."""
         self.value_type = value_type
         self.device_class = device_class
 
 
 class TapHomeMotionBinarySensorType(TapHomeBinarySensorType):
+    """Binary sensor representing motion detection."""
+
     def __init__(self) -> None:
+        """Initialize motion sensor type metadata."""
         super().__init__(
             ValueType.Motion,
             BinarySensorDeviceClass.MOTION,
@@ -71,7 +82,10 @@ class TapHomeMotionBinarySensorType(TapHomeBinarySensorType):
 
 
 class TapHomeReedContactBinarySensorType(TapHomeBinarySensorType):
+    """Binary sensor representing reed contact state."""
+
     def __init__(self) -> None:
+        """Initialize reed contact sensor metadata."""
         super().__init__(
             ValueType.ReedContact,
             None,
@@ -79,7 +93,10 @@ class TapHomeReedContactBinarySensorType(TapHomeBinarySensorType):
 
 
 class TapHomeSmokeBinarySensorType(TapHomeBinarySensorType):
+    """Binary sensor representing smoke detection."""
+
     def __init__(self) -> None:
+        """Initialize smoke sensor metadata."""
         super().__init__(
             ValueType.Smoke,
             BinarySensorDeviceClass.SMOKE,
@@ -87,7 +104,10 @@ class TapHomeSmokeBinarySensorType(TapHomeBinarySensorType):
 
 
 class TapHomeFloodBinarySensorType(TapHomeBinarySensorType):
+    """Binary sensor representing flood detection."""
+
     def __init__(self) -> None:
+        """Initialize flood sensor metadata."""
         super().__init__(
             ValueType.FloodState,
             BinarySensorDeviceClass.MOISTURE,
@@ -95,7 +115,10 @@ class TapHomeFloodBinarySensorType(TapHomeBinarySensorType):
 
 
 class TapHomeIsWindowOpenBinarySensorType(TapHomeBinarySensorType):
+    """Binary sensor indicating if a window is open."""
+
     def __init__(self) -> None:
+        """Initialize open window sensor metadata."""
         super().__init__(
             ValueType.IsWindowOpen,
             BinarySensorDeviceClass.WINDOW,
@@ -103,7 +126,10 @@ class TapHomeIsWindowOpenBinarySensorType(TapHomeBinarySensorType):
 
 
 class TapHomeVariableBinarySensorType(TapHomeBinarySensorType):
+    """Binary sensor tied to a custom variable state."""
+
     def __init__(self) -> None:
+        """Initialize variable sensor metadata."""
         super().__init__(
             ValueType.VariableState,
             None,
@@ -111,17 +137,22 @@ class TapHomeVariableBinarySensorType(TapHomeBinarySensorType):
 
 
 class BinarySensorConfigEntry(TapHomeConfigEntry):
-    def __init__(self, device_config: dict):
+    """Configuration for TapHome binary sensors."""
+
+    def __init__(self, device_config: dict) -> None:
+        """Initialize binary sensor config entry."""
         super().__init__(device_config)
         self._device_class = self.get_optional("device_class", None)
         self._value_type = self.get_optional("value_type", None)
 
     @property
     def device_class(self) -> str:
+        """Return Home Assistant device class if configured."""
         return self._device_class
 
     @property
     def value_type(self) -> ValueType:
+        """Return TapHome value type used by this sensor."""
         return self._value_type
 
 
@@ -135,7 +166,8 @@ class TapHomeBinarySensor(TapHomeEntity[TapHomeState], BinarySensorEntity):
         config_entry: BinarySensorConfigEntry,
         coordinator: TapHomeDataUpdateCoordinator,
         sensor_type: TapHomeBinarySensorType,
-    ):
+    ) -> None:
+        """Initialize TapHome binary sensor entity."""
         assert sensor_type is not None
         self._sensor_type = sensor_type
         unique_id_determination = f"{DOMAIN}.{self._sensor_type.value_type.name}"
@@ -176,7 +208,8 @@ class TapHomeBinarySensorCreateRequest(
         config_entry: BinarySensorConfigEntry,
         coordinator: TapHomeDataUpdateCoordinator,
         add_entities: AddEntitiesCallback,
-    ):
+    ) -> None:
+        """Initialize request for given configuration entry."""
         super().__init__(config_entry.id, coordinator, TapHomeState)
         self._hass = hass
         self._core_config = core_config
@@ -189,9 +222,11 @@ class TapHomeBinarySensorCreateRequest(
 
     @callback
     def handle_taphome_device_change(self) -> None:
+        """Create sensors again when TapHome device is replaced."""
         self.create_entities()
 
     def create_entities(self) -> None:
+        """Instantiate sensors for each supported value type."""
         if self.taphome_device is not None:
             self._was_entities_created = True
 
@@ -255,7 +290,6 @@ def setup_platform(
         for add_entry_request in hass.data[TAPHOME_PLATFORM][domain]:
             cores[add_entry_request.core_config] = add_entry_request.coordinator
 
-    # todo prověřit
     for core_config, coordinator in cores.items():
         is_alive_sensors.append(TapHomeIsAliveSensor(core_config, coordinator))
     add_entities(is_alive_sensors)

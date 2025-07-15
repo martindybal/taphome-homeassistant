@@ -1,7 +1,11 @@
+"""Enumeration of all value types supported by TapHome."""
+
 from enum import Enum
 
 
 class ValueType(Enum):
+    """Enumeration of numeric identifiers for TapHome values."""
+
     NAorAll = 0
     SensorBrightness = 2
     Humidity = 3

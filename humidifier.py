@@ -24,7 +24,10 @@ from .taphome_sdk import HumidifierService, HumidifierState, SwitchStates, Value
 
 
 class HumidifierConfigEntry(TapHomeConfigEntry):
+    """Configuration for a TapHome humidifier device."""
+
     def __init__(self, device_config: dict):
+        """Store config and extract humidity limits."""
         super().__init__(device_config)
 
         self.min_humidity = self.get_optional("min_humidity", None)
@@ -45,6 +48,7 @@ class TapHomeHumidifier(TapHomeEntity[HumidifierState], HumidifierEntity):
         coordinator: TapHomeDataUpdateCoordinator,
         humidifier_service: HumidifierService,
     ):
+        """Initialize TapHome humidifier entity."""
         super().__init__(
             hass,
             core_config,
@@ -85,8 +89,7 @@ class TapHomeHumidifier(TapHomeEntity[HumidifierState], HumidifierEntity):
 
     @property
     def min_humidity(self) -> int | None:
-        """Returns if the device is on or not."""
-
+        """Return lower humidity limit if configured or supported."""
         if self.config.min_humidity is not None:
             return self.config.min_humidity
 
@@ -100,7 +103,7 @@ class TapHomeHumidifier(TapHomeEntity[HumidifierState], HumidifierEntity):
 
     @property
     def max_humidity(self) -> int | None:
-        """Returns if the device is on or not."""
+        """Return upper humidity limit if configured or supported."""
         if self.config.max_humidity is not None:
             return self.config.max_humidity
 
@@ -126,7 +129,6 @@ class TapHomeHumidifier(TapHomeEntity[HumidifierState], HumidifierEntity):
 
     async def async_set_humidity(self, humidity: int) -> None:
         """Set new humidity level."""
-
         if self.min_humidity == humidity:
             self.async_turn_off()
         else:

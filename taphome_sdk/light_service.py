@@ -1,3 +1,5 @@
+"""Light control utilities for TapHome devices."""
+
 from .device import Device
 from .switch_states import SwitchStates
 from .taphome_api_service import TapHomeApiService
@@ -6,10 +8,13 @@ from .value_type import ValueType
 
 
 class LightState(TapHomeState):
+    """State representation for a light device."""
+
     def __init__(
         self,
         light_values: dict,
     ):
+        """Create state from ``light_values`` dictionary."""
         super().__init__(light_values)
 
         self.switch_state = SwitchStates(self.get_device_value(ValueType.SwitchState))
@@ -27,10 +32,14 @@ class LightState(TapHomeState):
 
 
 class LightService:
+    """Service for controlling TapHome lights."""
+
     def __init__(self, taphome_api_service: TapHomeApiService):
+        """Initialize with the provided API service."""
         self.taphome_api_service = taphome_api_service
 
     async def async_get_state(self, device: Device) -> LightState:
+        """Return the current ``LightState`` for ``device``."""
         light_values = await self.taphome_api_service.async_get_device_values(device.id)
 
         return LightState(light_values)
@@ -43,6 +52,7 @@ class LightService:
         hue=None,
         saturation=None,
     ) -> None:
+        """Turn the light on with the optional parameters provided."""
         if brightness is color_temp is hue is saturation is None:
             return self.taphome_api_service.async_set_device_value(
                 device.id, ValueType.SwitchState, SwitchStates.ON.value
@@ -74,6 +84,7 @@ class LightService:
         return self.taphome_api_service.async_set_device_values(device.id, values)
 
     def async_turn_off(self, device: Device) -> None:
+        """Turn ``device`` off."""
         return self.taphome_api_service.async_set_device_value(
             device.id, ValueType.SwitchState, SwitchStates.OFF.value
         )
