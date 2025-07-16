@@ -1,0 +1,23 @@
+name: Continuous Integration
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  code_quality:
+    name: Ensure Code Quality
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Source
+        uses: actions/checkout@v4
+      - name: Set Up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install Dependencies
+        run: |
+          pip install pre-commit
+      - name: Run Pre-commit Checks
+        run: pre-commit run --all-files --show-diff-on-failure
