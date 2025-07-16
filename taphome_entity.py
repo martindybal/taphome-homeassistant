@@ -1,9 +1,12 @@
 """Common entity abstractions for the TapHome integration."""
 
+from typing import Any
+
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers.entity import async_generate_entity_id
+from homeassistant.helpers.entity import async_generate_entity_id, cached_property
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.util import Mapping
 
 from .coordinator import (
     TapHomeDataUpdateCoordinator,
@@ -72,9 +75,9 @@ class TapHomeEntity(CoordinatorEntity, TapHomeDataUpdateCoordinatorObject[TState
             unique_id_core_id = (
                 f".{core_config.id}" if core_config.id is not None else ""
             )
-            self._unique_id = f"taphome{unique_id_core_id}.{unique_id_determination}.{self._taphome_device_id}".lower()
+            self._attr_unique_id = f"taphome{unique_id_core_id}.{unique_id_determination}.{self._taphome_device_id}".lower()
         else:
-            self._unique_id = config.unique_id
+            self._attr_unique_id = config.unique_id
 
         self._core_config = core_config
 
@@ -102,17 +105,12 @@ class TapHomeEntity(CoordinatorEntity, TapHomeDataUpdateCoordinatorObject[TState
             self.schedule_update_ha_state()
 
     @property
-    def unique_id(self):
-        """Return the entity unique identifier."""
-        return self._unique_id
-
-    @property
-    def available(self):
+    def available(self) -> bool:
         """Return ``True`` if the entity is ready for use."""
         return self.taphome_state is not None and self.taphome_device is not None
 
     @property
-    def name(self):
+    def name(self) -> str | None:
         """Return the display name of the entity."""
         if self.taphome_device is not None:
             if self._core_config.use_description_as_name:
@@ -121,64 +119,73 @@ class TapHomeEntity(CoordinatorEntity, TapHomeDataUpdateCoordinatorObject[TState
         return None
 
     @property
-    def operation_mode(self):
+    def operation_mode(self) -> OperationModes | None:
         """Return current operation mode if available."""
         if self.taphome_state is not None:
-            return OperationModes.create(
-                self.taphome_state.get_device_value(ValueType.OperationMode)
+            return self.taphome_state.get_device_enum_value(
+                OperationModes, ValueType.OperationMode
             )
         return None
 
-    @property
-    def extra_state_attributes(self) -> dict:
+    @cached_property
+    def extra_state_attributes(self) -> Mapping[str, Any] | None:
         """Return entity specific state attributes."""
-        attributes = {"taphome_id": self._taphome_device_id}
+        attributes: dict[str, Any] = {}
 
+        def add_state_attributes(
+            key: str,
+            value: Any,
+            value_transform=lambda v: v,
+        ) -> None:
+            """Add state attribute to the attributes dictionary."""
+            if value is not None:
+                attributes[key] = value_transform(value)
+
+        add_state_attributes("taphome_id", self._taphome_device_id)
         if self.taphome_device is not None:
-            attributes["taphome_name"] = self.taphome_device.name
-            attributes["taphome_description"] = self.taphome_device.description
+            add_state_attributes("taphome_name", self.taphome_device.name)
+            add_state_attributes("taphome_description", self.taphome_device.description)
+            add_state_attributes("taphome_category", self.taphome_device.category)
+            add_state_attributes("taphome_zone", self.taphome_device.zone)
 
-            if self.taphome_device.category is not None:
-                attributes["taphome_category"] = self.taphome_device.category
-
-            if self.taphome_device.zone is not None:
-                attributes["taphome_zone"] = self.taphome_device.zone
-
-        if self.operation_mode is not None:
-            attributes["taphome_operation_mode"] = self.operation_mode.name.lower()
+        add_state_attributes(
+            "taphome_operation_mode",
+            self.operation_mode,
+            lambda value: value.name.lower(),
+        )
 
         return attributes
 
     @staticmethod
-    def convert_taphome_byte_to_ha(value: int):
+    def convert_taphome_byte_to_ha(value: float | None) -> float | None:
         """Convert 0..1 to 0..255 scale."""
         if value is None:
             return None
         return value * 255
 
     @staticmethod
-    def convert_ha_byte_to_taphome(value: int):
+    def convert_ha_byte_to_taphome(value: float | None) -> float | None:
         """Convert 0..255 to 0..1 scale."""
         if value is None:
             return None
         return max(1, round((value / 255) * 100)) / 100
 
     @staticmethod
-    def convert_taphome_percentage_to_ha(value: int):
+    def convert_taphome_percentage_to_ha(value: float | None) -> float | None:
         """Convert 0..1 to 0..100 scale."""
         if value is None:
             return None
         return value * 100
 
     @staticmethod
-    def convert_ha_percentage_to_taphome(value: int):
+    def convert_ha_percentage_to_taphome(value: float | None) -> float | None:
         """Convert 0..100 to 0..1 scale."""
         if value is None:
             return None
         return value / 100
 
     @staticmethod
-    def convert_taphome_bool_to_ha(value: int):
+    def convert_taphome_bool_to_ha(value: int | None) -> bool | None:
         """Convert 0/1 values to boolean."""
         if value == 1:
             return True

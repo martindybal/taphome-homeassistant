@@ -32,19 +32,18 @@ class ThermostatService:
         """Initialize with the TapHome API service."""
         self.taphome_api_service = taphome_api_service
 
-    async def async_get_state(self, device: Device) -> ThermostatState:
+    async def async_get_state(self, device: Device) -> ThermostatState | None:
         """Return ``ThermostatState`` for ``device`` if available."""
         try:
             thermostat_values = await self.taphome_api_service.async_get_device_values(
                 device.id
             )
-
             return ThermostatState(thermostat_values)
         except Exception:
             _LOGGER.exception("TapHome async_get_state for %s failed", device.id)
             return None
 
-    def async_set_desired_temperature(
+    async def async_set_desired_temperature(
         self, device: Device, desired_temperature
     ) -> None:
         """Set the desired temperature on ``device``."""
@@ -54,4 +53,4 @@ class ThermostatService:
             )
         ]
 
-        return self.taphome_api_service.async_set_device_values(device.id, values)
+        await self.taphome_api_service.async_set_device_values(device.id, values)

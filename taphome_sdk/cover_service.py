@@ -16,7 +16,7 @@ class CoverState(TapHomeState):
     def __init__(
         self,
         switch_values: dict,
-    ):
+    ) -> None:
         """Create a new instance from raw ``switch_values``."""
         super().__init__(switch_values)
         self.blinds_level = self.get_device_value(ValueType.BlindsLevel)
@@ -27,11 +27,11 @@ class CoverState(TapHomeState):
 class CoverService:
     """Service for operating TapHome covers."""
 
-    def __init__(self, taphome_api_service: TapHomeApiService):
+    def __init__(self, taphome_api_service: TapHomeApiService) -> None:
         """Initialize with the given TapHome API service."""
         self.taphome_api_service = taphome_api_service
 
-    async def async_get_state(self, device: Device) -> CoverState:
+    async def async_get_state(self, device: Device) -> CoverState | None:
         """Return the current state of ``device``."""
         try:
             cover_values = await self.taphome_api_service.async_get_device_values(
@@ -44,8 +44,9 @@ class CoverService:
                 "TapHome async_get_state for device %s failed",
                 device.id,
             )
+            return None
 
-    def async_set_level(self, device: Device, position, tilt=None) -> None:
+    async def async_set_level(self, device: Device, position, tilt=None) -> None:
         """Move the cover to ``position`` and optionally set ``tilt``."""
         values = [
             self.taphome_api_service.create_device_value(
@@ -60,12 +61,12 @@ class CoverService:
                 )
             )
 
-        return self.taphome_api_service.async_set_device_values(device.id, values)
+        await self.taphome_api_service.async_set_device_values(device.id, values)
 
-    def async_set_slope(self, device: Device, tilt) -> None:
+    async def async_set_slope(self, device: Device, tilt) -> None:
         """Adjust the tilt of the cover to ``tilt``."""
         values = [
             self.taphome_api_service.create_device_value(ValueType.BlindsSlope, tilt)
         ]
 
-        return self.taphome_api_service.async_set_device_values(device.id, values)
+        await self.taphome_api_service.async_set_device_values(device.id, values)

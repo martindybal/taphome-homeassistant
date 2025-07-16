@@ -7,19 +7,16 @@ import logging
 from types import TracebackType
 from typing import Generic, TypeVar
 
-from aiohttp.client_reqrep import ClientResponseError
+from aiohttp import ClientResponseError
 from aiohttp.web import Request
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import TAPHOME_PLATFORM
-from .taphome_sdk.taphome_api_service import Device, TapHomeApiService
+from .taphome_sdk import Device, TapHomeApiService, TapHomeState
 
 _LOGGER = logging.getLogger(__name__)
-
-
-TState = TypeVar("TState")
 
 
 class TapHomeDataUpdateCoordinatorDevice:
@@ -112,9 +109,12 @@ class TapHomeDataUpdateCoordinator(DataUpdateCoordinator):
         self.taphome_api_service = taphome_api_service
         self._was_devices_discovered = False
         self._devices = {}
-        update_interval = timedelta(seconds=update_interval)
+        update_interval_timedelta = timedelta(seconds=update_interval)
         super().__init__(
-            hass, _LOGGER, name=TAPHOME_PLATFORM, update_interval=update_interval
+            hass,
+            _LOGGER,
+            name=TAPHOME_PLATFORM,
+            update_interval=update_interval_timedelta,
         )
 
     def register_entity(
@@ -134,7 +134,7 @@ class TapHomeDataUpdateCoordinator(DataUpdateCoordinator):
             device.attach_taphome_device_change_handler(taphome_device_change_handler)
             device.attach_taphome_state_change_handler(taphome_state_change_handler)
 
-    def get_device(self, taphome_device_id: int) -> Device:
+    def get_device(self, taphome_device_id: int) -> Device | None:
         """Return TapHome device instance for ``taphome_device_id``."""
         device = self.get_device_data(taphome_device_id)
         if device is None:
@@ -184,12 +184,12 @@ class TapHomeDataUpdateCoordinator(DataUpdateCoordinator):
         last_all_devices_values = (
             await self.taphome_api_service.async_get_all_devices_values()
         )
-        if last_all_devices_values is not None:
-            self.update_devices_values(last_all_devices_values, True)
-        else:
+        if last_all_devices_values is None:
             for device in self._devices.items():
                 device.taphome_state = None
             raise UpdateFailed
+
+        self.update_devices_values(last_all_devices_values, True)
 
     async def handle_webhook(
         self, hass: HomeAssistant, webhook_id: str, request: Request
@@ -229,11 +229,14 @@ class TapHomeDataUpdateCoordinator(DataUpdateCoordinator):
 
     def get_device_data(
         self, taphome_device_id: int
-    ) -> TapHomeDataUpdateCoordinatorDevice:
+    ) -> TapHomeDataUpdateCoordinatorDevice | None:
         """Return internal device container for ``taphome_device_id``."""
         if taphome_device_id not in self._devices:
             return None
         return self._devices[taphome_device_id]
+
+
+TState = TypeVar("TState", bound="TapHomeState")
 
 
 class TapHomeDataUpdateCoordinatorObject(Generic[TState]):
@@ -257,14 +260,14 @@ class TapHomeDataUpdateCoordinatorObject(Generic[TState]):
         )
 
     @property
-    def taphome_state(self) -> TState:
+    def taphome_state(self) -> TState | None:
         """Return the latest state for this device."""
         return self.coordinator.get_state(
             self._taphome_device_id, self._taphome_state_type
         )
 
     @property
-    def taphome_device(self) -> Device:
+    def taphome_device(self) -> Device | None:
         """Return the TapHome device representation."""
         return self.coordinator.get_device(self._taphome_device_id)
 
@@ -285,7 +288,7 @@ class TapHomeDataUpdateCoordinatorObject(Generic[TState]):
         """Handle changes when taphome_state is updated."""
 
 
-class UpdateTapHomeState:
+class UpdateTapHomeState(Generic[TState]):
     """Context manager for temporarily storing last TapHome state."""
 
     def __init__(
@@ -293,7 +296,7 @@ class UpdateTapHomeState:
     ) -> None:
         """Initialize context with reference to coordinator object."""
         self._coordinator_object = coordinator_object
-        self._last_state: TState | None = None
+        self._last_state = self._coordinator_object.taphome_state
 
     async def __aenter__(self):
         """Return current state and store it for later comparison."""
