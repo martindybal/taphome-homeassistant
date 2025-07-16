@@ -3,7 +3,7 @@
 import logging
 
 import aiohttp
-from aiohttp.client_reqrep import ClientResponse, ClientResponseError
+from aiohttp import ClientResponse, ClientResponseError
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -14,7 +14,7 @@ class TapHomeHttpClientFactory:
     class _TapHomeHttpClient:
         """Internal HTTP client wrapper used by the SDK."""
 
-        def __init__(self, api_url: str, token: str):
+        def __init__(self, api_url: str, token: str) -> None:
             """Initialize the client with ``api_url`` and ``token``."""
             self.api_url = api_url
             self.token = token
@@ -44,11 +44,13 @@ class TapHomeHttpClientFactory:
             try:
                 if response.status == 200:
                     return await response.json()
+
+                message = response.reason if response.reason else "Unexpected response"
                 raise ClientResponseError(
                     response.request_info,
                     response.history,
                     status=response.status,
-                    message=response.reason,
+                    message=message,
                     headers=response.headers,
                 )
             except:

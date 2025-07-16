@@ -26,7 +26,7 @@ class ButtonService:
         """Initialize the service with the TapHome API instance."""
         self.taphome_api_service = taphome_api_service
 
-    def async_press(
+    async def async_press(
         self, device: Device, action: ButtonAction = ButtonAction.Press
     ) -> None:
         """Trigger the desired button ``action`` on ``device``."""
@@ -36,4 +36,4 @@ class ButtonService:
             )
         ]
 
-        return self.taphome_api_service.async_set_device_values(device.id, values)
+        await self.taphome_api_service.async_set_device_values(device.id, values)

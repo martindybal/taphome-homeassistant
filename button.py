@@ -44,7 +44,7 @@ class ButtonConfigEntry(TapHomeConfigEntry):
         return self._device_class
 
 
-class TapHomeButton(TapHomeEntity[dict], ButtonEntity):
+class TapHomeButton(TapHomeEntity[TapHomeState], ButtonEntity):
     """Representation of an button."""
 
     def __init__(
@@ -73,6 +73,7 @@ class TapHomeButton(TapHomeEntity[dict], ButtonEntity):
     @property
     def available(self):
         """Return True if the TapHome device is present."""
+        super().available
         return self.taphome_device is not None
 
     @property

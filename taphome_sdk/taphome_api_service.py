@@ -29,7 +29,7 @@ class TapHomeApiService:
         """Initialize with the underlying HTTP client."""
         self.taphome_api_service = taphome_api_service
 
-    async def async_discovery_devices(self) -> list[Device]:
+    async def async_discovery_devices(self) -> list[Device] | None:
         """Return devices discovered on the TapHome network."""
         json = {}
         try:
@@ -40,6 +40,7 @@ class TapHomeApiService:
             _LOGGER.exception(
                 "TapHome request async_discovery_devices failed: %s", json
             )
+            return None
 
     def _map_devices(self, json) -> list[Device]:
         """Convert discovery JSON into a list of ``Device`` objects."""
@@ -62,17 +63,12 @@ class TapHomeApiService:
         except Exception:
             _LOGGER.exception("TapHome request async_get_location failed: %s", json)
 
-    async def async_get_all_devices_values(self) -> dict:
+    async def async_get_all_devices_values(self) -> dict | None:
         """Return current values for all devices."""
         device_info = None
         try:
             return await self.taphome_api_service.async_api_get("getAllDevicesValues")
-        except Exception as ex:
-            if hasattr(ex, "status") and ex.status == 501:
-                _LOGGER.exception(
-                    "TapHome request failed: Request not supported by core! Please update your core to 2021.2 or newer"
-                )
-                raise
+        except Exception:
             _LOGGER.exception(
                 "TapHome request async_get_all_devices_values failed: %s", device_info
             )
@@ -90,13 +86,13 @@ class TapHomeApiService:
             _LOGGER.exception(
                 "TapHome request async_get_device_values failed: %s", device_info
             )
-            return None
+            return {}
 
-    def async_set_device_value(
+    async def async_set_device_value(
         self, device_id: int, value_type: ValueType, value
     ) -> None:
         """Set a single ``value_type`` on ``device_id``."""
-        return self.async_set_device_values(
+        return await self.async_set_device_values(
             device_id,
             [self.create_device_value(value_type, value)],
         )

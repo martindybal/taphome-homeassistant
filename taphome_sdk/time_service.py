@@ -44,7 +44,7 @@ class TimeService:
             _LOGGER.exception("TapHome async_get_state for %s failed", device.id)
             return None
 
-    def async_set_value(self, total_seconds: int, device: Device) -> None:
+    async def async_set_value(self, total_seconds: int, device: Device) -> None:
         """Set time in seconds on ``device``."""
         values = [
             self.taphome_api_service.create_device_value(
@@ -54,4 +54,4 @@ class TimeService:
             )
         ]
 
-        return self.taphome_api_service.async_set_device_values(device.id, values)
+        await self.taphome_api_service.async_set_device_values(device.id, values)
