@@ -17,7 +17,9 @@ class LightState(TapHomeState):
         """Create state from ``light_values`` dictionary."""
         super().__init__(light_values)
 
-        self.switch_state = SwitchStates(self.get_device_value(ValueType.SwitchState))
+        self.switch_state = self.get_device_enum_value(
+            SwitchStates, ValueType.SwitchState
+        )
 
         self.hue = self.get_device_value(ValueType.HueDegrees)
         self.saturation = self.get_device_value(ValueType.Saturation)
@@ -34,7 +36,7 @@ class LightState(TapHomeState):
 class LightService:
     """Service for controlling TapHome lights."""
 
-    def __init__(self, taphome_api_service: TapHomeApiService):
+    def __init__(self, taphome_api_service: TapHomeApiService) -> None:
         """Initialize with the provided API service."""
         self.taphome_api_service = taphome_api_service
 
@@ -44,7 +46,7 @@ class LightService:
 
         return LightState(light_values)
 
-    def async_turn_on(
+    async def async_turn_on(
         self,
         device: Device,
         brightness=None,
@@ -54,9 +56,11 @@ class LightService:
     ) -> None:
         """Turn the light on with the optional parameters provided."""
         if brightness is color_temp is hue is saturation is None:
-            return self.taphome_api_service.async_set_device_value(
+            await self.taphome_api_service.async_set_device_value(
                 device.id, ValueType.SwitchState, SwitchStates.ON.value
             )
+            return
+
         values = []
 
         def append_value(value_type: ValueType, value):
@@ -81,10 +85,10 @@ class LightService:
         if saturation is not None:
             append_value(ValueType.Saturation, saturation)
 
-        return self.taphome_api_service.async_set_device_values(device.id, values)
+        await self.taphome_api_service.async_set_device_values(device.id, values)
 
-    def async_turn_off(self, device: Device) -> None:
+    async def async_turn_off(self, device: Device) -> None:
         """Turn ``device`` off."""
-        return self.taphome_api_service.async_set_device_value(
+        await self.taphome_api_service.async_set_device_value(
             device.id, ValueType.SwitchState, SwitchStates.OFF.value
         )

@@ -1,18 +1,22 @@
 """Helper object used during entity creation."""
 
+from typing import Generic, TypeVar
+
 from .coordinator import TapHomeDataUpdateCoordinator
 from .taphome_core_config_entry import TapHomeCoreConfigEntry
 from .taphome_entity import TapHomeConfigEntry
 from .taphome_sdk import TapHomeApiService
 
+TConfig = TypeVar("TConfig", bound="TapHomeConfigEntry")
 
-class AddEntryRequest:
+
+class AddEntryRequest(Generic[TConfig]):
     """Store parameters needed for creating an entity."""
 
     def __init__(
         self,
         core_config: TapHomeCoreConfigEntry,
-        config_entry: TapHomeConfigEntry,
+        config_entry: TConfig,
         taphome_device_id: int,
         coordinator: TapHomeDataUpdateCoordinator,
         taphome_api_service: TapHomeApiService,

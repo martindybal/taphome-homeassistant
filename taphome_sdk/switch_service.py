@@ -20,7 +20,9 @@ class SwitchState(TapHomeState):
     ):
         """Create state from ``switch_values``."""
         super().__init__(switch_values)
-        self.switch_state = SwitchStates(self.get_device_value(ValueType.SwitchState))
+        self.switch_state = self.get_device_enum_value(
+            SwitchStates, ValueType.SwitchState
+        )
 
 
 class SwitchService:
@@ -45,7 +47,7 @@ class SwitchService:
             _LOGGER.exception("TapHome async_get_state for %s failed", device.id)
             return None
 
-    def async_turn(self, switch_state: SwitchStates, device: Device) -> None:
+    async def async_turn(self, switch_state: SwitchStates, device: Device) -> None:
         """Set ``device`` to the provided ``switch_state``."""
         values = [
             self.taphome_api_service.create_device_value(
@@ -53,4 +55,4 @@ class SwitchService:
             )
         ]
 
-        return self.taphome_api_service.async_set_device_values(device.id, values)
+        await self.taphome_api_service.async_set_device_values(device.id, values)

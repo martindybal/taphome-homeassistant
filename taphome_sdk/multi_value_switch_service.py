@@ -20,7 +20,7 @@ class MultiValueSwitchState(TapHomeState):
     ):
         """Create state from ``multi_value_switch_values``."""
         super().__init__(multi_value_switch_values)
-        self.multi_value_switch_state: int = self.get_device_value(
+        self.multi_value_switch_state = self.get_device_int_value(
             ValueType.MultiValueSwitchState
         )
 
@@ -28,11 +28,11 @@ class MultiValueSwitchState(TapHomeState):
 class MultiValueSwitchService:
     """Operate multi-value switches via TapHome."""
 
-    def __init__(self, taphome_api_service: TapHomeApiService):
+    def __init__(self, taphome_api_service: TapHomeApiService) -> None:
         """Initialize with the TapHome API service."""
         self.taphome_api_service = taphome_api_service
 
-    async def async_get_state(self, device: Device) -> MultiValueSwitchState:
+    async def async_get_state(self, device: Device) -> MultiValueSwitchState | None:
         """Return ``MultiValueSwitchState`` for ``device``."""
         try:
             multi_value_switch_values = (
@@ -43,7 +43,7 @@ class MultiValueSwitchService:
             _LOGGER.exception("TapHome async_get_state for %s failed", device.id)
             return None
 
-    def async_set_value(self, value: int, device: Device) -> ValueChangeResult:
+    async def async_set_value(self, value: int, device: Device) -> None:
         """Set ``device`` to ``value`` and return the change result."""
         values = [
             self.taphome_api_service.create_device_value(
@@ -51,4 +51,4 @@ class MultiValueSwitchService:
             )
         ]
 
-        return self.taphome_api_service.async_set_device_values(device.id, values)
+        await self.taphome_api_service.async_set_device_values(device.id, values)

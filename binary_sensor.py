@@ -1,12 +1,13 @@
 """TapHome binary_sensor integration."""
 
 from homeassistant.components.binary_sensor import (
-    DOMAIN,
+    DOMAIN as BINARY_SENSOR_DOMAIN,
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
 from homeassistant.const import CONF_BINARY_SENSORS
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import cached_property
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .add_entry_request import AddEntryRequest
@@ -37,26 +38,23 @@ class TapHomeIsAliveSensor(BinarySensorEntity):
         self.coordinator = coordinator
 
         unique_id_core_id = f".{core_config.id}" if core_config.id is not None else ""
-        self._unique_id = f"taphome{unique_id_core_id}.{DOMAIN}.isalive".lower()
+        self._attr_unique_id = (
+            f"taphome{unique_id_core_id}.{BINARY_SENSOR_DOMAIN}.isalive".lower()
+        )
 
-    @property
-    def unique_id(self):
-        """Return entity unique identifier."""
-        return self._unique_id
-
-    @property
-    def name(self):
+    @cached_property
+    def name(self) -> str | None:
         """Return human readable name for this sensor."""
         core_id = f" {self._core_config.id}" if self._core_config.id is not None else ""
         return f"TapHome{core_id} is alive sensor"
 
-    @property
-    def device_class(self):
+    @cached_property
+    def device_class(self) -> BinarySensorDeviceClass | None:
         """Return type of binary sensor from component DEVICE_CLASSES."""
         return BinarySensorDeviceClass.CONNECTIVITY
 
     @property
-    def is_on(self) -> bool:
+    def is_on(self) -> bool | None:
         """Return if the binary sensor is currently on or off."""
         return self.coordinator.last_update_success
 
@@ -64,7 +62,9 @@ class TapHomeIsAliveSensor(BinarySensorEntity):
 class TapHomeBinarySensorType:
     """Data describing a TapHome binary sensor type."""
 
-    def __init__(self, value_type: ValueType, device_class: str | None = None) -> None:
+    def __init__(
+        self, value_type: ValueType, device_class: BinarySensorDeviceClass | None = None
+    ) -> None:
         """Store basic information about a binary sensor."""
         self.value_type = value_type
         self.device_class = device_class
@@ -146,12 +146,12 @@ class BinarySensorConfigEntry(TapHomeConfigEntry):
         self._value_type = self.get_optional("value_type", None)
 
     @property
-    def device_class(self) -> str:
+    def device_class(self) -> BinarySensorDeviceClass | None:
         """Return Home Assistant device class if configured."""
         return self._device_class
 
     @property
-    def value_type(self) -> ValueType:
+    def value_type(self) -> ValueType | None:
         """Return TapHome value type used by this sensor."""
         return self._value_type
 
@@ -170,7 +170,9 @@ class TapHomeBinarySensor(TapHomeEntity[TapHomeState], BinarySensorEntity):
         """Initialize TapHome binary sensor entity."""
         assert sensor_type is not None
         self._sensor_type = sensor_type
-        unique_id_determination = f"{DOMAIN}.{self._sensor_type.value_type.name}"
+        unique_id_determination = (
+            f"{BINARY_SENSOR_DOMAIN}.{self._sensor_type.value_type.name}"
+        )
 
         super().__init__(
             hass,
@@ -181,17 +183,20 @@ class TapHomeBinarySensor(TapHomeEntity[TapHomeState], BinarySensorEntity):
             TapHomeState,
         )
 
-    @property
-    def device_class(self) -> str:
+    @cached_property
+    def device_class(self) -> BinarySensorDeviceClass | None:
         """Return type of binary sensor from component DEVICE_CLASSES."""
         return self._sensor_type.device_class
 
     @property
-    def is_on(self) -> bool:
+    def is_on(self) -> bool | None:
         """Return if the binary sensor is currently on or off."""
+
         if self.taphome_state is not None:
             sensor_type = self._sensor_type
-            sensor_value = self.taphome_state.get_device_value(sensor_type.value_type)
+            sensor_value = self.taphome_state.get_device_int_value(
+                sensor_type.value_type
+            )
             return TapHomeEntity.convert_taphome_bool_to_ha(sensor_value)
         return None
 
@@ -271,9 +276,9 @@ def setup_platform(
     discovery_info=None,
 ) -> None:
     """Set up the binary sensor platform."""
-    add_entry_requests: list[AddEntryRequest] = hass.data[TAPHOME_PLATFORM][
-        CONF_BINARY_SENSORS
-    ]
+    add_entry_requests: list[AddEntryRequest[BinarySensorConfigEntry]] = hass.data[
+        TAPHOME_PLATFORM
+    ][CONF_BINARY_SENSORS]
 
     for add_entry_request in add_entry_requests:
         TapHomeBinarySensorCreateRequest(
