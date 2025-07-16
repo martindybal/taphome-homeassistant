@@ -4,7 +4,7 @@ from typing import Any
 
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers.entity import async_generate_entity_id, cached_property
+from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import Mapping
 
@@ -127,7 +127,7 @@ class TapHomeEntity(CoordinatorEntity, TapHomeDataUpdateCoordinatorObject[TState
             )
         return None
 
-    @cached_property
+    @property
     def extra_state_attributes(self) -> Mapping[str, Any] | None:
         """Return entity specific state attributes."""
         attributes: dict[str, Any] = {}
