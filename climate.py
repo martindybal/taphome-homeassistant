@@ -88,7 +88,6 @@ class TapHomeNoneClimateController(TapHomeClimateController[dict]):
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode):
         """Persist new HVAC mode."""
-        pass
 
 
 class TapHomeCoordinatorObjectClimateController(
