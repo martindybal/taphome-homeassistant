@@ -27,7 +27,7 @@ jobs:
           pylint .
         env:
           PYTHONPATH: '.'
-#      - name: Run mypy
-#        run: mypy -p taphome_sdk --ignore-missing-imports --explicit-package-bases
-#        env:
-#          PYTHONPATH: '.'
+      - name: Run mypy
+        run: mypy -p taphome_sdk --ignore-missing-imports --explicit-package-bases
+        env:
+          PYTHONPATH: '.'
