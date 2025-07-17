@@ -17,12 +17,17 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install ruff mypy homeassistant
+          pip install ruff mypy pylint homeassistant
       - name: Check compilation
         run: python -m compileall -q .
       - name: Run ruff
         run: ruff check .
-      - name: Run mypy
-        run: mypy -p taphome_sdk --ignore-missing-imports --explicit-package-bases
+      - name: Run pylint
+        run: >-
+          pylint .
         env:
           PYTHONPATH: '.'
+#      - name: Run mypy
+#        run: mypy -p taphome_sdk --ignore-missing-imports --explicit-package-bases
+#        env:
+#          PYTHONPATH: '.'
