@@ -189,6 +189,7 @@ class TapHomeDataUpdateCoordinator(DataUpdateCoordinator):
         last_all_devices_values = (
             await self.taphome_api_service.async_get_all_devices_values()
         )
+
         if last_all_devices_values is None:
             for device in self._devices.items():
                 device.taphome_state = None

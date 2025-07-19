@@ -17,11 +17,11 @@ from .add_entry_request import AddEntryRequest
 from .const import CONF_CLIMATES, TAPHOME_PLATFORM
 from .coordinator import TapHomeDataUpdateCoordinator, UpdateTapHomeState
 from .taphome_entity import (
+    StateT,
     TapHomeConfigEntry,
     TapHomeCoreConfigEntry,
     TapHomeDataUpdateCoordinatorObject,
     TapHomeEntity,
-    TState,
     callback,
 )
 from .taphome_sdk import (
@@ -39,7 +39,7 @@ from .taphome_sdk import (
 _LOGGER = logging.getLogger(__name__)
 
 
-class TapHomeClimateController(typing.Generic[TState]):
+class TapHomeClimateController(typing.Generic[StateT]):
     """Base class for TapHome climate controllers."""
 
     def __init__(self) -> None:
@@ -64,7 +64,7 @@ class TapHomeClimateController(typing.Generic[TState]):
         """Listen for data updates."""
         self._listeners.append(update_callback)
 
-    def _invoke_hvac_mode_changed(self, last_state: TState | None) -> None:
+    def _invoke_hvac_mode_changed(self, last_state: StateT | None) -> None:
         for update_callback in self._listeners:
             update_callback(last_state)
 
@@ -91,7 +91,7 @@ class TapHomeNoneClimateController(TapHomeClimateController[dict]):
 
 
 class TapHomeCoordinatorObjectClimateController(
-    TapHomeClimateController[TState], TapHomeDataUpdateCoordinatorObject[TState]
+    TapHomeClimateController[StateT], TapHomeDataUpdateCoordinatorObject[StateT]
 ):
     """Base controller operating on coordinator managed devices."""
 
@@ -109,7 +109,7 @@ class TapHomeCoordinatorObjectClimateController(
         self.coordinator = coordinator
 
     @callback
-    def handle_taphome_state_change(self, last_state: TState | None) -> None:
+    def handle_taphome_state_change(self, last_state: StateT | None) -> None:
         """Notify listeners when TapHome state changes."""
         self._invoke_hvac_mode_changed(last_state)
 

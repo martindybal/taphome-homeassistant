@@ -9,6 +9,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import Mapping
 
 from .coordinator import (
+    StateT,
     TapHomeDataUpdateCoordinator,
     TapHomeDataUpdateCoordinatorObject,
     callback,
@@ -55,7 +56,7 @@ class TapHomeConfigEntry:
         return default
 
 
-class TapHomeEntity(CoordinatorEntity, TapHomeDataUpdateCoordinatorObject[TState]):
+class TapHomeEntity(CoordinatorEntity, TapHomeDataUpdateCoordinatorObject[StateT]):
     """Base class for all TapHome entities."""
 
     def __init__(
@@ -98,7 +99,7 @@ class TapHomeEntity(CoordinatorEntity, TapHomeDataUpdateCoordinatorObject[TState
         """Handle updated data from the coordinator."""
 
     @callback
-    def handle_taphome_state_change(self, last_state: TState | None) -> None:
+    def handle_taphome_state_change(self, last_state: StateT | None) -> None:
         """Schedule state update when TapHome state changes."""
         if self.hass is not None:  # check if entity was added to hass
             self.schedule_update_ha_state()
