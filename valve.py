@@ -2,13 +2,15 @@
 
 from __future__ import annotations
 
-from homeassistant.components.valve import DOMAIN, ValveEntity, ValveEntityFeature
+from homeassistant.components.valve import (DOMAIN, ValveEntity,
+                                            ValveEntityFeature)
 from homeassistant.core import HomeAssistant
 
 from .add_entry_request import AddEntryRequest
 from .const import CONF_VALVE, TAPHOME_PLATFORM
 from .coordinator import TapHomeDataUpdateCoordinator, UpdateTapHomeState
-from .taphome_entity import TapHomeConfigEntry, TapHomeCoreConfigEntry, TapHomeEntity
+from .taphome_entity import (TapHomeConfigEntry, TapHomeCoreConfigEntry,
+                             TapHomeEntity)
 from .taphome_sdk import SwitchStates, ValveService, ValveState
 
 

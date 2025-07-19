@@ -1,7 +1,7 @@
 """Base state class for TapHome devices."""
 
-from enum import Enum
 import logging
+from enum import Enum
 from typing import TypeVar
 
 from .value_type import ValueType

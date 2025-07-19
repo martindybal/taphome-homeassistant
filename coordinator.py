@@ -2,19 +2,19 @@
 
 # from .switch import TapHomeSwitch
 import copy
-from datetime import timedelta
 import logging
+from datetime import timedelta
 from types import TracebackType
 from typing import Generic, TypeVar
 
 from aiohttp import ClientResponseError
 from aiohttp.web import Request
-
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.helpers.update_coordinator import (DataUpdateCoordinator,
+                                                      UpdateFailed)
 
 from .const import TAPHOME_PLATFORM
-from .taphome_sdk import Device, TapHomeApiService
+from .taphome_sdk import Device, TapHomeApiService, TapHomeState
 
 _LOGGER = logging.getLogger(__name__)
 

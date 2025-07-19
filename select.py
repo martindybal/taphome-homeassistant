@@ -1,13 +1,16 @@
 """TapHome light integration."""
 
-from homeassistant.components.select import DOMAIN as SELECT_DOMAIN, SelectEntity
+from homeassistant.components.select import DOMAIN as SELECT_DOMAIN
+from homeassistant.components.select import SelectEntity
 from homeassistant.core import HomeAssistant
 
 from .add_entry_request import AddEntryRequest
 from .const import CONF_MULTIVALUE_SWITCHES, TAPHOME_PLATFORM
 from .coordinator import TapHomeDataUpdateCoordinator, UpdateTapHomeState
-from .taphome_entity import TapHomeConfigEntry, TapHomeCoreConfigEntry, TapHomeEntity
-from .taphome_sdk import MultiValueSwitchService, MultiValueSwitchState, ValueType
+from .taphome_entity import (TapHomeConfigEntry, TapHomeCoreConfigEntry,
+                             TapHomeEntity)
+from .taphome_sdk import (MultiValueSwitchService, MultiValueSwitchState,
+                          ValueType)
 
 
 class TapHomeSelectOption:

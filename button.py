@@ -5,12 +5,8 @@ from homeassistant.core import HomeAssistant
 
 from .add_entry_request import AddEntryRequest
 from .const import CONF_BUTTONS, TAPHOME_PLATFORM
-from .taphome_entity import (
-    TapHomeConfigEntry,
-    TapHomeCoreConfigEntry,
-    TapHomeDataUpdateCoordinator,
-    TapHomeEntity,
-)
+from .taphome_entity import (TapHomeConfigEntry, TapHomeCoreConfigEntry,
+                             TapHomeDataUpdateCoordinator, TapHomeEntity)
 from .taphome_sdk import ButtonAction, ButtonService, TapHomeState
 
 

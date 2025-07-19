@@ -4,22 +4,15 @@ from __future__ import annotations
 
 from typing import Any
 
-from homeassistant.components.fan import (
-    DOMAIN as FAN_DOMAIN,
-    FanEntity,
-    FanEntityFeature,
-)
+from homeassistant.components.fan import DOMAIN as FAN_DOMAIN
+from homeassistant.components.fan import FanEntity, FanEntityFeature
 from homeassistant.core import HomeAssistant
 
 from .add_entry_request import AddEntryRequest
 from .const import CONF_FAN, TAPHOME_PLATFORM
 from .coordinator import UpdateTapHomeState
-from .taphome_entity import (
-    TapHomeConfigEntry,
-    TapHomeCoreConfigEntry,
-    TapHomeDataUpdateCoordinator,
-    TapHomeEntity,
-)
+from .taphome_entity import (TapHomeConfigEntry, TapHomeCoreConfigEntry,
+                             TapHomeDataUpdateCoordinator, TapHomeEntity)
 from .taphome_sdk import FanService, FanState, SwitchStates
 
 

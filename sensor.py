@@ -1,44 +1,27 @@
 """TapHome sensor integration."""
 
+import logging
 from dataclasses import dataclass, replace
 from datetime import datetime
 from typing import Callable
-import logging
 
-from homeassistant.components.sensor import (
-    DOMAIN as SENSOR_DOMAIN,
-    SensorDeviceClass,
-    SensorEntity,
-)
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.components.sensor.const import SensorStateClass
-from homeassistant.const import (
-    CONCENTRATION_PARTS_PER_MILLION,
-    CONF_SENSORS,
-    LIGHT_LUX,
-    PERCENTAGE,
-    UnitOfElectricCurrent,
-    UnitOfElectricPotential,
-    UnitOfEnergy,
-    UnitOfFrequency,
-    UnitOfPower,
-    UnitOfPressure,
-    UnitOfSpeed,
-    UnitOfTemperature,
-    UnitOfVolume,
-    UnitOfVolumetricFlux,
-)
+from homeassistant.const import (CONCENTRATION_PARTS_PER_MILLION, CONF_SENSORS,
+                                 LIGHT_LUX, PERCENTAGE, UnitOfElectricCurrent,
+                                 UnitOfElectricPotential, UnitOfEnergy,
+                                 UnitOfFrequency, UnitOfPower, UnitOfPressure,
+                                 UnitOfSpeed, UnitOfTemperature, UnitOfVolume,
+                                 UnitOfVolumetricFlux)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .add_entry_request import AddEntryRequest
 from .const import TAPHOME_PLATFORM
 from .coordinator import TapHomeDataUpdateCoordinator
-from .taphome_entity import (
-    TapHomeConfigEntry,
-    TapHomeCoreConfigEntry,
-    TapHomeDataUpdateCoordinatorObject,
-    TapHomeEntity,
-)
+from .taphome_entity import (TapHomeConfigEntry, TapHomeCoreConfigEntry,
+                             TapHomeDataUpdateCoordinatorObject, TapHomeEntity)
 from .taphome_sdk import TapHomeState, ValueType
 
 _LOGGER = logging.getLogger(__name__)

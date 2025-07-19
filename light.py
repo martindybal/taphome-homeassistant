@@ -2,21 +2,19 @@
 
 from __future__ import annotations
 
-from homeassistant.components.light import (
-    ATTR_BRIGHTNESS,
-    ATTR_COLOR_TEMP_KELVIN,
-    ATTR_HS_COLOR,
-    DOMAIN as LIGHT_DOMAIN,
-    ColorMode,
-    LightEntity,
-)
+from homeassistant.components.light import (ATTR_BRIGHTNESS,
+                                            ATTR_COLOR_TEMP_KELVIN,
+                                            ATTR_HS_COLOR)
+from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
+from homeassistant.components.light import ColorMode, LightEntity
 from homeassistant.const import CONF_LIGHTS
 from homeassistant.core import HomeAssistant
 
 from .add_entry_request import AddEntryRequest
 from .const import TAPHOME_PLATFORM
 from .coordinator import TapHomeDataUpdateCoordinator, UpdateTapHomeState
-from .taphome_entity import TapHomeConfigEntry, TapHomeCoreConfigEntry, TapHomeEntity
+from .taphome_entity import (TapHomeConfigEntry, TapHomeCoreConfigEntry,
+                             TapHomeEntity)
 from .taphome_sdk import LightService, LightState, SwitchStates, ValueType
 
 

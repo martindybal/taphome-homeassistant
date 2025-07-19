@@ -5,8 +5,8 @@ import typing
 from dataclasses import dataclass, field
 
 import voluptuous as vol
-
-from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
+from homeassistant.components.binary_sensor import \
+    DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN
 from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
 from homeassistant.components.cover import DOMAIN as COVER_DOMAIN
@@ -18,18 +18,12 @@ from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.components.time import DOMAIN as TIME_DOMAIN
 from homeassistant.components.valve import DOMAIN as VALVE_DOMAIN
-from homeassistant.components.webhook import async_register as async_register_webhook
+from homeassistant.components.webhook import \
+    async_register as async_register_webhook
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    CONF_BINARY_SENSORS,
-    CONF_COVERS,
-    CONF_ID,
-    CONF_LIGHTS,
-    CONF_SENSORS,
-    CONF_SWITCHES,
-    CONF_TOKEN,
-    CONF_WEBHOOK_ID,
-)
+from homeassistant.const import (CONF_BINARY_SENSORS, CONF_COVERS, CONF_ID,
+                                 CONF_LIGHTS, CONF_SENSORS, CONF_SWITCHES,
+                                 CONF_TOKEN, CONF_WEBHOOK_ID)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.discovery import load_platform
@@ -38,22 +32,11 @@ from .add_entry_request import AddEntryRequest
 from .binary_sensor import BinarySensorConfigEntry
 from .button import ButtonConfigEntry
 from .climate import ClimateConfigEntry
-from .const import (
-    CONF_API_URL,
-    CONF_BUTTONS,
-    CONF_CLIMATES,
-    CONF_CORES,
-    CONF_FAN,
-    CONF_HUMIDIFIER,
-    CONF_LANGUAGE,
-    CONF_MULTIVALUE_SWITCHES,
-    CONF_TIMES,
-    CONF_UPDATE_INTERVAL,
-    CONF_VALVE,
-    TAPHOME_PLATFORM,
-    USE_DESCRIPTION_AS_ENTITY_ID,
-    USE_DESCRIPTION_AS_NAME,
-)
+from .const import (CONF_API_URL, CONF_BUTTONS, CONF_CLIMATES, CONF_CORES,
+                    CONF_FAN, CONF_HUMIDIFIER, CONF_LANGUAGE,
+                    CONF_MULTIVALUE_SWITCHES, CONF_TIMES, CONF_UPDATE_INTERVAL,
+                    CONF_VALVE, TAPHOME_PLATFORM, USE_DESCRIPTION_AS_ENTITY_ID,
+                    USE_DESCRIPTION_AS_NAME)
 from .coordinator import TapHomeDataUpdateCoordinator
 from .cover import CoverConfigEntry
 from .humidifier import HumidifierConfigEntry
