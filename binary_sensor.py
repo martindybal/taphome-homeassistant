@@ -125,7 +125,7 @@ class BinarySensorConfigEntry(TapHomeConfigEntry):
         return self._value_type
 
 
-@dataclass(slots=True)
+@dataclass(slots=True, frozen=True)
 class BinarySensorInitContext:
     """Grouping of dependencies required to create a binary sensor."""
 
@@ -144,9 +144,7 @@ class TapHomeBinarySensor(TapHomeEntity[TapHomeState], BinarySensorEntity):
         """Initialize TapHome binary sensor entity."""
         assert sensor_type is not None
         self._sensor_type = sensor_type
-        unique_id_determination = (
-            f"{BINARY_SENSOR_DOMAIN}.{self._sensor_type.value_type.name}"
-        )
+        unique_id_determination = f"{BINARY_SENSOR_DOMAIN}.{self._sensor_type.value_type.name.replace('_', '')}"
 
         super().__init__(
             context.hass,

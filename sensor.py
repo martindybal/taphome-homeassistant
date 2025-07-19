@@ -280,7 +280,9 @@ class TapHomeSensor(TapHomeEntity[TapHomeState], SensorEntity):
         """Initialize TapHome sensor entity."""
         assert sensor_type is not None
         self._sensor_type = sensor_type
-        unique_id_determination = f"{SENSOR_DOMAIN}.{self._sensor_type.value_type.name}"
+        unique_id_determination = (
+            f"{SENSOR_DOMAIN}.{self._sensor_type.value_type.name.replace('_', '')}"
+        )
 
         super().__init__(
             context.hass,
