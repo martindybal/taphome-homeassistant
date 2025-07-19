@@ -81,8 +81,9 @@ class TapHomeValve(TapHomeEntity[ValveState], ValveEntity):
         return None
 
     async def async_open_valve(self) -> None:
-        """For valves that can set position, this method should be left unimplemented and only set_valve_position is required."""
-        # this causes a bug / unintended behavior . After switching on, the last value is not used, but 100%
+        """Open the valve if supported."""
+        # After turning on, the last value is ignored and 100 % is used.
+        # This behaviour is not desired.
         await self.valve_service.async_turn_on(self.taphome_device)
 
     async def async_close_valve(self) -> None:
@@ -102,9 +103,9 @@ class TapHomeValve(TapHomeEntity[ValveState], ValveEntity):
 
 def setup_platform(
     hass: HomeAssistant,
-    config,
+    _config,
     add_entities,
-    discovery_info=None,
+    _discovery_info=None,
 ) -> None:
     """Set up the valve platform."""
     add_entry_requests: list[AddEntryRequest] = hass.data[TAPHOME_PLATFORM][CONF_VALVE]

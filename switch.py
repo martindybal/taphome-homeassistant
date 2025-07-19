@@ -68,6 +68,14 @@ class TapHomeSwitch(TapHomeEntity[SwitchState], SwitchEntity):
         """Turn device off."""
         await self.async_turn(SwitchStates.OFF)
 
+    def turn_on(self, **kwargs) -> None:
+        """Synchronously turn the device on."""
+        self.hass.async_create_task(self.async_turn_on(**kwargs))
+
+    def turn_off(self, **kwargs) -> None:
+        """Synchronously turn the device off."""
+        self.hass.async_create_task(self.async_turn_off())
+
     async def async_turn(self, switch_state: SwitchStates):
         """Change the switch state on the TapHome device."""
         async with UpdateTapHomeState(self) as state:

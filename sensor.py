@@ -575,9 +575,9 @@ class TapHomeSensorCreateRequest(TapHomeDataUpdateCoordinatorObject[TapHomeState
 
 def setup_platform(
     hass: HomeAssistant,
-    config,
+    _config,
     add_entities: AddEntitiesCallback,
-    discovery_info=None,
+    _discovery_info=None,
 ) -> None:
     """Set up the sensor platform."""
     add_entry_requests: list[AddEntryRequest] = hass.data[TAPHOME_PLATFORM][

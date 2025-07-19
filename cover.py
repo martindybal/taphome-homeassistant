@@ -169,7 +169,9 @@ class TapHomeCover(TapHomeEntity[CoverState], CoverEntity):
             ha_position = kwargs.get(ATTR_POSITION)
             taphome_position = 1 - self.convert_ha_percentage_to_taphome(ha_position)
 
-            # TapHome also adjusts the tilt of the blind when changing the position. This is not a demanding behavior for me. So I use the existing tilt to preserve the value
+            # TapHome also adjusts the tilt of the blind when changing the
+            # position. This is not a demanding behavior for me, so we reuse
+            # the existing tilt to preserve the value
             taphome_tilt = None
             if self.current_cover_tilt_position is not None:
                 if taphome_position == 0:
@@ -228,9 +230,9 @@ class TapHomeCover(TapHomeEntity[CoverState], CoverEntity):
 
 def setup_platform(
     hass: HomeAssistant,
-    config,
+    _config,
     add_entities,
-    discovery_info=None,
+    _discovery_info=None,
 ) -> None:
     """Set up the cover platform."""
     add_entry_requests: list[AddEntryRequest] = hass.data[TAPHOME_PLATFORM][CONF_COVERS]
