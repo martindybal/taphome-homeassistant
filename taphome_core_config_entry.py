@@ -3,7 +3,7 @@
 from dataclasses import dataclass
 
 
-@dataclass(slots=True)
+@dataclass(slots=True, frozen=True)
 class TapHomeCoreConfigEntry:
     """Holds configuration options for a TapHome core instance."""
 

@@ -122,9 +122,12 @@ class TapHomeEntity(CoordinatorEntity, TapHomeDataUpdateCoordinatorObject[StateT
     def operation_mode(self) -> OperationModes | None:
         """Return current operation mode if available."""
         if self.taphome_state is not None:
-            return self.taphome_state.get_device_enum_value(
+            operation_mode = self.taphome_state.get_device_enum_value(
                 OperationModes, ValueType.OPERATION_MODE
             )
+            if operation_mode is not OperationModes.NONE:
+                return operation_mode
+
         return None
 
     @property

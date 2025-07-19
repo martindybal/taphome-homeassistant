@@ -1,6 +1,5 @@
 """Provides the taphome DataUpdateCoordinator."""
 
-# from .switch import TapHomeSwitch
 import copy
 from datetime import timedelta
 import logging
