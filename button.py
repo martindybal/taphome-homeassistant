@@ -5,8 +5,12 @@ from homeassistant.core import HomeAssistant
 
 from .add_entry_request import AddEntryRequest
 from .const import CONF_BUTTONS, TAPHOME_PLATFORM
-from .taphome_entity import (TapHomeConfigEntry, TapHomeCoreConfigEntry,
-                             TapHomeDataUpdateCoordinator, TapHomeEntity)
+from .taphome_entity import (
+    TapHomeConfigEntry,
+    TapHomeCoreConfigEntry,
+    TapHomeDataUpdateCoordinator,
+    TapHomeEntity,
+)
 from .taphome_sdk import ButtonAction, ButtonService, TapHomeState
 
 
@@ -69,7 +73,6 @@ class TapHomeButton(TapHomeEntity[TapHomeState], ButtonEntity):
     @property
     def available(self):
         """Return True if the TapHome device is present."""
-        super().available
         return self.taphome_device is not None
 
     @property

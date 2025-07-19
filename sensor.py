@@ -1,27 +1,44 @@
 """TapHome sensor integration."""
 
-import logging
+from collections.abc import Callable
 from dataclasses import dataclass, replace
 from datetime import datetime
-from typing import Callable
+import logging
 
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
+from homeassistant.components.sensor import (
+    DOMAIN as SENSOR_DOMAIN,
+    SensorDeviceClass,
+    SensorEntity,
+)
 from homeassistant.components.sensor.const import SensorStateClass
-from homeassistant.const import (CONCENTRATION_PARTS_PER_MILLION, CONF_SENSORS,
-                                 LIGHT_LUX, PERCENTAGE, UnitOfElectricCurrent,
-                                 UnitOfElectricPotential, UnitOfEnergy,
-                                 UnitOfFrequency, UnitOfPower, UnitOfPressure,
-                                 UnitOfSpeed, UnitOfTemperature, UnitOfVolume,
-                                 UnitOfVolumetricFlux)
+from homeassistant.const import (
+    CONCENTRATION_PARTS_PER_MILLION,
+    CONF_SENSORS,
+    LIGHT_LUX,
+    PERCENTAGE,
+    UnitOfElectricCurrent,
+    UnitOfElectricPotential,
+    UnitOfEnergy,
+    UnitOfFrequency,
+    UnitOfPower,
+    UnitOfPressure,
+    UnitOfSpeed,
+    UnitOfTemperature,
+    UnitOfVolume,
+    UnitOfVolumetricFlux,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .add_entry_request import AddEntryRequest
 from .const import TAPHOME_PLATFORM
 from .coordinator import TapHomeDataUpdateCoordinator
-from .taphome_entity import (TapHomeConfigEntry, TapHomeCoreConfigEntry,
-                             TapHomeDataUpdateCoordinatorObject, TapHomeEntity)
+from .taphome_entity import (
+    TapHomeConfigEntry,
+    TapHomeCoreConfigEntry,
+    TapHomeDataUpdateCoordinatorObject,
+    TapHomeEntity,
+)
 from .taphome_sdk import TapHomeState, ValueType
 
 _LOGGER = logging.getLogger(__name__)
@@ -56,7 +73,6 @@ class TapHomeSensorType:
             unit_of_measurement=unit_of_measurement or self.unit_of_measurement,
             state_class=state_class or self.state_class,
         )
-
 
 
 def _convert_percentage(value: int) -> int:
@@ -371,13 +387,17 @@ class TapHomeSensorCreateRequest(TapHomeDataUpdateCoordinatorObject[TapHomeState
                 if self.taphome_device.supports_value(sensor_type.value_type):
                     overrides = {}
                     if self._context.config_entry.device_class is not None:
-                        overrides["device_class"] = self._context.config_entry.device_class
+                        overrides["device_class"] = (
+                            self._context.config_entry.device_class
+                        )
                     if self._context.config_entry.unit_of_measurement is not None:
                         overrides["unit_of_measurement"] = (
                             self._context.config_entry.unit_of_measurement
                         )
                     if self._context.config_entry.state_class is not None:
-                        overrides["state_class"] = self._context.config_entry.state_class
+                        overrides["state_class"] = (
+                            self._context.config_entry.state_class
+                        )
 
                     sensor = TapHomeSensor(
                         self._context,

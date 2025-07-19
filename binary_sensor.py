@@ -2,10 +2,11 @@
 
 from dataclasses import dataclass
 
-from homeassistant.components.binary_sensor import \
-    DOMAIN as BINARY_SENSOR_DOMAIN
-from homeassistant.components.binary_sensor import (BinarySensorDeviceClass,
-                                                    BinarySensorEntity)
+from homeassistant.components.binary_sensor import (
+    DOMAIN as BINARY_SENSOR_DOMAIN,
+    BinarySensorDeviceClass,
+    BinarySensorEntity,
+)
 from homeassistant.const import CONF_BINARY_SENSORS
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import cached_property
@@ -14,9 +15,13 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .add_entry_request import AddEntryRequest
 from .const import TAPHOME_PLATFORM
 from .coordinator import TapHomeDataUpdateCoordinator
-from .taphome_entity import (TapHomeConfigEntry, TapHomeCoreConfigEntry,
-                             TapHomeDataUpdateCoordinatorObject, TapHomeEntity,
-                             callback)
+from .taphome_entity import (
+    TapHomeConfigEntry,
+    TapHomeCoreConfigEntry,
+    TapHomeDataUpdateCoordinatorObject,
+    TapHomeEntity,
+    callback,
+)
 from .taphome_sdk import TapHomeState, ValueType
 
 
@@ -217,7 +222,9 @@ class TapHomeBinarySensorCreateRequest(
             for sensor_type in supported_sensor_types:
                 if self.taphome_device.supports_value(sensor_type.value_type):
                     if self._context.config_entry.device_class is not None:
-                        sensor_type.device_class = self._context.config_entry.device_class
+                        sensor_type.device_class = (
+                            self._context.config_entry.device_class
+                        )
 
                     binary_sensor = TapHomeBinarySensor(
                         self._context,

@@ -1,7 +1,7 @@
 """Models TapHome devices and supported value types."""
 
-import logging
 from dataclasses import dataclass
+import logging
 
 from .value_type import ValueType
 

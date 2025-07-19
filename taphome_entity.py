@@ -8,8 +8,11 @@ from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import Mapping
 
-from .coordinator import (TapHomeDataUpdateCoordinator,
-                          TapHomeDataUpdateCoordinatorObject, TState, callback)
+from .coordinator import (
+    TapHomeDataUpdateCoordinator,
+    TapHomeDataUpdateCoordinatorObject,
+    callback,
+)
 from .taphome_core_config_entry import TapHomeCoreConfigEntry
 from .taphome_sdk import OperationModes, ValueType
 

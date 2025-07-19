@@ -4,18 +4,23 @@ from __future__ import annotations
 
 from typing import Any
 
-from homeassistant.components.humidifier import DOMAIN as HUMIDIFIER_DOMAIN
-from homeassistant.components.humidifier import (HumidifierAction,
-                                                 HumidifierEntity)
+from homeassistant.components.humidifier import (
+    DOMAIN as HUMIDIFIER_DOMAIN,
+    HumidifierAction,
+    HumidifierEntity,
+)
 from homeassistant.core import HomeAssistant
 
 from .add_entry_request import AddEntryRequest
 from .const import CONF_HUMIDIFIER, TAPHOME_PLATFORM
 from .coordinator import UpdateTapHomeState
-from .taphome_entity import (TapHomeConfigEntry, TapHomeCoreConfigEntry,
-                             TapHomeDataUpdateCoordinator, TapHomeEntity)
-from .taphome_sdk import (HumidifierService, HumidifierState, SwitchStates,
-                          ValueType)
+from .taphome_entity import (
+    TapHomeConfigEntry,
+    TapHomeCoreConfigEntry,
+    TapHomeDataUpdateCoordinator,
+    TapHomeEntity,
+)
+from .taphome_sdk import HumidifierService, HumidifierState, SwitchStates, ValueType
 
 
 class HumidifierConfigEntry(TapHomeConfigEntry):

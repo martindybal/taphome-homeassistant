@@ -2,15 +2,17 @@
 
 from __future__ import annotations
 
-from homeassistant.components.valve import (DOMAIN, ValveEntity,
-                                            ValveEntityFeature)
+from homeassistant.components.valve import (
+    DOMAIN as VALVE_DOMAIN,
+    ValveEntity,
+    ValveEntityFeature,
+)
 from homeassistant.core import HomeAssistant
 
 from .add_entry_request import AddEntryRequest
 from .const import CONF_VALVE, TAPHOME_PLATFORM
 from .coordinator import TapHomeDataUpdateCoordinator, UpdateTapHomeState
-from .taphome_entity import (TapHomeConfigEntry, TapHomeCoreConfigEntry,
-                             TapHomeEntity)
+from .taphome_entity import TapHomeConfigEntry, TapHomeCoreConfigEntry, TapHomeEntity
 from .taphome_sdk import SwitchStates, ValveService, ValveState
 
 
@@ -41,7 +43,7 @@ class TapHomeValve(TapHomeEntity[ValveState], ValveEntity):
     ) -> None:
         """Initialize TapHome valve entity."""
         super().__init__(
-            hass, core_config, config_entry, DOMAIN, coordinator, ValveState
+            hass, core_config, config_entry, VALVE_DOMAIN, coordinator, ValveState
         )
         self.valve_service = valve_service
         self._device_class = config_entry.device_class

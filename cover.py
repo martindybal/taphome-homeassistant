@@ -2,18 +2,26 @@
 
 import copy
 
-from homeassistant.components.cover import ATTR_POSITION, ATTR_TILT_POSITION
-from homeassistant.components.cover import DOMAIN as COVER_DOMAIN
-from homeassistant.components.cover import (CoverDeviceClass, CoverEntity,
-                                            CoverEntityFeature)
+from homeassistant.components.cover import (
+    ATTR_POSITION,
+    ATTR_TILT_POSITION,
+    DOMAIN as COVER_DOMAIN,
+    CoverDeviceClass,
+    CoverEntity,
+    CoverEntityFeature,
+)
 from homeassistant.const import CONF_COVERS
 from homeassistant.core import HomeAssistant, callback
 
 from .add_entry_request import AddEntryRequest
 from .const import TAPHOME_PLATFORM
 from .coordinator import UpdateTapHomeState
-from .taphome_entity import (TapHomeConfigEntry, TapHomeCoreConfigEntry,
-                             TapHomeDataUpdateCoordinator, TapHomeEntity)
+from .taphome_entity import (
+    TapHomeConfigEntry,
+    TapHomeCoreConfigEntry,
+    TapHomeDataUpdateCoordinator,
+    TapHomeEntity,
+)
 from .taphome_sdk import CoverService, CoverState
 
 

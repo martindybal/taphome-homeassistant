@@ -1,7 +1,7 @@
 """Provide support for handling button presses on TapHome devices."""
 
-import logging
 from enum import Enum
+import logging
 
 from .device import Device
 from .taphome_api_service import TapHomeApiService
