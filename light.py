@@ -91,7 +91,7 @@ class TapHomeLight(TapHomeEntity[LightState], LightEntity):
         """Return the warmest color_temp_kelvin that this light supports."""
         if self.taphome_device is not None:
             return self.taphome_device.supported_values[
-                ValueType.CorrelatedColorTemperature
+                ValueType.CORRELATED_COLOR_TEMPERATURE
             ].min_value
         return None
 
@@ -100,7 +100,7 @@ class TapHomeLight(TapHomeEntity[LightState], LightEntity):
         """Return the coldest color_temp_kelvin that this light supports."""
         if self.taphome_device is not None:
             return self.taphome_device.supported_values[
-                ValueType.CorrelatedColorTemperature
+                ValueType.CORRELATED_COLOR_TEMPERATURE
             ].max_value
         return None
 

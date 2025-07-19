@@ -96,7 +96,7 @@ class TapHomeHumidifier(TapHomeEntity[HumidifierState], HumidifierEntity):
         if self.taphome_device is not None:
             return TapHomeEntity.convert_taphome_percentage_to_ha(
                 self.taphome_device.supported_values[
-                    ValueType.AnalogOutputDesiredValue
+                    ValueType.ANALOG_OUTPUT_DESIRED_VALUE
                 ].min_value
             )
         return None
@@ -110,7 +110,7 @@ class TapHomeHumidifier(TapHomeEntity[HumidifierState], HumidifierEntity):
         if self.taphome_device is not None:
             return TapHomeEntity.convert_taphome_percentage_to_ha(
                 self.taphome_device.supported_values[
-                    ValueType.AnalogOutputDesiredValue
+                    ValueType.ANALOG_OUTPUT_DESIRED_VALUE
                 ].max_value
             )
         return None

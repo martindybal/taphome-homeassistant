@@ -20,9 +20,9 @@ class ThermostatState(TapHomeState):
         """Create state from ``thermostat_values``."""
         super().__init__(thermostat_values)
 
-        self.desired_temperature = self.get_device_value(ValueType.TemperatureSetPoint)
-        self.real_temperature = self.get_device_value(ValueType.RealTemperature)
-        self.real_humidity = self.get_device_value(ValueType.Humidity)
+        self.desired_temperature = self.get_device_value(ValueType.TEMPERATURE_SET_POINT)
+        self.real_temperature = self.get_device_value(ValueType.REAL_TEMPERATURE)
+        self.real_humidity = self.get_device_value(ValueType.HUMIDITY)
 
 
 class ThermostatService:
@@ -49,7 +49,7 @@ class ThermostatService:
         """Set the desired temperature on ``device``."""
         values = [
             self.taphome_api_service.create_device_value(
-                ValueType.TemperatureSetPoint, desired_temperature
+                ValueType.TEMPERATURE_SET_POINT, desired_temperature
             )
         ]
 

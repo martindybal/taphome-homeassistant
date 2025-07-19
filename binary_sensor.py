@@ -26,7 +26,7 @@ from .taphome_sdk import TapHomeState, ValueType
 class TapHomeIsAliveSensor(BinarySensorEntity):
     """Binary sensor reporting availability of the TapHome core."""
 
-    sensor_value_type = ValueType.Motion
+    sensor_value_type = ValueType.MOTION
 
     def __init__(
         self,
@@ -76,7 +76,7 @@ class TapHomeMotionBinarySensorType(TapHomeBinarySensorType):
     def __init__(self) -> None:
         """Initialize motion sensor type metadata."""
         super().__init__(
-            ValueType.Motion,
+            ValueType.MOTION,
             BinarySensorDeviceClass.MOTION,
         )
 
@@ -87,7 +87,7 @@ class TapHomeReedContactBinarySensorType(TapHomeBinarySensorType):
     def __init__(self) -> None:
         """Initialize reed contact sensor metadata."""
         super().__init__(
-            ValueType.ReedContact,
+            ValueType.REED_CONTACT,
             None,
         )
 
@@ -98,7 +98,7 @@ class TapHomeSmokeBinarySensorType(TapHomeBinarySensorType):
     def __init__(self) -> None:
         """Initialize smoke sensor metadata."""
         super().__init__(
-            ValueType.Smoke,
+            ValueType.SMOKE,
             BinarySensorDeviceClass.SMOKE,
         )
 
@@ -109,7 +109,7 @@ class TapHomeFloodBinarySensorType(TapHomeBinarySensorType):
     def __init__(self) -> None:
         """Initialize flood sensor metadata."""
         super().__init__(
-            ValueType.FloodState,
+            ValueType.FLOOD_STATE,
             BinarySensorDeviceClass.MOISTURE,
         )
 
@@ -120,7 +120,7 @@ class TapHomeIsWindowOpenBinarySensorType(TapHomeBinarySensorType):
     def __init__(self) -> None:
         """Initialize open window sensor metadata."""
         super().__init__(
-            ValueType.IsWindowOpen,
+            ValueType.IS_WINDOW_OPEN,
             BinarySensorDeviceClass.WINDOW,
         )
 
@@ -131,7 +131,7 @@ class TapHomeVariableBinarySensorType(TapHomeBinarySensorType):
     def __init__(self) -> None:
         """Initialize variable sensor metadata."""
         super().__init__(
-            ValueType.VariableState,
+            ValueType.VARIABLE_STATE,
             None,
         )
 

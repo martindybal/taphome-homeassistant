@@ -13,10 +13,10 @@ _LOGGER = logging.getLogger(__name__)
 class ButtonAction(Enum):
     """Enumeration of available button press actions."""
 
-    Press = 1
-    LongPress = 2
-    DoublePress = 3
-    TripplePress = 4
+    PRESS = 1
+    LONG_PRESS = 2
+    DOUBLE_PRESS = 3
+    TRIPPLE_PRESS = 4
 
 
 class ButtonService:
@@ -32,7 +32,7 @@ class ButtonService:
         """Trigger the desired button ``action`` on ``device``."""
         values = [
             self.taphome_api_service.create_device_value(
-                ValueType.ButtonPressed, action.value
+                ValueType.BUTTON_PRESSED, action.value
             )
         ]
 

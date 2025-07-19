@@ -57,7 +57,7 @@ class TapHomeSelect(TapHomeEntity[MultiValueSwitchState], SelectEntity):
         """Return list of available options from TapHome."""
         if self.taphome_device is not None:
             allowed_values = self.taphome_device.supported_values[
-                ValueType.MultiValueSwitchState
+                ValueType.MULTI_VALUE_SWITCH_STATE
             ].allowed_values
             return [
                 TapHomeSelectOption(value["value"], value["name"])

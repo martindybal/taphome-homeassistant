@@ -76,12 +76,12 @@ class Device:
     @staticmethod
     def create(device: dict):
         """Instantiate ``Device`` from raw ``device`` dictionary."""
-        deviceId = device["deviceId"]
+        device_id = device["deviceId"]
         name = device["name"]
         description = device["description"]
         zone = device.get("zone")
         category = device.get("category")
-        deviceType = device["type"]
+        device_type = device["type"]
         supported_values = {}
         for supported_value in device["supportedValues"]:
             try:
@@ -97,7 +97,7 @@ class Device:
             except ValueError:
                 _LOGGER.warning("%s is not a valid ValueType", supported_value)
         return Device(
-            deviceId, name, description, zone, category, deviceType, supported_values
+            device_id, name, description, zone, category, device_type, supported_values
         )
 
     @property

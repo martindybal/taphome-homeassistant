@@ -90,9 +90,9 @@ class TapHomeEntity(CoordinatorEntity, TapHomeDataUpdateCoordinatorObject[TState
             self._core_config.use_description_as_entity_id
             and self.taphome_device is not None
         ):
-            ENTITY_ID_FORMAT = unique_id_determination + ".{}"
+            entity_id_format = unique_id_determination + ".{}"
             self.entity_id = async_generate_entity_id(
-                ENTITY_ID_FORMAT, self.taphome_device.description, hass=hass
+                entity_id_format, self.taphome_device.description, hass=hass
             )
 
     def _handle_coordinator_update(self) -> None:
@@ -123,7 +123,7 @@ class TapHomeEntity(CoordinatorEntity, TapHomeDataUpdateCoordinatorObject[TState
         """Return current operation mode if available."""
         if self.taphome_state is not None:
             return self.taphome_state.get_device_enum_value(
-                OperationModes, ValueType.OperationMode
+                OperationModes, ValueType.OPERATION_MODE
             )
         return None
 

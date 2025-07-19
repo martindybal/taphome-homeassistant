@@ -23,7 +23,7 @@ class ButtonConfigEntry(TapHomeConfigEntry):
 
         config_actions = self.get_optional("actions", None)
         if config_actions is None:
-            self._actions = [ButtonAction.Press]
+            self._actions = [ButtonAction.PRESS]
         else:
             self._actions = []
             for config_action in config_actions:

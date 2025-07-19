@@ -71,7 +71,7 @@ class TapHomeHumiditySensorType(TapHomeSensorType):
     def __init__(self) -> None:
         """Initialize humidity sensor metadata."""
         super().__init__(
-            ValueType.Humidity,
+            ValueType.HUMIDITY,
             SensorDeviceClass.HUMIDITY,
             PERCENTAGE,
             SensorStateClass.MEASUREMENT,
@@ -88,7 +88,7 @@ class TapHomeTemperatureSensorType(TapHomeSensorType):
     def __init__(self) -> None:
         """Initialize temperature sensor metadata."""
         super().__init__(
-            ValueType.RealTemperature,
+            ValueType.REAL_TEMPERATURE,
             SensorDeviceClass.TEMPERATURE,
             UnitOfTemperature.CELSIUS,
             SensorStateClass.MEASUREMENT,
@@ -105,7 +105,7 @@ class TapHomeElectricCounterElectricityDemandSensorType(TapHomeSensorType):
     def __init__(self) -> None:
         """Initialize demand sensor metadata."""
         super().__init__(
-            ValueType.ElectricityDemand,
+            ValueType.ELECTRICITY_DEMAND,
             SensorDeviceClass.POWER,
             UnitOfPower.KILO_WATT,
             SensorStateClass.MEASUREMENT,
@@ -122,7 +122,7 @@ class TapHomeElectricCounterElectricityConsumptionSensorType(TapHomeSensorType):
     def __init__(self) -> None:
         """Initialize consumption sensor metadata."""
         super().__init__(
-            ValueType.ElectricityConsumption,
+            ValueType.ELECTRICITY_CONSUMPTION,
             SensorDeviceClass.ENERGY,
             UnitOfEnergy.KILO_WATT_HOUR,
             SensorStateClass.TOTAL_INCREASING,
@@ -139,7 +139,7 @@ class TapHomeCo2SensorType(TapHomeSensorType):
     def __init__(self) -> None:
         """Initialize CO2 sensor metadata."""
         super().__init__(
-            ValueType.Co2,
+            ValueType.CO2,
             SensorDeviceClass.CO2,
             CONCENTRATION_PARTS_PER_MILLION,
             SensorStateClass.MEASUREMENT,
@@ -156,7 +156,7 @@ class TapHomeBrightnessSensorType(TapHomeSensorType):
     def __init__(self) -> None:
         """Initialize brightness sensor metadata."""
         super().__init__(
-            ValueType.SensorBrightness,
+            ValueType.SENSOR_BRIGHTNESS,
             SensorDeviceClass.ILLUMINANCE,
             LIGHT_LUX,
             SensorStateClass.MEASUREMENT,
@@ -174,7 +174,7 @@ class TapHomeWindSpeedSensorType(TapHomeSensorType):
     def __init__(self) -> None:
         """Initialize wind speed sensor metadata."""
         super().__init__(
-            ValueType.WindSpeed,
+            ValueType.WIND_SPEED,
             None,
             UnitOfSpeed.KILOMETERS_PER_HOUR,
             SensorStateClass.MEASUREMENT,
@@ -191,7 +191,7 @@ class TapHomeAnalogInputSensorType(TapHomeSensorType):
     def __init__(self) -> None:
         """Initialize analog input sensor metadata."""
         super().__init__(
-            ValueType.AnalogInputValue,
+            ValueType.ANALOG_INPUT_VALUE,
             None,
             PERCENTAGE,
             SensorStateClass.MEASUREMENT,
@@ -208,7 +208,7 @@ class TapHomePulseCounterTotalImpulseCountSensorType(TapHomeSensorType):
     def __init__(self) -> None:
         """Initialize impulse counter sensor metadata."""
         super().__init__(
-            ValueType.TotalImpulseCount,
+            ValueType.TOTAL_IMPULSE_COUNT,
             state_class=SensorStateClass.TOTAL_INCREASING,
         )
 
@@ -219,7 +219,7 @@ class TapHomePulseCounterCurrentHourImpulseCountSensorType(TapHomeSensorType):
     def __init__(self) -> None:
         """Initialize impulse counter sensor metadata."""
         super().__init__(
-            ValueType.CurrentHourImpulseCount,
+            ValueType.CURRENT_HOUR_IMPULSE_COUNT,
             state_class=SensorStateClass.MEASUREMENT,
         )
 
@@ -230,7 +230,7 @@ class TapHomePulseCounterLastMeasuredFrequencySensorType(TapHomeSensorType):
     def __init__(self) -> None:
         """Initialize frequency sensor metadata."""
         super().__init__(
-            ValueType.LastMeasuredFrequency,
+            ValueType.LAST_MEASURED_FREQUENCY,
             None,
             UnitOfFrequency.HERTZ,
             SensorStateClass.MEASUREMENT,
@@ -247,7 +247,7 @@ class TapHomeGasConsumptionSensorType(TapHomeSensorType):
     def __init__(self) -> None:
         """Initialize gas consumption sensor metadata."""
         super().__init__(
-            ValueType.GasConsumption,
+            ValueType.GAS_CONSUMPTION,
             SensorDeviceClass.GAS,
             UnitOfVolume.CUBIC_METERS,
             SensorStateClass.TOTAL_INCREASING,
@@ -264,7 +264,7 @@ class TapHomeRainfallRateSensorType(TapHomeSensorType):
     def __init__(self) -> None:
         """Initialize rainfall rate sensor metadata."""
         super().__init__(
-            ValueType.RainfallRate,
+            ValueType.RAINFALL_RATE,
             SensorDeviceClass.PRECIPITATION_INTENSITY,
             UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR,
             SensorStateClass.MEASUREMENT,
@@ -281,7 +281,7 @@ class TapHomeWaterPressureSensorType(TapHomeSensorType):
     def __init__(self) -> None:
         """Initialize water pressure sensor metadata."""
         super().__init__(
-            ValueType.WaterPressure,
+            ValueType.WATER_PRESSURE,
             SensorDeviceClass.PRESSURE,
             UnitOfPressure.BAR,
             SensorStateClass.MEASUREMENT,
@@ -298,7 +298,7 @@ class TapHomeLightIntensitySensorType(TapHomeSensorType):
     def __init__(self) -> None:
         """Initialize light intensity sensor metadata."""
         super().__init__(
-            ValueType.LightIntensity,
+            ValueType.LIGHT_INTENSITY,
             SensorDeviceClass.ILLUMINANCE,
             LIGHT_LUX,
             SensorStateClass.MEASUREMENT,
@@ -315,7 +315,7 @@ class TapHomeBatteryPercentageSensorType(TapHomeSensorType):
     def __init__(self) -> None:
         """Initialize battery sensor metadata."""
         super().__init__(
-            ValueType.BatteryPercentageRemaining,
+            ValueType.BATTERY_PERCENTAGE_REMAINING,
             SensorDeviceClass.BATTERY,
             PERCENTAGE,
             SensorStateClass.MEASUREMENT,
@@ -332,7 +332,7 @@ class TapHomeElectricVoltageSensorType(TapHomeSensorType):
     def __init__(self) -> None:
         """Initialize voltage sensor metadata."""
         super().__init__(
-            ValueType.ElectricVoltage,
+            ValueType.ELECTRIC_VOLTAGE,
             SensorDeviceClass.VOLTAGE,
             UnitOfElectricPotential.VOLT,
             SensorStateClass.MEASUREMENT,
@@ -349,7 +349,7 @@ class TapHomeElectricCurrentSensorType(TapHomeSensorType):
     def __init__(self) -> None:
         """Initialize electric current sensor metadata."""
         super().__init__(
-            ValueType.ElectricCurrent,
+            ValueType.ELECTRIC_CURRENT,
             SensorDeviceClass.CURRENT,
             UnitOfElectricCurrent.AMPERE,
             SensorStateClass.MEASUREMENT,
@@ -366,7 +366,7 @@ class TapHomePercentagesSensorType(TapHomeSensorType):
     def __init__(self) -> None:
         """Initialize percentages sensor metadata."""
         super().__init__(
-            ValueType.Percentages,
+            ValueType.PERCENTAGES,
             None,
             PERCENTAGE,
             SensorStateClass.MEASUREMENT,
@@ -383,7 +383,7 @@ class TapHomeVariableType(TapHomeSensorType):
     def __init__(self) -> None:
         """Initialize variable state sensor metadata."""
         super().__init__(
-            ValueType.VariableState,
+            ValueType.VARIABLE_STATE,
             state_class=SensorStateClass.MEASUREMENT,
         )
 

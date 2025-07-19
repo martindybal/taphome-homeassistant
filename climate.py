@@ -357,7 +357,7 @@ class TapHomeClimate(TapHomeEntity[ThermostatState], ClimateEntity):
         """Return minimum allowed target temperature."""
         if self.taphome_device is not None:
             min_value = self.taphome_device.supported_values[
-                ValueType.TemperatureSetPoint
+                ValueType.TEMPERATURE_SET_POINT
             ].min_value
 
             # This's can be removed after 2024.2 release. Just return min_value to simplify code
@@ -378,7 +378,7 @@ class TapHomeClimate(TapHomeEntity[ThermostatState], ClimateEntity):
         """Return maximum allowed target temperature."""
         if self.taphome_device is not None:
             max_value = self.taphome_device.supported_values[
-                ValueType.TemperatureSetPoint
+                ValueType.TEMPERATURE_SET_POINT
             ].max_value
 
             # This's can be removed after 2024.2 release. Just return max_value to simplify code

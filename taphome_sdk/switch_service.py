@@ -21,7 +21,7 @@ class SwitchState(TapHomeState):
         """Create state from ``switch_values``."""
         super().__init__(switch_values)
         self.switch_state = self.get_device_enum_value(
-            SwitchStates, ValueType.SwitchState
+            SwitchStates, ValueType.SWITCH_STATE
         )
 
 
@@ -51,7 +51,7 @@ class SwitchService:
         """Set ``device`` to the provided ``switch_state``."""
         values = [
             self.taphome_api_service.create_device_value(
-                ValueType.SwitchState, switch_state.value
+                ValueType.SWITCH_STATE, switch_state.value
             )
         ]
 
