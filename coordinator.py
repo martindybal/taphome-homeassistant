@@ -10,11 +10,14 @@ from typing import Generic, TypeVar
 from aiohttp import ClientResponseError
 from aiohttp.web import Request
 
-from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.core import HomeAssistant, callback  # pylint: disable=import-error
+from homeassistant.helpers.update_coordinator import (  # pylint: disable=import-error
+    DataUpdateCoordinator,
+    UpdateFailed,
+)
 
 from .const import TAPHOME_PLATFORM
-from .taphome_sdk import Device, TapHomeApiService, TapHomeState
+from .taphome_sdk import Device, TapHomeApiService
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -82,7 +85,7 @@ class TapHomeDataUpdateCoordinatorDevice:
             state = (
                 None if self.taphome_values is None else state_type(self.taphome_values)
             )
-        except Exception:
+        except (ValueError, TypeError, KeyError):
             _LOGGER.exception(
                 "Error update_taphome_state for device %s", self.taphome_device.id
             )
@@ -127,7 +130,8 @@ class TapHomeDataUpdateCoordinator(DataUpdateCoordinator):
         device = self.get_device_data(taphome_device_id)
         if device is None:
             _LOGGER.error(
-                "TapHome register entity failed. Device with id %s has not been exposed in the TapHome API",
+                "TapHome register entity failed. Device with id %s has "
+                "not been exposed in the TapHome API",
                 taphome_device_id,
             )
         else:
@@ -157,10 +161,14 @@ class TapHomeDataUpdateCoordinator(DataUpdateCoordinator):
         except ClientResponseError as ex:
             if ex.status == 501:
                 _LOGGER.error(
-                    "Core don't support get all devices api endpoint. Please update your TapHome Core"
+                    "Core doesn't support get all devices api endpoint. "
+                    "Please update your TapHome Core",
                 )
-                raise NotImplementedError from ex  # NotImplementedError is reraised to fail integration loading.
-            exception_message = f"Invalid response from API: {ex.code} - {ex.request_info.url} {ex.message}"
+                raise NotImplementedError from ex
+            exception_message = (
+                f"Invalid response from API: {ex.code} - {ex.request_info.url} "
+                f"{ex.message}"
+            )
             _LOGGER.error(exception_message)
             raise UpdateFailed(exception_message) from ex
 
@@ -192,8 +200,8 @@ class TapHomeDataUpdateCoordinator(DataUpdateCoordinator):
         self.update_devices_values(last_all_devices_values, True)
 
     async def handle_webhook(
-        self, hass: HomeAssistant, webhook_id: str, request: Request
-    ):
+        self, _hass: HomeAssistant, webhook_id: str, request: Request
+    ) -> None:
         """Handle incoming webhook - we will trigger an update poll here."""
         _LOGGER.info("Taphome webhook triggered - webhook_id: %s", webhook_id)
         all_devices_values = await request.json()
@@ -236,10 +244,10 @@ class TapHomeDataUpdateCoordinator(DataUpdateCoordinator):
         return self._devices[taphome_device_id]
 
 
-TState = TypeVar("TState", bound="TapHomeState")
+StateT = TypeVar("StateT", bound="TapHomeState")
 
 
-class TapHomeDataUpdateCoordinatorObject(Generic[TState]):
+class TapHomeDataUpdateCoordinatorObject(Generic[StateT]):
     """Base mixin that exposes TapHome device and state via a coordinator."""
 
     def __init__(
@@ -260,7 +268,7 @@ class TapHomeDataUpdateCoordinatorObject(Generic[TState]):
         )
 
     @property
-    def taphome_state(self) -> TState | None:
+    def taphome_state(self) -> StateT | None:
         """Return the latest state for this device."""
         return self.coordinator.get_state(
             self._taphome_device_id, self._taphome_state_type
@@ -284,15 +292,15 @@ class TapHomeDataUpdateCoordinatorObject(Generic[TState]):
         self.handle_taphome_state_change(last_state)
 
     @callback
-    def handle_taphome_state_change(self, last_state: TState | None) -> None:
+    def handle_taphome_state_change(self, last_state: StateT | None) -> None:
         """Handle changes when taphome_state is updated."""
 
 
-class UpdateTapHomeState(Generic[TState]):
+class UpdateTapHomeState(Generic[StateT]):
     """Context manager for temporarily storing last TapHome state."""
 
     def __init__(
-        self, coordinator_object: TapHomeDataUpdateCoordinatorObject[TState]
+        self, coordinator_object: TapHomeDataUpdateCoordinatorObject[StateT]
     ) -> None:
         """Initialize context with reference to coordinator object."""
         self._coordinator_object = coordinator_object
