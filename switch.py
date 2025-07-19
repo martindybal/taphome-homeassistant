@@ -1,5 +1,6 @@
 """TapHome switch integration."""
 
+from typing import Any
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchEntity
 from homeassistant.const import CONF_SWITCHES
 from homeassistant.core import HomeAssistant
@@ -60,7 +61,7 @@ class TapHomeSwitch(TapHomeEntity[SwitchState], SwitchEntity):
             return self.taphome_state.switch_state == SwitchStates.ON
         return None
 
-    async def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn device on."""
         await self.async_turn(SwitchStates.ON)
 

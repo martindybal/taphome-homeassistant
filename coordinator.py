@@ -199,7 +199,7 @@ class TapHomeDataUpdateCoordinator(DataUpdateCoordinator):
 
         self.update_devices_values(last_all_devices_values, True)
 
-    async def handle_webhook(
+    async def async_handle_webhook(
         self, _hass: HomeAssistant, webhook_id: str, request: Request
     ) -> None:
         """Handle incoming webhook - we will trigger an update poll here."""

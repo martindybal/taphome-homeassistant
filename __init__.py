@@ -278,7 +278,7 @@ async def _setup_core(
             TAPHOME_PLATFORM,
             webhook_name,
             webhook_id,
-            coordinator.handle_webhook,
+            coordinator.async_handle_webhook,
         )
 
     hass.data[TAPHOME_PLATFORM] = {}
