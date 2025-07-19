@@ -10,11 +10,8 @@ from typing import Generic, TypeVar
 from aiohttp import ClientResponseError
 from aiohttp.web import Request
 
-from homeassistant.core import HomeAssistant, callback  # pylint: disable=import-error
-from homeassistant.helpers.update_coordinator import (  # pylint: disable=import-error
-    DataUpdateCoordinator,
-    UpdateFailed,
-)
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import TAPHOME_PLATFORM
 from .taphome_sdk import Device, TapHomeApiService
