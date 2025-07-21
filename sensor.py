@@ -242,33 +242,37 @@ class SensorInitContext:
 class SensorConfigEntry(TapHomeConfigEntry):
     """Configuration options for TapHome sensor entities."""
 
-    def __init__(self, device_config: dict):
+    def __init__(self, device_config: dict) -> None:
         """Initialize configuration entry from raw device config."""
         super().__init__(device_config)
-        self._device_class = self.get_optional("device_class", None)
-        self._value_type = self.get_optional("value_type", None)
-        self._unit_of_measurement = self.get_optional("unit_of_measurement", None)
-        self._state_class = self.get_optional("state_class", None)
+        self._device_class: SensorDeviceClass | None = self.get_optional(
+            "device_class", None
+        )
+        self._value_type: ValueType | None = self.get_optional("value_type", None)
+        self._unit_of_measurement: str | None = self.get_optional(
+            "unit_of_measurement", None
+        )
+        self._state_class: str | None = self.get_optional("state_class", None)
         if self.get_optional("was_measured", None) is True:
             self._state_class = SensorStateClass.MEASUREMENT
 
     @property
-    def device_class(self) -> str:
+    def device_class(self) -> SensorDeviceClass | None:
         """Return configured Home Assistant device class."""
         return self._device_class
 
     @property
-    def value_type(self) -> ValueType:
+    def value_type(self) -> ValueType | None:
         """Return TapHome value type of the sensor."""
         return self._value_type
 
     @property
-    def unit_of_measurement(self) -> str:
+    def unit_of_measurement(self) -> str | None:
         """Return unit of measurement if defined."""
         return self._unit_of_measurement
 
     @property
-    def state_class(self) -> str:
+    def state_class(self) -> str | None:
         """Return state class used for the sensor."""
         return self._state_class
 
@@ -331,14 +335,15 @@ class TapHomeSensor(TapHomeEntity[TapHomeState], SensorEntity):
 class TapHomeSensorCreateRequest(TapHomeDataUpdateCoordinatorObject[TapHomeState]):
     """Create TapHomeSensors from SensorConfigEntry when devices is discovered."""
 
-    def __init__(self, context: SensorInitContext, add_entities: AddEntitiesCallback):
+    def __init__(
+        self, context: SensorInitContext, add_entities: AddEntitiesCallback
+    ) -> None:
         """Initialize request for the provided configuration entry."""
-        super().__init__(context.config_entry.id, context.coordinator, TapHomeState)
         self._context = context
         self.add_entities = add_entities
-
         self._was_entities_created = False
-        self.create_entities()
+
+        super().__init__(context.config_entry.id, context.coordinator, TapHomeState)
 
     @callback
     def handle_taphome_device_change(self) -> None:
@@ -372,6 +377,11 @@ class TapHomeSensorCreateRequest(TapHomeDataUpdateCoordinatorObject[TapHomeState
                 VARIABLE_SENSOR,
                 PERCENTAGES_SENSOR,
             ]
+
+            if self._context is None:
+                _LOGGER.error(
+                    "SensorInitContext is not set, cannot create sensor entities"
+                )
 
             if self._context.config_entry.value_type:
                 supported_sensor_types.append(

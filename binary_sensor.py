@@ -182,12 +182,11 @@ class TapHomeBinarySensorCreateRequest(
         self, context: BinarySensorInitContext, add_entities: AddEntitiesCallback
     ) -> None:
         """Initialize request for given configuration entry."""
-        super().__init__(context.config_entry.id, context.coordinator, TapHomeState)
         self._context = context
         self.add_entities = add_entities
-
         self._was_entities_created = False
-        self.create_entities()
+
+        super().__init__(context.config_entry.id, context.coordinator, TapHomeState)
 
     @callback
     def handle_taphome_device_change(self) -> None:
