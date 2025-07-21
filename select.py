@@ -55,7 +55,6 @@ class TapHomeSelect(TapHomeEntity[MultiValueSwitchState], SelectEntity):
             MultiValueSwitchState,
         )
         self.multi_value_switch_service = multi_value_switch_service
-        # this should be load from TapHome or config. TapHome don't provide such information but they promissed it to me
 
     @property
     def taphome_options(self) -> list[TapHomeSelectOption]:
