@@ -1,6 +1,11 @@
 """TapHome button integration."""
 
-from homeassistant.components.button import DOMAIN, ButtonEntity
+from .taphome_sdk.helpers import Helpers
+from homeassistant.components.button import (
+    DOMAIN as BUTTON_DOMAIN,
+    ButtonDeviceClass,
+    ButtonEntity,
+)
 from homeassistant.core import HomeAssistant
 
 from .add_entry_request import AddEntryRequest
@@ -25,13 +30,14 @@ class ButtonConfigEntry(TapHomeConfigEntry):
         if config_actions is None:
             self._actions = [ButtonAction.PRESS]
         else:
-            self._actions = []
+            self._actions: list[ButtonAction] = []
             for config_action in config_actions:
-                for action in ButtonAction:
-                    if action.name.lower() == config_action.lower():
-                        self._actions.append(action)
+                action = Helpers.enum_from_string(ButtonAction, config_action)
+                self._actions.append(action)
 
-        self._device_class = self.get_optional("device_class", None)
+        self._device_class: ButtonDeviceClass | None = self.get_optional(
+            "device_class", None
+        )
 
     @property
     def actions(self):
@@ -61,7 +67,7 @@ class TapHomeButton(TapHomeEntity[TapHomeState], ButtonEntity):
             hass,
             core_config,
             config_entry,
-            f"{DOMAIN}.{action.name}",
+            f"{BUTTON_DOMAIN}.{action.name}",
             coordinator,
             TapHomeState,
         )
