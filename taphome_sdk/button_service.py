@@ -22,7 +22,7 @@ class ButtonAction(Enum):
 class ButtonService:
     """Send button press commands to a TapHome device."""
 
-    def __init__(self, taphome_api_service: TapHomeApiService):
+    def __init__(self, taphome_api_service: TapHomeApiService) -> None:
         """Initialize the service with the TapHome API instance."""
         self.taphome_api_service = taphome_api_service
 
