@@ -259,4 +259,5 @@ def setup_platform(
 
     for core_config, coordinator in cores.items():
         is_alive_sensors.append(TapHomeIsAliveSensor(core_config, coordinator))
+
     add_entities(is_alive_sensors)

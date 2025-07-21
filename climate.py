@@ -12,8 +12,13 @@ from homeassistant.components.climate import (
 )
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
+from homeassistant.helpers.entity_platform import (
+    AddEntitiesCallback,
+    ConfigType,
+    DiscoveryInfoType,
+)
 
-from .add_entry_request import AddEntryRequest
+from .add_entry_request import AddEntryRequest, add_taphome_entities
 from .const import CONF_CLIMATES, TAPHOME_PLATFORM
 from .coordinator import TapHomeDataUpdateCoordinator, UpdateTapHomeState
 from .taphome_entity import (
@@ -289,8 +294,8 @@ class TapHomeClimate(TapHomeEntity[ThermostatState], ClimateEntity):
         hass: HomeAssistant,
         core_config: TapHomeCoreConfigEntry,
         config_entry: ClimateConfigEntry,
-        taphome_api_service: TapHomeApiService,
         coordinator: TapHomeDataUpdateCoordinator,
+        thermostat_service: ThermostatService,
     ) -> None:
         """Initialize TapHome climate entity."""
         super().__init__(
@@ -302,9 +307,9 @@ class TapHomeClimate(TapHomeEntity[ThermostatState], ClimateEntity):
             ThermostatState,
         )
 
-        self.thermostat_service = ThermostatService(taphome_api_service)
+        self.thermostat_service = thermostat_service
         self.climate_controller = config_entry.create_climate_controller(
-            taphome_api_service, coordinator
+            thermostat_service.taphome_api_service, coordinator
         )
         self.climate_controller.add_hvac_mode_changed_listener(
             self.handle_taphome_state_change
@@ -426,23 +431,11 @@ class TapHomeClimate(TapHomeEntity[ThermostatState], ClimateEntity):
 
 def setup_platform(
     hass: HomeAssistant,
-    config,
-    add_entities,
-    discovery_info=None,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the climate platform."""
-    add_entry_requests: list[AddEntryRequest] = hass.data[TAPHOME_PLATFORM][
-        CONF_CLIMATES
-    ]
-    climates = []
-    for add_entry_request in add_entry_requests:
-        climate = TapHomeClimate(
-            hass,
-            add_entry_request.core_config,
-            add_entry_request.config_entry,
-            add_entry_request.taphome_api_service,
-            add_entry_request.coordinator,
-        )
-        climates.append(climate)
-
-    add_entities(climates)
+    add_taphome_entities(
+        hass, add_entities, CONF_CLIMATES, ThermostatService, TapHomeClimate
+    )

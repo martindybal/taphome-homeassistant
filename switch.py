@@ -9,9 +9,13 @@ from homeassistant.components.switch import (
 )
 from homeassistant.const import CONF_SWITCHES
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity_platform import (
+    AddEntitiesCallback,
+    ConfigType,
+    DiscoveryInfoType,
+)
 
-from .add_entry_request import AddEntryRequest
-from .const import TAPHOME_PLATFORM
+from .add_entry_request import add_taphome_entities
 from .coordinator import UpdateTapHomeState
 from .taphome_entity import (
     TapHomeConfigEntry,
@@ -83,24 +87,11 @@ class TapHomeSwitch(TapHomeEntity[SwitchState], SwitchEntity):
 
 def setup_platform(
     hass: HomeAssistant,
-    config,
-    add_entities,
-    discovery_info=None,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the switch platform."""
-    add_entry_requests: list[AddEntryRequest[SwitchConfigEntry]] = hass.data[
-        TAPHOME_PLATFORM
-    ][CONF_SWITCHES]
-    switches = []
-    for add_entry_request in add_entry_requests:
-        switch_service = SwitchService(add_entry_request.taphome_api_service)
-        switch = TapHomeSwitch(
-            hass,
-            add_entry_request.core_config,
-            add_entry_request.config_entry,
-            add_entry_request.coordinator,
-            switch_service,
-        )
-        switches.append(switch)
-
-    add_entities(switches)
+    add_taphome_entities(
+        hass, add_entities, CONF_SWITCHES, SwitchService, TapHomeSwitch
+    )

@@ -13,8 +13,7 @@ from homeassistant.components.light import (
 from homeassistant.const import CONF_LIGHTS
 from homeassistant.core import HomeAssistant
 
-from .add_entry_request import AddEntryRequest
-from .const import TAPHOME_PLATFORM
+from .add_entry_request import add_taphome_entities
 from .coordinator import TapHomeDataUpdateCoordinator, UpdateTapHomeState
 from .taphome_entity import TapHomeConfigEntry, TapHomeCoreConfigEntry, TapHomeEntity
 from .taphome_sdk import LightService, LightState, SwitchStates, ValueType
@@ -160,17 +159,4 @@ def setup_platform(
     discovery_info=None,
 ) -> None:
     """Set up the light platform."""
-    add_entry_requests: list[AddEntryRequest] = hass.data[TAPHOME_PLATFORM][CONF_LIGHTS]
-    lights = []
-    for add_entry_request in add_entry_requests:
-        light_service = LightService(add_entry_request.taphome_api_service)
-        light = TapHomeLight(
-            hass,
-            add_entry_request.core_config,
-            add_entry_request.config_entry,
-            add_entry_request.coordinator,
-            light_service,
-        )
-        lights.append(light)
-
-    add_entities(lights)
+    add_taphome_entities(hass, add_entities, CONF_LIGHTS, LightService, TapHomeLight)

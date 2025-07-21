@@ -1,6 +1,6 @@
 """Common entity abstractions for the TapHome integration."""
 
-from typing import Any
+from typing import Any, Generic, TypeVar
 
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady

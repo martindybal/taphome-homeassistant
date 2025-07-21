@@ -12,9 +12,13 @@ from homeassistant.components.cover import (
 )
 from homeassistant.const import CONF_COVERS
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity_platform import (
+    AddEntitiesCallback,
+    ConfigType,
+    DiscoveryInfoType,
+)
 
-from .add_entry_request import AddEntryRequest
-from .const import TAPHOME_PLATFORM
+from .add_entry_request import add_taphome_entities
 from .coordinator import UpdateTapHomeState
 from .taphome_entity import (
     TapHomeConfigEntry,
@@ -230,22 +234,9 @@ class TapHomeCover(TapHomeEntity[CoverState], CoverEntity):
 
 def setup_platform(
     hass: HomeAssistant,
-    _config,
-    add_entities,
-    _discovery_info=None,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up the cover platform."""
-    add_entry_requests: list[AddEntryRequest] = hass.data[TAPHOME_PLATFORM][CONF_COVERS]
-    covers = []
-    for add_entry_request in add_entry_requests:
-        cover_service = CoverService(add_entry_request.taphome_api_service)
-        cover = TapHomeCover(
-            hass,
-            add_entry_request.core_config,
-            add_entry_request.config_entry,
-            add_entry_request.coordinator,
-            cover_service,
-        )
-        covers.append(cover)
-
-    add_entities(covers)
+    """Set up the switch platform."""
+    add_taphome_entities(hass, add_entities, CONF_COVERS, CoverService, TapHomeCover)
