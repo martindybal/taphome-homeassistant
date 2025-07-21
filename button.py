@@ -67,7 +67,7 @@ class TapHomeButton(TapHomeEntity[TapHomeState], ButtonEntity):
             hass,
             core_config,
             config_entry,
-            f"{BUTTON_DOMAIN}.{action.name}",
+            f"{BUTTON_DOMAIN}.{action.name.replace('_', '')}",
             coordinator,
             TapHomeState,
         )
