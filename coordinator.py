@@ -107,7 +107,7 @@ class TapHomeDataUpdateCoordinator(DataUpdateCoordinator):
         """Initialize coordinator with API service and polling interval."""
         self.taphome_api_service = taphome_api_service
         self._was_devices_discovered = False
-        self._devices = {}
+        self._devices: dict[int, TapHomeDataUpdateCoordinatorDevice] = {}
         update_interval_timedelta = timedelta(seconds=update_interval)
         super().__init__(
             hass,
@@ -133,6 +133,8 @@ class TapHomeDataUpdateCoordinator(DataUpdateCoordinator):
         else:
             device.attach_taphome_device_change_handler(taphome_device_change_handler)
             device.attach_taphome_state_change_handler(taphome_state_change_handler)
+            taphome_device_change_handler()
+            taphome_state_change_handler()
 
     def get_device(self, taphome_device_id: int) -> Device | None:
         """Return TapHome device instance for ``taphome_device_id``."""
@@ -190,8 +192,8 @@ class TapHomeDataUpdateCoordinator(DataUpdateCoordinator):
         )
 
         if last_all_devices_values is None:
-            for device in self._devices.items():
-                device.taphome_state = None
+            for device in self._devices.values():
+                device.taphome_values = None
             raise UpdateFailed
 
         self.update_devices_values(last_all_devices_values, True)
@@ -272,7 +274,7 @@ class TapHomeDataUpdateCoordinatorObject(Generic[StateT]):
         )
 
     @property
-    def taphome_device(self) -> Device | None:
+    def taphome_device(self) -> Device:
         """Return the TapHome device representation."""
         return self.coordinator.get_device(self._taphome_device_id)
 
@@ -301,12 +303,12 @@ class UpdateTapHomeState(Generic[StateT]):
     ) -> None:
         """Initialize context with reference to coordinator object."""
         self._coordinator_object = coordinator_object
-        self._last_state = self._coordinator_object.taphome_state
+        self._last_state: StateT
 
     async def __aenter__(self):
         """Return current state and store it for later comparison."""
         self._last_state = self._coordinator_object.taphome_state
-        return self._coordinator_object.taphome_state
+        return self._last_state
 
     async def __aexit__(
         self,

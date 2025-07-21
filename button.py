@@ -68,17 +68,10 @@ class TapHomeButton(TapHomeEntity[TapHomeState], ButtonEntity):
 
         self._button_service = button_service
         self._action = action
-        self._device_class = config_entry.device_class
+        self._attr_device_class = config_entry.device_class
 
-    @property
-    def available(self):
-        """Return True if the TapHome device is present."""
-        return self.taphome_device is not None
-
-    @property
-    def device_class(self):
-        """Return the class of this device, from component DEVICE_CLASSES."""
-        return self._device_class
+    def _update_available(self):
+        self._attr_available = self.taphome_device is not None
 
     async def async_press(self) -> None:
         """Send press command to the TapHome device."""

@@ -4,7 +4,7 @@ from typing import Any
 
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchEntity
 from homeassistant.const import CONF_SWITCHES
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 
 from .add_entry_request import AddEntryRequest
 from .const import TAPHOME_PLATFORM
@@ -48,35 +48,25 @@ class TapHomeSwitch(TapHomeEntity[SwitchState], SwitchEntity):
             hass, core_config, config_entry, SWITCH_DOMAIN, coordinator, SwitchState
         )
         self.switch_service = switch_service
-        self._device_class = config_entry.device_class
+        self._attr_device_class = config_entry.device_class
 
-    @property
-    def device_class(self):
-        """Return the class of this device, from component DEVICE_CLASSES."""
-        return self._device_class
+    @callback
+    def handle_taphome_state_change(self, last_state: SwitchState | None) -> None:
+        """Update state of entity."""
+        if self.taphome_state is None:
+            self._attr_is_on = None
+        else:
+            self._attr_is_on = self.taphome_state.switch_state == SwitchStates.ON
 
-    @property
-    def is_on(self):
-        """Returns if the switch entity is on or not."""
-        if self.taphome_state is not None:
-            return self.taphome_state.switch_state == SwitchStates.ON
-        return None
+        super().handle_taphome_state_change(last_state)
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn device on."""
         await self.async_turn(SwitchStates.ON)
 
-    async def async_turn_off(self):
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn device off."""
         await self.async_turn(SwitchStates.OFF)
-
-    def turn_on(self, **kwargs) -> None:
-        """Synchronously turn the device on."""
-        self.hass.async_create_task(self.async_turn_on(**kwargs))
-
-    def turn_off(self, **kwargs) -> None:
-        """Synchronously turn the device off."""
-        self.hass.async_create_task(self.async_turn_off())
 
     async def async_turn(self, switch_state: SwitchStates):
         """Change the switch state on the TapHome device."""
@@ -92,9 +82,9 @@ def setup_platform(
     discovery_info=None,
 ) -> None:
     """Set up the switch platform."""
-    add_entry_requests: list[AddEntryRequest] = hass.data[TAPHOME_PLATFORM][
-        CONF_SWITCHES
-    ]
+    add_entry_requests: list[AddEntryRequest[SwitchConfigEntry]] = hass.data[
+        TAPHOME_PLATFORM
+    ][CONF_SWITCHES]
     switches = []
     for add_entry_request in add_entry_requests:
         switch_service = SwitchService(add_entry_request.taphome_api_service)
