@@ -18,8 +18,8 @@ from homeassistant.helpers.entity_platform import (
     DiscoveryInfoType,
 )
 
-from .add_entry_request import AddEntryRequest, add_taphome_entities
-from .const import CONF_CLIMATES, TAPHOME_PLATFORM
+from .add_entry_request import add_taphome_entities
+from .const import CONF_CLIMATES
 from .coordinator import TapHomeDataUpdateCoordinator, UpdateTapHomeState
 from .taphome_entity import (
     StateT,
