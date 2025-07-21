@@ -2,7 +2,11 @@
 
 from typing import Any
 
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchEntity
+from homeassistant.components.switch import (
+    DOMAIN as SWITCH_DOMAIN,
+    SwitchDeviceClass,
+    SwitchEntity,
+)
 from homeassistant.const import CONF_SWITCHES
 from homeassistant.core import HomeAssistant, callback
 
@@ -24,7 +28,9 @@ class SwitchConfigEntry(TapHomeConfigEntry):
     def __init__(self, device_config: dict) -> None:
         """Initialize switch config entry."""
         super().__init__(device_config)
-        self._device_class = self.get_optional("device_class", None)
+        self._device_class: SwitchDeviceClass | None = self.get_optional(
+            "device_class", None
+        )
 
     @property
     def device_class(self):
