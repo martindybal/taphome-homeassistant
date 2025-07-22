@@ -54,7 +54,7 @@ def add_taphome_entities(
 
     all_entities = []
     for entity_configuration in entities_configuration:
-        entities = taphome_entities_factory(
+        entry_entities = taphome_entities_factory(
             hass,
             entity_configuration.core_config,
             entity_configuration.config_entry,
@@ -62,9 +62,9 @@ def add_taphome_entities(
             taphome_service_factory(entity_configuration.taphome_api_service),
         )
 
-        if not isinstance(entities, Iterable):
-            entities = [entities]
+        if not isinstance(entry_entities, Iterable):
+            entry_entities = [entry_entities]
 
-        all_entities.extend(entities)
+        all_entities.extend(entry_entities)
 
     add_entities(all_entities)
