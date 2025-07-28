@@ -3,52 +3,25 @@ name: CI
 on:
   push:
 jobs:
-  prepare:
-    name: Prepare python environment
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    steps:
-      - name: Cache virtualenv
-        uses: actions/cache@v4
-        with:
-          path: venv
-          key: taphome-venv
-      - run: . venv/bin/activate
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-      - run: python -m pip install --upgrade pip
-      - run: pip install homeassistant
-      - name: Save virtualenv
-        uses: actions/cache@v4
-        with:
-          path: venv
-          key: taphome-venv
-
   compilation:
-    needs: prepare
     uses: ./.github/workflows/python-check.yml
     with:
-      package: ""
+      name: "compile"
       command: "python -m compileall -q ."
 
   ruff:
-    needs: prepare
     uses: ./.github/workflows/python-check.yml
     with:
       package: "ruff"
       command: "ruff check ."
 
   mypy:
-    needs: prepare
     uses: ./.github/workflows/python-check.yml
     with:
       package: "mypy"
       command: "mypy -p taphome_sdk --ignore-missing-imports --explicit-package-bases"
 
   pylint:
-    needs: prepare
     uses: ./.github/workflows/python-check.yml
     with:
       package: "pylint"
