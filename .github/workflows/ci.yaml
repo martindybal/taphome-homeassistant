@@ -10,9 +10,8 @@ jobs:
         with:
           python-version: "3.12"
       - run: python -m venv .venv
-      - run: |
-          .venv/bin/pip install --upgrade pip
-          .venv/bin/pip install homeassistant ruff mypy pylint
+      - run: .venv/bin/pip install --upgrade pip
+      - run: .venv/bin/pip install homeassistant
       - run: tar -czf python-env.tar.gz .venv
       - uses: actions/upload-artifact@v4
         with:
@@ -30,21 +29,21 @@ jobs:
     needs: prepare-python-env
     uses: ./.github/workflows/python-check.yml
     with:
-      name: "ruff"
+      package: "ruff"
       command: "ruff check ."
 
   mypy:
     needs: prepare-python-env
     uses: ./.github/workflows/python-check.yml
     with:
-      name: "mypy"
+      package: "mypy"
       command: "mypy -p taphome_sdk --ignore-missing-imports --explicit-package-bases"
 
   pylint:
     needs: prepare-python-env
     uses: ./.github/workflows/python-check.yml
     with:
-      name: "pylint"
+      package: "pylint"
       command: "pylint . --fail-under=9.4"
 
   validate-hacs:

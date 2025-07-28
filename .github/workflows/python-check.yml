@@ -1,15 +1,19 @@
 name: python-check
 on:
   workflow_call:
-      inputs:
-        name:
-          description: "Name of the step, e.g. 'ruff check'"
-          required: false
-          type: string
-        command:
-          description: "Command to run, e.g. 'ruff check .'"
-          required: true
-          type: string
+    inputs:
+      name:
+        description: "Name of the step, e.g. 'ruff check'"
+        required: false
+        type: string
+      package:
+        description: "step dependencies, which will be installed before running the command. e.g. 'ruff mypy'"
+        required: false
+        type: string
+      command:
+        description: "Command to run, e.g. 'ruff check .'"
+        required: true
+        type: string
 
 jobs:
   run-check:
@@ -23,6 +27,8 @@ jobs:
           name: python-env
           path: .
       - run: tar -xzf python-env.tar.gz
+      - if: ${{ inputs.package != '' }}
+        run: .venv/bin/pip install ${{ inputs.package }}
       - name: Run ${{ inputs.name || inputs.command }}
         shell: bash
         run: |
