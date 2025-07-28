@@ -29,7 +29,7 @@ class TapHomeDataUpdateCoordinatorDevice:
         """Initialize device container."""
         self._taphome_device_change_listeners = []
         self._taphome_state_change_listeners = []
-        self._taphome_device = None
+        self._taphome_device: Device
         self._taphome_values = None
         self._taphome_state_types = []
         self._taphome_states = {}
@@ -128,6 +128,18 @@ class TapHomeDataUpdateCoordinator(
             update_interval=update_interval_timedelta,
         )
 
+    def ensure_can_be_register_entity(self, taphome_device_id: int) -> bool:
+        """Check if TapHome device with ``taphome_device_id`` is exposed."""
+        is_exposed = taphome_device_id in self._devices
+        if is_exposed:
+            return True
+
+        device_not_exposed_message = f"TapHome entity can't be registred. Device with id {taphome_device_id} has not been exposed in the TapHome API"
+        _LOGGER.error(device_not_exposed_message)
+
+        self.taphome_issue_registry.create_device_not_exposed_issue(taphome_device_id)
+        return False
+
     def register_entity(
         self,
         taphome_device_id: int,
@@ -135,32 +147,16 @@ class TapHomeDataUpdateCoordinator(
         taphome_state_change_handler,
     ) -> None:
         """Register entity callbacks for a given TapHome device."""
-        device = self.get_device_data(taphome_device_id)
-
-        if device is None:
-            _LOGGER.error(
-                "TapHome register entity failed. Device with id %s has "
-                "not been exposed in the TapHome API",
-                taphome_device_id,
-            )
-
-            self.taphome_issue_registry.create_device_not_exposed_issue(
-                taphome_device_id
-            )
-        else:
-            self.taphome_issue_registry.try_delete_device_not_exposed_issue(
-                taphome_device_id
-            )
+        if self.ensure_can_be_register_entity(taphome_device_id):
+            device = self.get_device_data(taphome_device_id)
             device.attach_taphome_device_change_handler(taphome_device_change_handler)
             device.attach_taphome_state_change_handler(taphome_state_change_handler)
             taphome_device_change_handler()
             taphome_state_change_handler()
 
-    def get_device(self, taphome_device_id: int) -> Device | None:
+    def get_device(self, taphome_device_id: int) -> Device:
         """Return TapHome device instance for ``taphome_device_id``."""
         device = self.get_device_data(taphome_device_id)
-        if device is None:
-            return None
         return device.taphome_device
 
     def get_state(self, taphome_device_id: int, state_type):
@@ -256,7 +252,9 @@ class TapHomeDataUpdateCoordinator(
         self, device: TapHomeDataUpdateCoordinatorDevice, device_changed_values: dict
     ):
         """Merge ``device_changed_values`` into cached values."""
-        new_values = copy.deepcopy(device.taphome_values)
+        new_values = (
+            copy.deepcopy(device.taphome_values) if device.taphome_values else []
+        )
         for changed_value in device_changed_values:
             for value_entry in new_values:
                 if value_entry["valueTypeId"] == changed_value["valueTypeId"]:
@@ -267,10 +265,10 @@ class TapHomeDataUpdateCoordinator(
 
     def get_device_data(
         self, taphome_device_id: int
-    ) -> TapHomeDataUpdateCoordinatorDevice | None:
+    ) -> TapHomeDataUpdateCoordinatorDevice:
         """Return internal device container for ``taphome_device_id``."""
         if taphome_device_id not in self._devices:
-            return None
+            raise ValueError(f"TapHome device with id {taphome_device_id} not found")
         return self._devices[taphome_device_id]
 
 

@@ -211,12 +211,12 @@ class TapHomeModeClimateController(
             HVACMode.HEAT_COOL: 3,
         }
         multi_value_switch_state = modes.get(hvac_mode)
-
-        async with UpdateTapHomeState(self) as state:
-            await self.multi_value_switch_service.async_set_value(
-                multi_value_switch_state, self.taphome_device
-            )
-            state.multi_value_switch_state = multi_value_switch_state
+        if multi_value_switch_state is not None:
+            async with UpdateTapHomeState(self) as state:
+                await self.multi_value_switch_service.async_set_value(
+                    multi_value_switch_state, self.taphome_device
+                )
+                state.multi_value_switch_state = multi_value_switch_state
 
 
 class ClimateConfigEntry(TapHomeConfigEntry):

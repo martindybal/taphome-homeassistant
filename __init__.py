@@ -300,13 +300,21 @@ async def _setup_core(
     hass.data[TAPHOME_PLATFORM] = {}
     for domain in domains:
         domain_config = core_config[domain.config_key]
+
         config_entries = map_config_entries(domain.config_entry_type, domain_config)
+        exposed_config_entries = [
+            config_entry
+            for config_entry in config_entries
+            if coordinator.ensure_can_be_register_entity(config_entry.id)
+        ]
 
         core_add_entry_requests = map_add_entry_requests(
             core_config_entry,
-            config_entries,
+            exposed_config_entries,
             coordinator,
             taphome_api_service,
         )
+
         domain.add_requests(core_add_entry_requests)
+
     return True

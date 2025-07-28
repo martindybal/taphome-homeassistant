@@ -154,7 +154,7 @@ class TapHomeCover(TapHomeEntity[CoverState], CoverEntity):
         return self._is_closing
 
     @callback
-    def handle_taphome_state_change(self, last_state: CoverState) -> None:
+    def handle_taphome_state_change(self, last_state: CoverState | None) -> None:
         """Handle updates of TapHome cover state."""
         self.handle_moving(self.taphome_state, last_state)
         super().handle_taphome_state_change(last_state)
@@ -194,12 +194,16 @@ class TapHomeCover(TapHomeEntity[CoverState], CoverEntity):
                 state.blinds_level = taphome_position
                 self.handle_moving(state, last_state)
 
-    def handle_moving(self, current_state: CoverState, last_state: CoverState) -> None:
+    def handle_moving(
+        self, current_state: CoverState | None, last_state: CoverState | None
+    ) -> None:
         """Update internal moving flags according to state change."""
         if (
             current_state is not None
             and last_state is not None
             and current_state.blinds_is_moving
+            and current_state.blinds_level is not None
+            and last_state.blinds_level is not None
         ):
             if current_state.blinds_level > last_state.blinds_level:
                 self._is_closing = True
