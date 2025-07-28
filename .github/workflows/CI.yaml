@@ -19,7 +19,7 @@ jobs:
       - name: Install dependencies
         run: pip install homeassistant
       - name: Upload source as artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: source-code
           path: .
@@ -29,7 +29,7 @@ jobs:
     needs: python-environment
     steps:
       - name: Download source
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: source-code
           path: .
@@ -41,7 +41,7 @@ jobs:
     needs: python-environment
     steps:
       - name: Download source
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: source-code
           path: .
@@ -55,7 +55,7 @@ jobs:
     needs: python-environment
     steps:
       - name: Download source
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: source-code
           path: .
@@ -69,7 +69,7 @@ jobs:
     needs: python-environment
     steps:
       - name: Download source
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: source-code
           path: .
