@@ -4,7 +4,7 @@
 class Location:
     """Represent a physical location in TapHome."""
 
-    def __init__(self, location_id: str, location_name: str):
+    def __init__(self, location_id: str, location_name: str) -> None:
         """Create a new location from its id and name."""
         self._location_id = location_id
         self._location_name = location_name

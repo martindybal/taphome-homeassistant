@@ -1,10 +1,18 @@
 """TapHome button integration."""
 
-from homeassistant.components.button import DOMAIN, ButtonEntity
-from homeassistant.core import HomeAssistant
+from collections.abc import Iterator
 
-from .add_entry_request import AddEntryRequest
-from .const import CONF_BUTTONS, TAPHOME_PLATFORM
+from homeassistant.components.button import (
+    DOMAIN as BUTTON_DOMAIN,
+    ButtonDeviceClass,
+    ButtonEntity,
+)
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback, ConfigType
+from homeassistant.helpers.typing import DiscoveryInfoType
+
+from .add_entry_request import add_taphome_entities
+from .const import CONF_BUTTONS
 from .taphome_entity import (
     TapHomeConfigEntry,
     TapHomeCoreConfigEntry,
@@ -12,6 +20,7 @@ from .taphome_entity import (
     TapHomeEntity,
 )
 from .taphome_sdk import ButtonAction, ButtonService, TapHomeState
+from .taphome_sdk.helpers import Helpers
 
 
 class ButtonConfigEntry(TapHomeConfigEntry):
@@ -23,15 +32,16 @@ class ButtonConfigEntry(TapHomeConfigEntry):
 
         config_actions = self.get_optional("actions", None)
         if config_actions is None:
-            self._actions = [ButtonAction.Press]
+            self._actions = [ButtonAction.PRESS]
         else:
-            self._actions = []
+            self._actions: list[ButtonAction] = []
             for config_action in config_actions:
-                for action in ButtonAction:
-                    if action.name.lower() == config_action.lower():
-                        self._actions.append(action)
+                action = Helpers.enum_from_string(ButtonAction, config_action)
+                self._actions.append(action)
 
-        self._device_class = self.get_optional("device_class", None)
+        self._device_class: ButtonDeviceClass | None = self.get_optional(
+            "device_class", None
+        )
 
     @property
     def actions(self):
@@ -61,54 +71,49 @@ class TapHomeButton(TapHomeEntity[TapHomeState], ButtonEntity):
             hass,
             core_config,
             config_entry,
-            f"{DOMAIN}.{action.name}",
+            f"{BUTTON_DOMAIN}.{action.name.replace('_', '')}",
             coordinator,
             TapHomeState,
         )
 
         self._button_service = button_service
         self._action = action
-        self._device_class = config_entry.device_class
+        self._attr_device_class = config_entry.device_class
 
-    @property
-    def available(self):
-        """Return True if the TapHome device is present."""
-        super().available
-        return self.taphome_device is not None
-
-    @property
-    def device_class(self):
-        """Return the class of this device, from component DEVICE_CLASSES."""
-        return self._device_class
+    def _update_available(self):
+        self._attr_available = self.taphome_device is not None
 
     async def async_press(self) -> None:
         """Send press command to the TapHome device."""
         await self._button_service.async_press(self.taphome_device, self._action)
 
 
+def _create_button_entities(
+    hass: HomeAssistant,
+    core_config: TapHomeCoreConfigEntry,
+    config_entry: ButtonConfigEntry,
+    coordinator: TapHomeDataUpdateCoordinator,
+    button_service: ButtonService,
+) -> Iterator[TapHomeButton]:
+    """Create TapHome button entities."""
+    for action in config_entry.actions:
+        yield TapHomeButton(
+            hass,
+            core_config,
+            config_entry,
+            action,
+            coordinator,
+            button_service,
+        )
+
+
 def setup_platform(
     hass: HomeAssistant,
-    config,
-    add_entities,
-    discovery_info=None,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the button platform."""
-    add_entry_requests: list[AddEntryRequest] = hass.data[TAPHOME_PLATFORM][
-        CONF_BUTTONS
-    ]
-    buttons = []
-    for add_entry_request in add_entry_requests:
-        button_service = ButtonService(add_entry_request.taphome_api_service)
-
-        for action in add_entry_request.config_entry.actions:
-            button = TapHomeButton(
-                hass,
-                add_entry_request.core_config,
-                add_entry_request.config_entry,
-                action,
-                add_entry_request.coordinator,
-                button_service,
-            )
-            buttons.append(button)
-
-    add_entities(buttons)
+    add_taphome_entities(
+        hass, add_entities, CONF_BUTTONS, ButtonService, _create_button_entities
+    )

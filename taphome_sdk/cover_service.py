@@ -19,9 +19,9 @@ class CoverState(TapHomeState):
     ) -> None:
         """Create a new instance from raw ``switch_values``."""
         super().__init__(switch_values)
-        self.blinds_level = self.get_device_value(ValueType.BlindsLevel)
-        self.blinds_slope = self.get_device_value(ValueType.BlindsSlope)
-        self.blinds_is_moving = self.get_device_bool_value(ValueType.BlindsIsMoving)
+        self.blinds_level = self.get_device_value(ValueType.BLINDS_LEVEL)
+        self.blinds_slope = self.get_device_value(ValueType.BLINDS_SLOPE)
+        self.blinds_is_moving = self.get_device_bool_value(ValueType.BLINDS_IS_MOVING)
 
 
 class CoverService:
@@ -50,14 +50,14 @@ class CoverService:
         """Move the cover to ``position`` and optionally set ``tilt``."""
         values = [
             self.taphome_api_service.create_device_value(
-                ValueType.BlindsLevel, position
+                ValueType.BLINDS_LEVEL, position
             )
         ]
 
         if tilt is not None:
             values.append(
                 self.taphome_api_service.create_device_value(
-                    ValueType.BlindsSlope, tilt
+                    ValueType.BLINDS_SLOPE, tilt
                 )
             )
 
@@ -66,7 +66,7 @@ class CoverService:
     async def async_set_slope(self, device: Device, tilt) -> None:
         """Adjust the tilt of the cover to ``tilt``."""
         values = [
-            self.taphome_api_service.create_device_value(ValueType.BlindsSlope, tilt)
+            self.taphome_api_service.create_device_value(ValueType.BLINDS_SLOPE, tilt)
         ]
 
         await self.taphome_api_service.async_set_device_values(device.id, values)

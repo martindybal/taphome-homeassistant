@@ -1,5 +1,6 @@
 """TapHome integration."""
 
+from dataclasses import dataclass, field
 import logging
 import typing
 
@@ -70,20 +71,18 @@ _LOGGER = logging.getLogger(__name__)
 # "config_entry": BinarySensorConfigEntry,
 
 
+@dataclass
 class DomainDefinition:
     """Configuration holder for a Home Assistant platform domain."""
 
-    def __init__(
-        self,
-        name: str,
-        config_key: str,
-        config_entry_type,
-    ) -> None:
-        """Initialize domain with its configuration mapping."""
-        self.name = name
-        self.config_key = config_key
-        self.config_entry_type = config_entry_type
-        self.add_entry_requests = []
+    name: str
+    config_key: str
+    config_entry_type: type
+    add_entry_requests: list = field(default_factory=list)
+
+    def add_requests(self, requests: list) -> None:
+        """Extend stored entry requests."""
+        self.add_entry_requests.extend(requests)
 
 
 CONFIG_SCHEMA = vol.Schema(
@@ -145,7 +144,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigEntry) -> bool:
     """Set up the TapHome integration."""
     if CONF_LANGUAGE in config[TAPHOME_PLATFORM]:
         _LOGGER.error(
-            "TapHome language setting is not supported any more. You can rename entities as you wish. This options'll be removed in future, please remove it from your config"
+            "TapHome language setting is not supported any more. "
+            "You can rename entities as you wish. "
+            "This option will be removed in future, please remove it from your config"
         )
 
     if len(config[TAPHOME_PLATFORM][CONF_CORES]) > 1:
@@ -174,74 +175,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigEntry) -> bool:
     ]
 
     for core_config in config[TAPHOME_PLATFORM][CONF_CORES]:
-        token = core_config[CONF_TOKEN]
-
-        core_id = read_from_config_or_default(
-            core_config,
-            CONF_ID,
-            None,
-        )
-
-        use_description_as_entity_id = read_from_config_or_default(
-            core_config, USE_DESCRIPTION_AS_ENTITY_ID, False
-        )
-
-        use_description_as_name = read_from_config_or_default(
-            core_config, USE_DESCRIPTION_AS_NAME, False
-        )
-
-        core_config_entry = TapHomeCoreConfigEntry(
-            core_id, use_description_as_entity_id, use_description_as_name
-        )
-
-        api_url = read_from_config_or_default(
-            core_config,
-            CONF_API_URL,
-            "https://api.taphome.com/api/TapHomeApi/v1",
-        )
-
-        webhook_id = read_from_config_or_default(core_config, CONF_WEBHOOK_ID, None)
-
-        update_interval = read_from_config_or_default(
-            core_config,
-            CONF_UPDATE_INTERVAL,
-            get_update_interval_default_value(api_url, webhook_id),
-        )
-
-        taphome_http_client = TapHomeHttpClientFactory().create(api_url, token)
-        taphome_api_service = TapHomeApiService(taphome_http_client)
-        coordinator = TapHomeDataUpdateCoordinator(
-            hass, update_interval, taphome_api_service=taphome_api_service
-        )
-
-        try:
-            await coordinator.async_refresh()
-        except NotImplementedError:
+        if not await _setup_core(hass, core_config, domains):
             return False
-
-        # register webhook handler if webhook_id is specified
-        if webhook_id:
-            webhook_name = f"Taphome-{core_id}" if core_id else "Taphome"
-            async_register_webhook(
-                hass,
-                TAPHOME_PLATFORM,
-                webhook_name,
-                webhook_id,
-                coordinator.handle_webhook,
-            )
-
-        hass.data[TAPHOME_PLATFORM] = {}
-        for domain in domains:
-            domain_config = core_config[domain.config_key]
-            config_entries = map_config_entries(domain.config_entry_type, domain_config)
-
-            core_add_entry_requests = map_add_entry_requests(
-                core_config_entry,
-                config_entries,
-                coordinator,
-                taphome_api_service,
-            )
-            domain.add_entry_requests.extend(core_add_entry_requests)
 
     for domain in domains:
         hass.data[TAPHOME_PLATFORM][domain.config_key] = domain.add_entry_requests
@@ -295,3 +230,67 @@ def map_add_entry_requests(
         )
         for config_entry in config_entries
     ]
+
+
+async def _setup_core(
+    hass: HomeAssistant, core_config: dict, domains: list[DomainDefinition]
+) -> bool:
+    """Set up TapHome for one core configuration."""
+    token = core_config[CONF_TOKEN]
+
+    core_id = read_from_config_or_default(core_config, CONF_ID, None)
+    use_description_as_entity_id = read_from_config_or_default(
+        core_config, USE_DESCRIPTION_AS_ENTITY_ID, False
+    )
+    use_description_as_name = read_from_config_or_default(
+        core_config, USE_DESCRIPTION_AS_NAME, False
+    )
+
+    core_config_entry = TapHomeCoreConfigEntry(
+        core_id, use_description_as_entity_id, use_description_as_name
+    )
+
+    api_url = read_from_config_or_default(
+        core_config, CONF_API_URL, "https://api.taphome.com/api/TapHomeApi/v1"
+    )
+    webhook_id = read_from_config_or_default(core_config, CONF_WEBHOOK_ID, None)
+    update_interval = read_from_config_or_default(
+        core_config,
+        CONF_UPDATE_INTERVAL,
+        get_update_interval_default_value(api_url, webhook_id),
+    )
+
+    taphome_http_client = TapHomeHttpClientFactory().create(api_url, token)
+    taphome_api_service = TapHomeApiService(taphome_http_client)
+    coordinator = TapHomeDataUpdateCoordinator(
+        hass, update_interval, taphome_api_service=taphome_api_service
+    )
+
+    try:
+        await coordinator.async_refresh()
+    except NotImplementedError:
+        return False
+
+    if webhook_id:
+        webhook_name = f"Taphome-{core_id}" if core_id else "Taphome"
+        async_register_webhook(
+            hass,
+            TAPHOME_PLATFORM,
+            webhook_name,
+            webhook_id,
+            coordinator.async_handle_webhook,
+        )
+
+    hass.data[TAPHOME_PLATFORM] = {}
+    for domain in domains:
+        domain_config = core_config[domain.config_key]
+        config_entries = map_config_entries(domain.config_entry_type, domain_config)
+
+        core_add_entry_requests = map_add_entry_requests(
+            core_config_entry,
+            config_entries,
+            coordinator,
+            taphome_api_service,
+        )
+        domain.add_requests(core_add_entry_requests)
+    return True

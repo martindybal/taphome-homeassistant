@@ -1,5 +1,7 @@
 """TapHome binary_sensor integration."""
 
+from dataclasses import dataclass
+
 from homeassistant.components.binary_sensor import (
     DOMAIN as BINARY_SENSOR_DOMAIN,
     BinarySensorDeviceClass,
@@ -26,7 +28,7 @@ from .taphome_sdk import TapHomeState, ValueType
 class TapHomeIsAliveSensor(BinarySensorEntity):
     """Binary sensor reporting availability of the TapHome core."""
 
-    sensor_value_type = ValueType.Motion
+    sensor_value_type = ValueType.MOTION
 
     def __init__(
         self,
@@ -59,81 +61,48 @@ class TapHomeIsAliveSensor(BinarySensorEntity):
         return self.coordinator.last_update_success
 
 
+@dataclass(slots=True)
 class TapHomeBinarySensorType:
-    """Data describing a TapHome binary sensor type."""
+    """Metadata about a TapHome binary sensor value."""
 
-    def __init__(
-        self, value_type: ValueType, device_class: BinarySensorDeviceClass | None = None
-    ) -> None:
-        """Store basic information about a binary sensor."""
-        self.value_type = value_type
-        self.device_class = device_class
+    value_type: ValueType
+    device_class: BinarySensorDeviceClass | None = None
 
 
-class TapHomeMotionBinarySensorType(TapHomeBinarySensorType):
-    """Binary sensor representing motion detection."""
-
-    def __init__(self) -> None:
-        """Initialize motion sensor type metadata."""
-        super().__init__(
-            ValueType.Motion,
-            BinarySensorDeviceClass.MOTION,
-        )
+MOTION_BINARY_SENSOR = TapHomeBinarySensorType(
+    ValueType.MOTION,
+    BinarySensorDeviceClass.MOTION,
+)
 
 
-class TapHomeReedContactBinarySensorType(TapHomeBinarySensorType):
-    """Binary sensor representing reed contact state."""
-
-    def __init__(self) -> None:
-        """Initialize reed contact sensor metadata."""
-        super().__init__(
-            ValueType.ReedContact,
-            None,
-        )
+REED_CONTACT_BINARY_SENSOR = TapHomeBinarySensorType(
+    ValueType.REED_CONTACT,
+    None,
+)
 
 
-class TapHomeSmokeBinarySensorType(TapHomeBinarySensorType):
-    """Binary sensor representing smoke detection."""
-
-    def __init__(self) -> None:
-        """Initialize smoke sensor metadata."""
-        super().__init__(
-            ValueType.Smoke,
-            BinarySensorDeviceClass.SMOKE,
-        )
+SMOKE_BINARY_SENSOR = TapHomeBinarySensorType(
+    ValueType.SMOKE,
+    BinarySensorDeviceClass.SMOKE,
+)
 
 
-class TapHomeFloodBinarySensorType(TapHomeBinarySensorType):
-    """Binary sensor representing flood detection."""
-
-    def __init__(self) -> None:
-        """Initialize flood sensor metadata."""
-        super().__init__(
-            ValueType.FloodState,
-            BinarySensorDeviceClass.MOISTURE,
-        )
+FLOOD_BINARY_SENSOR = TapHomeBinarySensorType(
+    ValueType.FLOOD_STATE,
+    BinarySensorDeviceClass.MOISTURE,
+)
 
 
-class TapHomeIsWindowOpenBinarySensorType(TapHomeBinarySensorType):
-    """Binary sensor indicating if a window is open."""
-
-    def __init__(self) -> None:
-        """Initialize open window sensor metadata."""
-        super().__init__(
-            ValueType.IsWindowOpen,
-            BinarySensorDeviceClass.WINDOW,
-        )
+IS_WINDOW_OPEN_BINARY_SENSOR = TapHomeBinarySensorType(
+    ValueType.IS_WINDOW_OPEN,
+    BinarySensorDeviceClass.WINDOW,
+)
 
 
-class TapHomeVariableBinarySensorType(TapHomeBinarySensorType):
-    """Binary sensor tied to a custom variable state."""
-
-    def __init__(self) -> None:
-        """Initialize variable sensor metadata."""
-        super().__init__(
-            ValueType.VariableState,
-            None,
-        )
+VARIABLE_BINARY_SENSOR = TapHomeBinarySensorType(
+    ValueType.VARIABLE_STATE,
+    None,
+)
 
 
 class BinarySensorConfigEntry(TapHomeConfigEntry):
@@ -156,30 +125,33 @@ class BinarySensorConfigEntry(TapHomeConfigEntry):
         return self._value_type
 
 
+@dataclass(slots=True, frozen=True)
+class BinarySensorInitContext:
+    """Grouping of dependencies required to create a binary sensor."""
+
+    hass: HomeAssistant
+    core_config: TapHomeCoreConfigEntry
+    config_entry: "BinarySensorConfigEntry"
+    coordinator: TapHomeDataUpdateCoordinator
+
+
 class TapHomeBinarySensor(TapHomeEntity[TapHomeState], BinarySensorEntity):
     """Representation of an binary sensor."""
 
     def __init__(
-        self,
-        hass: HomeAssistant,
-        core_config: TapHomeCoreConfigEntry,
-        config_entry: BinarySensorConfigEntry,
-        coordinator: TapHomeDataUpdateCoordinator,
-        sensor_type: TapHomeBinarySensorType,
+        self, context: BinarySensorInitContext, sensor_type: TapHomeBinarySensorType
     ) -> None:
         """Initialize TapHome binary sensor entity."""
         assert sensor_type is not None
         self._sensor_type = sensor_type
-        unique_id_determination = (
-            f"{BINARY_SENSOR_DOMAIN}.{self._sensor_type.value_type.name}"
-        )
+        unique_id_determination = f"{BINARY_SENSOR_DOMAIN}.{self._sensor_type.value_type.name.replace('_', '')}"
 
         super().__init__(
-            hass,
-            core_config,
-            config_entry,
+            context.hass,
+            context.core_config,
+            context.config_entry,
             unique_id_determination,
-            coordinator,
+            context.coordinator,
             TapHomeState,
         )
 
@@ -207,23 +179,14 @@ class TapHomeBinarySensorCreateRequest(
     """Create TapHomeBinarySensor from BinarySensorConfigEntry when devices is discovered."""
 
     def __init__(
-        self,
-        hass: HomeAssistant,
-        core_config: TapHomeCoreConfigEntry,
-        config_entry: BinarySensorConfigEntry,
-        coordinator: TapHomeDataUpdateCoordinator,
-        add_entities: AddEntitiesCallback,
+        self, context: BinarySensorInitContext, add_entities: AddEntitiesCallback
     ) -> None:
         """Initialize request for given configuration entry."""
-        super().__init__(config_entry.id, coordinator, TapHomeState)
-        self._hass = hass
-        self._core_config = core_config
-        self._config_entry = config_entry
-        self.coordinator = coordinator
+        self._context = context
         self.add_entities = add_entities
-
         self._was_entities_created = False
-        self.create_entities()
+
+        super().__init__(context.config_entry.id, context.coordinator, TapHomeState)
 
     @callback
     def handle_taphome_device_change(self) -> None:
@@ -236,33 +199,32 @@ class TapHomeBinarySensorCreateRequest(
             self._was_entities_created = True
 
             supported_sensor_types: list[TapHomeBinarySensorType] = [
-                TapHomeMotionBinarySensorType(),
-                TapHomeReedContactBinarySensorType(),
-                TapHomeVariableBinarySensorType(),
-                TapHomeSmokeBinarySensorType(),
-                TapHomeFloodBinarySensorType(),
-                TapHomeIsWindowOpenBinarySensorType(),
+                MOTION_BINARY_SENSOR,
+                REED_CONTACT_BINARY_SENSOR,
+                VARIABLE_BINARY_SENSOR,
+                SMOKE_BINARY_SENSOR,
+                FLOOD_BINARY_SENSOR,
+                IS_WINDOW_OPEN_BINARY_SENSOR,
             ]
 
-            if self._config_entry.value_type:
+            if self._context.config_entry.value_type:
                 supported_sensor_types.append(
                     TapHomeBinarySensorType(
-                        ValueType(self._config_entry.value_type),
-                        self._config_entry.device_class,
+                        ValueType(self._context.config_entry.value_type),
+                        self._context.config_entry.device_class,
                     )
                 )
 
             binary_sensors = []
             for sensor_type in supported_sensor_types:
                 if self.taphome_device.supports_value(sensor_type.value_type):
-                    if self._config_entry.device_class is not None:
-                        sensor_type.device_class = self._config_entry.device_class
+                    if self._context.config_entry.device_class is not None:
+                        sensor_type.device_class = (
+                            self._context.config_entry.device_class
+                        )
 
                     binary_sensor = TapHomeBinarySensor(
-                        self._hass,
-                        self._core_config,
-                        self._config_entry,
-                        self.coordinator,
+                        self._context,
                         sensor_type,
                     )
                     binary_sensors.append(binary_sensor)
@@ -271,9 +233,9 @@ class TapHomeBinarySensorCreateRequest(
 
 def setup_platform(
     hass: HomeAssistant,
-    config,
+    _config,
     add_entities: AddEntitiesCallback,
-    discovery_info=None,
+    _discovery_info=None,
 ) -> None:
     """Set up the binary sensor platform."""
     add_entry_requests: list[AddEntryRequest[BinarySensorConfigEntry]] = hass.data[
@@ -281,13 +243,13 @@ def setup_platform(
     ][CONF_BINARY_SENSORS]
 
     for add_entry_request in add_entry_requests:
-        TapHomeBinarySensorCreateRequest(
-            hass,
-            add_entry_request.core_config,
-            add_entry_request.config_entry,
-            add_entry_request.coordinator,
-            add_entities,
+        context = BinarySensorInitContext(
+            hass=hass,
+            core_config=add_entry_request.core_config,
+            config_entry=add_entry_request.config_entry,
+            coordinator=add_entry_request.coordinator,
         )
+        TapHomeBinarySensorCreateRequest(context, add_entities)
 
     cores = {}
     is_alive_sensors = []
@@ -297,4 +259,5 @@ def setup_platform(
 
     for core_config, coordinator in cores.items():
         is_alive_sensors.append(TapHomeIsAliveSensor(core_config, coordinator))
+
     add_entities(is_alive_sensors)

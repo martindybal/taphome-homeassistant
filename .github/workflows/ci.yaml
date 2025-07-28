@@ -1,0 +1,37 @@
+# .github/workflows/ci.yml
+name: CI
+on:
+  push:
+jobs:
+  compilation:
+    uses: ./.github/workflows/python-check.yml
+    with:
+      name: "compile"
+      command: "python -m compileall -q ."
+
+  ruff:
+    uses: ./.github/workflows/python-check.yml
+    with:
+      package: "ruff"
+      command: "ruff check ."
+
+  mypy:
+    uses: ./.github/workflows/python-check.yml
+    with:
+      package: "mypy"
+      command: "mypy -p taphome_sdk --ignore-missing-imports --explicit-package-bases"
+
+  pylint:
+    uses: ./.github/workflows/python-check.yml
+    with:
+      package: "pylint"
+      command: "pylint . --fail-under=9.4"
+
+  validate-hacs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: HACS validation
+        uses: hacs/action@main
+        with:
+          category: integration

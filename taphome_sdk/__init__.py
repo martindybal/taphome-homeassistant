@@ -8,7 +8,8 @@ from .fan_service import FanService, FanState
 from .humidifier_service import HumidifierService, HumidifierState
 from .light_service import LightService, LightState
 from .location import Location
-from .multi_value_switch_service import MultiValueSwitchService, MultiValueSwitchState
+from .multi_value_switch_service import (MultiValueSwitchService,
+                                         MultiValueSwitchState)
 from .operation_modes import OperationModes
 from .switch_service import SwitchService, SwitchState
 from .switch_states import SwitchStates

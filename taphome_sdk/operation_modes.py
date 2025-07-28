@@ -6,5 +6,6 @@ from enum import Enum
 class OperationModes(Enum):
     """Known modes in which a device can operate."""
 
+    NONE = 0
     MANUAL = 1
     AUTO = 2

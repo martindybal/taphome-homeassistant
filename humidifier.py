@@ -10,9 +10,14 @@ from homeassistant.components.humidifier import (
     HumidifierEntity,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import (
+    AddEntitiesCallback,
+    ConfigType,
+    DiscoveryInfoType,
+)
 
-from .add_entry_request import AddEntryRequest
-from .const import CONF_HUMIDIFIER, TAPHOME_PLATFORM
+from .add_entry_request import add_taphome_entities
+from .const import CONF_HUMIDIFIER
 from .coordinator import UpdateTapHomeState
 from .taphome_entity import (
     TapHomeConfigEntry,
@@ -96,7 +101,7 @@ class TapHomeHumidifier(TapHomeEntity[HumidifierState], HumidifierEntity):
         if self.taphome_device is not None:
             return TapHomeEntity.convert_taphome_percentage_to_ha(
                 self.taphome_device.supported_values[
-                    ValueType.AnalogOutputDesiredValue
+                    ValueType.ANALOG_OUTPUT_DESIRED_VALUE
                 ].min_value
             )
         return None
@@ -110,7 +115,7 @@ class TapHomeHumidifier(TapHomeEntity[HumidifierState], HumidifierEntity):
         if self.taphome_device is not None:
             return TapHomeEntity.convert_taphome_percentage_to_ha(
                 self.taphome_device.supported_values[
-                    ValueType.AnalogOutputDesiredValue
+                    ValueType.ANALOG_OUTPUT_DESIRED_VALUE
                 ].max_value
             )
         return None
@@ -145,24 +150,11 @@ class TapHomeHumidifier(TapHomeEntity[HumidifierState], HumidifierEntity):
 
 def setup_platform(
     hass: HomeAssistant,
-    config,
-    add_entities,
-    discovery_info=None,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up the fan platform."""
-    add_entry_requests: list[AddEntryRequest] = hass.data[TAPHOME_PLATFORM][
-        CONF_HUMIDIFIER
-    ]
-    humidifiers = []
-    for add_entry_request in add_entry_requests:
-        humidifier_service = HumidifierService(add_entry_request.taphome_api_service)
-        humidifier = TapHomeHumidifier(
-            hass,
-            add_entry_request.core_config,
-            add_entry_request.config_entry,
-            add_entry_request.coordinator,
-            humidifier_service,
-        )
-        humidifiers.append(humidifier)
-
-    add_entities(humidifiers)
+    """Set up the switch platform."""
+    add_taphome_entities(
+        hass, add_entities, CONF_HUMIDIFIER, HumidifierService, TapHomeHumidifier
+    )

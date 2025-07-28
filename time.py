@@ -6,8 +6,8 @@ import logging
 from homeassistant.components.time import DOMAIN as TIME_DOMAIN, TimeEntity
 from homeassistant.core import HomeAssistant
 
-from .add_entry_request import AddEntryRequest
-from .const import CONF_TIMES, TAPHOME_PLATFORM
+from .add_entry_request import add_taphome_entities
+from .const import CONF_TIMES
 from .coordinator import TapHomeDataUpdateCoordinator, UpdateTapHomeState
 from .taphome_core_config_entry import TapHomeCoreConfigEntry
 from .taphome_entity import TapHomeConfigEntry, TapHomeEntity
@@ -76,18 +76,5 @@ def setup_platform(
     add_entities,
     discovery_info=None,
 ) -> None:
-    """Set up the time platform."""
-    add_entry_requests: list[AddEntryRequest] = hass.data[TAPHOME_PLATFORM][CONF_TIMES]
-
-    times = [
-        TapHomeTime(
-            hass,
-            add_entry_request.core_config,
-            add_entry_request.config_entry,
-            add_entry_request.coordinator,
-            TimeService(add_entry_request.taphome_api_service),
-        )
-        for add_entry_request in add_entry_requests
-    ]
-
-    add_entities(times)
+    """Set up the switch platform."""
+    add_taphome_entities(hass, add_entities, CONF_TIMES, TimeService, TapHomeTime)

@@ -19,29 +19,29 @@ class PercentageState(TapHomeState):
     ) -> None:
         """Create state from ``percentage_values`` dict."""
         super().__init__(percentage_values)
-        if self.get_device_value(ValueType.AnalogOutputValue) is not None:
+        if self.get_device_value(ValueType.ANALOG_OUTPUT_VALUE) is not None:
             self.create_analog_state()
-        elif self.get_device_value(ValueType.BlindsLevel) is not None:
+        elif self.get_device_value(ValueType.BLINDS_LEVEL) is not None:
             self.create_blind_state()
-        elif self.get_device_value(ValueType.SwitchState) is not None:
+        elif self.get_device_value(ValueType.SWITCH_STATE) is not None:
             self.create_switch_state()
 
     def create_analog_state(self) -> None:
         """Initialize analog output related attributes."""
-        self.percentage = self.get_device_value(ValueType.AnalogOutputValue)
+        self.percentage = self.get_device_value(ValueType.ANALOG_OUTPUT_VALUE)
         self.switch_state = self.get_device_enum_value(
-            SwitchStates, ValueType.SwitchState
+            SwitchStates, ValueType.SWITCH_STATE
         )
 
     def create_blind_state(self) -> None:
         """Initialize blind related attributes."""
-        self.percentage = self.get_device_value(ValueType.BlindsLevel)
+        self.percentage = self.get_device_value(ValueType.BLINDS_LEVEL)
         self.switch_state = SwitchStates(self.percentage != 0)
 
     def create_switch_state(self) -> None:
         """Initialize switch related attributes."""
         self.switch_state = self.get_device_enum_value(
-            SwitchStates, ValueType.SwitchState
+            SwitchStates, ValueType.SWITCH_STATE
         )
         self.percentage = 1 if self.switch_state == SwitchStates.ON else 0
 
@@ -106,11 +106,11 @@ class PercentageService:
 
     def _get_percentage_service(self, device: Device) -> PercentageServiceInterface:
         """Select helper service based on ``device`` capabilities."""
-        if device.supports_value(ValueType.AnalogOutputDesiredValue):
+        if device.supports_value(ValueType.ANALOG_OUTPUT_DESIRED_VALUE):
             return self.analog_percentage_service
-        if device.supports_value(ValueType.BlindsLevel):
+        if device.supports_value(ValueType.BLINDS_LEVEL):
             return self.blind_percentage_service
-        if device.supports_value(ValueType.SwitchState):
+        if device.supports_value(ValueType.SWITCH_STATE):
             return self.switch_percentage_service
         raise NotImplementedError(
             f"Device {device.id} does not support percentage operations."
@@ -133,7 +133,7 @@ class AnalogPercentageService(PercentageServiceInterface):
         """Turn ``device`` on."""
         values = [
             self.taphome_api_service.create_device_value(
-                ValueType.SwitchState, SwitchStates.ON.value
+                ValueType.SWITCH_STATE, SwitchStates.ON.value
             )
         ]
         await self.taphome_api_service.async_set_device_values(device.id, values)
@@ -142,7 +142,7 @@ class AnalogPercentageService(PercentageServiceInterface):
         """Turn ``device`` off."""
         values = [
             self.taphome_api_service.create_device_value(
-                ValueType.SwitchState, SwitchStates.OFF.value
+                ValueType.SWITCH_STATE, SwitchStates.OFF.value
             )
         ]
         await self.taphome_api_service.async_set_device_values(device.id, values)
@@ -154,10 +154,10 @@ class AnalogPercentageService(PercentageServiceInterface):
         else:
             values = [
                 self.taphome_api_service.create_device_value(
-                    ValueType.SwitchState, SwitchStates.ON.value
+                    ValueType.SWITCH_STATE, SwitchStates.ON.value
                 ),
                 self.taphome_api_service.create_device_value(
-                    ValueType.AnalogOutputDesiredValue, percentage
+                    ValueType.ANALOG_OUTPUT_DESIRED_VALUE, percentage
                 ),
             ]
 
@@ -188,7 +188,7 @@ class BlindPercentageService(PercentageServiceInterface):
         """Set blind position to ``percentage``."""
         values = [
             self.taphome_api_service.create_device_value(
-                ValueType.BlindsLevel, percentage
+                ValueType.BLINDS_LEVEL, percentage
             ),
         ]
 

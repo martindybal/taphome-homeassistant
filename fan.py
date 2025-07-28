@@ -10,9 +10,14 @@ from homeassistant.components.fan import (
     FanEntityFeature,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import (
+    AddEntitiesCallback,
+    ConfigType,
+    DiscoveryInfoType,
+)
 
-from .add_entry_request import AddEntryRequest
-from .const import CONF_FAN, TAPHOME_PLATFORM
+from .add_entry_request import add_taphome_entities
+from .const import CONF_FAN
 from .coordinator import UpdateTapHomeState
 from .taphome_entity import (
     TapHomeConfigEntry,
@@ -94,22 +99,9 @@ class TapHomeFan(TapHomeEntity[FanState], FanEntity):
 
 def setup_platform(
     hass: HomeAssistant,
-    config,
-    add_entities,
-    discovery_info=None,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up the fan platform."""
-    add_entry_requests: list[AddEntryRequest] = hass.data[TAPHOME_PLATFORM][CONF_FAN]
-    fans = []
-    for add_entry_request in add_entry_requests:
-        fan_service = FanService(add_entry_request.taphome_api_service)
-        fan = TapHomeFan(
-            hass,
-            add_entry_request.core_config,
-            add_entry_request.config_entry,
-            add_entry_request.coordinator,
-            fan_service,
-        )
-        fans.append(fan)
-
-    add_entities(fans)
+    """Set up the switch platform."""
+    add_taphome_entities(hass, add_entities, CONF_FAN, FanService, TapHomeFan)
