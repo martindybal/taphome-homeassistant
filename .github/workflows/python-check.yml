@@ -1,0 +1,20 @@
+name: python-check
+on:
+  workflow_call:
+    inputs:
+      package:
+        description: "step dependencies, which will be installed before running the command"
+        required: false
+        type: string
+      command:
+        description: "command to run, e.g. 'ruff check .'"
+        required: true
+        type: string
+
+jobs:
+  run-check:
+    runs-on: ubuntu-latest
+    steps:
+      - if: ${{ inputs.package != '' }}
+        run: pip install ${{ inputs.package }}
+      - run: ${{ inputs.command }}
