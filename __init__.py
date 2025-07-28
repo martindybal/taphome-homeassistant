@@ -263,7 +263,10 @@ async def _setup_core(
     taphome_http_client = TapHomeHttpClientFactory().create(api_url, token)
     taphome_api_service = TapHomeApiService(taphome_http_client)
     coordinator = TapHomeDataUpdateCoordinator(
-        hass, update_interval, taphome_api_service=taphome_api_service
+        hass,
+        update_interval,
+        taphome_api_service=taphome_api_service,
+        core_id=core_id,
     )
 
     try:

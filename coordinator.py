@@ -10,10 +10,13 @@ from aiohttp import ClientResponseError
 from aiohttp.web import Request
 
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import issue_registry as ir
+from homeassistant.helpers.issue_registry import IssueSeverity
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import TAPHOME_PLATFORM
 from .taphome_sdk import Device, TapHomeApiService, TapHomeState
+from .translations import TapHomeTexts
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -102,10 +105,15 @@ class TapHomeDataUpdateCoordinator(DataUpdateCoordinator):
     """Class to manage fetching TapHome data."""
 
     def __init__(
-        self, hass, update_interval: int, taphome_api_service: TapHomeApiService
+        self,
+        hass: HomeAssistant,
+        update_interval: int,
+        taphome_api_service: TapHomeApiService,
+        core_id: str | None,
     ) -> None:
         """Initialize coordinator with API service and polling interval."""
         self.taphome_api_service = taphome_api_service
+        self.core_id = core_id
         self._was_devices_discovered = False
         self._devices: dict[int, TapHomeDataUpdateCoordinatorDevice] = {}
         update_interval_timedelta = timedelta(seconds=update_interval)
@@ -124,13 +132,27 @@ class TapHomeDataUpdateCoordinator(DataUpdateCoordinator):
     ) -> None:
         """Register entity callbacks for a given TapHome device."""
         device = self.get_device_data(taphome_device_id)
+        issue_id = f"{TapHomeTexts.Issues.DEVICE_NOT_EXPOSED}_{taphome_device_id}"
+
         if device is None:
             _LOGGER.error(
                 "TapHome register entity failed. Device with id %s has "
                 "not been exposed in the TapHome API",
                 taphome_device_id,
             )
+
+            self._async_create_issue(
+                issue_id,
+                is_fixable=False,
+                severity=IssueSeverity.WARNING,
+                translation_key=TapHomeTexts.Issues.DEVICE_NOT_EXPOSED,
+                translation_placeholders={
+                    "device_id": str(taphome_device_id),
+                    "core_id": str(self.core_id or ""),
+                },
+            )
         else:
+            self._async_try_delete_issue(issue_id)
             device.attach_taphome_device_change_handler(taphome_device_change_handler)
             device.attach_taphome_state_change_handler(taphome_state_change_handler)
             taphome_device_change_handler()
@@ -155,6 +177,9 @@ class TapHomeDataUpdateCoordinator(DataUpdateCoordinator):
         try:
             await self.async_discovery_devices()
             await self.async_refresh_all_devices_values()
+            self._async_delete_issue(
+                f"{TapHomeTexts.Issues.CORE_UNAVAILABLE}_{self.core_id}",
+            )
             return self._devices  # noqa: TRY300
         except ClientResponseError as ex:
             if ex.status == 501:
@@ -167,12 +192,21 @@ class TapHomeDataUpdateCoordinator(DataUpdateCoordinator):
                 f"Invalid response from API: {ex.code} - {ex.request_info.url} "
                 f"{ex.message}"
             )
-            _LOGGER.error(exception_message)
-            raise UpdateFailed(exception_message) from ex
+            self._core_unavailable(ex, exception_message)
 
-        except Exception as ex:
-            _LOGGER.exception("TapHome data update failed")
-            raise UpdateFailed from ex
+        except Exception as ex:  # noqa: BLE001
+            self._core_unavailable(ex, "TapHome data update failed")
+
+    def _core_unavailable(self, ex, exception_message):
+        _LOGGER.error(exception_message)
+        self._async_create_issue(
+            f"{TapHomeTexts.Issues.CORE_UNAVAILABLE}_{self.core_id}",
+            is_fixable=False,
+            severity=IssueSeverity.ERROR,
+            translation_key=TapHomeTexts.Issues.CORE_UNAVAILABLE,
+            translation_placeholders={"core_id": str(self.core_id or "")},
+        )
+        raise UpdateFailed(exception_message) from ex
 
     async def async_discovery_devices(self) -> None:
         """Discover devices exposed by the TapHome core."""
@@ -241,6 +275,41 @@ class TapHomeDataUpdateCoordinator(DataUpdateCoordinator):
         if taphome_device_id not in self._devices:
             return None
         return self._devices[taphome_device_id]
+
+    def _async_create_issue(
+        self,
+        issue_id: str,
+        *,
+        breaks_in_ha_version: str | None = None,
+        data: dict[str, str | int | float | None] | None = None,
+        is_fixable: bool,
+        is_persistent: bool = False,
+        issue_domain: str | None = None,
+        learn_more_url: str | None = None,
+        severity: IssueSeverity,
+        translation_key: str,
+        translation_placeholders: dict[str, str] | None = None,
+    ) -> None:
+        """Create an issue in the issue registry."""
+
+        ir.async_create_issue(
+            self.hass,
+            TAPHOME_PLATFORM,
+            issue_id,
+            breaks_in_ha_version=breaks_in_ha_version,
+            data=data,
+            is_fixable=is_fixable,
+            is_persistent=is_persistent,
+            issue_domain=issue_domain,
+            learn_more_url=learn_more_url,
+            severity=severity,
+            translation_key=translation_key,
+            translation_placeholders=translation_placeholders,
+        )
+
+    def _async_try_delete_issue(self, issue_id: str) -> None:
+        """Delete an issue from the issue registry when exist."""
+        ir.async_delete_issue(self.hass, TAPHOME_PLATFORM, issue_id)
 
 
 StateT = TypeVar("StateT", bound="TapHomeState")
