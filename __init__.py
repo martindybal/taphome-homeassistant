@@ -39,16 +39,16 @@ from .binary_sensor import BinarySensorConfigEntry
 from .button import ButtonConfigEntry
 from .climate import ClimateConfigEntry
 from .const import (
+    AVAILABLE_ATTRIBUTES,
     CONF_API_URL,
     CONF_BUTTONS,
     CONF_CLIMATES,
     CONF_CORES,
+    CONF_ENABLED_ATTRIBUTES,
     CONF_FAN,
     CONF_HUMIDIFIER,
     CONF_LANGUAGE,
     CONF_MULTIVALUE_SWITCHES,
-    CONF_ENABLED_ATTRIBUTES,
-    AVAILABLE_ATTRIBUTES,
     CONF_TIMES,
     CONF_UPDATE_INTERVAL,
     CONF_VALVE,
