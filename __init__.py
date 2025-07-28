@@ -47,6 +47,8 @@ from .const import (
     CONF_HUMIDIFIER,
     CONF_LANGUAGE,
     CONF_MULTIVALUE_SWITCHES,
+    CONF_ENABLED_ATTRIBUTES,
+    AVAILABLE_ATTRIBUTES,
     CONF_TIMES,
     CONF_UPDATE_INTERVAL,
     CONF_VALVE,
@@ -114,6 +116,9 @@ CONFIG_SCHEMA = vol.Schema(
                             vol.Optional(CONF_UPDATE_INTERVAL): cv.positive_float,
                             vol.Optional(USE_DESCRIPTION_AS_ENTITY_ID): cv.boolean,
                             vol.Optional(USE_DESCRIPTION_AS_NAME): cv.boolean,
+                            vol.Optional(
+                                CONF_ENABLED_ATTRIBUTES, default=AVAILABLE_ATTRIBUTES
+                            ): cv.ensure_list,
                             vol.Optional(CONF_LIGHTS, default=[]): cv.ensure_list,
                             vol.Optional(CONF_BUTTONS, default=[]): cv.ensure_list,
                             vol.Optional(CONF_COVERS, default=[]): cv.ensure_list,
@@ -245,9 +250,17 @@ async def _setup_core(
     use_description_as_name = read_from_config_or_default(
         core_config, USE_DESCRIPTION_AS_NAME, False
     )
+    enabled_attributes = tuple(
+        read_from_config_or_default(
+            core_config, CONF_ENABLED_ATTRIBUTES, AVAILABLE_ATTRIBUTES
+        )
+    )
 
     core_config_entry = TapHomeCoreConfigEntry(
-        core_id, use_description_as_entity_id, use_description_as_name
+        core_id,
+        use_description_as_entity_id,
+        use_description_as_name,
+        enabled_attributes,
     )
 
     api_url = read_from_config_or_default(

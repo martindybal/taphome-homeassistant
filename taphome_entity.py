@@ -167,7 +167,7 @@ class TapHomeEntity(CoordinatorEntity, TapHomeDataUpdateCoordinatorObject[StateT
         value_transform=lambda v: v,
     ) -> None:
         """Add state attribute to the attributes dictionary."""
-        if value is not None:
+        if self._core_config.is_attribute_enabled(key) and value is not None:
             if not hasattr(self, "_attr_extra_state_attributes"):
                 self._attr_extra_state_attributes = {}
             self._attr_extra_state_attributes[key] = value_transform(value)

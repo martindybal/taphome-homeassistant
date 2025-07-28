@@ -1,15 +1,16 @@
 # Changelog
 
 ## 2025.7
-- Added detection of cover movement based on the blindsIsMoving state, enabling tracking of opening and closing directions.
-- Added entity state attributes
+- Added detection of cover movement based on the blindsIsMoving state to enable tracking of opening and closing directions.
+- Entity state attributes were added. This feature is enabled by default, and you can modify it via the `enabled_attributes` list in core configuration.
     - `taphome_id` to easily find an entity in taphome.
     - `taphome_name` the TapHome device name.
     - `taphome_description` the TapHome device description.
     - `taphome_category` the TapHome device category name.
     - `taphome_zone` the TapHome device zone name.
     - `taphome_operation_mode` to indicate Auto or Manual mode.
-- Better informing the user about problems with TapHome via config issues.
+- Improve communication with the TapHome Core.
+- Improve the way TapHome informs users about configuration and communication issues.
 
 ## 2025.2.0
 - Added support for `value_type` in sensor and binary sensor configurations, allowing users to define custom sensors for any device.
