@@ -3,28 +3,48 @@ name: CI
 on:
   push:
 jobs:
+  prepare-python-env:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m venv .venv
+      - run: |
+          .venv/bin/pip install --upgrade pip
+          .venv/bin/pip install homeassistant ruff mypy pylint
+      - run: tar -czf python-env.tar.gz .venv
+      - uses: actions/upload-artifact@v3
+        with:
+          name: python-env
+          path: python-env.tar.gz
+
   compilation:
+    needs: prepare-python-env
     uses: ./.github/workflows/python-check.yml
     with:
       name: "compile"
       command: "python -m compileall -q ."
 
   ruff:
+    needs: prepare-python-env
     uses: ./.github/workflows/python-check.yml
     with:
-      package: "ruff"
+      name: "ruff"
       command: "ruff check ."
 
   mypy:
+    needs: prepare-python-env
     uses: ./.github/workflows/python-check.yml
     with:
-      package: "mypy"
+      name: "mypy"
       command: "mypy -p taphome_sdk --ignore-missing-imports --explicit-package-bases"
 
   pylint:
+    needs: prepare-python-env
     uses: ./.github/workflows/python-check.yml
     with:
-      package: "pylint"
+      name: "pylint"
       command: "pylint . --fail-under=9.4"
 
   validate-hacs:
