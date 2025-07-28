@@ -7,7 +7,7 @@ jobs:
   python-environment:
     name: Prepare python environment
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
       - name: Set up Python
@@ -20,19 +20,25 @@ jobs:
         run: pip install homeassistant
       - name: Upload source as artifact
         uses: actions/upload-artifact@v4
+      - name: Cache virtualenv
+        uses: actions/cache@v4
         with:
-          name: source-code
-          path: .
+          path: venv
+          key: taphome-venv
 
   compilation:
     runs-on: ubuntu-latest
     needs: python-environment
     steps:
-      - name: Download source
-        uses: actions/download-artifact@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
         with:
-          name: source-code
-          path: .
+          python-version: "3.12"
+      - name: Restore virtualenv
+        uses: actions/cache@v4
+        with:
+          path: venv
+          key: taphome-venv
       - name: Check compilation
         run: python -m compileall -q .
 
@@ -40,49 +46,55 @@ jobs:
     runs-on: ubuntu-latest
     needs: python-environment
     steps:
-      - name: Download source
-        uses: actions/download-artifact@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
         with:
-          name: source-code
-          path: .
-      - name: Install ruff
-        run: pip install ruff
-      - name: Run ruff
-        run: ruff check .
+          python-version: "3.12"
+      - name: Restore virtualenv
+        uses: actions/cache@v4
+        with:
+          path: venv
+          key: taphome-venv
+      - run: pip install ruff
+      - run: ruff check .
 
   mypy:
     runs-on: ubuntu-latest
     needs: python-environment
     steps:
-      - name: Download source
-        uses: actions/download-artifact@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
         with:
-          name: source-code
-          path: .
-      - name: Install mypy
-        run: pip install mypy
-      - name: Run mypy
-        run: mypy -p taphome_sdk --ignore-missing-imports --explicit-package-bases
+          python-version: "3.12"
+      - name: Restore virtualenv
+        uses: actions/cache@v4
+        with:
+          path: venv
+          key: taphome-venv
+      - run: pip install mypy
+      - run: mypy -p taphome_sdk --ignore-missing-imports --explicit-package-bases
 
   pylint:
     runs-on: ubuntu-latest
     needs: python-environment
     steps:
-      - name: Download source
-        uses: actions/download-artifact@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
         with:
-          name: source-code
-          path: .
-      - name: Install pylint
-        run: pip install pylint
-      - name: Run pylint
-        run: pylint . --fail-under=9.4
+          python-version: "3.12"
+      - name: Restore virtualenv
+        uses: actions/cache@v4
+        with:
+          path: venv
+          key: ${{ runner.os }}-venv-${{ hashFiles('requirements_test.txt') }}
+      - run: pip install pylint
+      - run: pylint . --fail-under=9.4
 
   validate-hacs:
-    runs-on: "ubuntu-latest"
+    runs-on: ubuntu-latest
     steps:
-      - uses: "actions/checkout@v2"
+      - uses: actions/checkout@v4
       - name: HACS validation
-        uses: "hacs/action@main"
+        uses: hacs/action@main
         with:
-          category: "integration"
+          category: integration
