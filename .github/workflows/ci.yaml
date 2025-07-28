@@ -3,28 +3,49 @@ name: CI
 on:
   push:
 jobs:
+  setup-environment:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m pip install --upgrade pip
+      - run: python -m venv venv
+      - run: ./venv/bin/pip install -r ci_requirements.txt
+      - run: tar -czf venv.tar.gz venv
+      - uses: actions/upload-artifact@v3
+        with:
+          name: venv
+          path: venv.tar.gz
+
   compilation:
+    needs: setup-environment
     uses: ./.github/workflows/python-check.yml
     with:
       name: "compile"
+      use_venv: "venv"
       command: "python -m compileall -q ."
 
   ruff:
+    needs: setup-environment
     uses: ./.github/workflows/python-check.yml
     with:
-      package: "ruff"
+      use_venv: "venv"
       command: "ruff check ."
 
   mypy:
+    needs: setup-environment
     uses: ./.github/workflows/python-check.yml
     with:
-      package: "mypy"
+      use_venv: "venv"
       command: "mypy -p taphome_sdk --ignore-missing-imports --explicit-package-bases"
 
   pylint:
+    needs: setup-environment
     uses: ./.github/workflows/python-check.yml
     with:
-      package: "pylint"
+      use_venv: "venv"
       command: "pylint . --fail-under=9.4"
 
   validate-hacs:
