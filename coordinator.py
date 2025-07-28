@@ -4,13 +4,16 @@ import copy
 from datetime import timedelta
 import logging
 from types import TracebackType
-from typing import Generic, TypeVar
+from typing import Generic, NoReturn, TypeVar
 
 from aiohttp import ClientResponseError
 from aiohttp.web import Request
 
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.helpers.update_coordinator import (
+    TimestampDataUpdateCoordinator,
+    UpdateFailed,
+)
 
 from .const import TAPHOME_PLATFORM
 from .taphome_issue_registry import TapHomeIssueRegistry
@@ -99,7 +102,9 @@ class TapHomeDataUpdateCoordinatorDevice:
             taphome_state_change_handler(last_values)
 
 
-class TapHomeDataUpdateCoordinator(DataUpdateCoordinator):
+class TapHomeDataUpdateCoordinator(
+    TimestampDataUpdateCoordinator[dict[int, TapHomeDataUpdateCoordinatorDevice]]
+):
     """Class to manage fetching TapHome data."""
 
     def __init__(
@@ -165,11 +170,14 @@ class TapHomeDataUpdateCoordinator(DataUpdateCoordinator):
             return None
         return device.get_state(state_type)
 
-    async def _async_update_data(self):
+    async def _async_update_data(
+        self,
+    ) -> dict[int, TapHomeDataUpdateCoordinatorDevice]:
         """Fetch data from TapHome."""
         try:
             await self.async_discovery_devices()
             await self.async_refresh_all_devices_values()
+            self.last_update_success = True
             self.taphome_issue_registry.try_delete_core_unavailable_issue()
             return self._devices  # noqa: TRY300
         except ClientResponseError as ex:
@@ -188,7 +196,8 @@ class TapHomeDataUpdateCoordinator(DataUpdateCoordinator):
         except Exception as ex:  # noqa: BLE001
             self._core_unavailable(ex, "TapHome data update failed")
 
-    def _core_unavailable(self, ex, exception_message):
+    def _core_unavailable(self, ex, exception_message) -> NoReturn:
+        self.last_update_success = False
         _LOGGER.error(exception_message)
         self.taphome_issue_registry.create_core_unavailable_issue()
         raise UpdateFailed(exception_message) from ex
@@ -222,8 +231,11 @@ class TapHomeDataUpdateCoordinator(DataUpdateCoordinator):
     ) -> None:
         """Handle incoming webhook - we will trigger an update poll here."""
         _LOGGER.info("Taphome webhook triggered - webhook_id: %s", webhook_id)
-        all_devices_values = await request.json()
-        self.update_devices_values(all_devices_values)
+        if self.last_update_success:
+            all_devices_values = await request.json()
+            self.update_devices_values(all_devices_values)
+        else:
+            await self._async_update_data()
 
     def update_devices_values(self, changed_values: dict, force: bool = False):
         """Update cached values for all devices."""
