@@ -1,0 +1,12 @@
+{
+  "issues": {
+    "device_not_exposed": {
+      "title": "Gerät {device_id} ist für Core{core_id} nicht freigegeben",
+      "description": "Das Gerät {device_id}, das für Core{core_id} konfiguriert ist, ist in der TapHome-API nicht freigegeben. Bitte überprüfen Sie Ihre TapHome-Einstellungen."
+    },
+    "core_unavailable": {
+      "title": "Verbindung zum TapHome Core{core_id} fehlgeschlagen",
+      "description": "Home Assistant kann nicht mit dem TapHome Core{core_id} kommunizieren."
+    }
+  }
+}

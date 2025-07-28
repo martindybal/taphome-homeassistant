@@ -1,0 +1,12 @@
+{
+  "issues": {
+    "device_not_exposed": {
+      "title": "A(z) {device_id} eszköz nincs közzétéve a(z) core{core_id} számára",
+      "description": "A(z) {device_id} eszköz, amely core{core_id} számára van konfigurálva, nincs kitéve a TapHome API-ban. Ellenőrizze a TapHome beállításait."
+    },
+    "core_unavailable": {
+      "title": "Nem sikerült csatlakozni a TapHome core{core_id} rendszerhez",
+      "description": "A Home Assistant nem tud kommunikálni a TapHome core{core_id} rendszerrel."
+    }
+  }
+}
