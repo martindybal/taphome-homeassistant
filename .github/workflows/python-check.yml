@@ -1,32 +1,30 @@
 name: python-check
 on:
   workflow_call:
-    inputs:
-      name:
-        description: "name of the step, e.g. 'ruff check'"
-        required: false
-        type: string
-      package:
-        description: "step dependencies, which will be installed before running the command. e.g. 'ruff mypy'"
-        required: false
-        type: string
-      command:
-        description: "command to run, e.g. 'ruff check .'"
-        required: true
-        type: string
+      inputs:
+        name:
+          description: "Name of the step, e.g. 'ruff check'"
+          required: false
+          type: string
+        command:
+          description: "Command to run, e.g. 'ruff check .'"
+          required: true
+          type: string
 
 jobs:
   run-check:
-    name: ${{ inputs.name || inputs.package || inputs.command }}
+    name: ${{ inputs.name || inputs.command }}
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/download-artifact@v4
         with:
-          python-version: "3.12"
-      - run: python -m pip install --upgrade pip
-      - run: pip install homeassistant
-      - if: ${{ inputs.package != '' }}
-        run: pip install ${{ inputs.package }}
-      - run: ${{ inputs.command }}
+          name: python-env
+          path: .
+      - run: tar -xzf python-env.tar.gz
+      - name: Run ${{ inputs.name || inputs.command }}
+        shell: bash
+        run: |
+          source .venv/bin/activate
+          ${{ inputs.command }}
