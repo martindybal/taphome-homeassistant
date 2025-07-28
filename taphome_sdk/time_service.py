@@ -19,7 +19,7 @@ class TimeState(TapHomeState):
     ):
         """Create state from ``switch_values``."""
         super().__init__(switch_values)
-        self.total_seconds = self.get_device_value(ValueType.SessionDuration)
+        self.total_seconds = self.get_device_value(ValueType.SESSION_DURATION)
 
 
 class TimeService:
@@ -49,7 +49,7 @@ class TimeService:
         values = [
             self.taphome_api_service.create_device_value(
                 # Be care here. Only variable state can be changed. Value conversions are readonly.
-                ValueType.VariableState,
+                ValueType.VARIABLE_STATE,
                 total_seconds,
             )
         ]

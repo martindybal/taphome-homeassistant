@@ -20,7 +20,7 @@ class MultiValueSwitchState(TapHomeState):
         """Create state from ``multi_value_switch_values``."""
         super().__init__(multi_value_switch_values)
         self.multi_value_switch_state = self.get_device_int_value(
-            ValueType.MultiValueSwitchState
+            ValueType.MULTI_VALUE_SWITCH_STATE
         )
 
 
@@ -46,7 +46,7 @@ class MultiValueSwitchService:
         """Set ``device`` to ``value`` and return the change result."""
         values = [
             self.taphome_api_service.create_device_value(
-                ValueType.MultiValueSwitchState, value
+                ValueType.MULTI_VALUE_SWITCH_STATE, value
             )
         ]
 

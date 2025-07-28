@@ -1,6 +1,5 @@
 """Provides the taphome DataUpdateCoordinator."""
 
-# from .switch import TapHomeSwitch
 import copy
 from datetime import timedelta
 import logging
@@ -82,7 +81,7 @@ class TapHomeDataUpdateCoordinatorDevice:
             state = (
                 None if self.taphome_values is None else state_type(self.taphome_values)
             )
-        except Exception:
+        except (ValueError, TypeError, KeyError):
             _LOGGER.exception(
                 "Error update_taphome_state for device %s", self.taphome_device.id
             )
@@ -108,7 +107,7 @@ class TapHomeDataUpdateCoordinator(DataUpdateCoordinator):
         """Initialize coordinator with API service and polling interval."""
         self.taphome_api_service = taphome_api_service
         self._was_devices_discovered = False
-        self._devices = {}
+        self._devices: dict[int, TapHomeDataUpdateCoordinatorDevice] = {}
         update_interval_timedelta = timedelta(seconds=update_interval)
         super().__init__(
             hass,
@@ -127,12 +126,15 @@ class TapHomeDataUpdateCoordinator(DataUpdateCoordinator):
         device = self.get_device_data(taphome_device_id)
         if device is None:
             _LOGGER.error(
-                "TapHome register entity failed. Device with id %s has not been exposed in the TapHome API",
+                "TapHome register entity failed. Device with id %s has "
+                "not been exposed in the TapHome API",
                 taphome_device_id,
             )
         else:
             device.attach_taphome_device_change_handler(taphome_device_change_handler)
             device.attach_taphome_state_change_handler(taphome_state_change_handler)
+            taphome_device_change_handler()
+            taphome_state_change_handler()
 
     def get_device(self, taphome_device_id: int) -> Device | None:
         """Return TapHome device instance for ``taphome_device_id``."""
@@ -157,10 +159,14 @@ class TapHomeDataUpdateCoordinator(DataUpdateCoordinator):
         except ClientResponseError as ex:
             if ex.status == 501:
                 _LOGGER.error(
-                    "Core don't support get all devices api endpoint. Please update your TapHome Core"
+                    "Core doesn't support get all devices api endpoint. "
+                    "Please update your TapHome Core",
                 )
-                raise NotImplementedError from ex  # NotImplementedError is reraised to fail integration loading.
-            exception_message = f"Invalid response from API: {ex.code} - {ex.request_info.url} {ex.message}"
+                raise NotImplementedError from ex
+            exception_message = (
+                f"Invalid response from API: {ex.code} - {ex.request_info.url} "
+                f"{ex.message}"
+            )
             _LOGGER.error(exception_message)
             raise UpdateFailed(exception_message) from ex
 
@@ -184,16 +190,17 @@ class TapHomeDataUpdateCoordinator(DataUpdateCoordinator):
         last_all_devices_values = (
             await self.taphome_api_service.async_get_all_devices_values()
         )
+
         if last_all_devices_values is None:
-            for device in self._devices.items():
-                device.taphome_state = None
+            for device in self._devices.values():
+                device.taphome_values = None
             raise UpdateFailed
 
         self.update_devices_values(last_all_devices_values, True)
 
-    async def handle_webhook(
-        self, hass: HomeAssistant, webhook_id: str, request: Request
-    ):
+    async def async_handle_webhook(
+        self, _hass: HomeAssistant, webhook_id: str, request: Request
+    ) -> None:
         """Handle incoming webhook - we will trigger an update poll here."""
         _LOGGER.info("Taphome webhook triggered - webhook_id: %s", webhook_id)
         all_devices_values = await request.json()
@@ -236,10 +243,10 @@ class TapHomeDataUpdateCoordinator(DataUpdateCoordinator):
         return self._devices[taphome_device_id]
 
 
-TState = TypeVar("TState", bound="TapHomeState")
+StateT = TypeVar("StateT", bound="TapHomeState")
 
 
-class TapHomeDataUpdateCoordinatorObject(Generic[TState]):
+class TapHomeDataUpdateCoordinatorObject(Generic[StateT]):
     """Base mixin that exposes TapHome device and state via a coordinator."""
 
     def __init__(
@@ -260,14 +267,14 @@ class TapHomeDataUpdateCoordinatorObject(Generic[TState]):
         )
 
     @property
-    def taphome_state(self) -> TState | None:
+    def taphome_state(self) -> StateT | None:
         """Return the latest state for this device."""
         return self.coordinator.get_state(
             self._taphome_device_id, self._taphome_state_type
         )
 
     @property
-    def taphome_device(self) -> Device | None:
+    def taphome_device(self) -> Device:
         """Return the TapHome device representation."""
         return self.coordinator.get_device(self._taphome_device_id)
 
@@ -284,24 +291,24 @@ class TapHomeDataUpdateCoordinatorObject(Generic[TState]):
         self.handle_taphome_state_change(last_state)
 
     @callback
-    def handle_taphome_state_change(self, last_state: TState | None) -> None:
+    def handle_taphome_state_change(self, last_state: StateT | None) -> None:
         """Handle changes when taphome_state is updated."""
 
 
-class UpdateTapHomeState(Generic[TState]):
+class UpdateTapHomeState(Generic[StateT]):
     """Context manager for temporarily storing last TapHome state."""
 
     def __init__(
-        self, coordinator_object: TapHomeDataUpdateCoordinatorObject[TState]
+        self, coordinator_object: TapHomeDataUpdateCoordinatorObject[StateT]
     ) -> None:
         """Initialize context with reference to coordinator object."""
         self._coordinator_object = coordinator_object
-        self._last_state = self._coordinator_object.taphome_state
+        self._last_state: StateT
 
     async def __aenter__(self):
         """Return current state and store it for later comparison."""
         self._last_state = self._coordinator_object.taphome_state
-        return self._coordinator_object.taphome_state
+        return self._last_state
 
     async def __aexit__(
         self,

@@ -1,11 +1,21 @@
 """TapHome switch integration."""
 
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchEntity
-from homeassistant.const import CONF_SWITCHES
-from homeassistant.core import HomeAssistant
+from typing import Any
 
-from .add_entry_request import AddEntryRequest
-from .const import TAPHOME_PLATFORM
+from homeassistant.components.switch import (
+    DOMAIN as SWITCH_DOMAIN,
+    SwitchDeviceClass,
+    SwitchEntity,
+)
+from homeassistant.const import CONF_SWITCHES
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity_platform import (
+    AddEntitiesCallback,
+    ConfigType,
+    DiscoveryInfoType,
+)
+
+from .add_entry_request import add_taphome_entities
 from .coordinator import UpdateTapHomeState
 from .taphome_entity import (
     TapHomeConfigEntry,
@@ -22,7 +32,9 @@ class SwitchConfigEntry(TapHomeConfigEntry):
     def __init__(self, device_config: dict) -> None:
         """Initialize switch config entry."""
         super().__init__(device_config)
-        self._device_class = self.get_optional("device_class", None)
+        self._device_class: SwitchDeviceClass | None = self.get_optional(
+            "device_class", None
+        )
 
     @property
     def device_class(self):
@@ -46,25 +58,23 @@ class TapHomeSwitch(TapHomeEntity[SwitchState], SwitchEntity):
             hass, core_config, config_entry, SWITCH_DOMAIN, coordinator, SwitchState
         )
         self.switch_service = switch_service
-        self._device_class = config_entry.device_class
+        self._attr_device_class = config_entry.device_class
 
-    @property
-    def device_class(self):
-        """Return the class of this device, from component DEVICE_CLASSES."""
-        return self._device_class
+    @callback
+    def handle_taphome_state_change(self, last_state: SwitchState | None) -> None:
+        """Update state of entity."""
+        if self.taphome_state is None:
+            self._attr_is_on = None
+        else:
+            self._attr_is_on = self.taphome_state.switch_state == SwitchStates.ON
 
-    @property
-    def is_on(self):
-        """Returns if the switch entity is on or not."""
-        if self.taphome_state is not None:
-            return self.taphome_state.switch_state == SwitchStates.ON
-        return None
+        super().handle_taphome_state_change(last_state)
 
-    async def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn device on."""
         await self.async_turn(SwitchStates.ON)
 
-    async def async_turn_off(self):
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn device off."""
         await self.async_turn(SwitchStates.OFF)
 
@@ -77,24 +87,11 @@ class TapHomeSwitch(TapHomeEntity[SwitchState], SwitchEntity):
 
 def setup_platform(
     hass: HomeAssistant,
-    config,
-    add_entities,
-    discovery_info=None,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the switch platform."""
-    add_entry_requests: list[AddEntryRequest] = hass.data[TAPHOME_PLATFORM][
-        CONF_SWITCHES
-    ]
-    switches = []
-    for add_entry_request in add_entry_requests:
-        switch_service = SwitchService(add_entry_request.taphome_api_service)
-        switch = TapHomeSwitch(
-            hass,
-            add_entry_request.core_config,
-            add_entry_request.config_entry,
-            add_entry_request.coordinator,
-            switch_service,
-        )
-        switches.append(switch)
-
-    add_entities(switches)
+    add_taphome_entities(
+        hass, add_entities, CONF_SWITCHES, SwitchService, TapHomeSwitch
+    )

@@ -4,14 +4,13 @@ from typing import Any
 
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers.entity import async_generate_entity_id
+from homeassistant.helpers.entity import async_generate_entity_id, cached_property
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
-from homeassistant.util import Mapping
 
 from .coordinator import (
+    StateT,
     TapHomeDataUpdateCoordinator,
     TapHomeDataUpdateCoordinatorObject,
-    TState,
     callback,
 )
 from .taphome_core_config_entry import TapHomeCoreConfigEntry
@@ -56,7 +55,7 @@ class TapHomeConfigEntry:
         return default
 
 
-class TapHomeEntity(CoordinatorEntity, TapHomeDataUpdateCoordinatorObject[TState]):
+class TapHomeEntity(CoordinatorEntity, TapHomeDataUpdateCoordinatorObject[StateT]):
     """Base class for all TapHome entities."""
 
     def __init__(
@@ -70,6 +69,7 @@ class TapHomeEntity(CoordinatorEntity, TapHomeDataUpdateCoordinatorObject[TState
     ) -> None:
         """Initialize shared entity state."""
         self._taphome_device_id = config.id
+        self._attr_available = False
 
         if config.unique_id is None:
             unique_id_core_id = (
@@ -90,71 +90,87 @@ class TapHomeEntity(CoordinatorEntity, TapHomeDataUpdateCoordinatorObject[TState
             self._core_config.use_description_as_entity_id
             and self.taphome_device is not None
         ):
-            ENTITY_ID_FORMAT = unique_id_determination + ".{}"
+            entity_id_format = unique_id_determination + ".{}"
             self.entity_id = async_generate_entity_id(
-                ENTITY_ID_FORMAT, self.taphome_device.description, hass=hass
+                entity_id_format, self.taphome_device.description, hass=hass
             )
 
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
-
-    @callback
-    def handle_taphome_state_change(self, last_state: TState | None) -> None:
-        """Schedule state update when TapHome state changes."""
-        if self.hass is not None:  # check if entity was added to hass
-            self.schedule_update_ha_state()
-
-    @property
+    @cached_property
     def available(self) -> bool:
-        """Return ``True`` if the entity is ready for use."""
-        return self.taphome_state is not None and self.taphome_device is not None
-
-    @property
-    def name(self) -> str | None:
-        """Return the display name of the entity."""
-        if self.taphome_device is not None:
-            if self._core_config.use_description_as_name:
-                return self.taphome_device.description
-            return self.taphome_device.name
-        return None
+        """Return True if entity is available."""
+        return self._attr_available
 
     @property
     def operation_mode(self) -> OperationModes | None:
         """Return current operation mode if available."""
         if self.taphome_state is not None:
-            return self.taphome_state.get_device_enum_value(
-                OperationModes, ValueType.OperationMode
+            operation_mode = self.taphome_state.get_device_enum_value(
+                OperationModes, ValueType.OPERATION_MODE
             )
+            if operation_mode is not OperationModes.NONE:
+                return operation_mode
+
         return None
 
-    @property
-    def extra_state_attributes(self) -> Mapping[str, Any] | None:
-        """Return entity specific state attributes."""
-        attributes: dict[str, Any] = {}
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
 
-        def add_state_attributes(
-            key: str,
-            value: Any,
-            value_transform=lambda v: v,
-        ) -> None:
-            """Add state attribute to the attributes dictionary."""
-            if value is not None:
-                attributes[key] = value_transform(value)
+    @callback
+    def handle_taphome_device_change(self) -> None:
+        """Handle taphome_device change."""
+        self._update_available()
+        self._update_name()
 
-        add_state_attributes("taphome_id", self._taphome_device_id)
+        self.add_state_attributes("taphome_id", self._taphome_device_id)
         if self.taphome_device is not None:
-            add_state_attributes("taphome_name", self.taphome_device.name)
-            add_state_attributes("taphome_description", self.taphome_device.description)
-            add_state_attributes("taphome_category", self.taphome_device.category)
-            add_state_attributes("taphome_zone", self.taphome_device.zone)
+            self.add_state_attributes("taphome_name", self.taphome_device.name)
+            self.add_state_attributes(
+                "taphome_description", self.taphome_device.description
+            )
+            self.add_state_attributes("taphome_category", self.taphome_device.category)
+            self.add_state_attributes("taphome_zone", self.taphome_device.zone)
+        return super().handle_taphome_device_change()
 
-        add_state_attributes(
+    @callback
+    def handle_taphome_state_change(self, last_state: StateT | None) -> None:
+        """Schedule state update when TapHome state changes."""
+
+        self._update_available()
+
+        self.add_state_attributes(
             "taphome_operation_mode",
             self.operation_mode,
             lambda value: value.name.lower(),
         )
 
-        return attributes
+        if self.hass is not None:  # check if entity was added to hass
+            self.schedule_update_ha_state()
+
+        super().handle_taphome_state_change(last_state)
+
+    def _update_available(self):
+        self._attr_available = (
+            self.taphome_state is not None and self.taphome_device is not None
+        )
+
+    def _update_name(self):
+        if self.taphome_device is not None:
+            if self._core_config.use_description_as_name:
+                self._attr_name = self.taphome_device.description
+            else:
+                self._attr_name = self.taphome_device.name
+
+    def add_state_attributes(
+        self,
+        key: str,
+        value: Any,
+        value_transform=lambda v: v,
+    ) -> None:
+        """Add state attribute to the attributes dictionary."""
+        if value is not None:
+            if not hasattr(self, "_attr_extra_state_attributes"):
+                self._attr_extra_state_attributes = {}
+            self._attr_extra_state_attributes[key] = value_transform(value)
 
     @staticmethod
     def convert_taphome_byte_to_ha(value: float | None) -> float | None:

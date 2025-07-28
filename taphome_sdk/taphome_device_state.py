@@ -1,9 +1,8 @@
 """Base state class for TapHome devices."""
 
-from enum import Enum
 import logging
-from typing import TypeVar
 
+from .helpers import TEnum
 from .value_type import ValueType
 
 _LOGGER = logging.getLogger(__name__)
@@ -25,8 +24,6 @@ class TapHomeState:
             return self._device_values == other._device_values
 
         return False
-
-    TEnum = TypeVar("TEnum", bound=Enum)
 
     def get_device_enum_value(
         self, enum_type: type[TEnum], value_type: ValueType

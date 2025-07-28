@@ -2,11 +2,20 @@
 
 from __future__ import annotations
 
-from homeassistant.components.valve import DOMAIN, ValveEntity, ValveEntityFeature
+from homeassistant.components.valve import (
+    DOMAIN as VALVE_DOMAIN,
+    ValveEntity,
+    ValveEntityFeature,
+)
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import (
+    AddEntitiesCallback,
+    ConfigType,
+    DiscoveryInfoType,
+)
 
-from .add_entry_request import AddEntryRequest
-from .const import CONF_VALVE, TAPHOME_PLATFORM
+from .add_entry_request import add_taphome_entities
+from .const import CONF_VALVE
 from .coordinator import TapHomeDataUpdateCoordinator, UpdateTapHomeState
 from .taphome_entity import TapHomeConfigEntry, TapHomeCoreConfigEntry, TapHomeEntity
 from .taphome_sdk import SwitchStates, ValveService, ValveState
@@ -39,7 +48,7 @@ class TapHomeValve(TapHomeEntity[ValveState], ValveEntity):
     ) -> None:
         """Initialize TapHome valve entity."""
         super().__init__(
-            hass, core_config, config_entry, DOMAIN, coordinator, ValveState
+            hass, core_config, config_entry, VALVE_DOMAIN, coordinator, ValveState
         )
         self.valve_service = valve_service
         self._device_class = config_entry.device_class
@@ -81,8 +90,9 @@ class TapHomeValve(TapHomeEntity[ValveState], ValveEntity):
         return None
 
     async def async_open_valve(self) -> None:
-        """For valves that can set position, this method should be left unimplemented and only set_valve_position is required."""
-        # this causes a bug / unintended behavior . After switching on, the last value is not used, but 100%
+        """Open the valve if supported."""
+        # After turning on, the last value is ignored and 100 % is used.
+        # This behaviour is not desired.
         await self.valve_service.async_turn_on(self.taphome_device)
 
     async def async_close_valve(self) -> None:
@@ -102,22 +112,15 @@ class TapHomeValve(TapHomeEntity[ValveState], ValveEntity):
 
 def setup_platform(
     hass: HomeAssistant,
-    config,
-    add_entities,
-    discovery_info=None,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up the valve platform."""
-    add_entry_requests: list[AddEntryRequest] = hass.data[TAPHOME_PLATFORM][CONF_VALVE]
-    valves = []
-    for add_entry_request in add_entry_requests:
-        valve_service = ValveService(add_entry_request.taphome_api_service)
-        valve = TapHomeValve(
-            hass,
-            add_entry_request.core_config,
-            add_entry_request.config_entry,
-            add_entry_request.coordinator,
-            valve_service,
-        )
-        valves.append(valve)
-
-    add_entities(valves)
+    """Set up the switch platform."""
+    add_taphome_entities(
+        hass,
+        add_entities,
+        CONF_VALVE,
+        ValveService,
+        TapHomeValve,
+    )

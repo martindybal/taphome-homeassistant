@@ -2,9 +2,14 @@
 
 from homeassistant.components.select import DOMAIN as SELECT_DOMAIN, SelectEntity
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import (
+    AddEntitiesCallback,
+    ConfigType,
+    DiscoveryInfoType,
+)
 
-from .add_entry_request import AddEntryRequest
-from .const import CONF_MULTIVALUE_SWITCHES, TAPHOME_PLATFORM
+from .add_entry_request import add_taphome_entities
+from .const import CONF_MULTIVALUE_SWITCHES
 from .coordinator import TapHomeDataUpdateCoordinator, UpdateTapHomeState
 from .taphome_entity import TapHomeConfigEntry, TapHomeCoreConfigEntry, TapHomeEntity
 from .taphome_sdk import MultiValueSwitchService, MultiValueSwitchState, ValueType
@@ -50,14 +55,13 @@ class TapHomeSelect(TapHomeEntity[MultiValueSwitchState], SelectEntity):
             MultiValueSwitchState,
         )
         self.multi_value_switch_service = multi_value_switch_service
-        # this should be load from TapHome or config. TapHome don't provide such information but they promissed it to me
 
     @property
     def taphome_options(self) -> list[TapHomeSelectOption]:
         """Return list of available options from TapHome."""
         if self.taphome_device is not None:
             allowed_values = self.taphome_device.supported_values[
-                ValueType.MultiValueSwitchState
+                ValueType.MULTI_VALUE_SWITCH_STATE
             ].allowed_values
             return [
                 TapHomeSelectOption(value["value"], value["name"])
@@ -102,24 +106,15 @@ class TapHomeSelect(TapHomeEntity[MultiValueSwitchState], SelectEntity):
 
 def setup_platform(
     hass: HomeAssistant,
-    config,
-    add_entities,
-    discovery_info=None,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up the select platform."""
-    add_entry_requests: list[AddEntryRequest] = hass.data[TAPHOME_PLATFORM][
-        CONF_MULTIVALUE_SWITCHES
-    ]
-    selects = []
-    for add_entry_request in add_entry_requests:
-        select_service = MultiValueSwitchService(add_entry_request.taphome_api_service)
-        select = TapHomeSelect(
-            hass,
-            add_entry_request.core_config,
-            add_entry_request.config_entry,
-            add_entry_request.coordinator,
-            select_service,
-        )
-        selects.append(select)
-
-    add_entities(selects)
+    """Set up the switch platform."""
+    add_taphome_entities(
+        hass,
+        add_entities,
+        CONF_MULTIVALUE_SWITCHES,
+        MultiValueSwitchService,
+        TapHomeSelect,
+    )
