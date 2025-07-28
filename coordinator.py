@@ -9,11 +9,11 @@ from typing import Generic, TypeVar
 from aiohttp import ClientResponseError
 from aiohttp.web import Request
 
-from config.custom_components.taphome.taphome_issue_registry import TapHomeIssueRegistry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import TAPHOME_PLATFORM
+from .taphome_issue_registry import TapHomeIssueRegistry
 from .taphome_sdk import Device, TapHomeApiService, TapHomeState
 
 _LOGGER = logging.getLogger(__name__)
@@ -115,7 +115,7 @@ class TapHomeDataUpdateCoordinator(DataUpdateCoordinator):
         self._was_devices_discovered = False
         self._devices: dict[int, TapHomeDataUpdateCoordinatorDevice] = {}
         update_interval_timedelta = timedelta(seconds=update_interval)
-        self.tapHome_issue_registry = TapHomeIssueRegistry(hass, core_id)
+        self.taphome_issue_registry = TapHomeIssueRegistry(hass, core_id)
         super().__init__(
             hass,
             _LOGGER,
@@ -139,11 +139,11 @@ class TapHomeDataUpdateCoordinator(DataUpdateCoordinator):
                 taphome_device_id,
             )
 
-            self.tapHome_issue_registry.create_device_not_exposed_issue(
+            self.taphome_issue_registry.create_device_not_exposed_issue(
                 taphome_device_id
             )
         else:
-            self.tapHome_issue_registry.try_delete_device_not_exposed_issue(
+            self.taphome_issue_registry.try_delete_device_not_exposed_issue(
                 taphome_device_id
             )
             device.attach_taphome_device_change_handler(taphome_device_change_handler)
@@ -170,7 +170,7 @@ class TapHomeDataUpdateCoordinator(DataUpdateCoordinator):
         try:
             await self.async_discovery_devices()
             await self.async_refresh_all_devices_values()
-            self.tapHome_issue_registry.try_delete_core_unavailable_issue()
+            self.taphome_issue_registry.try_delete_core_unavailable_issue()
             return self._devices  # noqa: TRY300
         except ClientResponseError as ex:
             if ex.status == 501:
@@ -190,7 +190,7 @@ class TapHomeDataUpdateCoordinator(DataUpdateCoordinator):
 
     def _core_unavailable(self, ex, exception_message):
         _LOGGER.error(exception_message)
-        self.tapHome_issue_registry.create_core_unavailable_issue()
+        self.taphome_issue_registry.create_core_unavailable_issue()
         raise UpdateFailed(exception_message) from ex
 
     async def async_discovery_devices(self) -> None:
