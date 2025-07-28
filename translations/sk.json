@@ -1,0 +1,12 @@
+{
+  "issues": {
+    "device_not_exposed": {
+      "title": "Zariadenie {device_id} nie je vystavené pre core{core_id}",
+      "description": "Zariadenie {device_id} nakonfigurované pre core{core_id} nie je vystavené v TapHome API. Skontrolujte nastavenie TapHome."
+    },
+    "core_unavailable": {
+      "title": "Pripojenie k TapHome core{core_id} zlyhalo",
+      "description": "Home Assistant sa nevie pripojiť k TapHome core{core_id}."
+    }
+  }
+}
