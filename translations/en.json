@@ -1,0 +1,12 @@
+{
+  "issues": {
+    "device_not_exposed": {
+      "title": "Device {device_id} not exposed for core{core_id}",
+      "description": "Device {device_id} configured for core{core_id} is not exposed in the TapHome API. Please check your TapHome setup."
+    },
+    "core_unavailable": {
+      "title": "Connection to TapHome core{core_id} failed",
+      "description": "Home Assistant cannot communicate with the TapHome core{core_id}."
+    }
+  }
+}
