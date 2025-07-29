@@ -47,7 +47,7 @@ class TapHomeApiService:
         devices = []
         for device in json["devices"]:
             try:
-                devices.append(Device.create(device))
+                devices.append(Device.from_dict(device))
             except Exception:
                 _LOGGER.exception(
                     "TapHome Device.create failed \n %s \n %s", device, json

@@ -64,8 +64,8 @@ class TapHomeSelect(TapHomeEntity[MultiValueSwitchState], SelectEntity):
                 ValueType.MULTI_VALUE_SWITCH_STATE
             ].allowed_values
             return [
-                TapHomeSelectOption(value["value"], value["name"])
-                for value in filter(lambda value: value["isEnabled"], allowed_values)
+                TapHomeSelectOption(value.value, value.name)
+                for value in filter(lambda value: value.is_enabled, allowed_values)
             ]
         return None
 

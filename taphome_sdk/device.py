@@ -9,71 +9,79 @@ _LOGGER = logging.getLogger(__name__)
 
 
 @dataclass(slots=True)
+class EnumeratedValue:
+    """Describe a allowed value for SupportedValue."""
+
+    value: int
+    name: str
+    is_enabled: bool
+
+    @classmethod
+    def from_dict(cls, data: dict) -> "EnumeratedValue":
+        """Create EnumeratedValue instance from dictionary."""
+        return cls(value=data["value"], name=data["name"], is_enabled=data["isEnabled"])
+
+
+@dataclass(slots=True)
 class SupportedValue:
     """Describe a supported value on a TapHome device."""
 
     value_type: ValueType
     read_only: bool
-    allowed_values: list[dict]
+    allowed_values: list[EnumeratedValue]
     min_value: int | None
     max_value: int | None
+
+    @classmethod
+    def from_dict(cls, data: dict) -> "SupportedValue":
+        """Create SupportedValue instance from dictionary."""
+        return cls(
+            value_type=ValueType(data["valueTypeId"]),
+            read_only=data["readOnly"],
+            allowed_values=[
+                EnumeratedValue.from_dict(value)
+                for value in data.get("enumeratedValues", [])
+            ],
+            min_value=data.get("minValue"),
+            max_value=data.get("maxValue"),
+        )
 
 
 @dataclass(slots=True)
 class Device:
     """Representation of a device connected to TapHome."""
 
-    device_id: int
+    id: int
+    device_type: str
+    usage: str | None
     name: str
     description: str
     zone: str | None
     category: str | None
-    device_type: str
     supported_values: dict[ValueType, SupportedValue]
 
-    @staticmethod
-    def create(device: dict) -> "Device":
-        """Instantiate ``Device`` from raw ``device`` dictionary."""
-        device_id = device["deviceId"]
-        name = device["name"]
-        description = device["description"]
-        zone = device.get("zone")
-        category = device.get("category")
-        device_type = device["type"]
-        supported_values = {}
-        for supported_value in device["supportedValues"]:
+    @classmethod
+    def from_dict(cls, data: dict) -> "Device":
+        """Create Device instance from dictionary."""
+        supported_values: dict[ValueType, SupportedValue] = {}
+        for supported_value in data["supportedValues"]:
             try:
-                value_type = ValueType(supported_value["valueTypeId"])
-                read_only = supported_value["readOnly"]
-                allowed_values = supported_value.get("enumeratedValues", [])
-                min_value = supported_value.get("minValue")
-                max_value = supported_value.get("maxValue")
-                supported_values[value_type] = SupportedValue(
-                    value_type, read_only, allowed_values, min_value, max_value
-                )
-
+                supported_value = SupportedValue.from_dict(supported_value)
+                supported_values[supported_value.value_type] = supported_value
             except ValueError:
                 _LOGGER.warning("%s is not a valid ValueType", supported_value)
+
         return Device(
-            device_id,
-            name,
-            description,
-            zone,
-            category,
-            device_type,
+            data["deviceId"],
+            data["type"],
+            data.get("usage"),
+            data["name"],
+            data["description"],
+            data.get("zone"),
+            data.get("category"),
             supported_values,
         )
 
-    @property
-    def id(self) -> int:
-        """Return the device identifier."""
-        return self.device_id
-
-    @property
-    def type(self) -> str:
-        """Return the device type string."""
-        return self.device_type
-
-    def supports_value(self, value_type: ValueType):
+    def supports_value(self, value_type: ValueType) -> bool:
         """Return ``True`` if ``value_type`` is supported by the device."""
         return value_type in self.supported_values
