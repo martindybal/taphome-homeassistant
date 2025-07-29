@@ -46,6 +46,13 @@ jobs:
       package: "pylint"
       command: "pylint . --fail-under=9.4"
 
+  tests:
+    needs: prepare-python-env
+    uses: ./.github/workflows/python-check.yml
+    with:
+      package: "pytest pytest-asyncio"
+      command: "pytest"
+
   validate-hacs:
     runs-on: ubuntu-latest
     steps:
