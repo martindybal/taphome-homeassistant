@@ -4,12 +4,14 @@ from dataclasses import dataclass, field
 import logging
 import typing
 
+from aiohttp.web import Request
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN
 from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
 from homeassistant.components.cover import DOMAIN as COVER_DOMAIN
+from homeassistant.components.event import DOMAIN as EVENT_DOMAIN
 from homeassistant.components.fan import DOMAIN as FAN_DOMAIN
 from homeassistant.components.humidifier import DOMAIN as HUMIDIFIER_DOMAIN
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
@@ -19,7 +21,7 @@ from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.components.time import DOMAIN as TIME_DOMAIN
 from homeassistant.components.valve import DOMAIN as VALVE_DOMAIN
 from homeassistant.components.webhook import async_register as async_register_webhook
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigType
 from homeassistant.const import (
     CONF_BINARY_SENSORS,
     CONF_COVERS,
@@ -34,10 +36,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.discovery import load_platform
 
-from .add_entry_request import AddEntryRequest
-from .binary_sensor import BinarySensorConfigEntry
-from .button import ButtonConfigEntry
-from .climate import ClimateConfigEntry
+from .binary_sensor import BinarySensorEntityConfig
+from .button import TapHomeButtonConfig
+from .climate import TapHomeClimateConfig
 from .const import (
     AVAILABLE_ATTRIBUTES,
     CONF_API_URL,
@@ -47,24 +48,32 @@ from .const import (
     CONF_ENABLED_ATTRIBUTES,
     CONF_FAN,
     CONF_HUMIDIFIER,
+    CONF_LABELS,
     CONF_LANGUAGE,
     CONF_MULTIVALUE_SWITCHES,
     CONF_TIMES,
     CONF_UPDATE_INTERVAL,
     CONF_VALVE,
+    CONF_ZONES,
     TAPHOME_PLATFORM,
     USE_DESCRIPTION_AS_ENTITY_ID,
     USE_DESCRIPTION_AS_NAME,
 )
-from .coordinator import TapHomeDataUpdateCoordinator
-from .cover import CoverConfigEntry
-from .humidifier import HumidifierConfigEntry
-from .sensor import SensorConfigEntry
-from .switch import SwitchConfigEntry
-from .taphome_core_config_entry import TapHomeCoreConfigEntry
-from .taphome_entity import TapHomeConfigEntry
-from .legacy_taphome_sdk import TapHomeApiService, TapHomeHttpClientFactory
-from .valve import ValveConfigEntry
+from .cover import TapHomeCoverConfig
+from .fan import TapHomeFanConfig
+from .humidifier import TapHomeHumidifierConfig
+from .light import TapHomeLightConfig
+from .sensor import TapHomeSensorConfig
+from .switch import TapHomeSwitchConfig
+from .taphome_config_entry import (
+    AddEntryRequest,
+    NameMapping,
+    TapHomeCoreConfig,
+    TapHomeEntityConfig,
+)
+from .taphome_issue_registry import TapHomeIssueRegistry
+from .taphome_sdk import HubConnectionState, TapHomeHub, TapHomeHubFactory
+from .valve import TapHomeValveConfig
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -116,6 +125,22 @@ CONFIG_SCHEMA = vol.Schema(
                             vol.Optional(CONF_UPDATE_INTERVAL): cv.positive_float,
                             vol.Optional(USE_DESCRIPTION_AS_ENTITY_ID): cv.boolean,
                             vol.Optional(USE_DESCRIPTION_AS_NAME): cv.boolean,
+                            vol.Optional(CONF_ZONES): vol.Any(
+                                None,
+                                {
+                                    str: vol.Any(
+                                        str, {vol.Required("ignore"): cv.boolean}
+                                    )
+                                },
+                            ),
+                            vol.Optional(CONF_LABELS): vol.Any(
+                                None,
+                                {
+                                    str: vol.Any(
+                                        str, {vol.Required("ignore"): cv.boolean}
+                                    )
+                                },
+                            ),
                             vol.Optional(
                                 CONF_ENABLED_ATTRIBUTES, default=AVAILABLE_ATTRIBUTES
                             ): cv.ensure_list,
@@ -145,7 +170,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass: HomeAssistant, config: ConfigEntry) -> bool:
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the TapHome integration."""
     if CONF_LANGUAGE in config[TAPHOME_PLATFORM]:
         _LOGGER.error(
@@ -164,19 +189,20 @@ async def async_setup(hass: HomeAssistant, config: ConfigEntry) -> bool:
 
     domains = [
         DomainDefinition(
-            BINARY_SENSOR_DOMAIN, CONF_BINARY_SENSORS, BinarySensorConfigEntry
+            BINARY_SENSOR_DOMAIN, CONF_BINARY_SENSORS, BinarySensorEntityConfig
         ),
-        DomainDefinition(BUTTON_DOMAIN, CONF_BUTTONS, ButtonConfigEntry),
-        DomainDefinition(CLIMATE_DOMAIN, CONF_CLIMATES, ClimateConfigEntry),
-        DomainDefinition(COVER_DOMAIN, CONF_COVERS, CoverConfigEntry),
-        DomainDefinition(LIGHT_DOMAIN, CONF_LIGHTS, TapHomeConfigEntry),
-        DomainDefinition(FAN_DOMAIN, CONF_FAN, TapHomeConfigEntry),
-        DomainDefinition(VALVE_DOMAIN, CONF_VALVE, ValveConfigEntry),
-        DomainDefinition(HUMIDIFIER_DOMAIN, CONF_HUMIDIFIER, HumidifierConfigEntry),
-        DomainDefinition(SELECT_DOMAIN, CONF_MULTIVALUE_SWITCHES, TapHomeConfigEntry),
-        DomainDefinition(SENSOR_DOMAIN, CONF_SENSORS, SensorConfigEntry),
-        DomainDefinition(SWITCH_DOMAIN, CONF_SWITCHES, SwitchConfigEntry),
-        DomainDefinition(TIME_DOMAIN, CONF_TIMES, TapHomeConfigEntry),
+        DomainDefinition(BUTTON_DOMAIN, CONF_BUTTONS, TapHomeButtonConfig),
+        DomainDefinition(EVENT_DOMAIN, CONF_BUTTONS, TapHomeButtonConfig),
+        DomainDefinition(CLIMATE_DOMAIN, CONF_CLIMATES, TapHomeClimateConfig),
+        DomainDefinition(COVER_DOMAIN, CONF_COVERS, TapHomeCoverConfig),
+        DomainDefinition(LIGHT_DOMAIN, CONF_LIGHTS, TapHomeLightConfig),
+        DomainDefinition(FAN_DOMAIN, CONF_FAN, TapHomeFanConfig),
+        DomainDefinition(VALVE_DOMAIN, CONF_VALVE, TapHomeValveConfig),
+        DomainDefinition(HUMIDIFIER_DOMAIN, CONF_HUMIDIFIER, TapHomeHumidifierConfig),
+        DomainDefinition(SELECT_DOMAIN, CONF_MULTIVALUE_SWITCHES, TapHomeEntityConfig),
+        DomainDefinition(SENSOR_DOMAIN, CONF_SENSORS, TapHomeSensorConfig),
+        DomainDefinition(SWITCH_DOMAIN, CONF_SWITCHES, TapHomeSwitchConfig),
+        DomainDefinition(TIME_DOMAIN, CONF_TIMES, TapHomeEntityConfig),
     ]
 
     for core_config in config[TAPHOME_PLATFORM][CONF_CORES]:
@@ -197,124 +223,127 @@ async def async_setup(hass: HomeAssistant, config: ConfigEntry) -> bool:
     return True
 
 
-def get_update_interval_default_value(api_url: str, webhook_id: str) -> int:
-    """Return polling interval in seconds based on API configuration."""
-    if webhook_id:
-        return 600
-    if "cloudapi.taphome.com" in api_url:
-        return 20
-    return 2  # local api
-
-
-def read_from_config_or_default(config: dict, key: str, default_value) -> typing.Any:
-    """Return ``config[key]`` if available otherwise ``default_value``."""
+def _read_from_config_or_default(config: dict, key: str, default_value) -> typing.Any:
     if key in config:
         return config[key]
     return default_value
 
 
-def map_config_entries(config_entry, platform_config: list) -> list[TapHomeConfigEntry]:
-    """Instantiate ``config_entry`` objects for each configuration item."""
-    return list(map(config_entry, platform_config))
-
-
-def map_add_entry_requests(
-    core_config_entry: TapHomeCoreConfigEntry,
-    config_entries: list[TapHomeConfigEntry],
-    coordinator: TapHomeDataUpdateCoordinator,
-    taphome_api_service: TapHomeApiService,
-) -> list[AddEntryRequest]:
-    """Create ``AddEntryRequest`` objects for each config entry."""
-    return [
-        AddEntryRequest(
-            core_config_entry,
-            config_entry,
-            config_entry.id,
-            coordinator,
-            taphome_api_service,
-        )
-        for config_entry in config_entries
-    ]
-
-
 async def _setup_core(
     hass: HomeAssistant, core_config: dict, domains: list[DomainDefinition]
 ) -> bool:
-    """Set up TapHome for one core configuration."""
     token = core_config[CONF_TOKEN]
 
-    core_id = read_from_config_or_default(core_config, CONF_ID, None)
-    use_description_as_entity_id = read_from_config_or_default(
+    core_id = _read_from_config_or_default(core_config, CONF_ID, None)
+    use_description_as_entity_id = _read_from_config_or_default(
         core_config, USE_DESCRIPTION_AS_ENTITY_ID, False
     )
-    use_description_as_name = read_from_config_or_default(
+    use_description_as_name = _read_from_config_or_default(
         core_config, USE_DESCRIPTION_AS_NAME, False
     )
+    zone_mapping = (
+        NameMapping.from_dict(core_config.get(CONF_ZONES))
+        if CONF_ZONES in core_config
+        else None
+    )
+    label_mapping = (
+        NameMapping.from_dict(core_config.get(CONF_LABELS))
+        if CONF_LABELS in core_config
+        else None
+    )
     enabled_attributes = tuple(
-        read_from_config_or_default(
+        _read_from_config_or_default(
             core_config, CONF_ENABLED_ATTRIBUTES, AVAILABLE_ATTRIBUTES
         )
     )
 
-    core_config_entry = TapHomeCoreConfigEntry(
+    core_config_entry = TapHomeCoreConfig(
         core_id,
         use_description_as_entity_id,
         use_description_as_name,
+        zone_mapping,
+        label_mapping,
         enabled_attributes,
     )
 
-    api_url = read_from_config_or_default(
+    api_url = _read_from_config_or_default(
         core_config, CONF_API_URL, "https://api.taphome.com/api/TapHomeApi/v1"
     )
-    webhook_id = read_from_config_or_default(core_config, CONF_WEBHOOK_ID, None)
-    update_interval = read_from_config_or_default(
-        core_config,
-        CONF_UPDATE_INTERVAL,
-        get_update_interval_default_value(api_url, webhook_id),
+    webhook_id = _read_from_config_or_default(core_config, CONF_WEBHOOK_ID, None)
+    update_interval = _read_from_config_or_default(
+        core_config, CONF_UPDATE_INTERVAL, None
     )
 
-    taphome_http_client = TapHomeHttpClientFactory().create(api_url, token)
-    taphome_api_service = TapHomeApiService(taphome_http_client)
-    coordinator = TapHomeDataUpdateCoordinator(
-        hass,
-        update_interval,
-        taphome_api_service=taphome_api_service,
-        core_id=core_id,
-    )
+    if update_interval is not None:
+        _LOGGER.error("Update interval is not supported anymore")
+
+    taphome_issue_registry = TapHomeIssueRegistry(hass, core_id)
+    hub: TapHomeHub
 
     try:
-        await coordinator.async_refresh()
+        hub = await TapHomeHubFactory.async_connect(
+            api_url,
+            token,
+        )
+        if hub.connection_state.value != HubConnectionState.CONNECTED:
+            _LOGGER.error("Failed to connect to TapHome Hub")
+            return False
+
+        def hub_connection_state_changed(
+            _: HubConnectionState, state: HubConnectionState
+        ) -> None:
+            """Handle changes in hub connection state."""
+            if state == HubConnectionState.CONNECTED:
+                taphome_issue_registry.try_delete_core_unavailable_issue()
+            else:
+                taphome_issue_registry.create_core_unavailable_issue()
+
+        hub.connection_state.changed += hub_connection_state_changed
+
     except NotImplementedError:
         return False
 
     if webhook_id:
         webhook_name = f"Taphome-{core_id}" if core_id else "Taphome"
+
+        async def async_handle_webhook(
+            _: HomeAssistant, webhook_id: str, request: Request
+        ) -> None:
+            _LOGGER.info("Taphome webhook triggered - webhook_id: %s", webhook_id)
+            await hub.async_handle_webhook(request)
+
         async_register_webhook(
-            hass,
-            TAPHOME_PLATFORM,
-            webhook_name,
-            webhook_id,
-            coordinator.async_handle_webhook,
+            hass, TAPHOME_PLATFORM, webhook_name, webhook_id, async_handle_webhook
         )
 
     hass.data[TAPHOME_PLATFORM] = {}
     for domain in domains:
         domain_config = core_config[domain.config_key]
 
-        config_entries = map_config_entries(domain.config_entry_type, domain_config)
-        exposed_config_entries = [
-            config_entry
-            for config_entry in config_entries
-            if coordinator.ensure_can_be_register_entity(config_entry.id)
-        ]
+        config_entries = _map_config_entries(domain.config_entry_type, domain_config)
 
-        core_add_entry_requests = map_add_entry_requests(
-            core_config_entry,
-            exposed_config_entries,
-            coordinator,
-            taphome_api_service,
+        core_add_entry_requests = _map_add_entry_requests(
+            hass, core_config_entry, config_entries, hub
         )
 
         domain.add_requests(core_add_entry_requests)
 
     return True
+
+
+def _map_config_entries(
+    config_entry_factory, platform_config: list
+) -> list[TapHomeEntityConfig]:
+    return list(map(config_entry_factory, platform_config))
+
+
+def _map_add_entry_requests(
+    hass: HomeAssistant,
+    core_config_entry: TapHomeCoreConfig,
+    config_entries: list[TapHomeEntityConfig],
+    hub: TapHomeHub,
+) -> list[AddEntryRequest]:
+    return [
+        AddEntryRequest(hass, core_config_entry, config_entry, hub)
+        for config_entry in config_entries
+    ]
