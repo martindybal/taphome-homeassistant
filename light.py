@@ -16,7 +16,7 @@ from homeassistant.core import HomeAssistant
 from .add_entry_request import add_taphome_entities
 from .coordinator import TapHomeDataUpdateCoordinator, UpdateTapHomeState
 from .taphome_entity import TapHomeConfigEntry, TapHomeCoreConfigEntry, TapHomeEntity
-from .taphome_sdk import LightService, LightState, SwitchStates, ValueType
+from .legacy_taphome_sdk import LightService, LightState, SwitchStates, ValueType
 
 
 class TapHomeLight(TapHomeEntity[LightState], LightEntity):

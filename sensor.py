@@ -39,7 +39,7 @@ from .taphome_entity import (
     TapHomeDataUpdateCoordinatorObject,
     TapHomeEntity,
 )
-from .taphome_sdk import TapHomeState, ValueType
+from .legacy_taphome_sdk import TapHomeState, ValueType
 
 _LOGGER = logging.getLogger(__name__)
 

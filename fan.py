@@ -25,7 +25,7 @@ from .taphome_entity import (
     TapHomeDataUpdateCoordinator,
     TapHomeEntity,
 )
-from .taphome_sdk import FanService, FanState, SwitchStates
+from .legacy_taphome_sdk import FanService, FanState, SwitchStates
 
 
 class TapHomeFan(TapHomeEntity[FanState], FanEntity):

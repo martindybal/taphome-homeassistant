@@ -23,7 +23,7 @@ from .taphome_entity import (
     TapHomeDataUpdateCoordinator,
     TapHomeEntity,
 )
-from .taphome_sdk import SwitchService, SwitchState, SwitchStates
+from .legacy_taphome_sdk import SwitchService, SwitchState, SwitchStates
 
 
 class SwitchConfigEntry(TapHomeConfigEntry):

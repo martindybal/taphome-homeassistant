@@ -11,7 +11,7 @@ from .const import CONF_TIMES
 from .coordinator import TapHomeDataUpdateCoordinator, UpdateTapHomeState
 from .taphome_core_config_entry import TapHomeCoreConfigEntry
 from .taphome_entity import TapHomeConfigEntry, TapHomeEntity
-from .taphome_sdk.time_service import TimeService, TimeState
+from .legacy_taphome_sdk.time_service import TimeService, TimeState
 
 _LOGGER = logging.getLogger(__name__)
 

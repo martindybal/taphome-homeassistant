@@ -17,7 +17,7 @@ from homeassistant.helpers.update_coordinator import (
 
 from .const import TAPHOME_PLATFORM
 from .taphome_issue_registry import TapHomeIssueRegistry
-from .taphome_sdk import Device, TapHomeApiService, TapHomeState
+from .legacy_taphome_sdk import Device, TapHomeApiService, TapHomeState
 
 _LOGGER = logging.getLogger(__name__)
 

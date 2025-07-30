@@ -26,7 +26,7 @@ from .taphome_entity import (
     TapHomeDataUpdateCoordinator,
     TapHomeEntity,
 )
-from .taphome_sdk import CoverService, CoverState
+from .legacy_taphome_sdk import CoverService, CoverState
 
 
 class CoverConfigEntry(TapHomeConfigEntry):

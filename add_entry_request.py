@@ -11,7 +11,7 @@ from .const import TAPHOME_PLATFORM
 from .coordinator import TapHomeDataUpdateCoordinator
 from .taphome_core_config_entry import TapHomeCoreConfigEntry
 from .taphome_entity import TapHomeConfigEntry, TapHomeEntity
-from .taphome_sdk import TapHomeApiService
+from .legacy_taphome_sdk import TapHomeApiService
 
 ConfigEntryT = TypeVar("ConfigEntryT", bound="TapHomeConfigEntry")
 

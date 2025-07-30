@@ -29,7 +29,7 @@ from .taphome_entity import (
     TapHomeEntity,
     callback,
 )
-from .taphome_sdk import (
+from .legacy_taphome_sdk import (
     MultiValueSwitchService,
     MultiValueSwitchState,
     SwitchService,

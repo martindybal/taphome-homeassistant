@@ -19,8 +19,8 @@ from .taphome_entity import (
     TapHomeDataUpdateCoordinator,
     TapHomeEntity,
 )
-from .taphome_sdk import ButtonAction, ButtonService, TapHomeState
-from .taphome_sdk.helpers import Helpers
+from .legacy_taphome_sdk import ButtonAction, ButtonService, TapHomeState
+from .legacy_taphome_sdk.helpers import Helpers
 
 
 class ButtonConfigEntry(TapHomeConfigEntry):

@@ -14,7 +14,7 @@ from .coordinator import (
     callback,
 )
 from .taphome_core_config_entry import TapHomeCoreConfigEntry
-from .taphome_sdk import OperationModes, ValueType
+from .legacy_taphome_sdk import OperationModes, ValueType
 
 
 class TapHomeConfigEntry:

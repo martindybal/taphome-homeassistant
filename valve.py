@@ -18,7 +18,7 @@ from .add_entry_request import add_taphome_entities
 from .const import CONF_VALVE
 from .coordinator import TapHomeDataUpdateCoordinator, UpdateTapHomeState
 from .taphome_entity import TapHomeConfigEntry, TapHomeCoreConfigEntry, TapHomeEntity
-from .taphome_sdk import SwitchStates, ValveService, ValveState
+from .legacy_taphome_sdk import SwitchStates, ValveService, ValveState
 
 
 class ValveConfigEntry(TapHomeConfigEntry):

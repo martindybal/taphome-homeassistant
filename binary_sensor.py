@@ -22,7 +22,7 @@ from .taphome_entity import (
     TapHomeEntity,
     callback,
 )
-from .taphome_sdk import TapHomeState, ValueType
+from .legacy_taphome_sdk import TapHomeState, ValueType
 
 
 class TapHomeIsAliveSensor(BinarySensorEntity):

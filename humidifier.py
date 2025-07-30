@@ -25,7 +25,12 @@ from .taphome_entity import (
     TapHomeDataUpdateCoordinator,
     TapHomeEntity,
 )
-from .taphome_sdk import HumidifierService, HumidifierState, SwitchStates, ValueType
+from .legacy_taphome_sdk import (
+    HumidifierService,
+    HumidifierState,
+    SwitchStates,
+    ValueType,
+)
 
 
 class HumidifierConfigEntry(TapHomeConfigEntry):

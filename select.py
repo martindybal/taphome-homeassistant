@@ -12,7 +12,11 @@ from .add_entry_request import add_taphome_entities
 from .const import CONF_MULTIVALUE_SWITCHES
 from .coordinator import TapHomeDataUpdateCoordinator, UpdateTapHomeState
 from .taphome_entity import TapHomeConfigEntry, TapHomeCoreConfigEntry, TapHomeEntity
-from .taphome_sdk import MultiValueSwitchService, MultiValueSwitchState, ValueType
+from .legacy_taphome_sdk import (
+    MultiValueSwitchService,
+    MultiValueSwitchState,
+    ValueType,
+)
 
 
 class TapHomeSelectOption:

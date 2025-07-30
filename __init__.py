@@ -63,7 +63,7 @@ from .sensor import SensorConfigEntry
 from .switch import SwitchConfigEntry
 from .taphome_core_config_entry import TapHomeCoreConfigEntry
 from .taphome_entity import TapHomeConfigEntry
-from .taphome_sdk import TapHomeApiService, TapHomeHttpClientFactory
+from .legacy_taphome_sdk import TapHomeApiService, TapHomeHttpClientFactory
 from .valve import ValveConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
