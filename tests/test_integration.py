@@ -6,11 +6,12 @@ import pytest
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-from taphome_sdk import Device, SwitchStates, ValueType  # noqa: E402
-
 homeassistant_spec = importlib.util.find_spec("homeassistant")
-if homeassistant_spec is None:
-    pytest.skip("homeassistant not installed", allow_module_level=True)
+aiohttp_spec = importlib.util.find_spec("aiohttp")
+if homeassistant_spec is None or aiohttp_spec is None:
+    pytest.skip("homeassistant or aiohttp not installed", allow_module_level=True)
+
+from taphome_sdk import Device, SwitchStates, ValueType  # noqa: E402
 
 # load integration as custom_components.taphome
 spec = importlib.util.spec_from_file_location(
