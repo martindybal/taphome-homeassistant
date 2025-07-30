@@ -19,6 +19,8 @@ CONF_BUTTONS = "buttons"
 CONF_TIMES = "times"
 USE_DESCRIPTION_AS_ENTITY_ID = "use_description_as_entity_id"
 USE_DESCRIPTION_AS_NAME = "use_description_as_name"
+USE_ZONES_AS_AREAS = "use_zones_as_areas"
+USE_CATEGORIES_AS_LABELS = "use_categories_as_labels"
 CONF_ENABLED_ATTRIBUTES = "enabled_attributes"
 
 # Attributes that can be exposed per entity

@@ -1,5 +1,33 @@
 # Changelog
 
+## 2025.8
+- Completely rewritten TapHome integration (SDK 2.0). The integration has been rebuilt on TapHome SDK 2.0, offering:
+    - A full code rewrite for cleaner, more maintainable architecture
+    - Smoother developer experience with simplified API methods
+    - Improved communication with TapHome Core for faster updates and fewer failures
+- Cover movement & direction detection
+  Covers now report not only when they’re moving but also the direction (opening vs. closing) for more precise automations.
+- `is_alive_sensor` enhancements
+  The “alive” sensor can now distinguish between local LAN and cloud connections, helping you monitor connectivity health.
+- Added button event entity using the same configuration as button entities.
+- Added raining binary sensor and rain counter sensor for precipitation monitoring.
+
+- New humidifier configuration options
+  You can now bind additional sensors/switches to your humidifier entity via:
+  - `action_id` – track current status of the device
+  - `switch_id` – toggle the device on/off
+  - `mode_id`   – The current active mode
+  - `humidity_sensor_id` – The current humidity measured by the device
+  - `device_class` – Set Home Assistant humidifier device class
+
+- New fan configuration options
+  - `preset_mode_id` – fan may have preset modes that automatically control the percentage speed or other functionality.
+
+- New light configuration options
+  - `effect_id` - allows defining a multi-value switch in a light’s configuration that can trigger individual effects or entire light scenes.
+
+- Added gas demand, water consumption, and water demand sensors.
+
 ## 2025.7
 - Added detection of cover movement based on the blindsIsMoving state to enable tracking of opening and closing directions.
 - Entity state attributes were added. This feature is enabled by default, and you can modify it via the `enabled_attributes` list in core configuration.

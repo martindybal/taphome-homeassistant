@@ -3,7 +3,7 @@
 from enum import Enum
 
 
-class SwitchStates(Enum):
+class SwitchState(Enum):
     """Possible states for a simple on/off switch."""
 
     OFF = 0

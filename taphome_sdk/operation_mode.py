@@ -3,7 +3,7 @@
 from enum import Enum
 
 
-class OperationModes(Enum):
+class OperationMode(Enum):
     """Known modes in which a device can operate."""
 
     NONE = 0

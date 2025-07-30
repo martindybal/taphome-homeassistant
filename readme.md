@@ -8,7 +8,7 @@
 - Fan - AO for air recuperation, HVAC dampers
 - Humidifiers - DO, AO
 - Lights - switch, brightness, RGB
-- Sensors - Humidity, Temperature, Variable, Motion, Generic reed contact, Electric counter (consumption, demand), Brightness, Co2, Wind speed, Pulse counter (total impulse, current hour impulse, frequency)
+- Sensors - Humidity, Temperature, Variable, Motion, Generic reed contact, Electric counter (consumption, demand), Gas demand, Water consumption, Water demand, Brightness, Co2, Wind speed, Pulse counter (total impulse, current hour impulse, frequency), Rainfall rate, Rain counter, Raining
 - Switches - power outlet, digital out
 - MultiValueSwitches
 - Valves - DO, AO
