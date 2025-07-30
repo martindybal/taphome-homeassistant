@@ -18,53 +18,70 @@ from homeassistant.helpers.entity_platform import (
 
 from .add_entry_request import add_taphome_entities
 from .const import CONF_FAN
-from .coordinator import UpdateTapHomeState
-from .taphome_entity import (
-    TapHomeConfigEntry,
-    TapHomeCoreConfigEntry,
-    TapHomeDataUpdateCoordinator,
-    TapHomeEntity,
+from .taphome_config_entry import AddEntryRequest, TapHomeEntityConfig
+from .taphome_entity import TapHomeEntity
+from .taphome_sdk import (
+    GenericOutputAdapter,
+    GenericOutputState,
+    MultiValueSwitchDevice,
+    MultiValueSwitchState,
 )
-from .legacy_taphome_sdk import FanService, FanState, SwitchStates
 
 
-class TapHomeFan(TapHomeEntity[FanState], FanEntity):
+class TapHomeFanConfig(TapHomeEntityConfig):
+    """Configuration for a TapHome fan device."""
+
+    def __init__(self, device_config: dict) -> None:
+        """Store config and extract fan settings."""
+        super().__init__(device_config)
+        self.preset_mode_id: int | None = self.get_optional("preset_mode_id", None)
+
+
+class TapHomeFan(TapHomeEntity, FanEntity):
     """Representation of an fan."""
 
     def __init__(
         self,
-        hass: HomeAssistant,
-        core_config: TapHomeCoreConfigEntry,
-        config_entry: TapHomeConfigEntry,
-        coordinator: TapHomeDataUpdateCoordinator,
-        fan_service: FanService,
+        config: AddEntryRequest[TapHomeFanConfig],
     ) -> None:
         """Initialize TapHome fan entity."""
-        super().__init__(
-            hass, core_config, config_entry, FAN_DOMAIN, coordinator, FanState
+        self._fan_device = config.hub.get_generic_output_capable_device(
+            config.entity.id
         )
-        self.fan_service = fan_service
+        self._fan_generic_output = GenericOutputAdapter(self._fan_device)
+        self._fan_generic_output.state_changed += self._on_fan_state_change
+
         self._attr_supported_features = (
-            FanEntityFeature.TURN_ON
-            | FanEntityFeature.TURN_OFF
-            | FanEntityFeature.SET_SPEED
+            FanEntityFeature.TURN_ON | FanEntityFeature.TURN_OFF
         )
 
-    @property
-    def is_on(self):
-        """Returns if the fan entity is on or not."""
-        if self.taphome_state is not None:
-            return self.taphome_state.switch_state == SwitchStates.ON
-        return None
+        if self._fan_generic_output.support_set_output_value():
+            self._attr_supported_features |= FanEntityFeature.SET_SPEED
 
-    @property
-    def percentage(self) -> int | None:
-        """Return the current speed."""
-        if self.taphome_state is not None:
-            return TapHomeEntity.convert_taphome_percentage_to_ha(
-                self.taphome_state.percentage
+        if config.entity.preset_mode_id:
+            self._preset_mode_device = config.hub.get_typed_device(
+                config.entity.preset_mode_id, MultiValueSwitchDevice
             )
-        return None
+            self._attr_supported_features |= FanEntityFeature.PRESET_MODE
+            self._attr_preset_modes = self._preset_mode_device.options
+            self._preset_mode_device.state.changed += self._on_preset_mode_change
+            self._schedule_update_when_changed(self._preset_mode_device)
+
+        super().__init__(config, self._fan_device, FAN_DOMAIN)
+
+    def _on_fan_state_change(
+        self, _: GenericOutputState | None, current_state: GenericOutputState
+    ) -> None:
+        """Handle fan state change event."""
+        self._attr_is_on = current_state.is_on
+        self._attr_percentage = self.convert_th_percentage_to_ha(
+            current_state.output_value
+        )
+
+    def _on_preset_mode_change(
+        self, _: MultiValueSwitchState | None, current_state: MultiValueSwitchState
+    ) -> None:
+        self._attr_preset_mode = self._preset_mode_device.selected_option
 
     async def async_turn_on(
         self,
@@ -73,28 +90,22 @@ class TapHomeFan(TapHomeEntity[FanState], FanEntity):
         **kwargs: Any,
     ) -> None:
         """Turn on the fan."""
-        async with UpdateTapHomeState(self) as state:
-            await self.fan_service.async_turn_on(self.taphome_device)
-            state.switch_state = SwitchStates.ON
+        await self._fan_generic_output.async_turn_on()
 
-    async def async_turn_off(self, **kwargs: Any) -> None:
-        """Turn the fan off."""
-        async with UpdateTapHomeState(self) as state:
-            await self.fan_service.async_turn_off(self.taphome_device)
-            state.switch_state = SwitchStates.OFF
+        if percentage is not None:
+            await self.async_set_percentage(percentage)
+        else:
+            await self._fan_generic_output.async_turn_on()
 
     async def async_set_percentage(self, percentage: int) -> None:
         """Set the speed percentage of the fan."""
-        percentage = TapHomeEntity.convert_ha_percentage_to_taphome(percentage)
+        await self._fan_generic_output.async_set_output_value(
+            self.convert_ha_percentage_to_th(percentage)
+        )
 
-        async with UpdateTapHomeState(self) as state:
-            await self.fan_service.async_set_percentage(self.taphome_device, percentage)
-
-            if percentage is not None:
-                state.percentage = percentage
-                state.switch_state = (
-                    SwitchStates.OFF if percentage == 0 else SwitchStates.ON
-                )
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turn off the fan."""
+        await self._fan_generic_output.async_turn_off()
 
 
 def setup_platform(
@@ -104,4 +115,4 @@ def setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the switch platform."""
-    add_taphome_entities(hass, add_entities, CONF_FAN, FanService, TapHomeFan)
+    add_taphome_entities(hass, add_entities, CONF_FAN, TapHomeFan)

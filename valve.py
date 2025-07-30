@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from homeassistant.components.valve import (
     DOMAIN as VALVE_DOMAIN,
+    ValveDeviceClass,
     ValveEntity,
     ValveEntityFeature,
 )
@@ -16,98 +17,80 @@ from homeassistant.helpers.entity_platform import (
 
 from .add_entry_request import add_taphome_entities
 from .const import CONF_VALVE
-from .coordinator import TapHomeDataUpdateCoordinator, UpdateTapHomeState
-from .taphome_entity import TapHomeConfigEntry, TapHomeCoreConfigEntry, TapHomeEntity
-from .legacy_taphome_sdk import SwitchStates, ValveService, ValveState
+from .taphome_config_entry import AddEntryRequest, TapHomeEntityConfig
+from .taphome_entity import TapHomeEntity
+from .taphome_sdk import (
+    BidirectionalDeviceState,
+    GenericOutputAdapter,
+    GenericOutputState,
+    PositionState,
+)
 
 
-class ValveConfigEntry(TapHomeConfigEntry):
-    """Configuration options for TapHome valve devices."""
+class TapHomeValveConfig(TapHomeEntityConfig):
+    """Configuration for a TapHome valve device."""
 
     def __init__(self, device_config: dict) -> None:
-        """Initialize valve config entry."""
+        """Store config and extract valve limits."""
         super().__init__(device_config)
-        self._device_class = self.get_optional("device_class", None)
-
-    @property
-    def device_class(self):
-        """Return Home Assistant valve device class if configured."""
-        return self._device_class
+        self.device_class: ValveDeviceClass = self.get_optional("device_class", None)
 
 
-class TapHomeValve(TapHomeEntity[ValveState], ValveEntity):
+class TapHomeValve(TapHomeEntity, ValveEntity):
     """Representation of an valve."""
 
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        core_config: TapHomeCoreConfigEntry,
-        config_entry: ValveConfigEntry,
-        coordinator: TapHomeDataUpdateCoordinator,
-        valve_service: ValveService,
-    ) -> None:
+    def __init__(self, config: AddEntryRequest[TapHomeValveConfig]) -> None:
         """Initialize TapHome valve entity."""
-        super().__init__(
-            hass, core_config, config_entry, VALVE_DOMAIN, coordinator, ValveState
-        )
-        self.valve_service = valve_service
-        self._device_class = config_entry.device_class
 
+        self._valve_device = config.hub.get_generic_output_capable_device(
+            config.entity.id
+        )
+        self._valve_generic_output = GenericOutputAdapter(self._valve_device)
+        self._valve_generic_output.state_changed += self._on_valve_state_change
+
+        self._attr_reports_position = True
+        self._attr_device_class = config.entity.device_class
         self._attr_supported_features = (
             ValveEntityFeature.OPEN | ValveEntityFeature.CLOSE
         )
-        if self.valve_service.support_set_position(self.taphome_device):
-            self._attr_supported_features = (
-                self._attr_supported_features | ValveEntityFeature.SET_POSITION
-            )
 
-    @property
-    def device_class(self):
-        """Return the class of this device, from component DEVICE_CLASSES."""
-        return self._device_class
+        if self._valve_generic_output.support_set_output_value():
+            self._attr_supported_features |= ValveEntityFeature.SET_POSITION
 
-    @property
-    def reports_position(self) -> bool:
-        """Return True if entity reports position, False otherwise."""
-        return self.valve_service.support_set_position(self.taphome_device)
+        super().__init__(config, self._valve_device, VALVE_DOMAIN)
 
-    @property
-    def is_closed(self) -> bool | None:
-        """Return if the valve is closed or not."""
-        if self.taphome_state is not None:
-            return self.taphome_state.switch_state == SwitchStates.OFF
-        return None
+    def _on_valve_state_change(
+        self, _: GenericOutputState | None, current_state: GenericOutputState
+    ) -> None:
+        """Handle valve state change event."""
+        self._attr_current_valve_position = self.convert_th_percentage_to_ha(
+            current_state.output_value
+        )
 
-    @property
-    def current_valve_position(self) -> int | None:
-        """Return current position of valve."""
-        if self.taphome_state is not None and self.valve_service.support_set_position(
-            self.taphome_device
-        ):
-            return TapHomeEntity.convert_taphome_percentage_to_ha(
-                self.taphome_state.percentage
-            )
-        return None
+        match current_state.device_state:
+            case BidirectionalDeviceState() as bidirectional_state:
+                position_state = bidirectional_state.get_position_state()
+                self._attr_is_closed = position_state == PositionState.CLOSED
+                self._attr_is_opening = position_state == PositionState.OPENING
+                self._attr_is_closing = position_state == PositionState.CLOSING
+            case _:
+                self._attr_is_closed = not current_state.is_on
 
     async def async_open_valve(self) -> None:
-        """Open the valve if supported."""
+        """Open the valve."""
         # After turning on, the last value is ignored and 100 % is used.
         # This behaviour is not desired.
-        await self.valve_service.async_turn_on(self.taphome_device)
+        await self._valve_generic_output.async_turn_on()
 
     async def async_close_valve(self) -> None:
-        """For valves that can set position, this method should be left unimplemented and only set_valve_position is required."""
-        await self.valve_service.async_turn_off(self.taphome_device)
+        """Close the valve."""
+        await self._valve_generic_output.async_turn_off()
 
     async def async_set_valve_position(self, position: int) -> None:
         """Move the valve to a specific position."""
-        position = TapHomeEntity.convert_ha_percentage_to_taphome(position)
-
-        async with UpdateTapHomeState(self) as state:
-            await self.valve_service.async_set_percentage(self.taphome_device, position)
-
-            if position is not None:
-                state.percentage = position
+        await self._valve_generic_output.async_set_output_value(
+            self.convert_ha_percentage_to_th(position)
+        )
 
 
 def setup_platform(
@@ -116,11 +99,5 @@ def setup_platform(
     add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up the switch platform."""
-    add_taphome_entities(
-        hass,
-        add_entities,
-        CONF_VALVE,
-        ValveService,
-        TapHomeValve,
-    )
+    """Set up the valve platform."""
+    add_taphome_entities(hass, add_entities, CONF_VALVE, TapHomeValve)
