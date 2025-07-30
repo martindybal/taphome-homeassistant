@@ -13,12 +13,12 @@ if homeassistant_spec is None or aiohttp_spec is None:
 
 from taphome_sdk import Device, SwitchStates, ValueType  # noqa: E402
 
-# load integration as custom_components.taphome
+# load integration as package "taphome" so relative imports work
 spec = importlib.util.spec_from_file_location(
-    "custom_components.taphome", "__init__.py"
+    "taphome", "__init__.py", submodule_search_locations=[str(ROOT)]
 )
 taphome = importlib.util.module_from_spec(spec)
-sys.modules["custom_components.taphome"] = taphome
+sys.modules["taphome"] = taphome
 spec.loader.exec_module(taphome)
 
 class FakeTapHomeApiService:
