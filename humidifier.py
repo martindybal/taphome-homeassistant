@@ -133,7 +133,7 @@ class TapHomeHumidifier(TapHomeEntity, HumidifierEntity):
     def _on_action_change(
         self,
         _: MultiValueSwitchState | None,
-        current_state: MultiValueSwitchState,
+        _current_state: MultiValueSwitchState,
     ) -> None:
         self._attr_action = (
             None
@@ -144,7 +144,7 @@ class TapHomeHumidifier(TapHomeEntity, HumidifierEntity):
     def _on_mode_change(
         self,
         _: MultiValueSwitchState | None,
-        current_state: MultiValueSwitchState,
+        _current_state: MultiValueSwitchState,
     ) -> None:
         self._attr_mode = self._mode_device.selected_option
 
@@ -178,9 +178,9 @@ class TapHomeHumidifier(TapHomeEntity, HumidifierEntity):
 
 def setup_platform(
     hass: HomeAssistant,
-    config: ConfigType,
+    _config: ConfigType,
     add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+    _discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the humidifier platform."""
     add_taphome_entities(hass, add_entities, CONF_HUMIDIFIER, TapHomeHumidifier)

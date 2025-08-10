@@ -132,9 +132,9 @@ class TapHomeCover(TapHomeEntity, CoverEntity):
 
 def setup_platform(
     hass: HomeAssistant,
-    config: ConfigType,
+    _config: ConfigType,
     add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+    _discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the cover platform."""
     add_taphome_entities(hass, add_entities, CONF_COVERS, TapHomeCover)

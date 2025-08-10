@@ -62,9 +62,9 @@ class TapHomeSwitch(TapHomeEntity, SwitchEntity):
 
 def setup_platform(
     hass: HomeAssistant,
-    config: ConfigType,
+    _config: ConfigType,
     add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+    _discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the switch platform."""
     add_taphome_entities(hass, add_entities, CONF_SWITCHES, TapHomeSwitch)

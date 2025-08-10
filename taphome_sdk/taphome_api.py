@@ -371,7 +371,7 @@ class TapHomeApi:
         self.taphome_http_client = _TapHomeHttpClient(api_url, token)
 
     async def async_discovery_devices(self) -> DiscoveryResponse | None:
-        """Returns the currently exposed devices under 'Exposed devices', 'TapHome API' in TapHome application."""
+        """Return devices exposed under 'Exposed devices' > 'TapHome API' in the app."""
         return await self.taphome_http_client.async_api_get(
             DiscoveryResponse, "discovery"
         )
