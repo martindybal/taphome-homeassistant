@@ -39,7 +39,7 @@ class FromDictProtocol[ResponseT](Protocol):
     @classmethod
     def from_dict(cls, data: dict) -> ResponseT:
         """Create an instance of the class from a dictionary."""
-        ...
+        raise NotImplementedError
 
 
 def set_interval_async(
@@ -47,9 +47,9 @@ def set_interval_async(
 ) -> asyncio.Task:
     """Schedule `func(*args, **kwargs)` every `interval` seconds in asyncio."""
 
-    async def priodic_execute() -> None:
+    async def periodic_execute() -> None:
         while True:
             await asyncio.sleep(interval.total_seconds())
             await func(*args, **kwargs)
 
-    return asyncio.create_task(priodic_execute())
+    return asyncio.create_task(periodic_execute())

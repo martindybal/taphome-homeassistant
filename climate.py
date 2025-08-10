@@ -102,8 +102,8 @@ class HvacController(ABC):
 
     def __init__(
         self,
-        hub: TapHomeHub,
-        hvac_action_id: int | None,
+        _hub: TapHomeHub,
+        _hvac_action_id: int | None,
     ) -> None:
         """Initialize a TapHome HVAC controller."""
         self.hvac_action: ObservableValue[HVACAction | None] = ObservableValue(None)
@@ -420,7 +420,7 @@ class TapHomeClimateBase(TapHomeEntity, ClimateEntity, ABC):
         self.schedule_update_ha_state()
 
     def _on_preset_mode_change(
-        self, _: MultiValueSwitchState | None, current_state: MultiValueSwitchState
+        self, _: MultiValueSwitchState | None, _current_state: MultiValueSwitchState
     ) -> None:
         self._attr_preset_mode = self._preset_mode_device.selected_option
 
@@ -481,7 +481,8 @@ class TapHomeRangeClimate(TapHomeClimateBase):
             or not config.entity.range_high_thermostat_id
         ):
             raise ValueError(
-                "Both range_low_thermostat_id and range_high_thermostat_id must be set for TapHomeRangeClimate."
+                "Both range_low_thermostat_id and range_high_thermostat_id "
+                "must be set for TapHomeRangeClimate."
             )
 
         self.high_thermostat = config.hub.get_typed_device(
@@ -527,15 +528,16 @@ def _create_climate_entity(
         return TapHomeClimate(config)
     raise ValueError(
         "Invalid configuration for TapHome climate entity. "
-        "Both range_high_thermostat_id and range_low_thermostat_id must be set or both must be None."
+        "Both range_high_thermostat_id and range_low_thermostat_id must be "
+        "set or both must be None."
     )
 
 
 def setup_platform(
     hass: HomeAssistant,
-    config: ConfigType,
+    _config: ConfigType,
     add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+    _discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the switch platform."""
     add_taphome_entities(hass, add_entities, CONF_CLIMATES, _create_climate_entity)

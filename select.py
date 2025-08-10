@@ -38,7 +38,7 @@ class TapHomeSelect(TapHomeEntity, SelectEntity):
     def _on__multi_value_switch_state_change(
         self,
         _: MultiValueSwitchState | None,
-        current_state: MultiValueSwitchState,
+        _current_state: MultiValueSwitchState,
     ) -> None:
         self._attr_current_option = self._multi_value_switch.selected_option
 
@@ -49,9 +49,9 @@ class TapHomeSelect(TapHomeEntity, SelectEntity):
 
 def setup_platform(
     hass: HomeAssistant,
-    config: ConfigType,
+    _config: ConfigType,
     add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+    _discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the switch platform."""
     add_taphome_entities(hass, add_entities, CONF_MULTIVALUE_SWITCHES, TapHomeSelect)

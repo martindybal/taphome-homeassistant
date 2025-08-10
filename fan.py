@@ -79,7 +79,7 @@ class TapHomeFan(TapHomeEntity, FanEntity):
         )
 
     def _on_preset_mode_change(
-        self, _: MultiValueSwitchState | None, current_state: MultiValueSwitchState
+        self, _: MultiValueSwitchState | None, _current_state: MultiValueSwitchState
     ) -> None:
         self._attr_preset_mode = self._preset_mode_device.selected_option
 
@@ -110,9 +110,9 @@ class TapHomeFan(TapHomeEntity, FanEntity):
 
 def setup_platform(
     hass: HomeAssistant,
-    config: ConfigType,
+    _config: ConfigType,
     add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+    _discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the switch platform."""
     add_taphome_entities(hass, add_entities, CONF_FAN, TapHomeFan)

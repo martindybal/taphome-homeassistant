@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from .taphome_sdk.taphome_api import ApiConnectionType
 from homeassistant.components.binary_sensor import (
     DOMAIN as BINARY_SENSOR_DOMAIN,
     BinarySensorDeviceClass,
@@ -28,6 +27,7 @@ from .taphome_sdk import (
     TapHomeHub,
     ValueType,
 )
+from .taphome_sdk.taphome_api import ApiConnectionType
 
 
 class TapHomeIsAliveSensor(BinarySensorEntity):
@@ -64,7 +64,7 @@ class TapHomeIsAliveSensor(BinarySensorEntity):
         self._attr_is_on = current_state == HubConnectionState.CONNECTED
 
     def _on_hub_connection_type_change(
-        self, old_type: ApiConnectionType | None, current_type: ApiConnectionType
+        self, _old_type: ApiConnectionType | None, current_type: ApiConnectionType
     ) -> None:
         """Handle hub connection state changes."""
         self._add_connection_type_attribute(current_type)
@@ -145,7 +145,10 @@ class TapHomeBinarySensor(TapHomeEntity, BinarySensorEntity):
     ) -> None:
         """Initialize TapHome binary sensor entity."""
         self._sensor_type = sensor_type
-        unique_id_determination = f"{BINARY_SENSOR_DOMAIN}.{self._sensor_type.value_type.name.replace('_', '')}"
+        unique_id_determination = (
+            f"{BINARY_SENSOR_DOMAIN}."
+            f"{self._sensor_type.value_type.name.replace('_', '')}"
+        )
 
         self._attr_device_class = sensor_type.device_class
 
