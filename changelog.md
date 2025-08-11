@@ -23,6 +23,28 @@
 - New fan configuration options
   - `preset_mode_id` – fan may have preset modes that automatically control the percentage speed or other functionality.
 
+- Climate entity configuration rewritten
+  - `hvac_switch_id` – digital output toggling the device on or off
+  - `hvac_mode` – fixed HVAC mode used with `hvac_switch_id`
+  - `hvac_mode_id` – multivalue switch providing selectable HVAC modes
+  - `hvac_action_id` – multivalue switch reporting current HVAC action
+  - `range_low_thermostat_id` / `range_high_thermostat_id` – thermostats for heat/cool range control
+  - `preset_mode_id` – multivalue switch with preset modes
+  - `fan_mode_id` – multivalue switch controlling fan mode
+  - `swing_mode_id` – multivalue switch controlling vertical swing
+  - `swing_horizontal_mode_id` – multivalue switch controlling horizontal swing
+  - `target_humidity_id` – analog output controlling desired humidity
+  - `min_humidity` / `max_humidity` – humidity limits for the humidifier
+  - `precision` – override temperature reporting precision
+
+  HVAC can be configured in several ways:
+  - `hvac_switch_id` + `hvac_mode` – static mode controlled by a switch
+  - `hvac_switch_id` + `hvac_mode_id` – switch combined with selectable modes. In case you control the valve that can heat or cool.
+  - `hvac_mode_id` only – modes control the device state directly
+  - no hvac fields – entity works in read‑only mode
+
+  Legacy keys (`thermostat`, `heat`, `cool`, `mode`, etc.) are still recognised and translated to the new options, so existing configurations remain functional.
+
 - New light configuration options
   - `effect_id` - allows defining a multi-value switch in a light’s configuration that can trigger individual effects or entire light scenes.
 

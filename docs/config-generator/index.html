@@ -131,6 +131,14 @@
                                 </option>
                             </datalist>
 
+                            <datalist v-bind:id="'analogOutputs' + taphomeCore.token">
+                                <option
+                                    v-for="device in taphomeCore.devices.filter(device => device.supportedValues.some(supportedValue => supportedValue.valueTypeId == TapHomeValueType.analogOutputValue))"
+                                    v-bind:value="device.deviceId">
+                                    {{ device.name }}
+                                </option>
+                            </datalist>
+
                             <div class="row mb-3">
                                 <label v-bind:for="'token' + taphomeCore.token" class="col-3 col-form-label">
                                     token
@@ -426,6 +434,84 @@
                                                         <small class="form-text">
                                                             Optional. Cooling switch
                                                         </small>
+                                                    </div>
+                                                </div>
+                                                <div class="row mt-3">
+                                                    <label
+                                                        v-bind:for="'climate-fan_mode_id-selector' + taphomeCore.token + device.deviceId"
+                                                        class="col-sm-5 col-form-label">fan_mode_id</label>
+                                                    <div class="col-sm-7">
+                                                        <input
+                                                            v-bind:id="'climate-fan_mode_id-selector' + taphomeCore.token + device.deviceId"
+                                                            class="form-select" v-model="device.climateFanModeId"
+                                                            v-bind:list="'multiValueSwitches' + taphomeCore.token" />
+                                                        <small class="form-text">Optional. Fan mode multivalue switch</small>
+                                                    </div>
+                                                </div>
+                                                <div class="row mt-3">
+                                                    <label
+                                                        v-bind:for="'climate-swing_mode_id-selector' + taphomeCore.token + device.deviceId"
+                                                        class="col-sm-5 col-form-label">swing_mode_id</label>
+                                                    <div class="col-sm-7">
+                                                        <input
+                                                            v-bind:id="'climate-swing_mode_id-selector' + taphomeCore.token + device.deviceId"
+                                                            class="form-select" v-model="device.climateSwingModeId"
+                                                            v-bind:list="'multiValueSwitches' + taphomeCore.token" />
+                                                        <small class="form-text">Optional. Vertical swing multivalue switch</small>
+                                                    </div>
+                                                </div>
+                                                <div class="row mt-3">
+                                                    <label
+                                                        v-bind:for="'climate-swing_horizontal_mode_id-selector' + taphomeCore.token + device.deviceId"
+                                                        class="col-sm-5 col-form-label">swing_horizontal_mode_id</label>
+                                                    <div class="col-sm-7">
+                                                        <input
+                                                            v-bind:id="'climate-swing_horizontal_mode_id-selector' + taphomeCore.token + device.deviceId"
+                                                            class="form-select" v-model="device.climateSwingHorizontalModeId"
+                                                            v-bind:list="'multiValueSwitches' + taphomeCore.token" />
+                                                        <small class="form-text">Optional. Horizontal swing multivalue switch</small>
+                                                    </div>
+                                                </div>
+                                                <div class="row mt-3">
+                                                    <label
+                                                        v-bind:for="'climate-target_humidity_id-selector' + taphomeCore.token + device.deviceId"
+                                                        class="col-sm-5 col-form-label">target_humidity_id</label>
+                                                    <div class="col-sm-7">
+                                                        <input
+                                                            v-bind:id="'climate-target_humidity_id-selector' + taphomeCore.token + device.deviceId"
+                                                            class="form-select" v-model="device.climateTargetHumidityId"
+                                                            v-bind:list="'analogOutputs' + taphomeCore.token" />
+                                                        <small class="form-text">Optional. Analog output controlling humidity</small>
+                                                    </div>
+                                                </div>
+                                                <div class="row mt-3">
+                                                    <label
+                                                        v-bind:for="'climate-min_humidity' + taphomeCore.token + device.deviceId"
+                                                        class="col-sm-5 col-form-label">min_humidity</label>
+                                                    <div class="col-sm-7">
+                                                        <input
+                                                            v-bind:id="'climate-min_humidity' + taphomeCore.token + device.deviceId"
+                                                            class="form-control" v-model="device.climateMinHumidity" />
+                                                    </div>
+                                                </div>
+                                                <div class="row mt-3">
+                                                    <label
+                                                        v-bind:for="'climate-max_humidity' + taphomeCore.token + device.deviceId"
+                                                        class="col-sm-5 col-form-label">max_humidity</label>
+                                                    <div class="col-sm-7">
+                                                        <input
+                                                            v-bind:id="'climate-max_humidity' + taphomeCore.token + device.deviceId"
+                                                            class="form-control" v-model="device.climateMaxHumidity" />
+                                                    </div>
+                                                </div>
+                                                <div class="row mt-3">
+                                                    <label
+                                                        v-bind:for="'climate-precision' + taphomeCore.token + device.deviceId"
+                                                        class="col-sm-5 col-form-label">precision</label>
+                                                    <div class="col-sm-7">
+                                                        <input
+                                                            v-bind:id="'climate-precision' + taphomeCore.token + device.deviceId"
+                                                            class="form-control" v-model="device.climatePrecision" />
                                                     </div>
                                                 </div>
                                             </div>

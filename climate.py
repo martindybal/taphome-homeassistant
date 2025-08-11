@@ -24,6 +24,8 @@ from .const import CONF_CLIMATES
 from .taphome_config_entry import AddEntryRequest, TapHomeEntityConfig
 from .taphome_entity import TapHomeEntity
 from .taphome_sdk import (
+    AnalogOutputDevice,
+    AnalogOutputState,
     DigitalOutputDevice,
     MultiValueSwitchDevice,
     MultiValueSwitchState,
@@ -65,10 +67,17 @@ class TapHomeClimateConfig(TapHomeEntityConfig):
         )
 
         self.preset_mode_id: int | None = self.get_optional("preset_mode_id", None)
+        self.fan_mode_id: int | None = self.get_optional("fan_mode_id", None)
         self.swing_mode_id: int | None = self.get_optional("swing_mode_id", None)
         self.swing_horizontal_mode_id: int | None = self.get_optional(
             "swing_horizontal_mode_id", None
         )
+        self.target_humidity_id: int | None = self.get_optional(
+            "target_humidity_id", None
+        )
+        self.min_humidity: int | None = self.get_optional("min_humidity", None)
+        self.max_humidity: int | None = self.get_optional("max_humidity", None)
+        self.precision: float | None = self.get_optional("precision", None)
 
     @staticmethod
     def _backwards_compatibility(device_config):
@@ -429,6 +438,55 @@ class TapHomeClimateBase(TapHomeEntity, ClimateEntity, ABC):
             self._preset_mode_device.state.changed += self._on_preset_mode_change
             self._schedule_update_when_changed(self._preset_mode_device)
 
+        if config.entity.fan_mode_id:
+            self._fan_mode_device = config.hub.get_typed_device(
+                config.entity.fan_mode_id, MultiValueSwitchDevice
+            )
+            self._attr_supported_features |= ClimateEntityFeature.FAN_MODE
+            self._attr_fan_modes = self._fan_mode_device.options
+            self._fan_mode_device.state.changed += self._on_fan_mode_change
+            self._schedule_update_when_changed(self._fan_mode_device)
+
+        if config.entity.swing_mode_id:
+            self._swing_mode_device = config.hub.get_typed_device(
+                config.entity.swing_mode_id, MultiValueSwitchDevice
+            )
+            self._attr_supported_features |= ClimateEntityFeature.SWING_MODE
+            self._attr_swing_modes = self._swing_mode_device.options
+            self._swing_mode_device.state.changed += self._on_swing_mode_change
+            self._schedule_update_when_changed(self._swing_mode_device)
+
+        if config.entity.swing_horizontal_mode_id:
+            self._swing_horizontal_mode_device = config.hub.get_typed_device(
+                config.entity.swing_horizontal_mode_id, MultiValueSwitchDevice
+            )
+            self._attr_supported_features |= ClimateEntityFeature.SWING_HORIZONTAL_MODE
+            self._attr_swing_horizontal_modes = (
+                self._swing_horizontal_mode_device.options
+            )
+            self._swing_horizontal_mode_device.state.changed += (
+                self._on_swing_horizontal_mode_change
+            )
+            self._schedule_update_when_changed(self._swing_horizontal_mode_device)
+
+        if config.entity.target_humidity_id:
+            if config.entity.min_humidity is not None:
+                self._attr_min_humidity = config.entity.min_humidity
+            if config.entity.max_humidity is not None:
+                self._attr_max_humidity = config.entity.max_humidity
+            self._attr_supported_features |= ClimateEntityFeature.TARGET_HUMIDITY
+
+            self._target_humidity_device = config.hub.get_typed_device(
+                config.entity.target_humidity_id, AnalogOutputDevice
+            )
+            self._target_humidity_device.state.changed += (
+                self._on_target_humidity_change
+            )
+            self._schedule_update_when_changed(self._target_humidity_device)
+
+        if config.entity.precision is not None:
+            self._attr_precision = config.entity.precision
+
         super().__init__(config, thermostat, CLIMATE_DOMAIN)
 
     def _on_hvac_action_changed(self, _, hvac_action: HVACAction | None) -> None:
@@ -451,6 +509,50 @@ class TapHomeClimateBase(TapHomeEntity, ClimateEntity, ABC):
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
         await self._preset_mode_device.async_select_option(preset_mode)
+
+    def _on_fan_mode_change(
+        self, _: MultiValueSwitchState | None, current_state: MultiValueSwitchState
+    ) -> None:
+        self._attr_fan_mode = self._fan_mode_device.selected_option
+
+    async def async_set_fan_mode(self, fan_mode: str) -> None:
+        """Set new target fan mode."""
+        await self._fan_mode_device.async_select_option(fan_mode)
+
+    def _on_swing_mode_change(
+        self, _: MultiValueSwitchState | None, current_state: MultiValueSwitchState
+    ) -> None:
+        self._attr_swing_mode = self._swing_mode_device.selected_option
+
+    async def async_set_swing_mode(self, swing_mode: str) -> None:
+        """Set new target swing mode."""
+        await self._swing_mode_device.async_select_option(swing_mode)
+
+    def _on_swing_horizontal_mode_change(
+        self, _: MultiValueSwitchState | None, current_state: MultiValueSwitchState
+    ) -> None:
+        self._attr_swing_horizontal_mode = (
+            self._swing_horizontal_mode_device.selected_option
+        )
+
+    async def async_set_swing_horizontal_mode(self, swing_horizontal_mode: str) -> None:
+        """Set new target horizontal swing mode."""
+        await self._swing_horizontal_mode_device.async_select_option(
+            swing_horizontal_mode
+        )
+
+    def _on_target_humidity_change(
+        self, _: AnalogOutputState | None, current_state: AnalogOutputState
+    ) -> None:
+        self._attr_target_humidity = TapHomeEntity.convert_th_percentage_to_ha(
+            current_state.output_value
+        )
+
+    async def async_set_humidity(self, humidity: int) -> None:
+        """Set new target humidity."""
+        await self._target_humidity_device.async_set_output_value(
+            self.convert_ha_percentage_to_th(humidity)
+        )
 
     @final
     def _on_thermostat_state_change(
