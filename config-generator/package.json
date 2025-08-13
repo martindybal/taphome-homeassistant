@@ -1,0 +1,39 @@
+{
+  "name": "config-generator",
+  "version": "1.0.0",
+  "description": "TapHome to Home Assistant configuration generator",
+  "main": "src/main.ts",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "lint": "eslint .",
+    "test": "vitest"
+  },
+  "keywords": [
+    "taphome",
+    "home-assistant",
+    "generator"
+  ],
+  "author": "",
+  "license": "MIT",
+  "type": "module",
+  "dependencies": {
+    "bootstrap": "^5.3.7",
+    "js-yaml": "^4.1.0",
+    "vue": "^3.5.18"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.33.0",
+    "@typescript-eslint/eslint-plugin": "^8.39.1",
+    "@typescript-eslint/parser": "^8.39.1",
+    "@vitejs/plugin-vue": "^6.0.1",
+    "eslint": "^8.57.1",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-vue": "^9.33.0",
+    "jsdom": "^26.1.0",
+    "prettier": "^3.6.2",
+    "typescript": "^5.9.2",
+    "vite": "^7.1.2",
+    "vitest": "^3.2.4"
+  }
+}
