@@ -1,0 +1,28 @@
+name: Deploy config generator
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'docs/config-generator/**'
+      - '.github/workflows/deploy-config-generator.yml'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: docs/config-generator
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+      - run: npm ci
+      - run: npm run build
+      - uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: docs/config-generator/dist
+          destination_dir: config-generator

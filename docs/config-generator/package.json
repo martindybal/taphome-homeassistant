@@ -1,33 +1,22 @@
 {
-  "name": "taphome-homeassistant-config",
-  "version": "0.1.0",
+  "name": "config-generator",
   "private": true,
+  "version": "0.0.0",
+  "type": "module",
   "scripts": {
-    "bundle": "tsc",
-    "build": "tsc -w"
+    "dev": "vite",
+    "build": "vue-tsc -b && vite build",
+    "preview": "vite preview"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/martindybal/taphome-homeassistant-config.git"
+  "dependencies": {
+    "bootstrap": "^5.3.7",
+    "vue": "^3.5.18"
   },
-  "author": "Martin Dybal <martin@dybal.it> (https://dybal.it/)",
-  "license": "GPL v3 with Commons Clause",
-  "bugs": {
-    "url": "https://github.com/martindybal/taphome-homeassistant-config/issues"
-  },
-  "homepage": "https://www.dybal.it/taphome-homeassistant-config/",
-  "dependencies": {},
   "devDependencies": {
-    "typescript": "^4.2.4"
-  },
-  "browserslist": {
-    "production": [
-      "defaults",
-      "IE 11",
-      "not IE_Mob 11"
-    ],
-    "development": [
-      "defaults"
-    ]
+    "@vitejs/plugin-vue": "^6.0.1",
+    "@vue/tsconfig": "^0.7.0",
+    "typescript": "~5.8.3",
+    "vite": "^7.1.2",
+    "vue-tsc": "^3.0.5"
   }
 }
