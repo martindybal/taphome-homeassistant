@@ -8,9 +8,7 @@ export interface CoreCredentials {
 
 export class DiscoveryClient {
   async fetch(core: CoreCredentials): Promise<Device[]> {
-    const response = await fetch(`${core.apiUrl}/discovery`, {
-      headers: { Authorization: `Bearer ${core.token}` },
-    });
+    const response = await fetch(`https://api.taphome.com/api/TapHomeApi/v1/discovery?token=${core.token}`);
     if (!response.ok) {
       throw new Error('Failed to fetch discovery');
     }

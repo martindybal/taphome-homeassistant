@@ -10,7 +10,7 @@
     </thead>
     <tbody>
       <tr v-for="device in devices" :key="device.id">
-        <td>{{ device.id }}</td>
+        <td>{{ device.deviceId }}</td>
         <td>{{ device.name }}</td>
         <td>{{ device.usage }}</td>
         <td>{{ device.domain }}</td>
