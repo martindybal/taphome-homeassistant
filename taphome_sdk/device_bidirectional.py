@@ -1,6 +1,7 @@
 """TapHome Digital Output Device."""
 
 from dataclasses import dataclass
+from datetime import datetime, timedelta
 from enum import Enum
 
 from .device import Device, DeviceState, ValueType
@@ -19,17 +20,20 @@ class PositionState(Enum):
         return self.value
 
 
+MOVEMENT_PENDING_TIMEOUT = timedelta(seconds=10)
+
+
 class BidirectionalDeviceState(DeviceState):
     """State for a digital output device."""
 
     position: float | None = None
     tilt: float | None = None
 
-    _movement_pending: bool = False
+    _movement_pending_until: datetime | None = None
 
     def set_movement_pending(self) -> None:
         """TapHome didn't change BLINDS_IS_MOVING immediately."""
-        self._movement_pending = True
+        self._movement_pending_until = datetime.now() + MOVEMENT_PENDING_TIMEOUT
 
     def device_values_changed(self, initial: bool) -> None:
         """Update state attributes when device values change."""
@@ -37,7 +41,7 @@ class BidirectionalDeviceState(DeviceState):
         self.tilt = self.get_device_value(ValueType.BLINDS_SLOPE)
         is_moving = self.get_device_bool_value(ValueType.BLINDS_IS_MOVING)
         if is_moving:
-            self._movement_pending = False
+            self._movement_pending_until = None
 
     def get_inverted_position_state(
         self, close_threshold: float | None = None
@@ -65,7 +69,11 @@ class BidirectionalDeviceState(DeviceState):
         close_threshold = close_threshold or 0
         final_position_state = self._compute_final_position_state(close_threshold)
         is_moving = self.get_device_bool_value(ValueType.BLINDS_IS_MOVING)
-        if is_moving or self._movement_pending:
+        movement_pending = (
+            self._movement_pending_until is not None
+            and datetime.now() < self._movement_pending_until
+        )
+        if is_moving or movement_pending:
             return (
                 PositionState.CLOSING
                 if final_position_state is PositionState.CLOSED
