@@ -87,6 +87,13 @@ class TapHomeDevice {
     climateHeatingSwitchIdingCoolingModeId: number;
     climateHeatingSwitchId: number;
     climateCoolingSwitchId: number;
+    climateFanModeId: number;
+    climateSwingModeId: number;
+    climateSwingHorizontalModeId: number;
+    climateTargetHumidityId: number;
+    climateMinHumidity: number;
+    climateMaxHumidity: number;
+    climatePrecision: number;
 
     sensorUnitOfMeasurement: string;
     sensorStateClass: string;
@@ -175,7 +182,14 @@ class TapHomeDevice {
             this.climateMaxTemperature ||
             this.climateHeatingSwitchIdingCoolingModeId ||
             this.climateHeatingSwitchId ||
-            this.climateCoolingSwitchId) {
+            this.climateCoolingSwitchId ||
+            this.climateFanModeId ||
+            this.climateSwingModeId ||
+            this.climateSwingHorizontalModeId ||
+            this.climateTargetHumidityId ||
+            this.climateMinHumidity ||
+            this.climateMaxHumidity ||
+            this.climatePrecision) {
             let config = `\n        - id: ${this.deviceId}`
             if (this.climateMinTemperature) {
                 config += `\n          min_temperature: ${this.climateMinTemperature}`;
@@ -189,6 +203,27 @@ class TapHomeDevice {
                 config += `\n          heating_switch_id: ${this.climateHeatingSwitchId}`;
             } else if (this.climateCoolingSwitchId) {
                 config += `\n          cooling_switch_id: ${this.climateCoolingSwitchId}`;
+            }
+            if (this.climateFanModeId) {
+                config += `\n          fan_mode_id: ${this.climateFanModeId}`;
+            }
+            if (this.climateSwingModeId) {
+                config += `\n          swing_mode_id: ${this.climateSwingModeId}`;
+            }
+            if (this.climateSwingHorizontalModeId) {
+                config += `\n          swing_horizontal_mode_id: ${this.climateSwingHorizontalModeId}`;
+            }
+            if (this.climateTargetHumidityId) {
+                config += `\n          target_humidity_id: ${this.climateTargetHumidityId}`;
+            }
+            if (this.climateMinHumidity) {
+                config += `\n          min_humidity: ${this.climateMinHumidity}`;
+            }
+            if (this.climateMaxHumidity) {
+                config += `\n          max_humidity: ${this.climateMaxHumidity}`;
+            }
+            if (this.climatePrecision) {
+                config += `\n          precision: ${this.climatePrecision}`;
             }
             return config;
         }
