@@ -44,7 +44,7 @@ jobs:
     uses: ./.github/workflows/python-check.yml
     with:
       package: "pylint"
-      command: "pylint . --fail-under=9.4"
+      command: "pylint . --fail-under=9.5"
 
   validate-hacs:
     runs-on: ubuntu-latest

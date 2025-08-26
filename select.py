@@ -10,98 +10,41 @@ from homeassistant.helpers.entity_platform import (
 
 from .add_entry_request import add_taphome_entities
 from .const import CONF_MULTIVALUE_SWITCHES
-from .coordinator import TapHomeDataUpdateCoordinator, UpdateTapHomeState
-from .taphome_entity import TapHomeConfigEntry, TapHomeCoreConfigEntry, TapHomeEntity
-from .taphome_sdk import MultiValueSwitchService, MultiValueSwitchState, ValueType
+from .taphome_config_entry import AddEntryRequest, TapHomeEntityConfig
+from .taphome_entity import TapHomeEntity
+from .taphome_sdk import MultiValueSwitchDevice, MultiValueSwitchState
 
 
-class TapHomeSelectOption:
-    """Represent a selectable option value."""
-
-    def __init__(self, value: int, text: str) -> None:
-        """Store option ``value`` and display ``text``."""
-        self._value = value
-        self._text = text
-
-    @property
-    def value(self):
-        """Return raw option value sent to TapHome."""
-        return self._value
-
-    @property
-    def text(self):
-        """Return human readable option value."""
-        return self._text
-
-
-class TapHomeSelect(TapHomeEntity[MultiValueSwitchState], SelectEntity):
+class TapHomeSelect(TapHomeEntity, SelectEntity):
     """Representation of an select."""
 
     def __init__(
         self,
-        hass: HomeAssistant,
-        core_config: TapHomeCoreConfigEntry,
-        config_entry: TapHomeConfigEntry,
-        coordinator: TapHomeDataUpdateCoordinator,
-        multi_value_switch_service: MultiValueSwitchService,
+        config: AddEntryRequest[TapHomeEntityConfig],
     ) -> None:
         """Initialize TapHome select entity."""
-        super().__init__(
-            hass,
-            core_config,
-            config_entry,
-            SELECT_DOMAIN,
-            coordinator,
-            MultiValueSwitchState,
+
+        self._multi_value_switch = config.hub.get_typed_device(
+            config.entity.id, MultiValueSwitchDevice
         )
-        self.multi_value_switch_service = multi_value_switch_service
+        self._multi_value_switch.state.changed += (
+            self._on__multi_value_switch_state_change
+        )
 
-    @property
-    def taphome_options(self) -> list[TapHomeSelectOption]:
-        """Return list of available options from TapHome."""
-        if self.taphome_device is not None:
-            allowed_values = self.taphome_device.supported_values[
-                ValueType.MULTI_VALUE_SWITCH_STATE
-            ].allowed_values
-            return [
-                TapHomeSelectOption(value.value, value.name)
-                for value in filter(lambda value: value.is_enabled, allowed_values)
-            ]
-        return None
+        self._attr_options = self._multi_value_switch.options
 
-    @property
-    def options(self) -> list[str]:
-        """Return list of option texts for Home Assistant UI."""
-        if self.taphome_device is not None:
-            return [option.text for option in self.taphome_options]
-        return None
+        super().__init__(config, self._multi_value_switch, SELECT_DOMAIN)
 
-    @property
-    def current_option(self) -> str:
-        """Return text of the currently selected option."""
-        if self.taphome_state is not None:
-            return self.get_opinion_by_value(
-                self.taphome_state.multi_value_switch_state
-            ).text
-        return None
+    def _on__multi_value_switch_state_change(
+        self,
+        _: MultiValueSwitchState | None,
+        current_state: MultiValueSwitchState,
+    ) -> None:
+        self._attr_current_option = self._multi_value_switch.selected_option
 
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
-        taphome_option = self.get_opinion_by_text(option)
-
-        async with UpdateTapHomeState(self) as state:
-            await self.multi_value_switch_service.async_set_value(
-                taphome_option.value, self.taphome_device
-            )
-            state.multi_value_switch_state = taphome_option.value
-
-    def get_opinion_by_value(self, value: int) -> TapHomeSelectOption:
-        """Return option object matching ``value``."""
-        return next(option for option in self.taphome_options if option.value == value)
-
-    def get_opinion_by_text(self, text: str) -> TapHomeSelectOption:
-        """Return option object matching ``text``."""
-        return next(option for option in self.taphome_options if option.text == text)
+        await self._multi_value_switch.async_select_option(option)
 
 
 def setup_platform(
@@ -111,10 +54,4 @@ def setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the switch platform."""
-    add_taphome_entities(
-        hass,
-        add_entities,
-        CONF_MULTIVALUE_SWITCHES,
-        MultiValueSwitchService,
-        TapHomeSelect,
-    )
+    add_taphome_entities(hass, add_entities, CONF_MULTIVALUE_SWITCHES, TapHomeSelect)
