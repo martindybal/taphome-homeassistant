@@ -1,6 +1,7 @@
 # Changelog
 
 ## 2025.8
+- Added support for specifying the TapHome core using ``ip`` instead of the full ``api_url`` while keeping backward compatibility.
 - Completely rewritten TapHome integration (SDK 2.0). The integration has been rebuilt on TapHome SDK 2.0, offering:
     - A full code rewrite for cleaner, more maintainable architecture
     - Smoother developer experience with simplified API methods

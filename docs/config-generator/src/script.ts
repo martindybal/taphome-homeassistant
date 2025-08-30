@@ -257,6 +257,7 @@ class TapHomeDevice {
 class TapHomeCore {
     id: string;
     token: string;
+    ip: string;
     apiUrl: string;
     webhookId: string;
     devices: TapHomeDevice[];
@@ -274,7 +275,7 @@ class TapHomeCore {
             return "";
         }
 
-        let config = `    - ${this.idConfig()}token: ${this.token}${this.apiUrlConfig()}${this.webhookIdConfig()}`;
+        let config = `    - ${this.idConfig()}token: ${this.token}${this.ipConfig()}${this.apiUrlConfig()}${this.webhookIdConfig()}`;
         for (let entityType in HomeAssistantEntityType) {
             if (isNaN(Number(entityType))) {
                 config += `${this.entitiesConfig(selectedDevices, HomeAssistantEntityType[entityType])}`;
@@ -296,6 +297,13 @@ class TapHomeCore {
             return "";
         }
         return `\n      api_url: ${this.apiUrl}`;
+    }
+
+    private ipConfig() {
+        if (!this.ip) {
+            return "";
+        }
+        return `\n      ip: ${this.ip}`;
     }
 
     private webhookIdConfig() {
