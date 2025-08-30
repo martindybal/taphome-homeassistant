@@ -1,58 +1,11 @@
 # Changelog
 
 ## 2025.8
-- Added support for specifying the TapHome core using ``ip`` instead of the full ``api_url`` while keeping backward compatibility.
-- ``api_url`` takes precedence over ``ip`` when both are provided.
-- Conflicting ``ip`` and ``api_url`` configuration now creates an issue.
-- Completely rewritten TapHome integration (SDK 2.0). The integration has been rebuilt on TapHome SDK 2.0, offering:
-    - A full code rewrite for cleaner, more maintainable architecture
-    - Smoother developer experience with simplified API methods
-    - Improved communication with TapHome Core for faster updates and fewer failures
-- Cover movement & direction detection
-  Covers now report not only when they’re moving but also the direction (opening vs. closing) for more precise automations.
-- `is_alive_sensor` enhancements
-  The “alive” sensor can now distinguish between local LAN and cloud connections, helping you monitor connectivity health.
-- Added button event entity using the same configuration as button entities.
-- Added raining binary sensor and rain counter sensor for precipitation monitoring.
-
-- New humidifier configuration options
-  You can now bind additional sensors/switches to your humidifier entity via:
-  - `action_id` – track current status of the device
-  - `switch_id` – toggle the device on/off
-  - `mode_id`   – The current active mode
-  - `humidity_sensor_id` – The current humidity measured by the device
-  - `device_class` – Set Home Assistant humidifier device class
-
-- New fan configuration options
-  - `preset_mode_id` – fan may have preset modes that automatically control the percentage speed or other functionality.
-
-- Climate entity configuration rewritten
-  - `hvac_switch_id` – digital output toggling the device on or off
-  - `hvac_mode` – fixed HVAC mode used with `hvac_switch_id`
-  - `hvac_mode_id` – multivalue switch providing selectable HVAC modes
-  - `hvac_action_id` – multivalue switch reporting current HVAC action
-  - `range_low_thermostat_id` / `range_high_thermostat_id` – thermostats for heat/cool range control
-  - `preset_mode_id` – multivalue switch with preset modes
-  - `fan_mode_id` – multivalue switch controlling fan mode
-  - `swing_mode_id` – multivalue switch controlling vertical swing
-  - `swing_horizontal_mode_id` – multivalue switch controlling horizontal swing
-  - `target_humidity_id` – analog output controlling desired humidity
-  - `min_humidity` / `max_humidity` – humidity limits for the humidifier
-  - `precision` – override temperature reporting precision
-  - `target_temperature_step` - The supported step size a target temperature can be increased or decreased
-
-  HVAC can be configured in several ways:
-  - `hvac_switch_id` + `hvac_mode` – static mode controlled by a switch
-  - `hvac_switch_id` + `hvac_mode_id` – switch combined with selectable modes. In case you control the valve that can heat or cool.
-  - `hvac_mode_id` only – modes control the device state directly
-  - no hvac fields – entity works in read‑only mode
-
-  Legacy keys (`thermostat`, `heat`, `cool`, `mode`, etc.) are still recognised and translated to the new options, so existing configurations remain functional.
-
-- New light configuration options
-  - `effect_id` - allows defining a multi-value switch in a light’s configuration that can trigger individual effects or entire light scenes.
-
-- Added gas demand, water consumption, and water demand sensors.
+- Configure the TapHome core with `ip` or full `api_url`; conflicts raise an issue and `api_url` wins.
+- Integration rebuilt on TapHome SDK 2.0 for cleaner architecture and faster updates.
+- Added cover direction detection, button event entities, rain sensors, and gas/water consumption sensors.
+- Expanded options for humidifier, fan, climate, and light entities.
+- `is_alive_sensor` now distinguishes local and cloud connections.
 
 ## 2025.7
 - Added detection of cover movement based on the blindsIsMoving state to enable tracking of opening and closing directions.
