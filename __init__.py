@@ -267,15 +267,18 @@ async def _setup_core(
         label_mapping,
         enabled_attributes,
     )
+    taphome_issue_registry = TapHomeIssueRegistry(hass, core_id)
     ip = _read_from_config_or_default(core_config, CONF_IP, None)
     api_url = _read_from_config_or_default(core_config, CONF_API_URL, None)
-    if api_url is not None and ip is not None:
-        _LOGGER.warning("Both api_url and ip are set; using api_url")
-    elif api_url is None:
-        if ip is not None:
-            api_url = f"http://{ip}/api/TapHomeApi/v1"
-        else:
-            api_url = "https://api.taphome.com/api/TapHomeApi/v1"
+    if api_url and ip:
+        taphome_issue_registry.create_ip_and_api_url_set_issue()
+    else:
+        taphome_issue_registry.try_delete_ip_and_api_url_set_issue()
+        if api_url is None:
+            if ip is not None:
+                api_url = f"http://{ip}/api/TapHomeApi/v1"
+            else:
+                api_url = "https://api.taphome.com/api/TapHomeApi/v1"
     webhook_id = _read_from_config_or_default(core_config, CONF_WEBHOOK_ID, None)
     update_interval = _read_from_config_or_default(
         core_config, CONF_UPDATE_INTERVAL, None
@@ -284,7 +287,6 @@ async def _setup_core(
     if update_interval is not None:
         _LOGGER.error("Update interval is not supported anymore")
 
-    taphome_issue_registry = TapHomeIssueRegistry(hass, core_id)
     hub: TapHomeHub
 
     try:

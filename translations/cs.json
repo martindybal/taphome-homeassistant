@@ -7,6 +7,10 @@
     "core_unavailable": {
       "title": "Připojení k TapHome core{core_id} se nezdařilo",
       "description": "Home Assistant se nemůže spojit s TapHome core{core_id}."
+    },
+    "ip_and_api_url_set": {
+      "title": "Both api_url and ip set for core{core_id}",
+      "description": "Both api_url and ip are configured for core{core_id}. api_url will be used."
     }
   }
 }
