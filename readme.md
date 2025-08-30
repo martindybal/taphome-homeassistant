@@ -18,6 +18,8 @@
 - Time
 - Valve
 
+The changes are described in [changelog.md](/changelog.md).
+
 ## Installation
 
 ### Install with HACS (recommended)
