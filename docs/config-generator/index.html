@@ -175,17 +175,27 @@
                                 </div>
                             </div>
                             <div class="row mb-3">
+                                <label v-bind:for="'ip' + taphomeCore.token" class="col-3 col-form-label">
+                                    ip
+                                </label>
+                                <div class="col-9">
+                                    <input class="form-control" v-bind:id="'ip' + taphomeCore.token"
+                                        placeholder="192.168.1.3" v-model="taphomeCore.ip">
+                                    <small class="form-text">
+                                        Optional. IP address of your TapHome core.
+                                    </small>
+                                </div>
+                            </div>
+                            <div class="row mb-3">
                                 <label v-bind:for="'api_url' + taphomeCore.token" class="col-3 col-form-label">
                                     api_url
                                 </label>
                                 <div class="col-9">
                                     <input class="form-control" v-bind:id="'api_url' + taphomeCore.token"
-                                        placeholder="http://192.168.1.3/api/TapHomeApi/v1"
-                                        v-model="taphomeCore.apiUrl">
+                                        placeholder="http://192.168.1.3/api/TapHomeApi/v1" v-model="taphomeCore.apiUrl">
                                     <small class="form-text">
-                                        Optional. Local api is preferred way "http://192.168.1.3/api/TapHomeApi/v1".
-                                        Make sure that IP of your core will not change. 
-                                        In rare cases you can use https://api.taphome.com/api/TapHomeApi/v1/ with a lot of limitations.
+                                        Optional. Override the API URL. Use only if you need a custom address
+                                        such as the cloud API.
                                     </small>
                                 </div>
                             </div>

@@ -400,7 +400,7 @@ var TapHomeCore = /** @class */ (function () {
             if (selectedDevices.length === 0) {
                 return "";
             }
-            var config = "    - " + this.idConfig() + "token: " + this.token + this.apiUrlConfig() + this.webhookIdConfig();
+            var config = "    - " + this.idConfig() + "token: " + this.token + this.ipConfig() + this.apiUrlConfig() + this.webhookIdConfig();
             for (var entityType in HomeAssistantEntityType) {
                 if (isNaN(Number(entityType))) {
                     config += "" + this.entitiesConfig(selectedDevices, HomeAssistantEntityType[entityType]);
@@ -422,6 +422,12 @@ var TapHomeCore = /** @class */ (function () {
             return "";
         }
         return "\n      api_url: " + this.apiUrl;
+    };
+    TapHomeCore.prototype.ipConfig = function () {
+        if (!this.ip) {
+            return "";
+        }
+        return "\n      ip: " + this.ip;
     };
     TapHomeCore.prototype.webhookIdConfig = function () {
         if (!this.webhookId) {

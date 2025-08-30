@@ -42,6 +42,7 @@ from .climate import TapHomeClimateConfig
 from .const import (
     AVAILABLE_ATTRIBUTES,
     CONF_API_URL,
+    CONF_IP,
     CONF_BUTTONS,
     CONF_CLIMATES,
     CONF_CORES,
@@ -120,6 +121,7 @@ CONFIG_SCHEMA = vol.Schema(
                         {
                             vol.Required(CONF_TOKEN): cv.string,
                             vol.Optional(CONF_ID): cv.string,
+                            vol.Optional(CONF_IP): cv.string,
                             vol.Optional(CONF_API_URL): cv.string,
                             vol.Optional(CONF_WEBHOOK_ID): cv.string,
                             vol.Optional(CONF_UPDATE_INTERVAL): cv.positive_float,
@@ -265,10 +267,13 @@ async def _setup_core(
         label_mapping,
         enabled_attributes,
     )
-
-    api_url = _read_from_config_or_default(
-        core_config, CONF_API_URL, "https://api.taphome.com/api/TapHomeApi/v1"
-    )
+    ip = _read_from_config_or_default(core_config, CONF_IP, None)
+    api_url = _read_from_config_or_default(core_config, CONF_API_URL, None)
+    if api_url is None:
+        if ip is not None:
+            api_url = f"http://{ip}/api/TapHomeApi/v1"
+        else:
+            api_url = "https://api.taphome.com/api/TapHomeApi/v1"
     webhook_id = _read_from_config_or_default(core_config, CONF_WEBHOOK_ID, None)
     update_interval = _read_from_config_or_default(
         core_config, CONF_UPDATE_INTERVAL, None
