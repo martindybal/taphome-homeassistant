@@ -8,3 +8,4 @@ class Issues(StrEnum):
 
     DEVICE_NOT_EXPOSED = "device_not_exposed"
     CORE_UNAVAILABLE = "core_unavailable"
+    IP_AND_API_URL_SET = "ip_and_api_url_set"
