@@ -9,8 +9,8 @@
       "description": "Home Assistant non può comunicare con il TapHome core{core_id}."
     },
     "ip_and_api_url_set": {
-      "title": "Both api_url and ip set for core{core_id}",
-      "description": "Both api_url and ip are configured for core{core_id}. api_url will be used."
+      "title": "Sia api_url sia ip impostati per il core{core_id}",
+      "description": "Per il core{core_id} sono configurati sia api_url sia ip. Verrà utilizzato api_url."
     }
   }
 }

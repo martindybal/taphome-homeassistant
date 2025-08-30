@@ -9,8 +9,8 @@
       "description": "A Home Assistant nem tud kommunikálni a TapHome core{core_id} rendszerrel."
     },
     "ip_and_api_url_set": {
-      "title": "Both api_url and ip set for core{core_id}",
-      "description": "Both api_url and ip are configured for core{core_id}. api_url will be used."
+      "title": "Mind az api_url, mind az ip be van állítva a(z) core{core_id} számára",
+      "description": "A(z) core{core_id} konfigurációjában mind az api_url, mind az ip meg van adva. Az api_url kerül felhasználásra."
     }
   }
 }
