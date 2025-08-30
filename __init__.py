@@ -269,7 +269,9 @@ async def _setup_core(
     )
     ip = _read_from_config_or_default(core_config, CONF_IP, None)
     api_url = _read_from_config_or_default(core_config, CONF_API_URL, None)
-    if api_url is None:
+    if api_url is not None and ip is not None:
+        _LOGGER.warning("Both api_url and ip are set; using api_url")
+    elif api_url is None:
         if ip is not None:
             api_url = f"http://{ip}/api/TapHomeApi/v1"
         else:

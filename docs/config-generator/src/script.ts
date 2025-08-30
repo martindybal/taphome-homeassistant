@@ -300,7 +300,7 @@ class TapHomeCore {
     }
 
     private ipConfig() {
-        if (!this.ip) {
+        if (!this.ip || this.apiUrl) {
             return "";
         }
         return `\n      ip: ${this.ip}`;
