@@ -424,7 +424,7 @@ var TapHomeCore = /** @class */ (function () {
         return "\n      api_url: " + this.apiUrl;
     };
     TapHomeCore.prototype.ipConfig = function () {
-        if (!this.ip) {
+        if (!this.ip || this.apiUrl) {
             return "";
         }
         return "\n      ip: " + this.ip;
