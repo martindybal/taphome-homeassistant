@@ -33,7 +33,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import TAPHOME_PLATFORM
+from .add_entry_request import add_taphome_entities
 from .taphome_config_entry import AddEntryRequest, TapHomeEntityConfig
 from .taphome_entity import TapHomeEntity
 from .taphome_sdk import Device, DeviceState, ValueType
@@ -377,11 +377,4 @@ def setup_platform(
     _discovery_info=None,
 ) -> None:
     """Set up the sensor platform."""
-    add_entry_requests: list[AddEntryRequest] = hass.data[TAPHOME_PLATFORM][
-        CONF_SENSORS
-    ]
-
-    sensors: list[TapHomeSensor] = []
-    for config in add_entry_requests:
-        sensors.extend(create_entities(config))
-    add_entities(sensors)
+    add_taphome_entities(hass, add_entities, CONF_SENSORS, create_entities)
