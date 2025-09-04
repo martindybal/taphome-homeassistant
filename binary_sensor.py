@@ -22,8 +22,8 @@ from .taphome_config_entry import (
     TapHomeEntityConfig,
 )
 from .taphome_entity import TapHomeEntity
-from .taphome_sdk import Device, DeviceState, HubConnectionState, TapHomeHub, ValueType
-from .taphome_sdk.taphome_api import ApiConnectionType
+from taphome_sdk import Device, DeviceState, HubConnectionState, TapHomeHub, ValueType
+from taphome_sdk.taphome_api import ApiConnectionType
 
 
 class TapHomeIsAliveSensor(BinarySensorEntity):

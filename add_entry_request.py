@@ -10,7 +10,7 @@ from .const import TAPHOME_PLATFORM
 from .taphome_config_entry import AddEntryRequest, TapHomeEntityConfigT
 from .taphome_entity import TapHomeEntity
 from .taphome_issue_registry import TapHomeIssueRegistry
-from .taphome_sdk import DeviceNotExposedError
+from taphome_sdk import DeviceNotExposedError
 
 TapHomeEntityT = TypeVar("TapHomeEntityT", bound=TapHomeEntity)
 

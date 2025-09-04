@@ -1,2 +1,5 @@
 __pycache__/
 codex-apply.sh
+taphome-sdk/build/
+taphome-sdk/dist/
+taphome-sdk/src/taphome_sdk.egg-info/

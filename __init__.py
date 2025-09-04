@@ -73,7 +73,7 @@ from .taphome_config_entry import (
     TapHomeEntityConfig,
 )
 from .taphome_issue_registry import TapHomeIssueRegistry
-from .taphome_sdk import HubConnectionState, TapHomeHub, TapHomeHubFactory
+from taphome_sdk import HubConnectionState, TapHomeHub, TapHomeHubFactory
 from .valve import TapHomeValveConfig
 
 _LOGGER = logging.getLogger(__name__)
