@@ -14,6 +14,7 @@ from homeassistant.const import CONF_BINARY_SENSORS
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from .add_entry_request import add_taphome_entities
 from .const import TAPHOME_PLATFORM
 from .taphome_config_entry import (
     AddEntryRequest,
@@ -217,13 +218,14 @@ def setup_platform(
     _discovery_info=None,
 ) -> None:
     """Set up the binary sensor platform."""
-    add_entry_requests: list[AddEntryRequest[BinarySensorEntityConfig]] = hass.data[
-        TAPHOME_PLATFORM
-    ][CONF_BINARY_SENSORS]
-
     binary_sensors: list[BinarySensorEntity] = []
-    for config in add_entry_requests:
-        binary_sensors.extend(TapHomeBinarySensorFactory(config).create_entities())
+
+    add_taphome_entities(
+        hass,
+        binary_sensors.extend,
+        CONF_BINARY_SENSORS,
+        lambda config: TapHomeBinarySensorFactory(config).create_entities(),
+    )
 
     cores = {}
     for domain in hass.data[TAPHOME_PLATFORM]:
