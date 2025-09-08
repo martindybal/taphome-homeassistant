@@ -15,7 +15,7 @@ authors = [
 maintainers = [
     {name = "Martin Dybal", email = "martin@dybal.it"},
 ]
-keywords = ["taphome", "smart home", "home automation", "iot"]
+keywords = ["taphome", "home automation"]
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
