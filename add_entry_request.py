@@ -10,7 +10,7 @@ from .const import TAPHOME_PLATFORM
 from .taphome_config_entry import AddEntryRequest, TapHomeEntityConfigT
 from .taphome_entity import TapHomeEntity
 from .taphome_issue_registry import TapHomeIssueRegistry
-from .taphome_sdk import DeviceNotExposedError
+from .taphome_sdk import DeviceNotExposedError, DeviceTypeError
 
 TapHomeEntityT = TypeVar("TapHomeEntityT", bound=TapHomeEntity)
 
@@ -41,6 +41,15 @@ def add_taphome_entities(
             taphome_issue_registry = TapHomeIssueRegistry(hass, configuration.core.id)
             taphome_issue_registry.create_device_not_exposed_issue(
                 configuration.entity.id
+            )
+            continue
+        except DeviceTypeError as err:
+            taphome_issue_registry = TapHomeIssueRegistry(hass, configuration.core.id)
+            taphome_issue_registry.create_device_type_mismatch_issue(
+                configuration.entity.id,
+                err.device_type,
+                err.expected_device_types,
+                err.supported_values,
             )
             continue
 

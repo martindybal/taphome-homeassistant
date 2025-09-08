@@ -11,6 +11,10 @@
     "ip_and_api_url_set": {
       "title": "Pre core{core_id} sú nastavené api_url aj ip",
       "description": "Pre core{core_id} sú nakonfigurované hodnoty api_url aj ip. Použije sa api_url."
+    },
+    "device_type_mismatch": {
+      "title": "Nepodporovaný typ zariadenia {device_id} v core{core_id}",
+      "description": "Zariadenie {device_id} je typu {device_type} s podporovanými hodnotami [{supported_values}], očakávané: {expected}. Skontrolujte nastavenie TapHome."
     }
   }
 }

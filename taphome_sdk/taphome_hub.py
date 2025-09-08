@@ -49,6 +49,30 @@ class DeviceNotExposedError(Exception):
         )
 
 
+class DeviceTypeError(Exception):
+    """Unexpected device type returned for a TapHome device."""
+
+    def __init__(
+        self,
+        device_id: int,
+        device_class_name: str,
+        device_type: str,
+        supported_values: str,
+        expected_device_types: str,
+    ) -> None:
+        """Initialize the exception with the device ID and types."""
+        msg = (
+            f"Device with ID {device_id} is type {device_class_name} "
+            f"(device_type={device_type}, "
+            f"supported_values=[{supported_values}]) not one of: {expected_device_types}"
+        )
+        super().__init__(msg)
+        self.device_id = device_id
+        self.device_type = device_type
+        self.supported_values = supported_values
+        self.expected_device_types = expected_device_types
+
+
 class TapHomeHub:
     """TapHome Hub connection class."""
 
@@ -95,10 +119,17 @@ class TapHomeHub:
             raise DeviceNotExposedError(device_id)
 
         if not isinstance(device, device_types):
-            device_type = device.__class__.__name__
-            names = ", ".join(t.__name__ for t in device_types)
-            raise TypeError(
-                f"Device with ID {device_id} is type {device_type} not one of: {names}"
+            device_class_name = device.__class__.__name__
+            expected_device_types = ", ".join(t.__name__ for t in device_types)
+            supported_values = ", ".join(
+                value_type.name for value_type in device.supported_values
+            )
+            raise DeviceTypeError(
+                device_id,
+                device_class_name,
+                device.device_type,
+                supported_values,
+                expected_device_types,
             )
 
         return device

@@ -11,6 +11,10 @@
     "ip_and_api_url_set": {
       "title": "Both api_url and ip set for core{core_id}",
       "description": "Both api_url and ip are configured for core{core_id}. api_url will be used."
+    },
+    "device_type_mismatch": {
+      "title": "Unsupported type for device {device_id} in core{core_id}",
+      "description": "Device {device_id} is type {device_type} with supported values [{supported_values}] but expected: {expected}. Please check your TapHome setup."
     }
   }
 }

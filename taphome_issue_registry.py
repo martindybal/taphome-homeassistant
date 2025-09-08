@@ -67,8 +67,33 @@ class TapHomeIssueRegistry:
         issue_id = self._create_device_not_exposed_issue_id(taphome_device_id)
         self.try_delete_issue(issue_id)
 
+    def create_device_type_mismatch_issue(
+        self,
+        taphome_device_id: int,
+        device_type: str,
+        expected_device_types: str,
+        supported_values: str,
+    ) -> None:
+        issue_id = self._create_device_type_mismatch_issue_id(taphome_device_id)
+        self.create_issue(
+            issue_id,
+            is_fixable=False,
+            severity=IssueSeverity.ERROR,
+            translation_key=Issues.DEVICE_TYPE_MISMATCH,
+            translation_placeholders={
+                "device_id": str(taphome_device_id),
+                "device_type": device_type,
+                "expected": expected_device_types,
+                "supported_values": supported_values,
+                "core_id": self.core_id,
+            },
+        )
+
     def _create_device_not_exposed_issue_id(self, taphome_device_id):
         return f"{Issues.DEVICE_NOT_EXPOSED}_{taphome_device_id}"
+
+    def _create_device_type_mismatch_issue_id(self, taphome_device_id):
+        return f"{Issues.DEVICE_TYPE_MISMATCH}_{taphome_device_id}"
 
     def _create_core_unavailable_issue_id(self):
         return f"{Issues.CORE_UNAVAILABLE}_{self.core_id}"

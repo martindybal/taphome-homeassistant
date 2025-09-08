@@ -41,6 +41,7 @@ from .operation_mode import OperationMode
 from .taphome_api import ApiConnectionType
 from .taphome_hub import (
     DeviceNotExposedError,
+    DeviceTypeError,
     HubConnectionState,
     TapHomeHub,
     TapHomeHubFactory,

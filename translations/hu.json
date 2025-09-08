@@ -11,6 +11,10 @@
     "ip_and_api_url_set": {
       "title": "Mind az api_url, mind az ip be van állítva a(z) core{core_id} számára",
       "description": "A(z) core{core_id} konfigurációjában mind az api_url, mind az ip meg van adva. Az api_url kerül felhasználásra."
+    },
+    "device_type_mismatch": {
+      "title": "Nem támogatott eszköztípus {device_id} a(z) core{core_id} számára",
+      "description": "A(z) {device_id} azonosítójú eszköz típusa {device_type}, támogatott értékek [{supported_values}], várt: {expected}. Kérjük, ellenőrizze a TapHome beállításokat."
     }
   }
 }
