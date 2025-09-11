@@ -122,13 +122,22 @@ class BidirectionalDevice(Device[BidirectionalDeviceState]):
         """Set device to the provided ``position``."""
         if not self.supports_tilt:
             tilt = None
-
-        if self.state.position != position:
+        
+        if (
+            self.supports_value(ValueType.BLINDS_IS_MOVING)
+            and self.state.position != position
+        ):
             self.state.set_movement_pending()
 
         await self.async_set_device_values(
             {ValueType.BLINDS_LEVEL: position, ValueType.BLINDS_SLOPE: tilt}
         )
+
+        if not self.supports_value(ValueType.BLINDS_IS_MOVING):
+            self.state.apply_changes(
+                {ValueType.BLINDS_LEVEL: position, ValueType.BLINDS_SLOPE: tilt},
+                force=True,
+            )
 
     async def async_set_tilt(self, tilt: float) -> None:
         """Set device to the provided ``tilt``."""

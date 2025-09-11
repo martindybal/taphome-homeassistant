@@ -39,7 +39,7 @@ class DeviceFactory:
     ) -> Device | None:
         """Create a Device."""
 
-        if metadata.supports_values(ValueType.BLINDS_LEVEL, ValueType.BLINDS_IS_MOVING):
+        if metadata.supports_value(ValueType.BLINDS_LEVEL):
             return BidirectionalDevice.create(
                 api=api,
                 connection_type=connection_type,
