@@ -42,20 +42,23 @@ class TapHomeEntity(Entity):
             unique_id_core_id = (
                 f".{config.core.id}" if config.core.id is not None else ""
             )
-            # Build unique_id: use domain + unique_id_determination if provided
-            if unique_id_determination:
-                unique_id_suffix = f"{domain}.{unique_id_determination}"
-            else:
-                unique_id_suffix = domain
+            # Home Assistant 2026.2 requires entity IDs in format {domain}.{object_id}
+            # Build unique_id with domain + unique_id_determination for entities with variants
+            unique_id_suffix = (
+                f"{domain}.{unique_id_determination}" if unique_id_determination 
+                else domain
+            )
             self._attr_unique_id = f"taphome{unique_id_core_id}.{unique_id_suffix}.{taphome_device.id}".lower()
 
         if config.core.use_description_as_entity_id:
-            # Build entity_id using domain and optional unique_id_determination
+            # Home Assistant 2026.2 (PR #160302) enforces strict entity ID validation
+            # Entity IDs must be {domain}.{object_id} where domain cannot contain underscores
+            # Use slugify to convert "PRESS home_leave_button" to "press_home_leave_button"
             entity_id_format = domain + ".{}"
-            if unique_id_determination:
-                name = unique_id_determination.replace('.', ' ') + ' ' + taphome_device.description
-            else:
-                name = taphome_device.description
+            name = (
+                unique_id_determination.replace('.', ' ') + ' ' + taphome_device.description 
+                if unique_id_determination else taphome_device.description
+            )
             self.entity_id = async_generate_entity_id(
                 entity_id_format,
                 name,

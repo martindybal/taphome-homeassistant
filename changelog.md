@@ -1,5 +1,13 @@
 # Changelog
 
+## 2026.2
+- **Home Assistant 2026.2 Compatibility Fix**: Fixed entity ID format validation errors introduced in Home Assistant 2026.2 (PR #160302)
+  - Home Assistant now enforces strict entity ID validation requiring `{domain}.{object_id}` format
+  - Domain part cannot contain underscores or multiple dots
+  - Refactored `TapHomeEntity` constructor to accept separate `domain` and `unique_id_determination` parameters for cleaner code
+  - Entity IDs now correctly generated as `button.press_device_name` instead of invalid `button.PRESS.device_name`
+  - Unique IDs remain unchanged to preserve existing entity configurations and automations
+
 ## 2025.8
 - Configure the TapHome core with `ip` or full `api_url`; conflicts raise an issue and `api_url` wins.
 - Completely rewritten TapHome integration (SDK 2.0). The integration has been rebuilt on TapHome SDK 2.0, offering:
