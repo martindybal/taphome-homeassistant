@@ -150,14 +150,14 @@ class TapHomeBinarySensor(TapHomeEntity, BinarySensorEntity):
     ) -> None:
         """Initialize TapHome binary sensor entity."""
         self._sensor_type = sensor_type
-        unique_id_determination = f"{BINARY_SENSOR_DOMAIN}.{self._sensor_type.value_type.name.replace('_', '')}"
 
         self._attr_device_class = sensor_type.device_class
 
         self._device = config.hub.get_typed_device(config.entity.id, Device)
 
         self._device.state.changed += self._on_device_state_change
-        super().__init__(config, self._device, unique_id_determination)
+        super().__init__(config, self._device, BINARY_SENSOR_DOMAIN, 
+                        self._sensor_type.value_type.name.replace('_', ''))
 
     def _on_device_state_change(
         self, _: DeviceState | None, current_state: DeviceState
