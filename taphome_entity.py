@@ -24,7 +24,8 @@ class TapHomeEntity(Entity):
         self,
         config: AddEntryRequest[TapHomeEntityConfigT],
         taphome_device: Device,
-        unique_id_determination: str,
+        domain: str,
+        unique_id_determination: str | None = None,
     ) -> None:
         """Initialize shared entity state."""
         super().__init__()
@@ -41,15 +42,18 @@ class TapHomeEntity(Entity):
             unique_id_core_id = (
                 f".{config.core.id}" if config.core.id is not None else ""
             )
-            self._attr_unique_id = f"taphome{unique_id_core_id}.{unique_id_determination}.{taphome_device.id}".lower()
+            # Build unique_id: use domain + unique_id_determination if provided
+            unique_id_suffix = (
+                f"{domain}.{unique_id_determination}" if unique_id_determination 
+                else domain
+            )
+            self._attr_unique_id = f"taphome{unique_id_core_id}.{unique_id_suffix}.{taphome_device.id}".lower()
 
         if config.core.use_description_as_entity_id:
-            # Extract domain and build name for entity_id generation
-            # For "button.PRESS" + "device", slugify will create "button.press_device"
-            parts = unique_id_determination.split('.', 1)
-            entity_id_format = parts[0] + ".{}"
-            name = (parts[1].replace('.', ' ') + ' ' + taphome_device.description 
-                   if len(parts) > 1 else taphome_device.description)
+            # Build entity_id using domain and optional unique_id_determination
+            entity_id_format = domain + ".{}"
+            name = (unique_id_determination.replace('.', ' ') + ' ' + taphome_device.description 
+                   if unique_id_determination else taphome_device.description)
             self.entity_id = async_generate_entity_id(
                 entity_id_format,
                 name,

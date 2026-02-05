@@ -53,8 +53,7 @@ class TapHomeButton(TapHomeEntity, ButtonEntity):
         self._attr_device_class = config.entity.device_class
         self._action = action
 
-        unique_id_determination = f"{BUTTON_DOMAIN}.{action.name.replace('_', '')}"
-        super().__init__(config, self._button, unique_id_determination)
+        super().__init__(config, self._button, BUTTON_DOMAIN, action.name.replace('_', ''))
         self._add_state_attributes(
             "taphome_button_action",
             action,

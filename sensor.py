@@ -289,14 +289,11 @@ class TapHomeSensor(TapHomeEntity, SensorEntity):
         self._attr_state_class = sensor_type.state_class
         self._attr_native_unit_of_measurement = sensor_type.unit_of_measurement
 
-        unique_id_determination = (
-            f"{SENSOR_DOMAIN}.{self._sensor_type.value_type.name.replace('_', '')}"
-        )
-
         self._device = config.hub.get_typed_device(config.entity.id, Device)
 
         self._device.state.changed += self._on_device_state_change
-        super().__init__(config, self._device, unique_id_determination)
+        super().__init__(config, self._device, SENSOR_DOMAIN,
+                        self._sensor_type.value_type.name.replace('_', ''))
 
     def _on_device_state_change(
         self, _: DeviceState | None, current_state: DeviceState
