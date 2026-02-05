@@ -51,8 +51,11 @@ class TapHomeEntity(Entity):
             # 2. Prepend suffix to description (e.g., "PRESS" + "device" = "press_device")
             if '.' in unique_id_determination:
                 domain, suffix = unique_id_determination.split('.', 1)
+                # Sanitize suffix: replace dots with underscores to prevent multiple dots
+                # and ensure only valid characters
+                suffix_sanitized = suffix.lower().replace('.', '_')
                 # Prepend suffix to description to ensure uniqueness
-                modified_description = f"{suffix.lower()}_{taphome_device.description}"
+                modified_description = f"{suffix_sanitized}_{taphome_device.description}"
             else:
                 domain = unique_id_determination
                 modified_description = taphome_device.description
