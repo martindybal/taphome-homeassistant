@@ -44,6 +44,7 @@ class TapHomeEntity(Entity):
             self._attr_unique_id = f"taphome{unique_id_core_id}.{unique_id_determination}.{taphome_device.id}".lower()
 
         if config.core.use_description_as_entity_id:
+            # Home Assistant 2026.2 enforces strict entity ID validation 
             # Replace dots with underscores to ensure valid entity_id format
             # e.g., "button.PRESS" becomes "button_PRESS.{}" then "button_PRESS.device_name"
             entity_id_format = unique_id_determination.replace('.', '_') + ".{}"
