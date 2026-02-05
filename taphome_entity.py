@@ -44,7 +44,10 @@ class TapHomeEntity(Entity):
             self._attr_unique_id = f"taphome{unique_id_core_id}.{unique_id_determination}.{taphome_device.id}".lower()
 
         if config.core.use_description_as_entity_id:
-            entity_id_format = unique_id_determination + ".{}"
+            # Extract domain from unique_id_determination for entity_id_format
+            # Format can be "domain" or "domain.suffix"
+            domain = unique_id_determination.split('.')[0] if '.' in unique_id_determination else unique_id_determination
+            entity_id_format = domain + ".{}"
             self.entity_id = async_generate_entity_id(
                 entity_id_format,
                 taphome_device.description,
