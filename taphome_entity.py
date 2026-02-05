@@ -44,26 +44,15 @@ class TapHomeEntity(Entity):
             self._attr_unique_id = f"taphome{unique_id_core_id}.{unique_id_determination}.{taphome_device.id}".lower()
 
         if config.core.use_description_as_entity_id:
-            # Home Assistant 2026.2 enforces strict entity ID validation
-            # Entity ID format must be: {valid_domain}.{object_id}
-            # For complex unique_id_determination like "button.PRESS", we need to:
-            # 1. Extract domain (e.g., "button")
-            # 2. Prepend suffix to description (e.g., "PRESS" + "device" = "press_device")
-            if '.' in unique_id_determination:
-                domain, suffix = unique_id_determination.split('.', 1)
-                # Sanitize suffix: replace dots with underscores to prevent multiple dots
-                # and ensure only valid characters
-                suffix_sanitized = suffix.lower().replace('.', '_')
-                # Prepend suffix to description to ensure uniqueness
-                modified_description = f"{suffix_sanitized}_{taphome_device.description}"
-            else:
-                domain = unique_id_determination
-                modified_description = taphome_device.description
-            
-            entity_id_format = domain + ".{}"
+            # Extract domain and build name for entity_id generation
+            # For "button.PRESS" + "device", slugify will create "button.press_device"
+            parts = unique_id_determination.split('.', 1)
+            entity_id_format = parts[0] + ".{}"
+            name = (parts[1].replace('.', ' ') + ' ' + taphome_device.description 
+                   if len(parts) > 1 else taphome_device.description)
             self.entity_id = async_generate_entity_id(
                 entity_id_format,
-                modified_description,
+                name,
                 hass=config.hass,
             )
 
