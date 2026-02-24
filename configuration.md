@@ -303,7 +303,7 @@ taphome:
     - id: primary
       use_description_as_entity_id: true
       token: !secret taphome_primary_token
-      api_url: http://192.168.1.3/api/TapHomeApi/v1
+      ip: 192.168.1.3
       webhook_id: taphome_primary
       binary_sensors:
         - 77
