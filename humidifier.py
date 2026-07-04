@@ -12,15 +12,11 @@ from homeassistant.components.humidifier import (
     HumidifierEntityFeature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import (
-    AddEntitiesCallback,
-    ConfigType,
-    DiscoveryInfoType,
-)
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .add_entry_request import add_taphome_entities
-from .const import CONF_HUMIDIFIER
 from .taphome_config_entry import AddEntryRequest, TapHomeEntityConfig
+from .taphome_data import TapHomeConfigEntry
 from .taphome_entity import TapHomeEntity
 from .taphome_sdk import (
     Device,
@@ -182,11 +178,12 @@ class TapHomeHumidifier(TapHomeEntity, HumidifierEntity):
             await self._mode_device.async_select_option(mode)
 
 
-def setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
-    add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+    entry: TapHomeConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up the humidifier platform."""
-    add_taphome_entities(hass, add_entities, CONF_HUMIDIFIER, TapHomeHumidifier)
+    """Set up TapHome humidifiers from a config entry."""
+    add_taphome_entities(
+        entry, async_add_entities, HUMIDIFIER_DOMAIN, TapHomeHumidifier
+    )

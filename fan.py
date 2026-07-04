@@ -10,15 +10,11 @@ from homeassistant.components.fan import (
     FanEntityFeature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import (
-    AddEntitiesCallback,
-    ConfigType,
-    DiscoveryInfoType,
-)
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .add_entry_request import add_taphome_entities
-from .const import CONF_FAN
 from .taphome_config_entry import AddEntryRequest, TapHomeEntityConfig
+from .taphome_data import TapHomeConfigEntry
 from .taphome_entity import TapHomeEntity
 from .taphome_sdk import (
     GenericOutputAdapter,
@@ -123,11 +119,10 @@ class TapHomeFan(TapHomeEntity, FanEntity):
         await self._fan_generic_output.async_turn_off()
 
 
-def setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
-    add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+    entry: TapHomeConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up the switch platform."""
-    add_taphome_entities(hass, add_entities, CONF_FAN, TapHomeFan)
+    """Set up TapHome fans from a config entry."""
+    add_taphome_entities(entry, async_add_entities, FAN_DOMAIN, TapHomeFan)

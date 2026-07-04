@@ -1,6 +1,32 @@
 """Constants used by the TapHome integration."""
 
+from homeassistant.const import (
+    CONF_BINARY_SENSORS,
+    CONF_COVERS,
+    CONF_LIGHTS,
+    CONF_SENSORS,
+    CONF_SWITCHES,
+    Platform,
+)
+
 TAPHOME_PLATFORM = "taphome"
+DOMAIN = TAPHOME_PLATFORM
+
+PLATFORMS: list[Platform] = [
+    Platform.BINARY_SENSOR,
+    Platform.BUTTON,
+    Platform.CLIMATE,
+    Platform.COVER,
+    Platform.EVENT,
+    Platform.FAN,
+    Platform.HUMIDIFIER,
+    Platform.LIGHT,
+    Platform.SELECT,
+    Platform.SENSOR,
+    Platform.SWITCH,
+    Platform.TIME,
+    Platform.VALVE,
+]
 
 TAPHOME_API_SERVICE = f"{TAPHOME_PLATFORM}_TapHomeApiService"
 TAPHOME_COORDINATOR = f"{TAPHOME_PLATFORM}_Coordinator"
@@ -24,6 +50,24 @@ USE_DESCRIPTION_AS_NAME = "use_description_as_name"
 CONF_ZONES = "zones"
 CONF_LABELS = "labels"
 CONF_ENABLED_ATTRIBUTES = "enabled_attributes"
+
+# Configuration keys holding per-platform device lists
+DEVICE_CONFIG_KEYS = [
+    CONF_LIGHTS,
+    CONF_BUTTONS,
+    CONF_COVERS,
+    CONF_CLIMATES,
+    CONF_FAN,
+    CONF_HUMIDIFIER,
+    CONF_MULTIVALUE_SWITCHES,
+    CONF_SWITCHES,
+    CONF_SENSORS,
+    CONF_BINARY_SENSORS,
+    CONF_VALVE,
+    CONF_TIMES,
+]
+
+DEFAULT_CLOUD_API_URL = "https://api.taphome.com/api/TapHomeApi/v1"
 
 # Attributes that can be exposed per entity
 AVAILABLE_ATTRIBUTES = [

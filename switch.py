@@ -9,16 +9,12 @@ from homeassistant.components.switch import (
     SwitchDeviceClass,
     SwitchEntity,
 )
-from homeassistant.const import CONF_SWITCHES
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import (
-    AddEntitiesCallback,
-    ConfigType,
-    DiscoveryInfoType,
-)
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .add_entry_request import add_taphome_entities
 from .taphome_config_entry import AddEntryRequest, TapHomeEntityConfig
+from .taphome_data import TapHomeConfigEntry
 from .taphome_entity import TapHomeEntity
 from .taphome_sdk import DigitalOutputDevice, DigitalOutputState
 
@@ -60,11 +56,10 @@ class TapHomeSwitch(TapHomeEntity, SwitchEntity):
         await self._switch.async_turn_off()
 
 
-def setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
-    add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+    entry: TapHomeConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up the switch platform."""
-    add_taphome_entities(hass, add_entities, CONF_SWITCHES, TapHomeSwitch)
+    """Set up TapHome switches from a config entry."""
+    add_taphome_entities(entry, async_add_entities, SWITCH_DOMAIN, TapHomeSwitch)

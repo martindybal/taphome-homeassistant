@@ -1,4 +1,54 @@
 {
+  "config": {
+    "step": {
+      "user": {
+        "title": "Připojit TapHome core",
+        "description": "Zveřejněte svá zařízení v aplikaci TapHome (Nastavení → Zveřejnit zařízení → TapHome API) a zadejte níže token. Pro lokální přístup vyplňte IP adresu vašeho core; ponechte obě adresní pole prázdná pro použití TapHome cloudu.",
+        "data": {
+          "ip": "IP adresa",
+          "api_url": "API URL",
+          "token": "Token"
+        },
+        "data_description": {
+          "ip": "IP adresa vašeho TapHome core, např. 192.168.1.3.",
+          "api_url": "Pokročilé: úplná API URL core. Vyplňte buď IP adresu, nebo API URL, ne obojí.",
+          "token": "Autorizační token zobrazený v horní části obrazovky TapHome API."
+        }
+      },
+      "reconfigure": {
+        "title": "Změnit nastavení TapHome core",
+        "description": "Upravte nastavení připojení k vašemu TapHome core.",
+        "data": {
+          "ip": "IP adresa",
+          "api_url": "API URL",
+          "token": "Token"
+        },
+        "data_description": {
+          "ip": "IP adresa vašeho TapHome core, např. 192.168.1.3.",
+          "api_url": "Pokročilé: úplná API URL core. Vyplňte buď IP adresu, nebo API URL, ne obojí.",
+          "token": "Autorizační token zobrazený v horní části obrazovky TapHome API."
+        }
+      },
+      "reauth_confirm": {
+        "title": "Znovu ověřit TapHome",
+        "description": "Token pro {name} již není platný. Zadejte nový token.",
+        "data": {
+          "token": "Token"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Připojení k TapHome core se nezdařilo.",
+      "invalid_auth": "TapHome core odmítl token.",
+      "ip_and_api_url_set": "Vyplňte buď IP adresu, nebo API URL, ne obojí."
+    },
+    "abort": {
+      "already_configured": "Tento TapHome core je již nakonfigurován.",
+      "reauth_successful": "Opětovné ověření proběhlo úspěšně.",
+      "reconfigure_successful": "Změna nastavení proběhla úspěšně.",
+      "unique_id_mismatch": "Připojený core neodpovídá core, pro který byl tento záznam vytvořen."
+    }
+  },
   "issues": {
     "device_not_exposed": {
       "title": "Zařízení {device_id} není zveřejněno pro core{core_id}",
@@ -15,6 +65,10 @@
     "device_type_mismatch": {
       "title": "Nepodporovaný typ zařízení {device_id} v core{core_id}",
       "description": "Zařízení {device_id} je typu {device_type} s podporovanými hodnotami [{supported_values}], očekáváno: {expected}. Zkontrolujte prosím nastavení TapHome."
+    },
+    "yaml_deprecated": {
+      "title": "YAML konfigurace TapHome je zastaralá",
+      "description": "Vaše YAML konfigurace TapHome byla naimportována a integrace se nyní spravuje v UI (Nastavení → Zařízení a služby). Odstraňte sekci taphome z configuration.yaml — změny v ní se již nepromítají."
     }
   }
 }
