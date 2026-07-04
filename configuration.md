@@ -8,12 +8,27 @@ _Settings → Expose devices → TapHome API_.
 
 Then choose the devices that you want to expose to Home Assistant using the _Add device_ option.
 
-Every exposed device has a numeric id, you have to take these ids, the authorization token at top of the screen and insert in Home Assistant integration configuration file as show below. **Do not share your token anywhere!**.
+Take the authorization token at the top of the screen — you will enter it when adding the integration. **Do not share your token anywhere!**
 
 ### Local access
-The prefered way is local access with webhook (local_push). You have to provide `api_url` in your config. Format is _http://{Your_Core_IP}/api/cloudapi/v1_. Make sure that your core Ip address'll not change in the future.
+The preferred way is local access with webhook (local_push). Provide the IP address of your core when adding the integration and make sure that your core IP address will not change in the future.
 
-## YAML Configuration
+## Configuration via UI (recommended)
+
+1. In Home Assistant go to _Settings → Devices & services → Add integration_ and search for **TapHome**.
+2. Enter the IP address of your core (or leave both address fields empty to use the TapHome cloud) and the authorization token. Each TapHome core is added as a separate integration entry.
+3. Open the integration entry and press **Configure** to manage everything else:
+   - **Core settings** – webhook for push updates, using TapHome descriptions as entity IDs/names, exposed attributes.
+   - **Zones (areas)** – rename TapHome zones to Home Assistant areas or ignore them.
+   - **Labels (categories)** – rename TapHome categories to Home Assistant labels or ignore them.
+   - **Select devices** – choose a platform (lights, covers, climates, …) and pick the devices exposed on the core.
+   - **Device options** – advanced per-device options (device class, effects, climate controller ids, …) matching the tables below.
+
+The connection settings (IP/API URL, token) can be changed later via the entry's **Reconfigure** action. When the core rejects the token, Home Assistant automatically starts a re-authentication flow.
+
+## YAML Configuration (deprecated)
+
+**YAML configuration is deprecated.** An existing `taphome:` section in `configuration.yaml` is imported into the UI automatically on startup — entities keep their unique IDs and history. After the import, remove the `taphome:` section; changes made in YAML are no longer applied. The tables below still document all options, which are all available in the UI as well.
 
 The integration is configured in `configuration.yaml`. Each TapHome core is defined under `taphome.cores`. Every core requires an authentication token and at least one platform configuration.
 

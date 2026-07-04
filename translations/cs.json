@@ -181,10 +181,6 @@
       "title": "Připojení k TapHome core{core_id} se nezdařilo",
       "description": "Home Assistant se nemůže spojit s TapHome core{core_id}."
     },
-    "ip_and_api_url_set": {
-      "title": "Pro core{core_id} jsou nastaveny api_url i ip",
-      "description": "Pro core{core_id} jsou nakonfigurovány hodnoty api_url i ip. Použije se api_url."
-    },
     "device_type_mismatch": {
       "title": "Nepodporovaný typ zařízení {device_id} v core{core_id}",
       "description": "Zařízení {device_id} je typu {device_type} s podporovanými hodnotami [{supported_values}], očekáváno: {expected}. Zkontrolujte prosím nastavení TapHome."

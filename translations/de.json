@@ -181,10 +181,6 @@
       "title": "Verbindung zum TapHome Core{core_id} fehlgeschlagen",
       "description": "Home Assistant kann nicht mit dem TapHome Core{core_id} kommunizieren."
     },
-    "ip_and_api_url_set": {
-      "title": "Für Core{core_id} sind sowohl api_url als auch ip gesetzt",
-      "description": "Für Core{core_id} sind sowohl api_url als auch ip konfiguriert. Es wird api_url verwendet."
-    },
     "device_type_mismatch": {
       "title": "Nicht unterstützter Typ für Gerät {device_id} im Core{core_id}",
       "description": "Gerät {device_id} ist vom Typ {device_type} mit unterstützten Werten [{supported_values}], erwartet: {expected}. Bitte überprüfe deine TapHome-Konfiguration."

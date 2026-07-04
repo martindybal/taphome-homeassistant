@@ -31,22 +31,6 @@ class TapHomeIssueRegistry:
         issue_id = self._create_core_unavailable_issue_id()
         self.try_delete_issue(issue_id)
 
-    def create_ip_and_api_url_set_issue(self) -> None:
-        """Create an issue when both api_url and ip are set."""
-        issue_id = self._create_ip_and_api_url_set_issue_id()
-        self.create_issue(
-            issue_id,
-            is_fixable=False,
-            severity=IssueSeverity.WARNING,
-            translation_key=Issues.IP_AND_API_URL_SET,
-            translation_placeholders={"core_id": str(self.core_id or "")},
-        )
-
-    def try_delete_ip_and_api_url_set_issue(self) -> None:
-        """Try to delete the ip and api_url set issue."""
-        issue_id = self._create_ip_and_api_url_set_issue_id()
-        self.try_delete_issue(issue_id)
-
     def create_device_not_exposed_issue(self, taphome_device_id: int) -> None:
         """Create an issue in the issue registry."""
         issue_id = self._create_device_not_exposed_issue_id(taphome_device_id)
@@ -97,9 +81,6 @@ class TapHomeIssueRegistry:
 
     def _create_core_unavailable_issue_id(self):
         return f"{Issues.CORE_UNAVAILABLE}_{self.core_id}"
-
-    def _create_ip_and_api_url_set_issue_id(self):
-        return f"{Issues.IP_AND_API_URL_SET}_{self.core_id}"
 
     def create_issue(
         self,
