@@ -1,0 +1,31 @@
+{
+  "devices": [
+    {"deviceId": 1, "values": [{"valueTypeId": 48, "value": 1}]},
+    {
+      "deviceId": 2,
+      "values": [
+        {"valueTypeId": 42, "value": 0.5},
+        {"valueTypeId": 67, "value": 0.5}
+      ]
+    },
+    {
+      "deviceId": 3,
+      "values": [
+        {"valueTypeId": 6, "value": 21.5},
+        {"valueTypeId": 5, "value": 20.8}
+      ]
+    },
+    {
+      "deviceId": 4,
+      "values": [
+        {"valueTypeId": 46, "value": 0.3},
+        {"valueTypeId": 66, "value": 0},
+        {"valueTypeId": 10, "value": 0.5}
+      ]
+    },
+    {"deviceId": 5, "values": [{"valueTypeId": 49, "value": 1}, {"valueTypeId": 71, "value": 1}]},
+    {"deviceId": 6, "values": [{"valueTypeId": 52, "value": 0}]},
+    {"deviceId": 7, "values": [{"valueTypeId": 3, "value": 0.55}]}
+  ],
+  "timestamp": 0
+}
