@@ -49,6 +49,129 @@
       "unique_id_mismatch": "The connected core does not match the core this entry was created for."
     }
   },
+  "options": {
+    "step": {
+      "init": {
+        "title": "TapHome options",
+        "menu_options": {
+          "core_settings": "Core settings",
+          "zones": "Zones (areas)",
+          "labels": "Labels (categories)",
+          "select_devices": "Select devices",
+          "device_options": "Device options"
+        }
+      },
+      "core_settings": {
+        "title": "Core settings",
+        "data": {
+          "webhook_id": "Webhook ID",
+          "use_description_as_entity_id": "Use TapHome descriptions as entity IDs",
+          "use_description_as_name": "Use TapHome descriptions as entity names",
+          "enabled_attributes": "Exposed attributes"
+        },
+        "data_description": {
+          "webhook_id": "Register a webhook for instant push updates from the core, e.g. taphome_primary. Leave empty to disable."
+        }
+      },
+      "zones": {
+        "title": "Zones",
+        "description": "Map TapHome zones to Home Assistant areas. Pick zones to ignore, or fill in a new name to rename a zone. Leave a field empty to keep the original name.",
+        "data": {
+          "ignored_names": "Ignored"
+        }
+      },
+      "labels": {
+        "title": "Labels",
+        "description": "Map TapHome categories to Home Assistant labels. Pick categories to ignore, or fill in a new name to rename a category. Leave a field empty to keep the original name.",
+        "data": {
+          "ignored_names": "Ignored"
+        }
+      },
+      "select_devices": {
+        "title": "Select platform",
+        "data": {
+          "platform": "Platform"
+        }
+      },
+      "select_devices_pick": {
+        "title": "Select devices",
+        "description": "Choose which TapHome devices are exposed as {platform}. Deselecting a device removes its entity.",
+        "data": {
+          "devices": "Devices"
+        }
+      },
+      "device_options": {
+        "title": "Select platform",
+        "data": {
+          "platform": "Platform"
+        }
+      },
+      "device_options_pick": {
+        "title": "Select device",
+        "data": {
+          "device": "Device"
+        }
+      },
+      "device_options_form": {
+        "title": "Device options",
+        "description": "Advanced options for {device}. Empty fields use automatic defaults.",
+        "data": {
+          "unique_id": "Unique ID",
+          "effect_id": "Effects multi value switch",
+          "device_class": "Device class",
+          "actions": "Actions",
+          "close_threshold": "Close threshold (%)",
+          "range_high_thermostat_id": "Range high thermostat",
+          "range_low_thermostat_id": "Range low thermostat",
+          "target_temperature_step": "Target temperature step",
+          "precision": "Temperature precision",
+          "hvac_switch_id": "HVAC switch",
+          "hvac_mode": "Fixed HVAC mode",
+          "hvac_mode_id": "HVAC mode multi value switch",
+          "hvac_action_id": "HVAC action multi value switch",
+          "preset_mode_id": "Preset modes multi value switch",
+          "fan_mode_id": "Fan modes multi value switch",
+          "swing_mode_id": "Swing modes multi value switch",
+          "swing_horizontal_mode_id": "Horizontal swing modes multi value switch",
+          "target_humidity_id": "Target humidity analog output",
+          "min_humidity": "Minimum humidity (%)",
+          "max_humidity": "Maximum humidity (%)",
+          "switch_id": "On/off switch",
+          "action_id": "Action multi value switch",
+          "mode_id": "Modes multi value switch",
+          "humidity_sensor_id": "Humidity sensor",
+          "value_type": "Value type",
+          "unit_of_measurement": "Unit of measurement",
+          "state_class": "State class"
+        }
+      }
+    },
+    "error": {
+      "invalid_device_id": "Invalid device ID."
+    },
+    "abort": {
+      "entry_not_loaded": "The TapHome core is not loaded. Fix the connection first.",
+      "no_devices_configured": "No devices are configured yet. Use Select devices first."
+    }
+  },
+  "selector": {
+    "platform": {
+      "options": {
+        "lights": "Lights",
+        "buttons": "Buttons",
+        "covers": "Covers",
+        "climates": "Climates",
+        "fans": "Fans",
+        "humidifiers": "Humidifiers",
+        "multivalue_switches": "Multi value switches",
+        "switches": "Switches",
+        "sensors": "Sensors",
+        "binary_sensors": "Binary sensors",
+        "valves": "Valves",
+        "times": "Times"
+      }
+    }
+  },
   "issues": {
     "device_not_exposed": {
       "title": "Device {device_id} not exposed for core{core_id}",

@@ -49,6 +49,129 @@
       "unique_id_mismatch": "Pripojený core nezodpovedá core, pre ktorý bol tento záznam vytvorený."
     }
   },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Možnosti TapHome",
+        "menu_options": {
+          "core_settings": "Nastavenie core",
+          "zones": "Zóny (oblasti)",
+          "labels": "Štítky (kategórie)",
+          "select_devices": "Výber zariadení",
+          "device_options": "Možnosti zariadenia"
+        }
+      },
+      "core_settings": {
+        "title": "Nastavenie core",
+        "data": {
+          "webhook_id": "Webhook ID",
+          "use_description_as_entity_id": "Použiť popisy TapHome ako ID entít",
+          "use_description_as_name": "Použiť popisy TapHome ako názvy entít",
+          "enabled_attributes": "Zverejnené atribúty"
+        },
+        "data_description": {
+          "webhook_id": "Zaregistruje webhook pre okamžité push aktualizácie z core, napr. taphome_primary. Nechajte prázdne pre vypnutie."
+        }
+      },
+      "zones": {
+        "title": "Zóny",
+        "description": "Mapovanie zón TapHome na oblasti Home Assistantu. Vyberte zóny na ignorovanie, alebo vyplňte nový názov na premenovanie. Prázdne pole ponechá pôvodný názov.",
+        "data": {
+          "ignored_names": "Ignorované"
+        }
+      },
+      "labels": {
+        "title": "Štítky",
+        "description": "Mapovanie kategórií TapHome na štítky Home Assistantu. Vyberte kategórie na ignorovanie, alebo vyplňte nový názov na premenovanie. Prázdne pole ponechá pôvodný názov.",
+        "data": {
+          "ignored_names": "Ignorované"
+        }
+      },
+      "select_devices": {
+        "title": "Výber platformy",
+        "data": {
+          "platform": "Platforma"
+        }
+      },
+      "select_devices_pick": {
+        "title": "Výber zariadení",
+        "description": "Vyberte, ktoré zariadenia TapHome sa zverejnia ako {platform}. Odobratie zariadenia odstráni jeho entitu.",
+        "data": {
+          "devices": "Zariadenia"
+        }
+      },
+      "device_options": {
+        "title": "Výber platformy",
+        "data": {
+          "platform": "Platforma"
+        }
+      },
+      "device_options_pick": {
+        "title": "Výber zariadenia",
+        "data": {
+          "device": "Zariadenie"
+        }
+      },
+      "device_options_form": {
+        "title": "Možnosti zariadenia",
+        "description": "Pokročilé možnosti pre {device}. Prázdne polia použijú automatické predvolené hodnoty.",
+        "data": {
+          "unique_id": "Unikátne ID",
+          "effect_id": "Viachodnotový prepínač efektov",
+          "device_class": "Trieda zariadenia",
+          "actions": "Akcie",
+          "close_threshold": "Prah zatvorenia (%)",
+          "range_high_thermostat_id": "Horný termostat rozsahu",
+          "range_low_thermostat_id": "Dolný termostat rozsahu",
+          "target_temperature_step": "Krok cieľovej teploty",
+          "precision": "Presnosť teploty",
+          "hvac_switch_id": "Spínač HVAC",
+          "hvac_mode": "Pevný režim HVAC",
+          "hvac_mode_id": "Viachodnotový prepínač režimu HVAC",
+          "hvac_action_id": "Viachodnotový prepínač akcie HVAC",
+          "preset_mode_id": "Viachodnotový prepínač predvolieb",
+          "fan_mode_id": "Viachodnotový prepínač režimov ventilátora",
+          "swing_mode_id": "Viachodnotový prepínač natáčania",
+          "swing_horizontal_mode_id": "Viachodnotový prepínač horizontálneho natáčania",
+          "target_humidity_id": "Analógový výstup cieľovej vlhkosti",
+          "min_humidity": "Minimálna vlhkosť (%)",
+          "max_humidity": "Maximálna vlhkosť (%)",
+          "switch_id": "Spínač zapnutia/vypnutia",
+          "action_id": "Viachodnotový prepínač akcie",
+          "mode_id": "Viachodnotový prepínač režimov",
+          "humidity_sensor_id": "Senzor vlhkosti",
+          "value_type": "Typ hodnoty",
+          "unit_of_measurement": "Jednotka merania",
+          "state_class": "Trieda stavu"
+        }
+      }
+    },
+    "error": {
+      "invalid_device_id": "Neplatné ID zariadenia."
+    },
+    "abort": {
+      "entry_not_loaded": "TapHome core nie je načítaný. Najprv opravte pripojenie.",
+      "no_devices_configured": "Zatiaľ nie sú nakonfigurované žiadne zariadenia. Najprv použite Výber zariadení."
+    }
+  },
+  "selector": {
+    "platform": {
+      "options": {
+        "lights": "Svetlá",
+        "buttons": "Tlačidlá",
+        "covers": "Rolety a žalúzie",
+        "climates": "Termostaty",
+        "fans": "Ventilátory",
+        "humidifiers": "Zvlhčovače",
+        "multivalue_switches": "Viachodnotové prepínače",
+        "switches": "Spínače",
+        "sensors": "Senzory",
+        "binary_sensors": "Binárne senzory",
+        "valves": "Ventily",
+        "times": "Časy"
+      }
+    }
+  },
   "issues": {
     "device_not_exposed": {
       "title": "Zariadenie {device_id} nie je vystavené pre core{core_id}",
