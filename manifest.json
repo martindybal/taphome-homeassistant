@@ -1,11 +1,12 @@
 {
   "domain": "taphome",
   "name": "TapHome",
-  "version": "2026.3.0",
+  "version": "2026.7.0",
+  "config_flow": true,
   "iot_class": "local_push",
   "documentation": "https://github.com/martindybal/taphome-homeassistant",
   "issue_tracker": "https://github.com/martindybal/taphome-homeassistant/issues",
-  "dependencies": [],
+  "dependencies": ["webhook"],
   "codeowners": [
     "@martindybal"
   ],

@@ -5,15 +5,11 @@ import logging
 
 from homeassistant.components.time import DOMAIN as TIME_DOMAIN, TimeEntity
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import (
-    AddEntitiesCallback,
-    ConfigType,
-    DiscoveryInfoType,
-)
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .add_entry_request import add_taphome_entities
-from .const import CONF_TIMES
 from .taphome_config_entry import AddEntryRequest, TapHomeEntityConfig
+from .taphome_data import TapHomeConfigEntry
 from .taphome_entity import TapHomeEntity
 from .taphome_sdk import SessionDurationVariableDevice, SessionDurationVariableState
 
@@ -45,11 +41,10 @@ class TapHomeTime(TapHomeEntity, TimeEntity):
         await self._variable.async_set_time(value)
 
 
-def setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
-    add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+    entry: TapHomeConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up the switch platform."""
-    add_taphome_entities(hass, add_entities, CONF_TIMES, TapHomeTime)
+    """Set up TapHome times from a config entry."""
+    add_taphome_entities(entry, async_add_entities, TIME_DOMAIN, TapHomeTime)

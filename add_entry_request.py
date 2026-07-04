@@ -3,11 +3,10 @@
 from collections.abc import Callable, Iterable
 from typing import TypeVar
 
-from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import TAPHOME_PLATFORM
 from .taphome_config_entry import AddEntryRequest, TapHomeEntityConfigT
+from .taphome_data import TapHomeConfigEntry
 from .taphome_entity import TapHomeEntity
 from .taphome_issue_registry import TapHomeIssueRegistry
 from .taphome_sdk import DeviceNotExposedError, DeviceTypeError
@@ -16,18 +15,18 @@ TapHomeEntityT = TypeVar("TapHomeEntityT", bound=TapHomeEntity)
 
 
 def add_taphome_entities(
-    hass: HomeAssistant,
+    entry: TapHomeConfigEntry,
     add_entities: AddEntitiesCallback,
-    configuration_section_name: str,
+    platform_domain: str,
     taphome_entities_factory: Callable[
         [AddEntryRequest[TapHomeEntityConfigT]],
         TapHomeEntityT | Iterable[TapHomeEntityT],
     ],
 ) -> None:
-    """Set up the switch platform."""
-    entities_configuration: list[AddEntryRequest[TapHomeEntityConfigT]] = hass.data[
-        TAPHOME_PLATFORM
-    ][configuration_section_name]
+    """Create entities for one platform from the entry's stored requests."""
+    entities_configuration: list[AddEntryRequest[TapHomeEntityConfigT]] = (
+        entry.runtime_data.add_entry_requests[platform_domain]
+    )
 
     all_entities = []
     for configuration in entities_configuration:
@@ -38,13 +37,17 @@ def add_taphome_entities(
                 entry_entities = [entry_entities]
 
         except DeviceNotExposedError:
-            taphome_issue_registry = TapHomeIssueRegistry(hass, configuration.core.id)
+            taphome_issue_registry = TapHomeIssueRegistry(
+                configuration.hass, configuration.core.id
+            )
             taphome_issue_registry.create_device_not_exposed_issue(
                 configuration.entity.id
             )
             continue
         except DeviceTypeError as err:
-            taphome_issue_registry = TapHomeIssueRegistry(hass, configuration.core.id)
+            taphome_issue_registry = TapHomeIssueRegistry(
+                configuration.hass, configuration.core.id
+            )
             taphome_issue_registry.create_device_type_mismatch_issue(
                 configuration.entity.id,
                 err.device_type,

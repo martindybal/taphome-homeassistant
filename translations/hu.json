@@ -1,4 +1,54 @@
 {
+  "config": {
+    "step": {
+      "user": {
+        "title": "TapHome core csatlakoztatása",
+        "description": "Tegye közzé eszközeit a TapHome alkalmazásban (Beállítások → Eszközök közzététele → TapHome API), és adja meg alább a tokent. Helyi hozzáféréshez adja meg a core IP-címét; hagyja üresen mindkét címmezőt a TapHome felhő használatához.",
+        "data": {
+          "ip": "IP-cím",
+          "api_url": "API URL",
+          "token": "Token"
+        },
+        "data_description": {
+          "ip": "A TapHome core IP-címe, pl. 192.168.1.3.",
+          "api_url": "Haladó: a core teljes API URL-je. Az IP-címet vagy az API URL-t adja meg, ne mindkettőt.",
+          "token": "A TapHome API képernyő tetején megjelenő hitelesítési token."
+        }
+      },
+      "reconfigure": {
+        "title": "TapHome core újrakonfigurálása",
+        "description": "Frissítse a TapHome core kapcsolati beállításait.",
+        "data": {
+          "ip": "IP-cím",
+          "api_url": "API URL",
+          "token": "Token"
+        },
+        "data_description": {
+          "ip": "A TapHome core IP-címe, pl. 192.168.1.3.",
+          "api_url": "Haladó: a core teljes API URL-je. Az IP-címet vagy az API URL-t adja meg, ne mindkettőt.",
+          "token": "A TapHome API képernyő tetején megjelenő hitelesítési token."
+        }
+      },
+      "reauth_confirm": {
+        "title": "TapHome újrahitelesítése",
+        "description": "A(z) {name} tokenje már nem érvényes. Adjon meg egy új tokent.",
+        "data": {
+          "token": "Token"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Nem sikerült csatlakozni a TapHome core-hoz.",
+      "invalid_auth": "A TapHome core elutasította a tokent.",
+      "ip_and_api_url_set": "Az IP-címet vagy az API URL-t adja meg, ne mindkettőt."
+    },
+    "abort": {
+      "already_configured": "Ez a TapHome core már konfigurálva van.",
+      "reauth_successful": "Az újrahitelesítés sikeres volt.",
+      "reconfigure_successful": "Az újrakonfigurálás sikeres volt.",
+      "unique_id_mismatch": "A csatlakoztatott core nem egyezik azzal a core-ral, amelyhez ez a bejegyzés készült."
+    }
+  },
   "issues": {
     "device_not_exposed": {
       "title": "A(z) {device_id} eszköz nincs közzétéve a(z) core{core_id} számára",
@@ -15,6 +65,10 @@
     "device_type_mismatch": {
       "title": "Nem támogatott eszköztípus {device_id} a(z) core{core_id} számára",
       "description": "A(z) {device_id} azonosítójú eszköz típusa {device_type}, támogatott értékek [{supported_values}], várt: {expected}. Kérjük, ellenőrizze a TapHome beállításokat."
+    },
+    "yaml_deprecated": {
+      "title": "A TapHome YAML-konfiguráció elavult",
+      "description": "A TapHome YAML-konfigurációja importálásra került, és az integráció mostantól a felületen kezelhető (Beállítások → Eszközök és szolgáltatások). Távolítsa el a taphome szakaszt a configuration.yaml fájlból — az ott végzett módosítások már nem érvényesülnek."
     }
   }
 }

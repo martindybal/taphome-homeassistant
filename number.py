@@ -15,6 +15,7 @@ from homeassistant.helpers.entity_platform import (
 from .add_entry_request import add_taphome_entities
 from .const import CONF_NUMBERS
 from .taphome_config_entry import AddEntryRequest, TapHomeEntityConfig
+from .taphome_data import TapHomeConfigEntry
 from .taphome_entity import TapHomeEntity
 from .taphome_sdk import DeviceState, ValueType, VariableDevice, VariableState
 
@@ -26,14 +27,10 @@ class TapHomeNumber(TapHomeEntity, NumberEntity):
 
     def __init__(self, config: AddEntryRequest[TapHomeEntityConfig]) -> None:
         """Initialize TapHome number entity."""
-        self._variable = config.hub.get_typed_device(
-            config.entity.id, VariableDevice
-        )
+        self._variable = config.hub.get_typed_device(config.entity.id, VariableDevice)
 
         self._read_only = False
-        supported_value = self._variable.supported_values.get(
-            ValueType.VARIABLE_STATE
-        )
+        supported_value = self._variable.supported_values.get(ValueType.VARIABLE_STATE)
         if supported_value is not None:
             if supported_value.read_only:
                 self._read_only = True
@@ -48,9 +45,7 @@ class TapHomeNumber(TapHomeEntity, NumberEntity):
 
         super().__init__(config, self._variable, NUMBER_DOMAIN)
 
-    def _state_changed(
-        self, _: DeviceState | None, current_state: DeviceState
-    ) -> None:
+    def _state_changed(self, _: DeviceState | None, current_state: DeviceState) -> None:
         """Update native value before HA state is refreshed."""
         if isinstance(current_state, VariableState):
             self._attr_native_value = current_state.value
@@ -67,11 +62,10 @@ class TapHomeNumber(TapHomeEntity, NumberEntity):
         await self._variable.async_set_value(value)
 
 
-def setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
-    add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+    entry: TapHomeConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up the number platform."""
-    add_taphome_entities(hass, add_entities, CONF_NUMBERS, TapHomeNumber)
+    """Set up TapHome numbers from a config entry."""
+    add_taphome_entities(entry, async_add_entities, CONF_NUMBERS, TapHomeNumber)

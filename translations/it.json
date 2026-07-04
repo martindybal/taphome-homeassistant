@@ -1,4 +1,54 @@
 {
+  "config": {
+    "step": {
+      "user": {
+        "title": "Connetti TapHome core",
+        "description": "Esponi i tuoi dispositivi nell'app TapHome (Impostazioni → Esponi dispositivi → TapHome API) e inserisci il token qui sotto. Per l'accesso locale inserisci l'indirizzo IP del tuo core; lascia vuoti entrambi i campi indirizzo per usare il cloud TapHome.",
+        "data": {
+          "ip": "Indirizzo IP",
+          "api_url": "URL API",
+          "token": "Token"
+        },
+        "data_description": {
+          "ip": "Indirizzo IP del tuo TapHome core, ad es. 192.168.1.3.",
+          "api_url": "Avanzato: URL API completo del core. Inserisci l'indirizzo IP oppure l'URL API, non entrambi.",
+          "token": "Token di autorizzazione mostrato in alto nella schermata TapHome API."
+        }
+      },
+      "reconfigure": {
+        "title": "Riconfigura TapHome core",
+        "description": "Aggiorna le impostazioni di connessione del tuo TapHome core.",
+        "data": {
+          "ip": "Indirizzo IP",
+          "api_url": "URL API",
+          "token": "Token"
+        },
+        "data_description": {
+          "ip": "Indirizzo IP del tuo TapHome core, ad es. 192.168.1.3.",
+          "api_url": "Avanzato: URL API completo del core. Inserisci l'indirizzo IP oppure l'URL API, non entrambi.",
+          "token": "Token di autorizzazione mostrato in alto nella schermata TapHome API."
+        }
+      },
+      "reauth_confirm": {
+        "title": "Riautentica TapHome",
+        "description": "Il token per {name} non è più valido. Inserisci un nuovo token.",
+        "data": {
+          "token": "Token"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Connessione al TapHome core non riuscita.",
+      "invalid_auth": "Il TapHome core ha rifiutato il token.",
+      "ip_and_api_url_set": "Inserisci l'indirizzo IP oppure l'URL API, non entrambi."
+    },
+    "abort": {
+      "already_configured": "Questo TapHome core è già configurato.",
+      "reauth_successful": "La riautenticazione è avvenuta con successo.",
+      "reconfigure_successful": "La riconfigurazione è avvenuta con successo.",
+      "unique_id_mismatch": "Il core connesso non corrisponde al core per cui è stata creata questa voce."
+    }
+  },
   "issues": {
     "device_not_exposed": {
       "title": "Dispositivo {device_id} non esposto per core{core_id}",
@@ -15,6 +65,10 @@
     "device_type_mismatch": {
       "title": "Tipo non supportato per dispositivo {device_id} nel core{core_id}",
       "description": "Il dispositivo {device_id} è di tipo {device_type} con valori supportati [{supported_values}], previsto: {expected}. Controlla la configurazione di TapHome."
+    },
+    "yaml_deprecated": {
+      "title": "La configurazione YAML di TapHome è obsoleta",
+      "description": "La tua configurazione YAML di TapHome è stata importata e l'integrazione ora si gestisce dall'interfaccia (Impostazioni → Dispositivi e servizi). Rimuovi la sezione taphome da configuration.yaml — le modifiche lì non vengono più applicate."
     }
   }
 }
