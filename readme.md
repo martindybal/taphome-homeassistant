@@ -32,7 +32,7 @@ If you have [HACS](https://hacs.xyz/) installed, search for **TapHome** and inst
 3. Copy all files from this repository into the `taphome` folder.
 
 ## Configuration
-The configuration is described in detail in the [configuration.md](/configuration.md).
+Add the integration in _Settings → Devices & services → Add integration → TapHome_ and configure devices via the UI. Existing YAML configurations are imported automatically. The configuration is described in detail in the [configuration.md](/configuration.md).
 
 ### Do you need help?
 I would be happy to configure your TapHome integration, integrate gadgets from Home Assistant to TapHome or set up complex smart rules for you. Feel free to contact me [dybal.it](https://www.dybal.it/).
