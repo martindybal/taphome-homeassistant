@@ -49,6 +49,129 @@
       "unique_id_mismatch": "Il core connesso non corrisponde al core per cui è stata creata questa voce."
     }
   },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Opzioni TapHome",
+        "menu_options": {
+          "core_settings": "Impostazioni core",
+          "zones": "Zone (aree)",
+          "labels": "Etichette (categorie)",
+          "select_devices": "Seleziona dispositivi",
+          "device_options": "Opzioni dispositivo"
+        }
+      },
+      "core_settings": {
+        "title": "Impostazioni core",
+        "data": {
+          "webhook_id": "ID webhook",
+          "use_description_as_entity_id": "Usa le descrizioni TapHome come ID entità",
+          "use_description_as_name": "Usa le descrizioni TapHome come nomi entità",
+          "enabled_attributes": "Attributi esposti"
+        },
+        "data_description": {
+          "webhook_id": "Registra un webhook per aggiornamenti push istantanei dal core, ad es. taphome_primary. Lascia vuoto per disattivare."
+        }
+      },
+      "zones": {
+        "title": "Zone",
+        "description": "Mappa le zone TapHome sulle aree di Home Assistant. Seleziona le zone da ignorare oppure inserisci un nuovo nome per rinominarle. I campi vuoti mantengono il nome originale.",
+        "data": {
+          "ignored_names": "Ignorate"
+        }
+      },
+      "labels": {
+        "title": "Etichette",
+        "description": "Mappa le categorie TapHome sulle etichette di Home Assistant. Seleziona le categorie da ignorare oppure inserisci un nuovo nome per rinominarle. I campi vuoti mantengono il nome originale.",
+        "data": {
+          "ignored_names": "Ignorate"
+        }
+      },
+      "select_devices": {
+        "title": "Seleziona piattaforma",
+        "data": {
+          "platform": "Piattaforma"
+        }
+      },
+      "select_devices_pick": {
+        "title": "Seleziona dispositivi",
+        "description": "Scegli quali dispositivi TapHome esporre come {platform}. Deselezionare un dispositivo rimuove la sua entità.",
+        "data": {
+          "devices": "Dispositivi"
+        }
+      },
+      "device_options": {
+        "title": "Seleziona piattaforma",
+        "data": {
+          "platform": "Piattaforma"
+        }
+      },
+      "device_options_pick": {
+        "title": "Seleziona dispositivo",
+        "data": {
+          "device": "Dispositivo"
+        }
+      },
+      "device_options_form": {
+        "title": "Opzioni dispositivo",
+        "description": "Opzioni avanzate per {device}. I campi vuoti usano i valori predefiniti automatici.",
+        "data": {
+          "unique_id": "ID univoco",
+          "effect_id": "Selettore multivalore effetti",
+          "device_class": "Classe dispositivo",
+          "actions": "Azioni",
+          "close_threshold": "Soglia di chiusura (%)",
+          "range_high_thermostat_id": "Termostato alto dell'intervallo",
+          "range_low_thermostat_id": "Termostato basso dell'intervallo",
+          "target_temperature_step": "Passo temperatura target",
+          "precision": "Precisione temperatura",
+          "hvac_switch_id": "Interruttore HVAC",
+          "hvac_mode": "Modalità HVAC fissa",
+          "hvac_mode_id": "Selettore multivalore modalità HVAC",
+          "hvac_action_id": "Selettore multivalore azione HVAC",
+          "preset_mode_id": "Selettore multivalore preimpostazioni",
+          "fan_mode_id": "Selettore multivalore modalità ventola",
+          "swing_mode_id": "Selettore multivalore oscillazione",
+          "swing_horizontal_mode_id": "Selettore multivalore oscillazione orizzontale",
+          "target_humidity_id": "Uscita analogica umidità target",
+          "min_humidity": "Umidità minima (%)",
+          "max_humidity": "Umidità massima (%)",
+          "switch_id": "Interruttore on/off",
+          "action_id": "Selettore multivalore azione",
+          "mode_id": "Selettore multivalore modalità",
+          "humidity_sensor_id": "Sensore di umidità",
+          "value_type": "Tipo di valore",
+          "unit_of_measurement": "Unità di misura",
+          "state_class": "Classe di stato"
+        }
+      }
+    },
+    "error": {
+      "invalid_device_id": "ID dispositivo non valido."
+    },
+    "abort": {
+      "entry_not_loaded": "Il TapHome core non è caricato. Correggi prima la connessione.",
+      "no_devices_configured": "Nessun dispositivo configurato. Usa prima Seleziona dispositivi."
+    }
+  },
+  "selector": {
+    "platform": {
+      "options": {
+        "lights": "Luci",
+        "buttons": "Pulsanti",
+        "covers": "Tapparelle",
+        "climates": "Climatizzazione",
+        "fans": "Ventilatori",
+        "humidifiers": "Umidificatori",
+        "multivalue_switches": "Selettori multivalore",
+        "switches": "Interruttori",
+        "sensors": "Sensori",
+        "binary_sensors": "Sensori binari",
+        "valves": "Valvole",
+        "times": "Orari"
+      }
+    }
+  },
   "issues": {
     "device_not_exposed": {
       "title": "Dispositivo {device_id} non esposto per core{core_id}",

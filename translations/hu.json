@@ -49,6 +49,129 @@
       "unique_id_mismatch": "A csatlakoztatott core nem egyezik azzal a core-ral, amelyhez ez a bejegyzés készült."
     }
   },
+  "options": {
+    "step": {
+      "init": {
+        "title": "TapHome beállítások",
+        "menu_options": {
+          "core_settings": "Core beállítások",
+          "zones": "Zónák (területek)",
+          "labels": "Címkék (kategóriák)",
+          "select_devices": "Eszközök kiválasztása",
+          "device_options": "Eszközbeállítások"
+        }
+      },
+      "core_settings": {
+        "title": "Core beállítások",
+        "data": {
+          "webhook_id": "Webhook azonosító",
+          "use_description_as_entity_id": "TapHome leírások használata entitásazonosítóként",
+          "use_description_as_name": "TapHome leírások használata entitásnévként",
+          "enabled_attributes": "Közzétett attribútumok"
+        },
+        "data_description": {
+          "webhook_id": "Webhookot regisztrál az azonnali push frissítésekhez a core-ról, pl. taphome_primary. Hagyja üresen a kikapcsoláshoz."
+        }
+      },
+      "zones": {
+        "title": "Zónák",
+        "description": "TapHome zónák leképezése Home Assistant területekre. Válassza ki a figyelmen kívül hagyandó zónákat, vagy adjon meg új nevet az átnevezéshez. Az üres mezők megtartják az eredeti nevet.",
+        "data": {
+          "ignored_names": "Figyelmen kívül hagyva"
+        }
+      },
+      "labels": {
+        "title": "Címkék",
+        "description": "TapHome kategóriák leképezése Home Assistant címkékre. Válassza ki a figyelmen kívül hagyandó kategóriákat, vagy adjon meg új nevet az átnevezéshez. Az üres mezők megtartják az eredeti nevet.",
+        "data": {
+          "ignored_names": "Figyelmen kívül hagyva"
+        }
+      },
+      "select_devices": {
+        "title": "Platform kiválasztása",
+        "data": {
+          "platform": "Platform"
+        }
+      },
+      "select_devices_pick": {
+        "title": "Eszközök kiválasztása",
+        "description": "Válassza ki, mely TapHome eszközök jelenjenek meg mint {platform}. Egy eszköz kijelölésének megszüntetése eltávolítja az entitását.",
+        "data": {
+          "devices": "Eszközök"
+        }
+      },
+      "device_options": {
+        "title": "Platform kiválasztása",
+        "data": {
+          "platform": "Platform"
+        }
+      },
+      "device_options_pick": {
+        "title": "Eszköz kiválasztása",
+        "data": {
+          "device": "Eszköz"
+        }
+      },
+      "device_options_form": {
+        "title": "Eszközbeállítások",
+        "description": "Speciális beállítások: {device}. Az üres mezők automatikus alapértelmezéseket használnak.",
+        "data": {
+          "unique_id": "Egyedi azonosító",
+          "effect_id": "Effektek többértékű kapcsolója",
+          "device_class": "Eszközosztály",
+          "actions": "Műveletek",
+          "close_threshold": "Zárási küszöb (%)",
+          "range_high_thermostat_id": "Tartomány felső termosztátja",
+          "range_low_thermostat_id": "Tartomány alsó termosztátja",
+          "target_temperature_step": "Célhőmérséklet lépésköze",
+          "precision": "Hőmérséklet pontossága",
+          "hvac_switch_id": "HVAC kapcsoló",
+          "hvac_mode": "Rögzített HVAC mód",
+          "hvac_mode_id": "HVAC mód többértékű kapcsolója",
+          "hvac_action_id": "HVAC művelet többértékű kapcsolója",
+          "preset_mode_id": "Előbeállítások többértékű kapcsolója",
+          "fan_mode_id": "Ventilátormódok többértékű kapcsolója",
+          "swing_mode_id": "Legyezési módok többértékű kapcsolója",
+          "swing_horizontal_mode_id": "Vízszintes legyezési módok többértékű kapcsolója",
+          "target_humidity_id": "Célpáratartalom analóg kimenete",
+          "min_humidity": "Minimális páratartalom (%)",
+          "max_humidity": "Maximális páratartalom (%)",
+          "switch_id": "Be/ki kapcsoló",
+          "action_id": "Művelet többértékű kapcsolója",
+          "mode_id": "Módok többértékű kapcsolója",
+          "humidity_sensor_id": "Páratartalom-érzékelő",
+          "value_type": "Értéktípus",
+          "unit_of_measurement": "Mértékegység",
+          "state_class": "Állapotosztály"
+        }
+      }
+    },
+    "error": {
+      "invalid_device_id": "Érvénytelen eszközazonosító."
+    },
+    "abort": {
+      "entry_not_loaded": "A TapHome core nincs betöltve. Először javítsa a kapcsolatot.",
+      "no_devices_configured": "Még nincs konfigurált eszköz. Először használja az Eszközök kiválasztása lehetőséget."
+    }
+  },
+  "selector": {
+    "platform": {
+      "options": {
+        "lights": "Lámpák",
+        "buttons": "Gombok",
+        "covers": "Redőnyök",
+        "climates": "Klímák",
+        "fans": "Ventilátorok",
+        "humidifiers": "Párásítók",
+        "multivalue_switches": "Többértékű kapcsolók",
+        "switches": "Kapcsolók",
+        "sensors": "Érzékelők",
+        "binary_sensors": "Bináris érzékelők",
+        "valves": "Szelepek",
+        "times": "Idők"
+      }
+    }
+  },
   "issues": {
     "device_not_exposed": {
       "title": "A(z) {device_id} eszköz nincs közzétéve a(z) core{core_id} számára",

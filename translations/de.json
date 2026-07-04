@@ -49,6 +49,129 @@
       "unique_id_mismatch": "Der verbundene Core stimmt nicht mit dem Core überein, für den dieser Eintrag erstellt wurde."
     }
   },
+  "options": {
+    "step": {
+      "init": {
+        "title": "TapHome-Optionen",
+        "menu_options": {
+          "core_settings": "Core-Einstellungen",
+          "zones": "Zonen (Bereiche)",
+          "labels": "Labels (Kategorien)",
+          "select_devices": "Geräte auswählen",
+          "device_options": "Geräteoptionen"
+        }
+      },
+      "core_settings": {
+        "title": "Core-Einstellungen",
+        "data": {
+          "webhook_id": "Webhook-ID",
+          "use_description_as_entity_id": "TapHome-Beschreibungen als Entitäts-IDs verwenden",
+          "use_description_as_name": "TapHome-Beschreibungen als Entitätsnamen verwenden",
+          "enabled_attributes": "Bereitgestellte Attribute"
+        },
+        "data_description": {
+          "webhook_id": "Registriert einen Webhook für sofortige Push-Updates vom Core, z. B. taphome_primary. Leer lassen zum Deaktivieren."
+        }
+      },
+      "zones": {
+        "title": "Zonen",
+        "description": "TapHome-Zonen auf Home-Assistant-Bereiche abbilden. Wählen Sie Zonen zum Ignorieren oder geben Sie einen neuen Namen zum Umbenennen ein. Leere Felder behalten den Originalnamen.",
+        "data": {
+          "ignored_names": "Ignoriert"
+        }
+      },
+      "labels": {
+        "title": "Labels",
+        "description": "TapHome-Kategorien auf Home-Assistant-Labels abbilden. Wählen Sie Kategorien zum Ignorieren oder geben Sie einen neuen Namen zum Umbenennen ein. Leere Felder behalten den Originalnamen.",
+        "data": {
+          "ignored_names": "Ignoriert"
+        }
+      },
+      "select_devices": {
+        "title": "Plattform auswählen",
+        "data": {
+          "platform": "Plattform"
+        }
+      },
+      "select_devices_pick": {
+        "title": "Geräte auswählen",
+        "description": "Wählen Sie, welche TapHome-Geräte als {platform} bereitgestellt werden. Das Abwählen eines Geräts entfernt seine Entität.",
+        "data": {
+          "devices": "Geräte"
+        }
+      },
+      "device_options": {
+        "title": "Plattform auswählen",
+        "data": {
+          "platform": "Plattform"
+        }
+      },
+      "device_options_pick": {
+        "title": "Gerät auswählen",
+        "data": {
+          "device": "Gerät"
+        }
+      },
+      "device_options_form": {
+        "title": "Geräteoptionen",
+        "description": "Erweiterte Optionen für {device}. Leere Felder verwenden automatische Standardwerte.",
+        "data": {
+          "unique_id": "Eindeutige ID",
+          "effect_id": "Mehrwertschalter für Effekte",
+          "device_class": "Geräteklasse",
+          "actions": "Aktionen",
+          "close_threshold": "Schließschwelle (%)",
+          "range_high_thermostat_id": "Oberer Bereichsthermostat",
+          "range_low_thermostat_id": "Unterer Bereichsthermostat",
+          "target_temperature_step": "Schrittweite der Zieltemperatur",
+          "precision": "Temperaturgenauigkeit",
+          "hvac_switch_id": "HVAC-Schalter",
+          "hvac_mode": "Fester HVAC-Modus",
+          "hvac_mode_id": "Mehrwertschalter für HVAC-Modus",
+          "hvac_action_id": "Mehrwertschalter für HVAC-Aktion",
+          "preset_mode_id": "Mehrwertschalter für Voreinstellungen",
+          "fan_mode_id": "Mehrwertschalter für Lüftermodi",
+          "swing_mode_id": "Mehrwertschalter für Schwenkmodi",
+          "swing_horizontal_mode_id": "Mehrwertschalter für horizontale Schwenkmodi",
+          "target_humidity_id": "Analogausgang für Zielfeuchtigkeit",
+          "min_humidity": "Minimale Luftfeuchtigkeit (%)",
+          "max_humidity": "Maximale Luftfeuchtigkeit (%)",
+          "switch_id": "Ein/Aus-Schalter",
+          "action_id": "Mehrwertschalter für Aktion",
+          "mode_id": "Mehrwertschalter für Modi",
+          "humidity_sensor_id": "Feuchtigkeitssensor",
+          "value_type": "Werttyp",
+          "unit_of_measurement": "Maßeinheit",
+          "state_class": "Zustandsklasse"
+        }
+      }
+    },
+    "error": {
+      "invalid_device_id": "Ungültige Geräte-ID."
+    },
+    "abort": {
+      "entry_not_loaded": "Der TapHome Core ist nicht geladen. Beheben Sie zuerst die Verbindung.",
+      "no_devices_configured": "Es sind noch keine Geräte konfiguriert. Verwenden Sie zuerst „Geräte auswählen“."
+    }
+  },
+  "selector": {
+    "platform": {
+      "options": {
+        "lights": "Lichter",
+        "buttons": "Tasten",
+        "covers": "Abdeckungen",
+        "climates": "Klimageräte",
+        "fans": "Ventilatoren",
+        "humidifiers": "Luftbefeuchter",
+        "multivalue_switches": "Mehrwertschalter",
+        "switches": "Schalter",
+        "sensors": "Sensoren",
+        "binary_sensors": "Binärsensoren",
+        "valves": "Ventile",
+        "times": "Zeiten"
+      }
+    }
+  },
   "issues": {
     "device_not_exposed": {
       "title": "Gerät {device_id} ist für Core{core_id} nicht freigegeben",

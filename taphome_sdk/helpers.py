@@ -15,8 +15,9 @@ def enum_from_string_optional(
     """Create a ``EnumT`` from a string or return None."""
     if value is None:
         return None
+    normalized = value.replace(" ", "").replace("_", "").lower()
     for enum_value in enum_type:
-        if enum_value.name.replace("_", "").lower() == value.replace(" ", "").lower():
+        if enum_value.name.replace("_", "").lower() == normalized:
             return enum_value
 
     return None
