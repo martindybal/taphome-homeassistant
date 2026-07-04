@@ -2,6 +2,8 @@
 
 Cíl: dostat integraci `taphome` do repozitáře `home-assistant/core` tak, aby prošla review napoprvé bez zásadních výhrad.
 
+> **Podrobný implementační plán** jednotlivých fází je rozpracován v [ha-core/](ha-core/README.md).
+
 ## Souhrn — proč integrace v současné podobě neprojde
 
 Home Assistant má pro **nové** integrace tvrdé požadavky (dev docs + Integration Quality Scale, minimálně tier **Bronze**). Současný stav proti nim:
