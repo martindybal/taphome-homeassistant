@@ -65,10 +65,11 @@
         "title": "Opzioni TapHome",
         "menu_options": {
           "core_settings": "Impostazioni core",
+          "add_devices": "Aggiungi dispositivi",
+          "edit_devices": "Modifica dispositivi",
+          "remove_devices": "Rimuovi dispositivi",
           "zones": "Zone (aree)",
-          "labels": "Etichette (categorie)",
-          "select_devices": "Seleziona dispositivi",
-          "device_options": "Opzioni dispositivo"
+          "labels": "Etichette (categorie)"
         }
       },
       "core_settings": {
@@ -92,44 +93,34 @@
       },
       "zones": {
         "title": "Zone",
-        "description": "Mappa le zone TapHome sulle aree di Home Assistant. Seleziona le zone da ignorare oppure inserisci un nuovo nome per rinominarle. I campi vuoti mantengono il nome originale.",
-        "data": {
-          "ignored_names": "Ignorate"
-        }
+        "description": "Mappa le zone TapHome sulle aree di Home Assistant. Per ogni zona puoi inserire un nuovo nome — un campo vuoto mantiene il nome originale — oppure attivare ignore per saltare la zona."
       },
       "labels": {
         "title": "Etichette",
-        "description": "Mappa le categorie TapHome sulle etichette di Home Assistant. Seleziona le categorie da ignorare oppure inserisci un nuovo nome per rinominarle. I campi vuoti mantengono il nome originale.",
-        "data": {
-          "ignored_names": "Ignorate"
-        }
+        "description": "Mappa le categorie TapHome sulle etichette di Home Assistant. Per ogni categoria puoi inserire un nuovo nome — un campo vuoto mantiene il nome originale — oppure attivare ignore per saltare la categoria."
       },
-      "select_devices": {
-        "title": "Seleziona piattaforma",
-        "data": {
-          "platform": "Piattaforma"
-        }
-      },
-      "select_devices_pick": {
-        "title": "Seleziona dispositivi",
-        "description": "Scegli quali dispositivi TapHome esporre come {platform}. Deselezionare un dispositivo rimuove la sua entità.",
+      "add_devices": {
+        "title": "Aggiungi dispositivi",
+        "description": "Scegli i dispositivi TapHome da aggiungere. Digita nel campo per cercare. I dispositivi non ancora aggiunti mostrano la zona e la categoria TapHome, quelli aggiunti la stanza.",
         "data": {
           "devices": "Dispositivi"
         }
       },
-      "device_options": {
+      "add_devices_platform": {
         "title": "Seleziona piattaforma",
+        "description": "Scegli la piattaforma come cui aggiungere i dispositivi selezionati. I dispositivi non adatti alla piattaforma scelta verranno saltati. Selezionati: {devices}",
         "data": {
           "platform": "Piattaforma"
         }
       },
-      "device_options_pick": {
-        "title": "Seleziona dispositivo",
+      "edit_devices": {
+        "title": "Modifica dispositivo",
+        "description": "Scegli il dispositivo da modificare. Digita nel campo per cercare.",
         "data": {
           "device": "Dispositivo"
         }
       },
-      "device_options_form": {
+      "edit_devices_form": {
         "title": "Opzioni dispositivo",
         "description": "Opzioni avanzate per {device}. I campi vuoti usano i valori predefiniti automatici.",
         "data": {
@@ -161,6 +152,13 @@
           "unit_of_measurement": "Unità di misura",
           "state_class": "Classe di stato"
         }
+      },
+      "remove_devices": {
+        "title": "Rimuovi dispositivi",
+        "description": "Scegli i dispositivi da rimuovere. Le loro entità verranno rimosse da Home Assistant. Digita nel campo per cercare.",
+        "data": {
+          "devices": "Dispositivi"
+        }
       }
     },
     "error": {
@@ -168,11 +166,14 @@
       "cannot_connect": "Connessione al TapHome core non riuscita.",
       "invalid_auth": "Il TapHome core ha rifiutato il token.",
       "ip_required": "Inserisci l'indirizzo IP del tuo core oppure attiva il cloud TapHome.",
-      "unique_id_mismatch": "Il core connesso non corrisponde al core per cui è stata creata questa voce."
+      "unique_id_mismatch": "Il core connesso non corrisponde al core per cui è stata creata questa voce.",
+      "no_devices_selected": "Seleziona almeno un dispositivo.",
+      "no_common_platform": "I dispositivi selezionati non possono essere aggiunti come nessuna piattaforma.",
+      "invalid_device": "Seleziona un dispositivo dall'elenco."
     },
     "abort": {
       "entry_not_loaded": "Il TapHome core non è caricato. Correggi prima la connessione.",
-      "no_devices_configured": "Nessun dispositivo configurato. Usa prima Seleziona dispositivi."
+      "no_devices_configured": "Nessun dispositivo configurato. Usa prima Aggiungi dispositivi."
     }
   },
   "selector": {

@@ -16,15 +16,16 @@ The preferred way is local access with webhook (local_push). Provide the IP addr
 ## Configuration via UI (recommended)
 
 1. In Home Assistant go to _Settings → Devices & services → Add integration_ and search for **TapHome**.
-2. Enter the IP address of your core (or leave both address fields empty to use the TapHome cloud) and the authorization token. Each TapHome core is added as a separate integration entry.
+2. Enter the authorization token and the IP address of your core (or enable **Use TapHome cloud** to connect through the TapHome cloud instead). The webhook and other core settings can be filled in here too. Each TapHome core is added as a separate integration entry.
 3. Open the integration entry and press **Configure** to manage everything else:
-   - **Core settings** – webhook for push updates, using TapHome descriptions as entity IDs/names, exposed attributes.
+   - **Core settings** – the same connection, webhook, description and exposed-attribute fields as when adding the core.
    - **Zones (areas)** – rename TapHome zones to Home Assistant areas or ignore them.
    - **Labels (categories)** – rename TapHome categories to Home Assistant labels or ignore them.
-   - **Select devices** – choose a platform (lights, covers, climates, …) and pick the devices exposed on the core.
-   - **Device options** – advanced per-device options (device class, effects, climate controller ids, …) matching the tables below.
+   - **Add devices** – pick the devices exposed on the core (searchable, with each device's room/zone shown) and then the platform (lights, covers, climates, …) they should be added as.
+   - **Edit devices** – pick a configured device (searchable) and adjust the advanced per-device options (device class, effects, climate controller ids, …) matching the tables below.
+   - **Remove devices** – pick the devices whose entities should be removed from Home Assistant.
 
-The connection settings (IP/API URL, token) can be changed later via the entry's **Reconfigure** action. When the core rejects the token, Home Assistant automatically starts a re-authentication flow.
+The connection settings (token, IP address / cloud) can also be changed later via **Core settings** or the entry's **Reconfigure** action. When the core rejects the token, Home Assistant automatically starts a re-authentication flow.
 
 ## YAML Configuration (deprecated)
 
