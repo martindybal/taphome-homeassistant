@@ -17,7 +17,7 @@
           "token": "Authorization token shown at the top of the TapHome API screen.",
           "use_cloud": "Connect through the TapHome cloud instead of your local network. Only recommended when the core is not reachable locally — the cloud is slower and requires an internet connection. The IP address is ignored when enabled.",
           "ip": "IP address of your TapHome core on your local network, e.g. 192.168.1.3. Find it in the TapHome app under My location. Recommended over the cloud for a faster, more reliable connection.",
-          "webhook_id": "Recommended: lets the core push updates instantly instead of Home Assistant polling every 2 seconds. Enter any name, e.g. taphome_primary, then in the TapHome app on the Expose devices screen enable Webhook and set the Webhook URL to e.g. http://homeassistant.local:8123/api/webhook/taphome_primary — replace homeassistant.local with your own Home Assistant address and taphome_primary with the name you entered above."
+          "webhook_id": "Recommended: lets the core push updates instantly instead of Home Assistant polling every 2 seconds. Enter any name, e.g. taphome_primary, then in the TapHome app on the Expose devices screen enable Webhook and set the Webhook URL to e.g. http://homeassistant.local:8123/api/webhook/taphome — replace homeassistant.local with your own Home Assistant address and taphome_primary with the name you entered above."
         }
       },
       "reconfigure": {
@@ -36,7 +36,7 @@
           "token": "Authorization token shown at the top of the TapHome API screen.",
           "use_cloud": "Connect through the TapHome cloud instead of your local network. Only recommended when the core is not reachable locally — the cloud is slower and requires an internet connection. The IP address is ignored when enabled.",
           "ip": "IP address of your TapHome core on your local network, e.g. 192.168.1.3. Find it in the TapHome app under My location. Recommended over the cloud for a faster, more reliable connection.",
-          "webhook_id": "Recommended: lets the core push updates instantly instead of Home Assistant polling every 2 seconds. Enter any name, e.g. taphome_primary, then in the TapHome app on the Expose devices screen enable Webhook and set the Webhook URL to e.g. http://homeassistant.local:8123/api/webhook/taphome_primary — replace homeassistant.local with your own Home Assistant address and taphome_primary with the name you entered above."
+          "webhook_id": "Recommended: lets the core push updates instantly instead of Home Assistant polling every 2 seconds. Enter any name, e.g. taphome_primary, then in the TapHome app on the Expose devices screen enable Webhook and set the Webhook URL to e.g. http://homeassistant.local:8123/api/webhook/taphome — replace homeassistant.local with your own Home Assistant address and taphome_primary with the name you entered above."
         }
       },
       "reauth_confirm": {
@@ -87,7 +87,7 @@
           "token": "Authorization token shown at the top of the TapHome API screen.",
           "use_cloud": "Connect through the TapHome cloud instead of your local network. Only recommended when the core is not reachable locally — the cloud is slower and requires an internet connection. The IP address is ignored when enabled.",
           "ip": "IP address of your TapHome core on your local network, e.g. 192.168.1.3. Find it in the TapHome app under My location. Recommended over the cloud for a faster, more reliable connection.",
-          "webhook_id": "Recommended: lets the core push updates instantly instead of Home Assistant polling every 2 seconds. Enter any name, e.g. taphome_primary, then in the TapHome app on the Expose devices screen enable Webhook and set the Webhook URL to e.g. http://homeassistant.local:8123/api/webhook/taphome_primary — replace homeassistant.local with your own Home Assistant address and taphome_primary with the name you entered above."
+          "webhook_id": "Recommended: lets the core push updates instantly instead of Home Assistant polling every 2 seconds. Enter any name, e.g. taphome_primary, then in the TapHome app on the Expose devices screen enable Webhook and set the Webhook URL to e.g. http://homeassistant.local:8123/api/webhook/taphome — replace homeassistant.local with your own Home Assistant address and taphome_primary with the name you entered above."
         },
         "description": "Update the connection and core settings of your TapHome core. A local connection is recommended: only enable \"Use TapHome cloud\" if you can't reach the core directly on your network — the cloud updates less often (about every 20 seconds) and depends on TapHome's servers being reachable. Find your core's IP address in the TapHome app under \"My location\"."
       },

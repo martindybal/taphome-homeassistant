@@ -72,6 +72,8 @@ YAML_UNIQUE_ID_PREFIX = "yaml_"
 
 CONF_USE_CLOUD = "use_cloud"
 
+DEFAULT_WEBHOOK_ID = "taphome"
+
 CONNECTION_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_TOKEN): TextSelector(
@@ -85,9 +87,7 @@ CONNECTION_SCHEMA = vol.Schema(
 CORE_SCHEMA = CONNECTION_SCHEMA.extend(
     {
         vol.Optional(CONF_WEBHOOK_ID): TextSelector(),
-        vol.Optional(
-            USE_DESCRIPTION_AS_ENTITY_ID, default=False
-        ): BooleanSelector(),
+        vol.Optional(USE_DESCRIPTION_AS_ENTITY_ID, default=False): BooleanSelector(),
         vol.Optional(USE_DESCRIPTION_AS_NAME, default=False): BooleanSelector(),
         vol.Optional(
             CONF_ENABLED_ATTRIBUTES, default=AVAILABLE_ATTRIBUTES
@@ -296,9 +296,12 @@ class TapHomeConfigFlow(ConfigFlow, domain=DOMAIN):
                     options=options,
                 )
 
+        suggested_values = user_input or {CONF_WEBHOOK_ID: DEFAULT_WEBHOOK_ID}
         return self.async_show_form(
             step_id="user",
-            data_schema=self.add_suggested_values_to_schema(CORE_SCHEMA, user_input),
+            data_schema=self.add_suggested_values_to_schema(
+                CORE_SCHEMA, suggested_values
+            ),
             errors=errors,
         )
 
@@ -348,9 +351,7 @@ class TapHomeConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_reauth(
-        self, entry_data: dict[str, Any]
-    ) -> ConfigFlowResult:
+    async def async_step_reauth(self, entry_data: dict[str, Any]) -> ConfigFlowResult:
         """Handle reauthentication when the token is rejected."""
         return await self.async_step_reauth_confirm()
 
@@ -817,8 +818,7 @@ class TapHomeOptionsFlow(OptionsFlow):
         if device.id in self._configured_device_ids():
             return self._area_name(device.zone)
         return (
-            " · ".join(part for part in (device.zone, device.category) if part)
-            or None
+            " · ".join(part for part in (device.zone, device.category) if part) or None
         )
 
     def _configured_device_ids(self) -> set[int]:
@@ -992,7 +992,7 @@ class TapHomeOptionsFlow(OptionsFlow):
             if option_field.kind in (FieldKind.DEVICE_ID, FieldKind.VALUE_TYPE):
                 try:
                     new_config[option_field.key] = int(value)
-                except (TypeError, ValueError):
+                except TypeError, ValueError:
                     errors[option_field.key] = "invalid_device_id"
             elif option_field.kind == FieldKind.NUMBER_INT:
                 new_config[option_field.key] = int(value)
