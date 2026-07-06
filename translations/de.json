@@ -3,30 +3,40 @@
     "step": {
       "user": {
         "title": "TapHome Core verbinden",
-        "description": "Geben Sie Ihre Geräte in der TapHome-App frei (Einstellungen → Geräte freigeben → TapHome API) und tragen Sie unten den Token ein. Für lokalen Zugriff geben Sie die IP-Adresse Ihres Cores an; lassen Sie beide Adressfelder leer, um die TapHome-Cloud zu verwenden.",
+        "description": "Geben Sie Ihre Geräte in der TapHome-App frei (Einstellungen → Geräte freigeben → TapHome API) und tragen Sie unten den Token ein. Eine lokale Verbindung wird empfohlen: Aktivieren Sie „TapHome-Cloud verwenden“ nur, wenn der Core in Ihrem Netzwerk nicht direkt erreichbar ist — die Cloud aktualisiert seltener (etwa alle 20 Sekunden) und benötigt erreichbare TapHome-Server. Die IP-Adresse Ihres Cores finden Sie in der TapHome-App unter „Mein Standort“.",
         "data": {
+          "token": "Token",
+          "use_cloud": "TapHome-Cloud verwenden",
           "ip": "IP-Adresse",
-          "api_url": "API-URL",
-          "token": "Token"
+          "webhook_id": "Webhook-ID",
+          "use_description_as_entity_id": "TapHome-Beschreibungen als Entitäts-IDs verwenden",
+          "use_description_as_name": "TapHome-Beschreibungen als Entitätsnamen verwenden",
+          "enabled_attributes": "Bereitgestellte Attribute"
         },
         "data_description": {
-          "ip": "IP-Adresse Ihres TapHome Cores, z. B. 192.168.1.3.",
-          "api_url": "Erweitert: vollständige API-URL des Cores. Geben Sie entweder die IP-Adresse oder die API-URL an, nicht beides.",
-          "token": "Autorisierungstoken, der oben auf dem TapHome-API-Bildschirm angezeigt wird."
+          "token": "Autorisierungstoken, der oben auf dem TapHome-API-Bildschirm angezeigt wird.",
+          "use_cloud": "Verbindung über die TapHome-Cloud statt über das lokale Netzwerk. Nur empfohlen, wenn der Core lokal nicht erreichbar ist — die Cloud ist langsamer und benötigt eine Internetverbindung. Bei Aktivierung wird die IP-Adresse ignoriert.",
+          "ip": "IP-Adresse Ihres TapHome Cores in Ihrem lokalen Netzwerk, z. B. 192.168.1.3. Zu finden in der TapHome-App unter Mein Standort. Gegenüber der Cloud für eine schnellere, zuverlässigere Verbindung empfohlen.",
+          "webhook_id": "Empfohlen: Der Core sendet Änderungen dann sofort, statt dass Home Assistant alle 2 Sekunden nachfragt. Geben Sie einen beliebigen Namen ein, z. B. taphome_primary, und tragen Sie denselben in der TapHome-App auf dem Bildschirm „Geräte freigeben“ ein — aktivieren Sie dort Webhook und setzen Sie die Webhook-URL z. B. auf http://homeassistant.local:8123/api/webhook/taphome_primary — ersetzen Sie homeassistant.local durch die Adresse Ihres Home Assistant und taphome_primary durch den oben eingegebenen Namen."
         }
       },
       "reconfigure": {
         "title": "TapHome Core neu konfigurieren",
-        "description": "Aktualisieren Sie die Verbindungseinstellungen Ihres TapHome Cores.",
+        "description": "Aktualisieren Sie die Verbindungs- und Core-Einstellungen Ihres TapHome Cores. Eine lokale Verbindung wird empfohlen: Aktivieren Sie „TapHome-Cloud verwenden“ nur, wenn der Core in Ihrem Netzwerk nicht direkt erreichbar ist — die Cloud aktualisiert seltener (etwa alle 20 Sekunden) und benötigt erreichbare TapHome-Server. Die IP-Adresse Ihres Cores finden Sie in der TapHome-App unter „Mein Standort“.",
         "data": {
+          "token": "Token",
+          "use_cloud": "TapHome-Cloud verwenden",
           "ip": "IP-Adresse",
-          "api_url": "API-URL",
-          "token": "Token"
+          "webhook_id": "Webhook-ID",
+          "use_description_as_entity_id": "TapHome-Beschreibungen als Entitäts-IDs verwenden",
+          "use_description_as_name": "TapHome-Beschreibungen als Entitätsnamen verwenden",
+          "enabled_attributes": "Bereitgestellte Attribute"
         },
         "data_description": {
-          "ip": "IP-Adresse Ihres TapHome Cores, z. B. 192.168.1.3.",
-          "api_url": "Erweitert: vollständige API-URL des Cores. Geben Sie entweder die IP-Adresse oder die API-URL an, nicht beides.",
-          "token": "Autorisierungstoken, der oben auf dem TapHome-API-Bildschirm angezeigt wird."
+          "token": "Autorisierungstoken, der oben auf dem TapHome-API-Bildschirm angezeigt wird.",
+          "use_cloud": "Verbindung über die TapHome-Cloud statt über das lokale Netzwerk. Nur empfohlen, wenn der Core lokal nicht erreichbar ist — die Cloud ist langsamer und benötigt eine Internetverbindung. Bei Aktivierung wird die IP-Adresse ignoriert.",
+          "ip": "IP-Adresse Ihres TapHome Cores in Ihrem lokalen Netzwerk, z. B. 192.168.1.3. Zu finden in der TapHome-App unter Mein Standort. Gegenüber der Cloud für eine schnellere, zuverlässigere Verbindung empfohlen.",
+          "webhook_id": "Empfohlen: Der Core sendet Änderungen dann sofort, statt dass Home Assistant alle 2 Sekunden nachfragt. Geben Sie einen beliebigen Namen ein, z. B. taphome_primary, und tragen Sie denselben in der TapHome-App auf dem Bildschirm „Geräte freigeben“ ein — aktivieren Sie dort Webhook und setzen Sie die Webhook-URL z. B. auf http://homeassistant.local:8123/api/webhook/taphome_primary — ersetzen Sie homeassistant.local durch die Adresse Ihres Home Assistant und taphome_primary durch den oben eingegebenen Namen."
         }
       },
       "reauth_confirm": {
@@ -40,7 +50,7 @@
     "error": {
       "cannot_connect": "Verbindung zum TapHome Core fehlgeschlagen.",
       "invalid_auth": "Der TapHome Core hat den Token abgelehnt.",
-      "ip_and_api_url_set": "Geben Sie entweder die IP-Adresse oder die API-URL an, nicht beides."
+      "ip_required": "Geben Sie die IP-Adresse Ihres Cores an oder aktivieren Sie die TapHome-Cloud."
     },
     "abort": {
       "already_configured": "Dieser TapHome Core ist bereits konfiguriert.",
@@ -64,14 +74,21 @@
       "core_settings": {
         "title": "Core-Einstellungen",
         "data": {
+          "token": "Token",
+          "use_cloud": "TapHome-Cloud verwenden",
+          "ip": "IP-Adresse",
           "webhook_id": "Webhook-ID",
           "use_description_as_entity_id": "TapHome-Beschreibungen als Entitäts-IDs verwenden",
           "use_description_as_name": "TapHome-Beschreibungen als Entitätsnamen verwenden",
           "enabled_attributes": "Bereitgestellte Attribute"
         },
         "data_description": {
-          "webhook_id": "Registriert einen Webhook für sofortige Push-Updates vom Core, z. B. taphome_primary. Leer lassen zum Deaktivieren."
-        }
+          "token": "Autorisierungstoken, der oben auf dem TapHome-API-Bildschirm angezeigt wird.",
+          "use_cloud": "Verbindung über die TapHome-Cloud statt über das lokale Netzwerk. Nur empfohlen, wenn der Core lokal nicht erreichbar ist — die Cloud ist langsamer und benötigt eine Internetverbindung. Bei Aktivierung wird die IP-Adresse ignoriert.",
+          "ip": "IP-Adresse Ihres TapHome Cores in Ihrem lokalen Netzwerk, z. B. 192.168.1.3. Zu finden in der TapHome-App unter Mein Standort. Gegenüber der Cloud für eine schnellere, zuverlässigere Verbindung empfohlen.",
+          "webhook_id": "Empfohlen: Der Core sendet Änderungen dann sofort, statt dass Home Assistant alle 2 Sekunden nachfragt. Geben Sie einen beliebigen Namen ein, z. B. taphome_primary, und tragen Sie denselben in der TapHome-App auf dem Bildschirm „Geräte freigeben“ ein — aktivieren Sie dort Webhook und setzen Sie die Webhook-URL z. B. auf http://homeassistant.local:8123/api/webhook/taphome_primary — ersetzen Sie homeassistant.local durch die Adresse Ihres Home Assistant und taphome_primary durch den oben eingegebenen Namen."
+        },
+        "description": "Aktualisieren Sie die Verbindungs- und Core-Einstellungen Ihres TapHome Cores. Eine lokale Verbindung wird empfohlen: Aktivieren Sie „TapHome-Cloud verwenden“ nur, wenn der Core in Ihrem Netzwerk nicht direkt erreichbar ist — die Cloud aktualisiert seltener (etwa alle 20 Sekunden) und benötigt erreichbare TapHome-Server. Die IP-Adresse Ihres Cores finden Sie in der TapHome-App unter „Mein Standort“."
       },
       "zones": {
         "title": "Zonen",
@@ -147,7 +164,11 @@
       }
     },
     "error": {
-      "invalid_device_id": "Ungültige Geräte-ID."
+      "invalid_device_id": "Ungültige Geräte-ID.",
+      "cannot_connect": "Verbindung zum TapHome Core fehlgeschlagen.",
+      "invalid_auth": "Der TapHome Core hat den Token abgelehnt.",
+      "ip_required": "Geben Sie die IP-Adresse Ihres Cores an oder aktivieren Sie die TapHome-Cloud.",
+      "unique_id_mismatch": "Der verbundene Core stimmt nicht mit dem Core überein, für den dieser Eintrag erstellt wurde."
     },
     "abort": {
       "entry_not_loaded": "Der TapHome Core ist nicht geladen. Beheben Sie zuerst die Verbindung.",

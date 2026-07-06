@@ -69,14 +69,33 @@ _LOGGER = logging.getLogger(__name__)
 
 YAML_UNIQUE_ID_PREFIX = "yaml_"
 
-USER_SCHEMA = vol.Schema(
+CONF_USE_CLOUD = "use_cloud"
+
+CONNECTION_SCHEMA = vol.Schema(
     {
-        vol.Optional(CONF_IP): TextSelector(),
-        vol.Optional(CONF_API_URL): TextSelector(
-            TextSelectorConfig(type=TextSelectorType.URL)
-        ),
         vol.Required(CONF_TOKEN): TextSelector(
             TextSelectorConfig(type=TextSelectorType.PASSWORD)
+        ),
+        vol.Optional(CONF_USE_CLOUD, default=False): BooleanSelector(),
+        vol.Optional(CONF_IP): TextSelector(),
+    }
+)
+
+CORE_SCHEMA = CONNECTION_SCHEMA.extend(
+    {
+        vol.Optional(CONF_WEBHOOK_ID): TextSelector(),
+        vol.Optional(
+            USE_DESCRIPTION_AS_ENTITY_ID, default=False
+        ): BooleanSelector(),
+        vol.Optional(USE_DESCRIPTION_AS_NAME, default=False): BooleanSelector(),
+        vol.Optional(
+            CONF_ENABLED_ATTRIBUTES, default=AVAILABLE_ATTRIBUTES
+        ): SelectSelector(
+            SelectSelectorConfig(
+                options=AVAILABLE_ATTRIBUTES,
+                multiple=True,
+                mode=SelectSelectorMode.DROPDOWN,
+            )
         ),
     }
 )
@@ -111,6 +130,64 @@ def resolve_api_url(ip: str | None, api_url: str | None) -> str:
     if ip:
         return f"http://{ip}/api/TapHomeApi/v1"
     return DEFAULT_CLOUD_API_URL
+
+
+def _connection_values_from_api_url(api_url: str) -> dict[str, Any]:
+    """Derive the ip/use_cloud form values from a stored API URL."""
+    normalized = api_url.rstrip("/")
+    if normalized == DEFAULT_CLOUD_API_URL:
+        return {CONF_USE_CLOUD: True}
+    prefix = "http://"
+    suffix = "/api/TapHomeApi/v1"
+    if normalized.startswith(prefix) and normalized.endswith(suffix):
+        ip = normalized[len(prefix) : -len(suffix)]
+        if ip and "/" not in ip:
+            return {CONF_IP: ip}
+    return {}
+
+
+def _apply_core_settings(options: dict[str, Any], user_input: dict[str, Any]) -> None:
+    """Merge the core settings form fields from user_input into options."""
+    if user_input.get(CONF_WEBHOOK_ID):
+        options[CONF_WEBHOOK_ID] = user_input[CONF_WEBHOOK_ID].strip()
+    else:
+        options.pop(CONF_WEBHOOK_ID, None)
+    options[USE_DESCRIPTION_AS_ENTITY_ID] = user_input.get(
+        USE_DESCRIPTION_AS_ENTITY_ID, False
+    )
+    options[USE_DESCRIPTION_AS_NAME] = user_input.get(USE_DESCRIPTION_AS_NAME, False)
+    options[CONF_ENABLED_ATTRIBUTES] = user_input.get(
+        CONF_ENABLED_ATTRIBUTES, AVAILABLE_ATTRIBUTES
+    )
+
+
+def _is_yaml_fallback_unique_id(unique_id: str | None) -> bool:
+    """Return True when the entry still has an import fallback unique id."""
+    return unique_id is None or unique_id.startswith(YAML_UNIQUE_ID_PREFIX)
+
+
+async def _async_validate_connection(
+    user_input: dict[str, Any], errors: dict[str, str]
+) -> tuple[str, Location] | None:
+    """Validate the connection form input and return the resolved connection."""
+    if user_input.get(CONF_USE_CLOUD, False):
+        api_url = DEFAULT_CLOUD_API_URL
+    else:
+        ip = (user_input.get(CONF_IP) or "").strip()
+        if not ip:
+            errors["base"] = "ip_required"
+            return None
+        api_url = f"http://{ip}/api/TapHomeApi/v1"
+
+    try:
+        location = await _async_get_location(api_url, user_input[CONF_TOKEN])
+    except TapHomeAuthError:
+        errors["base"] = "invalid_auth"
+    except CannotConnectError:
+        errors["base"] = "cannot_connect"
+    else:
+        return api_url, location
+    return None
 
 
 async def _async_get_location(api_url: str, token: str) -> Location:
@@ -201,11 +278,13 @@ class TapHomeConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            connection = await self._async_validate_connection(user_input, errors)
+            connection = await _async_validate_connection(user_input, errors)
             if connection is not None:
                 api_url, location = connection
                 await self.async_set_unique_id(location.location_id)
                 self._abort_if_unique_id_configured()
+                options: dict[str, Any] = {}
+                _apply_core_settings(options, user_input)
                 return self.async_create_entry(
                     title=location.location_name,
                     data={
@@ -213,28 +292,31 @@ class TapHomeConfigFlow(ConfigFlow, domain=DOMAIN):
                         CONF_API_URL: api_url,
                         CONF_ID: location.location_id,
                     },
+                    options=options,
                 )
 
         return self.async_show_form(
             step_id="user",
-            data_schema=self.add_suggested_values_to_schema(USER_SCHEMA, user_input),
+            data_schema=self.add_suggested_values_to_schema(CORE_SCHEMA, user_input),
             errors=errors,
         )
 
     async def async_step_reconfigure(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Handle reconfiguration of the connection settings."""
+        """Handle reconfiguration of the connection and core settings."""
         entry = self._get_reconfigure_entry()
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            connection = await self._async_validate_connection(user_input, errors)
+            connection = await _async_validate_connection(user_input, errors)
             if connection is not None:
                 api_url, location = connection
                 await self.async_set_unique_id(location.location_id)
-                if not self._is_yaml_fallback_unique_id(entry.unique_id):
+                if not _is_yaml_fallback_unique_id(entry.unique_id):
                     self._abort_if_unique_id_mismatch(reason="unique_id_mismatch")
+                new_options = dict(entry.options)
+                _apply_core_settings(new_options, user_input)
                 return self.async_update_reload_and_abort(
                     entry,
                     unique_id=location.location_id,
@@ -242,16 +324,25 @@ class TapHomeConfigFlow(ConfigFlow, domain=DOMAIN):
                         CONF_TOKEN: user_input[CONF_TOKEN],
                         CONF_API_URL: api_url,
                     },
+                    options=new_options,
                 )
 
         suggested_values = user_input or {
-            CONF_API_URL: entry.data.get(CONF_API_URL),
             CONF_TOKEN: entry.data.get(CONF_TOKEN),
+            **_connection_values_from_api_url(entry.data.get(CONF_API_URL) or ""),
+            CONF_WEBHOOK_ID: entry.options.get(CONF_WEBHOOK_ID),
+            USE_DESCRIPTION_AS_ENTITY_ID: entry.options.get(
+                USE_DESCRIPTION_AS_ENTITY_ID, False
+            ),
+            USE_DESCRIPTION_AS_NAME: entry.options.get(USE_DESCRIPTION_AS_NAME, False),
+            CONF_ENABLED_ATTRIBUTES: entry.options.get(
+                CONF_ENABLED_ATTRIBUTES, AVAILABLE_ATTRIBUTES
+            ),
         }
         return self.async_show_form(
             step_id="reconfigure",
             data_schema=self.add_suggested_values_to_schema(
-                USER_SCHEMA, suggested_values
+                CORE_SCHEMA, suggested_values
             ),
             errors=errors,
         )
@@ -279,7 +370,7 @@ class TapHomeConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
             else:
                 await self.async_set_unique_id(location.location_id)
-                if not self._is_yaml_fallback_unique_id(entry.unique_id):
+                if not _is_yaml_fallback_unique_id(entry.unique_id):
                     self._abort_if_unique_id_mismatch(reason="unique_id_mismatch")
                 return self.async_update_reload_and_abort(
                     entry,
@@ -334,35 +425,6 @@ class TapHomeConfigFlow(ConfigFlow, domain=DOMAIN):
             options=_yaml_core_to_options(import_data),
         )
 
-    async def _async_validate_connection(
-        self, user_input: dict[str, Any], errors: dict[str, str]
-    ) -> tuple[str, Location] | None:
-        """Validate the user form input and return the resolved connection."""
-        ip = user_input.get(CONF_IP)
-        api_url = user_input.get(CONF_API_URL)
-
-        if ip and api_url:
-            errors["base"] = "ip_and_api_url_set"
-            return None
-
-        resolved_api_url = resolve_api_url(ip, api_url)
-        try:
-            location = await _async_get_location(
-                resolved_api_url, user_input[CONF_TOKEN]
-            )
-        except TapHomeAuthError:
-            errors["base"] = "invalid_auth"
-        except CannotConnectError:
-            errors["base"] = "cannot_connect"
-        else:
-            return resolved_api_url, location
-        return None
-
-    @staticmethod
-    def _is_yaml_fallback_unique_id(unique_id: str | None) -> bool:
-        """Return True when the entry still has an import fallback unique id."""
-        return unique_id is None or unique_id.startswith(YAML_UNIQUE_ID_PREFIX)
-
 
 def _device_config_id(device_config: dict | int) -> int:
     """Return the TapHome device id of a stored device configuration."""
@@ -408,53 +470,50 @@ class TapHomeOptionsFlow(OptionsFlow):
     async def async_step_core_settings(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Edit core level settings."""
-        if user_input is not None:
-            if user_input.get(CONF_WEBHOOK_ID):
-                self._options[CONF_WEBHOOK_ID] = user_input[CONF_WEBHOOK_ID].strip()
-            else:
-                self._options.pop(CONF_WEBHOOK_ID, None)
-            self._options[USE_DESCRIPTION_AS_ENTITY_ID] = user_input.get(
-                USE_DESCRIPTION_AS_ENTITY_ID, False
-            )
-            self._options[USE_DESCRIPTION_AS_NAME] = user_input.get(
-                USE_DESCRIPTION_AS_NAME, False
-            )
-            self._options[CONF_ENABLED_ATTRIBUTES] = user_input.get(
-                CONF_ENABLED_ATTRIBUTES, []
-            )
-            return self._async_save_options()
+        """Edit the connection and core level settings."""
+        errors: dict[str, str] = {}
 
-        schema = vol.Schema(
-            {
-                vol.Optional(CONF_WEBHOOK_ID): TextSelector(),
-                vol.Optional(
-                    USE_DESCRIPTION_AS_ENTITY_ID,
-                    default=self._options.get(USE_DESCRIPTION_AS_ENTITY_ID, False),
-                ): BooleanSelector(),
-                vol.Optional(
-                    USE_DESCRIPTION_AS_NAME,
-                    default=self._options.get(USE_DESCRIPTION_AS_NAME, False),
-                ): BooleanSelector(),
-                vol.Optional(
-                    CONF_ENABLED_ATTRIBUTES,
-                    default=self._options.get(
-                        CONF_ENABLED_ATTRIBUTES, AVAILABLE_ATTRIBUTES
-                    ),
-                ): SelectSelector(
-                    SelectSelectorConfig(
-                        options=AVAILABLE_ATTRIBUTES,
-                        multiple=True,
-                        mode=SelectSelectorMode.DROPDOWN,
+        if user_input is not None:
+            connection = await _async_validate_connection(user_input, errors)
+            if connection is not None:
+                api_url, location = connection
+                if (
+                    not _is_yaml_fallback_unique_id(self.config_entry.unique_id)
+                    and location.location_id != self.config_entry.unique_id
+                ):
+                    errors["base"] = "unique_id_mismatch"
+                else:
+                    self.hass.config_entries.async_update_entry(
+                        self.config_entry,
+                        data={
+                            **self.config_entry.data,
+                            CONF_TOKEN: user_input[CONF_TOKEN],
+                            CONF_API_URL: api_url,
+                        },
                     )
-                ),
-            }
-        )
+                    _apply_core_settings(self._options, user_input)
+                    return self._async_save_options()
+
+        suggested_values = user_input or {
+            CONF_TOKEN: self.config_entry.data.get(CONF_TOKEN),
+            **_connection_values_from_api_url(
+                self.config_entry.data.get(CONF_API_URL) or ""
+            ),
+            CONF_WEBHOOK_ID: self._options.get(CONF_WEBHOOK_ID),
+            USE_DESCRIPTION_AS_ENTITY_ID: self._options.get(
+                USE_DESCRIPTION_AS_ENTITY_ID, False
+            ),
+            USE_DESCRIPTION_AS_NAME: self._options.get(USE_DESCRIPTION_AS_NAME, False),
+            CONF_ENABLED_ATTRIBUTES: self._options.get(
+                CONF_ENABLED_ATTRIBUTES, AVAILABLE_ATTRIBUTES
+            ),
+        }
         return self.async_show_form(
             step_id="core_settings",
             data_schema=self.add_suggested_values_to_schema(
-                schema, {CONF_WEBHOOK_ID: self._options.get(CONF_WEBHOOK_ID)}
+                CORE_SCHEMA, suggested_values
             ),
+            errors=errors,
         )
 
     async def async_step_zones(
