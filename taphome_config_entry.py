@@ -12,34 +12,26 @@ from .taphome_sdk import TapHomeHub, get_optional, get_required
 
 @dataclass(slots=True, frozen=True)
 class NameMapping:
-    """Define name mapping and ignored names (immutable/hashable)."""
+    """Define the name-to-target mapping (immutable/hashable)."""
 
     renames: frozenset[tuple[str, str]]
-    ignored: frozenset[str]
 
     @staticmethod
     def from_dict(data: dict | None) -> NameMapping:
         """Create a NameMapping from a dictionary."""
-        renames: dict[str, str] = {}
-        ignored: set[str] = set()
-        if data is not None:
-            for source, target in data.items():
-                if isinstance(target, dict) and target.get("ignore"):
-                    ignored.add(source)
-                elif isinstance(target, str):
-                    renames[source] = target
-        return NameMapping(frozenset(renames.items()), frozenset(ignored))
+        renames = {
+            source: target
+            for source, target in (data or {}).items()
+            if isinstance(target, str)
+        }
+        return NameMapping(frozenset(renames.items()))
 
-    def is_ignored(self, original: str) -> bool:
-        """Check if the original name is ignored."""
-        return original in self.ignored
-
-    def map(self, original: str) -> str:
-        """Map original name to preferred name."""
-        for k, v in self.renames:
-            if k == original:
-                return v
-        return original
+    def get(self, original: str) -> str | None:
+        """Return the configured target for the original name, or None."""
+        for source, target in self.renames:
+            if source == original:
+                return target
+        return None
 
 
 @dataclass(slots=True, frozen=True)

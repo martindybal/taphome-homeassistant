@@ -8,6 +8,7 @@
           "token": "Token",
           "use_cloud": "Use TapHome cloud",
           "ip": "IP address",
+          "id": "Core ID",
           "webhook_id": "Webhook ID",
           "use_description_as_entity_id": "Use TapHome descriptions as entity IDs",
           "use_description_as_name": "Use TapHome descriptions as entity names",
@@ -17,6 +18,7 @@
           "token": "Authorization token shown at the top of the TapHome API screen.",
           "use_cloud": "Connect through the TapHome cloud instead of your local network. Only recommended when the core is not reachable locally — the cloud is slower and requires an internet connection. The IP address is ignored when enabled.",
           "ip": "IP address of your TapHome core on your local network, e.g. 192.168.1.3. Find it in the TapHome app under My location. Recommended over the cloud for a faster, more reliable connection.",
+          "id": "Optional identifier for this core. Only needed when you use more than one core — give each a unique value so their entities do not clash. Leave empty for a single core. When migrating from YAML, keep the id you used there.",
           "webhook_id": "Recommended: lets the core push updates instantly instead of Home Assistant polling every 2 seconds. Enter any name, e.g. taphome_primary, then in the TapHome app on the Expose devices screen enable Webhook and set the Webhook URL to e.g. http://homeassistant.local:8123/api/webhook/taphome — replace homeassistant.local with your own Home Assistant address and taphome_primary with the name you entered above."
         }
       },
@@ -27,6 +29,7 @@
           "token": "Token",
           "use_cloud": "Use TapHome cloud",
           "ip": "IP address",
+          "id": "Core ID",
           "webhook_id": "Webhook ID",
           "use_description_as_entity_id": "Use TapHome descriptions as entity IDs",
           "use_description_as_name": "Use TapHome descriptions as entity names",
@@ -36,6 +39,7 @@
           "token": "Authorization token shown at the top of the TapHome API screen.",
           "use_cloud": "Connect through the TapHome cloud instead of your local network. Only recommended when the core is not reachable locally — the cloud is slower and requires an internet connection. The IP address is ignored when enabled.",
           "ip": "IP address of your TapHome core on your local network, e.g. 192.168.1.3. Find it in the TapHome app under My location. Recommended over the cloud for a faster, more reliable connection.",
+          "id": "Optional identifier for this core. Only needed when you use more than one core — give each a unique value so their entities do not clash. Leave empty for a single core. When migrating from YAML, keep the id you used there.",
           "webhook_id": "Recommended: lets the core push updates instantly instead of Home Assistant polling every 2 seconds. Enter any name, e.g. taphome_primary, then in the TapHome app on the Expose devices screen enable Webhook and set the Webhook URL to e.g. http://homeassistant.local:8123/api/webhook/taphome — replace homeassistant.local with your own Home Assistant address and taphome_primary with the name you entered above."
         }
       },
@@ -45,12 +49,39 @@
         "data": {
           "token": "Token"
         }
+      },
+      "zones": {
+        "title": "Zones",
+        "description": "Map TapHome zones to Home Assistant areas. Pick the area for each zone; leave a zone empty to not assign an area."
+      },
+      "labels": {
+        "title": "Labels",
+        "description": "Map TapHome categories to Home Assistant labels. Pick the label for each category; leave a category empty to not assign a label."
+      },
+      "add_devices": {
+        "title": "Add devices",
+        "description": "Pick the TapHome devices you want to add. Type in the field to search. Devices that are not added yet show their TapHome zone and category, added devices show their room.",
+        "data": {
+          "devices": "Devices"
+        }
+      },
+      "add_devices_platform": {
+        "title": "Select platforms",
+        "description": "For each device choose the platforms to add it as. You can pick several platforms per device, or none to skip that device. Only platforms compatible with each device are offered."
+      },
+      "add_devices_options": {
+        "title": "Device options",
+        "description": "Set the options for each selected device and platform. Each section is one device on one platform. Empty fields use automatic defaults."
       }
     },
     "error": {
       "cannot_connect": "Failed to connect to the TapHome core.",
       "invalid_auth": "The TapHome core rejected the token.",
-      "ip_required": "Fill in the IP address of your core, or enable the TapHome cloud."
+      "ip_required": "Fill in the IP address of your core, or enable the TapHome cloud.",
+      "no_devices_selected": "Select at least one device.",
+      "no_common_platform": "The selected devices cannot be added as any platform.",
+      "invalid_device": "Select a device from the list.",
+      "invalid_device_id": "Invalid device ID."
     },
     "abort": {
       "already_configured": "This TapHome core is already configured.",
@@ -78,6 +109,7 @@
           "token": "Token",
           "use_cloud": "Use TapHome cloud",
           "ip": "IP address",
+          "id": "Core ID",
           "webhook_id": "Webhook ID",
           "use_description_as_entity_id": "Use TapHome descriptions as entity IDs",
           "use_description_as_name": "Use TapHome descriptions as entity names",
@@ -87,17 +119,18 @@
           "token": "Authorization token shown at the top of the TapHome API screen.",
           "use_cloud": "Connect through the TapHome cloud instead of your local network. Only recommended when the core is not reachable locally — the cloud is slower and requires an internet connection. The IP address is ignored when enabled.",
           "ip": "IP address of your TapHome core on your local network, e.g. 192.168.1.3. Find it in the TapHome app under My location. Recommended over the cloud for a faster, more reliable connection.",
+          "id": "Optional identifier for this core. Only needed when you use more than one core — give each a unique value so their entities do not clash. Leave empty for a single core. When migrating from YAML, keep the id you used there.",
           "webhook_id": "Recommended: lets the core push updates instantly instead of Home Assistant polling every 2 seconds. Enter any name, e.g. taphome_primary, then in the TapHome app on the Expose devices screen enable Webhook and set the Webhook URL to e.g. http://homeassistant.local:8123/api/webhook/taphome — replace homeassistant.local with your own Home Assistant address and taphome_primary with the name you entered above."
         },
         "description": "Update the connection and core settings of your TapHome core. A local connection is recommended: only enable \"Use TapHome cloud\" if you can't reach the core directly on your network — the cloud updates less often (about every 20 seconds) and depends on TapHome's servers being reachable. Find your core's IP address in the TapHome app under \"My location\"."
       },
       "zones": {
         "title": "Zones",
-        "description": "Map TapHome zones to Home Assistant areas. For each zone you can enter a new name — leave the field empty to keep the original name — or turn on ignore to skip the zone."
+        "description": "Map TapHome zones to Home Assistant areas. Pick the area for each zone; leave a zone empty to not assign an area."
       },
       "labels": {
         "title": "Labels",
-        "description": "Map TapHome categories to Home Assistant labels. For each category you can enter a new name — leave the field empty to keep the original name — or turn on ignore to skip the category."
+        "description": "Map TapHome categories to Home Assistant labels. Pick the label for each category; leave a category empty to not assign a label."
       },
       "add_devices": {
         "title": "Add devices",
@@ -107,24 +140,24 @@
         }
       },
       "add_devices_platform": {
-        "title": "Select platform",
-        "description": "Choose the platform the selected devices will be added as. Devices that do not fit the chosen platform are skipped. Selected: {devices}",
-        "data": {
-          "platform": "Platform"
-        }
+        "title": "Select platforms",
+        "description": "For each device choose the platforms to add it as. You can pick several platforms per device, or none to skip that device. Only platforms compatible with each device are offered."
+      },
+      "add_devices_options": {
+        "title": "Device options",
+        "description": "Set the options for each selected device and platform. Each section is one device on one platform. Empty fields use automatic defaults."
       },
       "edit_devices": {
-        "title": "Edit device",
-        "description": "Pick the device you want to edit. Type in the field to search.",
+        "title": "Edit devices",
+        "description": "Pick the devices you want to edit. Type in the field to search.",
         "data": {
-          "device": "Device"
+          "devices": "Devices"
         }
       },
       "edit_devices_form": {
         "title": "Device options",
-        "description": "Advanced options for {device}. Empty fields use automatic defaults.",
+        "description": "Set the options for each selected device. Each section is one device. Empty fields use automatic defaults.",
         "data": {
-          "unique_id": "Unique ID",
           "effect_id": "Effects multi value switch",
           "device_class": "Device class",
           "actions": "Actions",

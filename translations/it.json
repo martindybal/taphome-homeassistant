@@ -45,12 +45,39 @@
         "data": {
           "token": "Token"
         }
+      },
+      "zones": {
+        "title": "Zone",
+        "description": "Mappa le zone TapHome sulle aree di Home Assistant. Per ogni zona puoi inserire un nuovo nome — un campo vuoto mantiene il nome originale — oppure attivare ignore per saltare la zona."
+      },
+      "labels": {
+        "title": "Etichette",
+        "description": "Mappa le categorie TapHome sulle etichette di Home Assistant. Per ogni categoria puoi inserire un nuovo nome — un campo vuoto mantiene il nome originale — oppure attivare ignore per saltare la categoria."
+      },
+      "add_devices": {
+        "title": "Aggiungi dispositivi",
+        "description": "Scegli i dispositivi TapHome da aggiungere. Digita nel campo per cercare. I dispositivi non ancora aggiunti mostrano la zona e la categoria TapHome, quelli aggiunti la stanza.",
+        "data": {
+          "devices": "Dispositivi"
+        }
+      },
+      "add_devices_platform": {
+        "title": "Seleziona piattaforme",
+        "description": "Per ogni dispositivo scegli le piattaforme come cui aggiungerlo. Puoi selezionare più piattaforme per dispositivo, oppure nessuna per saltare il dispositivo. Vengono offerte solo le piattaforme compatibili con ciascun dispositivo."
+      },
+      "add_devices_options": {
+        "title": "Opzioni dispositivo",
+        "description": "Imposta le opzioni per ogni dispositivo e piattaforma selezionati. Ogni sezione è un dispositivo su una piattaforma. I campi vuoti usano i valori predefiniti automatici."
       }
     },
     "error": {
       "cannot_connect": "Connessione al TapHome core non riuscita.",
       "invalid_auth": "Il TapHome core ha rifiutato il token.",
-      "ip_required": "Inserisci l'indirizzo IP del tuo core oppure attiva il cloud TapHome."
+      "ip_required": "Inserisci l'indirizzo IP del tuo core oppure attiva il cloud TapHome.",
+      "no_devices_selected": "Seleziona almeno un dispositivo.",
+      "no_common_platform": "I dispositivi selezionati non possono essere aggiunti come nessuna piattaforma.",
+      "invalid_device": "Seleziona un dispositivo dall'elenco.",
+      "invalid_device_id": "ID dispositivo non valido."
     },
     "abort": {
       "already_configured": "Questo TapHome core è già configurato.",
@@ -107,24 +134,24 @@
         }
       },
       "add_devices_platform": {
-        "title": "Seleziona piattaforma",
-        "description": "Scegli la piattaforma come cui aggiungere i dispositivi selezionati. I dispositivi non adatti alla piattaforma scelta verranno saltati. Selezionati: {devices}",
-        "data": {
-          "platform": "Piattaforma"
-        }
+        "title": "Seleziona piattaforme",
+        "description": "Per ogni dispositivo scegli le piattaforme come cui aggiungerlo. Puoi selezionare più piattaforme per dispositivo, oppure nessuna per saltare il dispositivo. Vengono offerte solo le piattaforme compatibili con ciascun dispositivo."
+      },
+      "add_devices_options": {
+        "title": "Opzioni dispositivo",
+        "description": "Imposta le opzioni per ogni dispositivo e piattaforma selezionati. Ogni sezione è un dispositivo su una piattaforma. I campi vuoti usano i valori predefiniti automatici."
       },
       "edit_devices": {
-        "title": "Modifica dispositivo",
-        "description": "Scegli il dispositivo da modificare. Digita nel campo per cercare.",
+        "title": "Modifica dispositivi",
+        "description": "Scegli i dispositivi da modificare. Digita nel campo per cercare.",
         "data": {
-          "device": "Dispositivo"
+          "devices": "Dispositivi"
         }
       },
       "edit_devices_form": {
         "title": "Opzioni dispositivo",
-        "description": "Opzioni avanzate per {device}. I campi vuoti usano i valori predefiniti automatici.",
+        "description": "Imposta le opzioni per ogni dispositivo selezionato. Ogni sezione è un dispositivo. I campi vuoti usano i valori predefiniti automatici.",
         "data": {
-          "unique_id": "ID univoco",
           "effect_id": "Selettore multivalore effetti",
           "device_class": "Classe dispositivo",
           "actions": "Azioni",
