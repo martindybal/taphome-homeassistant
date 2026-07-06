@@ -17,7 +17,7 @@
           "token": "Token di autorizzazione mostrato in alto nella schermata TapHome API.",
           "use_cloud": "Connessione tramite il cloud TapHome invece della rete locale. Consigliato solo se il core non è raggiungibile localmente — il cloud è più lento e richiede una connessione a internet. Quando è attivo, l'indirizzo IP viene ignorato.",
           "ip": "Indirizzo IP del tuo TapHome core sulla tua rete locale, ad es. 192.168.1.3. Lo trovi nell'app TapHome in La mia posizione. Consigliato rispetto al cloud per una connessione più veloce e affidabile.",
-          "webhook_id": "Consigliato: il core invia gli aggiornamenti immediatamente invece di farli interrogare da Home Assistant ogni 2 secondi. Inserisci un nome qualsiasi, ad es. taphome_primary, e imposta lo stesso nome nell'app TapHome nella schermata Esponi dispositivi — attiva il Webhook e imposta l'URL Webhook, ad es. su http://homeassistant.local:8123/api/webhook/taphome_primary — sostituisci homeassistant.local con l'indirizzo del tuo Home Assistant e taphome_primary con il nome inserito sopra."
+          "webhook_id": "Consigliato: il core invia gli aggiornamenti immediatamente invece di farli interrogare da Home Assistant ogni 2 secondi. Inserisci un nome qualsiasi, ad es. taphome_primary, e imposta lo stesso nome nell'app TapHome nella schermata Esponi dispositivi — attiva il Webhook e imposta l'URL Webhook, ad es. su http://homeassistant.local:8123/api/webhook/taphome — sostituisci homeassistant.local con l'indirizzo del tuo Home Assistant e taphome_primary con il nome inserito sopra."
         }
       },
       "reconfigure": {
@@ -36,7 +36,7 @@
           "token": "Token di autorizzazione mostrato in alto nella schermata TapHome API.",
           "use_cloud": "Connessione tramite il cloud TapHome invece della rete locale. Consigliato solo se il core non è raggiungibile localmente — il cloud è più lento e richiede una connessione a internet. Quando è attivo, l'indirizzo IP viene ignorato.",
           "ip": "Indirizzo IP del tuo TapHome core sulla tua rete locale, ad es. 192.168.1.3. Lo trovi nell'app TapHome in La mia posizione. Consigliato rispetto al cloud per una connessione più veloce e affidabile.",
-          "webhook_id": "Consigliato: il core invia gli aggiornamenti immediatamente invece di farli interrogare da Home Assistant ogni 2 secondi. Inserisci un nome qualsiasi, ad es. taphome_primary, e imposta lo stesso nome nell'app TapHome nella schermata Esponi dispositivi — attiva il Webhook e imposta l'URL Webhook, ad es. su http://homeassistant.local:8123/api/webhook/taphome_primary — sostituisci homeassistant.local con l'indirizzo del tuo Home Assistant e taphome_primary con il nome inserito sopra."
+          "webhook_id": "Consigliato: il core invia gli aggiornamenti immediatamente invece di farli interrogare da Home Assistant ogni 2 secondi. Inserisci un nome qualsiasi, ad es. taphome_primary, e imposta lo stesso nome nell'app TapHome nella schermata Esponi dispositivi — attiva il Webhook e imposta l'URL Webhook, ad es. su http://homeassistant.local:8123/api/webhook/taphome — sostituisci homeassistant.local con l'indirizzo del tuo Home Assistant e taphome_primary con il nome inserito sopra."
         }
       },
       "reauth_confirm": {
@@ -87,7 +87,7 @@
           "token": "Token di autorizzazione mostrato in alto nella schermata TapHome API.",
           "use_cloud": "Connessione tramite il cloud TapHome invece della rete locale. Consigliato solo se il core non è raggiungibile localmente — il cloud è più lento e richiede una connessione a internet. Quando è attivo, l'indirizzo IP viene ignorato.",
           "ip": "Indirizzo IP del tuo TapHome core sulla tua rete locale, ad es. 192.168.1.3. Lo trovi nell'app TapHome in La mia posizione. Consigliato rispetto al cloud per una connessione più veloce e affidabile.",
-          "webhook_id": "Consigliato: il core invia gli aggiornamenti immediatamente invece di farli interrogare da Home Assistant ogni 2 secondi. Inserisci un nome qualsiasi, ad es. taphome_primary, e imposta lo stesso nome nell'app TapHome nella schermata Esponi dispositivi — attiva il Webhook e imposta l'URL Webhook, ad es. su http://homeassistant.local:8123/api/webhook/taphome_primary — sostituisci homeassistant.local con l'indirizzo del tuo Home Assistant e taphome_primary con il nome inserito sopra."
+          "webhook_id": "Consigliato: il core invia gli aggiornamenti immediatamente invece di farli interrogare da Home Assistant ogni 2 secondi. Inserisci un nome qualsiasi, ad es. taphome_primary, e imposta lo stesso nome nell'app TapHome nella schermata Esponi dispositivi — attiva il Webhook e imposta l'URL Webhook, ad es. su http://homeassistant.local:8123/api/webhook/taphome — sostituisci homeassistant.local con l'indirizzo del tuo Home Assistant e taphome_primary con il nome inserito sopra."
         },
         "description": "Aggiorna le impostazioni di connessione e core del tuo TapHome core. Si consiglia una connessione locale: attiva „Usa il cloud TapHome“ solo se il core non è raggiungibile direttamente sulla tua rete — il cloud aggiorna meno spesso (circa ogni 20 secondi) e richiede che i server TapHome siano raggiungibili. Trovi l'indirizzo IP del tuo core nell'app TapHome in „La mia posizione“."
       },

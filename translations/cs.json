@@ -17,7 +17,7 @@
           "token": "Autorizační token zobrazený v horní části obrazovky TapHome API.",
           "use_cloud": "Připojení přes TapHome cloud místo lokální sítě. Doporučeno jen tehdy, když core není dostupný lokálně — cloud je pomalejší a vyžaduje internetové připojení. Při zapnutí se IP adresa ignoruje.",
           "ip": "Najdete ji v aplikaci TapHome v části Moje lokace.",
-          "webhook_id": "Doporučeno: core pak posílá změny okamžitě, místo aby je Home Assistant zjišťoval dotazem každé 2 sekundy. Zadejte libovolný název, např. taphome_primary, a stejný nastavte i v aplikaci TapHome na obrazovce Vystavit zařízení → zapněte Povolit Web Hook a do Web Hook URL vyplňte např. http://homeassistant.local:8123/api/webhook/taphome_primary — homeassistant.local nahraďte adresou vašeho Home Assistant a taphome_primary názvem, který jste zadali výše."
+          "webhook_id": "Doporučeno: core pak posílá změny okamžitě, místo aby je Home Assistant zjišťoval dotazem každé 2 sekundy. Zadejte libovolný název, např. taphome_primary, a stejný nastavte i v aplikaci TapHome na obrazovce Vystavit zařízení → zapněte Povolit Web Hook a do Web Hook URL vyplňte např. http://homeassistant.local:8123/api/webhook/taphome — homeassistant.local nahraďte adresou vašeho Home Assistant a taphome_primary názvem, který jste zadali výše."
         }
       },
       "reconfigure": {
@@ -36,7 +36,7 @@
           "token": "Autorizační token zobrazený v horní části obrazovky TapHome API.",
           "use_cloud": "Připojení přes TapHome cloud místo lokální sítě. Doporučeno jen tehdy, když core není dostupný lokálně — cloud je pomalejší a vyžaduje internetové připojení. Při zapnutí se IP adresa ignoruje.",
           "ip": "Najdete ji v aplikaci TapHome v části Moje lokace.",
-          "webhook_id": "Doporučeno: core pak posílá změny okamžitě, místo aby je Home Assistant zjišťoval dotazem každé 2 sekundy. Zadejte libovolný název, např. taphome_primary, a stejný nastavte i v aplikaci TapHome na obrazovce Vystavit zařízení → zapněte Povolit Web Hook a do Web Hook URL vyplňte např. http://homeassistant.local:8123/api/webhook/taphome_primary — homeassistant.local nahraďte adresou vašeho Home Assistant a taphome_primary názvem, který jste zadali výše."
+          "webhook_id": "Doporučeno: core pak posílá změny okamžitě, místo aby je Home Assistant zjišťoval dotazem každé 2 sekundy. Zadejte libovolný název, např. taphome_primary, a stejný nastavte i v aplikaci TapHome na obrazovce Vystavit zařízení → zapněte Povolit Web Hook a do Web Hook URL vyplňte např. http://homeassistant.local:8123/api/webhook/taphome — homeassistant.local nahraďte adresou vašeho Home Assistant a taphome_primary názvem, který jste zadali výše."
         }
       },
       "reauth_confirm": {
@@ -87,7 +87,7 @@
           "token": "Autorizační token zobrazený v horní části obrazovky TapHome API.",
           "use_cloud": "Připojení přes TapHome cloud místo lokální sítě. Doporučeno jen tehdy, když core není dostupný lokálně — cloud je pomalejší a vyžaduje internetové připojení. Při zapnutí se IP adresa ignoruje.",
           "ip": "Najdete ji v aplikaci TapHome v části Moje lokace.",
-          "webhook_id": "Doporučeno: core pak posílá změny okamžitě, místo aby je Home Assistant zjišťoval dotazem každé 2 sekundy. Zadejte libovolný název, např. taphome_primary, a stejný nastavte i v aplikaci TapHome na obrazovce Vystavit zařízení → zapněte Povolit Web Hook a do Web Hook URL vyplňte např. http://homeassistant.local:8123/api/webhook/taphome_primary — homeassistant.local nahraďte adresou vašeho Home Assistant a taphome_primary názvem, který jste zadali výše."
+          "webhook_id": "Doporučeno: core pak posílá změny okamžitě, místo aby je Home Assistant zjišťoval dotazem každé 2 sekundy. Zadejte libovolný název, např. taphome_primary, a stejný nastavte i v aplikaci TapHome na obrazovce Vystavit zařízení → zapněte Povolit Web Hook a do Web Hook URL vyplňte např. http://homeassistant.local:8123/api/webhook/taphome — homeassistant.local nahraďte adresou vašeho Home Assistant a taphome_primary názvem, který jste zadali výše."
         },
         "description": "Upravte nastavení připojení a core u tohoto TapHome core. Doporučujeme lokální připojení: „Použít TapHome cloud“ zapněte jen tehdy, když se ke core nedá připojit přímo ve vaší síti — cloud aktualizuje stav méně často (přibližně jednou za 20 sekund) a vyžaduje dostupnost serverů TapHome. IP adresu vašeho core najdete v aplikaci TapHome v části „Moje lokace“."
       },
