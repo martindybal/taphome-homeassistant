@@ -122,7 +122,7 @@ class BidirectionalDevice(Device[BidirectionalDeviceState]):
         """Set device to the provided ``position``."""
         if not self.supports_tilt:
             tilt = None
-        
+
         if (
             self.supports_value(ValueType.BLINDS_IS_MOVING)
             and self.state.position != position
