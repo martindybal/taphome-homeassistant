@@ -218,7 +218,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             hass.config_entries.flow.async_init(
                 DOMAIN, context={"source": SOURCE_IMPORT}, data=core_config
             )
-        ) (Add config flow and convert setup to config entries)
+        )
 
     if cores:
         ir.async_create_issue(
