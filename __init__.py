@@ -1,6 +1,10 @@
 """TapHome integration."""
 
-from . import sdk_locator  # noqa: F401  # must run before taphome_sdk imports
+# sdk_locator must be imported before anything imports taphome_sdk, which
+# breaks the usual import ordering on purpose.
+# pylint: disable=wrong-import-order
+
+from . import sdk_locator  # noqa: F401
 
 from dataclasses import dataclass
 import logging
@@ -239,7 +243,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             translation_key=Issues.YAML_DEPRECATED,
             learn_more_url=(
                 "https://github.com/martindybal/taphome-homeassistant"
-                "/blob/production/configuration.md"
+                "/blob/production/docs/user-guide.md#migrating-from-yaml"
             ),
         )
 
@@ -320,7 +324,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: TapHomeConfigEntry) -> 
     return unload_ok
 
 
-async def async_migrate_entry(hass: HomeAssistant, entry: TapHomeConfigEntry) -> bool:
+async def async_migrate_entry(
+    _hass: HomeAssistant, _entry: TapHomeConfigEntry
+) -> bool:
     """Migrate old config entries to the current version."""
     return True
 

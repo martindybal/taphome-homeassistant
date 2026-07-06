@@ -4,11 +4,12 @@ from homeassistant.components.select import DOMAIN as SELECT_DOMAIN, SelectEntit
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from taphome_sdk import MultiValueSwitchDevice, MultiValueSwitchState
+
 from .add_entry_request import add_taphome_entities
 from .taphome_config_entry import AddEntryRequest, TapHomeEntityConfig
 from .taphome_data import TapHomeConfigEntry
 from .taphome_entity import TapHomeEntity
-from taphome_sdk import MultiValueSwitchDevice, MultiValueSwitchState
 
 
 class TapHomeSelect(TapHomeEntity, SelectEntity):

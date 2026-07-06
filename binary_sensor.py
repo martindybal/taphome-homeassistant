@@ -13,6 +13,8 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from taphome_sdk import Device, DeviceState, HubConnectionState, TapHomeHub, ValueType
+
 from .add_entry_request import add_taphome_entities
 from .taphome_config_entry import (
     AddEntryRequest,
@@ -21,8 +23,7 @@ from .taphome_config_entry import (
 )
 from .taphome_data import TapHomeConfigEntry
 from .taphome_entity import TapHomeEntity
-from taphome_sdk import Device, DeviceState, HubConnectionState, TapHomeHub, ValueType
-from .taphome_sdk.taphome_api import ApiConnectionType
+from taphome_sdk.taphome_api import ApiConnectionType
 
 
 class TapHomeIsAliveSensor(BinarySensorEntity):

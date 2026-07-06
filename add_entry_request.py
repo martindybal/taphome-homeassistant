@@ -5,11 +5,12 @@ from typing import TypeVar
 
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from taphome_sdk import DeviceNotExposedError, DeviceTypeError
+
 from .taphome_config_entry import AddEntryRequest, TapHomeEntityConfigT
 from .taphome_data import TapHomeConfigEntry
 from .taphome_entity import TapHomeEntity
 from .taphome_issue_registry import TapHomeIssueRegistry
-from taphome_sdk import DeviceNotExposedError, DeviceTypeError
 
 TapHomeEntityT = TypeVar("TapHomeEntityT", bound=TapHomeEntity)
 

@@ -245,9 +245,10 @@ v Core odmítne), smazat `issue_tracker` (Core používá centrální tracker),
 `documentation` míří na home-assistant.io, přidat `config_flow`,
 `quality_scale`, `requirements`. Klíče abecedně (hassfest kontroluje).
 
-Volitelně doplnit `zeroconf`/`dhcp` discovery hubu v LAN, pokud TapHome core
-něco inzeruje (mDNS/UPnP) — velké plus pro UX i review; ověřit na reálném
-zařízení (`avahi-browse -a`).
+Síťová autodiscovery hubu (`zeroconf`/`dhcp`) **není možná** — o TapHome core
+se bez tokenu nelze nic dozvědět. Zařízení se vybírají průvodcem v config
+flow (per-device výběr platformy) a nově exposnutá zařízení hlásí integrace
+sama přes repair issues; obojí už je implementované v custom integraci.
 
 ## 2.9 Co se maže bez náhrady
 

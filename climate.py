@@ -15,10 +15,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.config_validation import UnitOfTemperature
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .add_entry_request import add_taphome_entities
-from .taphome_config_entry import AddEntryRequest, TapHomeEntityConfig
-from .taphome_data import TapHomeConfigEntry
-from .taphome_entity import TapHomeEntity
 from taphome_sdk import (
     AnalogOutputDevice,
     AnalogOutputState,
@@ -32,6 +28,11 @@ from taphome_sdk import (
     ValueType,
     enum_from_string_optional,
 )
+
+from .add_entry_request import add_taphome_entities
+from .taphome_config_entry import AddEntryRequest, TapHomeEntityConfig
+from .taphome_data import TapHomeConfigEntry
+from .taphome_entity import TapHomeEntity
 
 
 class TapHomeClimateConfig(TapHomeEntityConfig):

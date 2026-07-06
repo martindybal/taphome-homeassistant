@@ -8,16 +8,19 @@ A [HACS](https://hacs.xyz/) custom integration that connects [TapHome](https://t
 
 ## Commands
 
-There is no test suite. CI (`.github/workflows/ci.yaml`, Python 3.12) runs these checks — run them locally before pushing:
+CI (`.github/workflows/ci.yaml`, Python 3.12) runs these checks — run them locally before pushing:
 
 ```bash
 python -m venv .venv && source .venv/bin/activate
-pip install homeassistant ruff pylint "taphome-sdk @ git+https://github.com/martindybal/taphome-sdk.git@main"
+pip install homeassistant ruff pylint pytest-homeassistant-custom-component "taphome-sdk @ git+https://github.com/martindybal/taphome-sdk.git@main"
 
 python -m compileall -q .                                          # compile check
 ruff check .                                                       # lint
 pylint . --fail-under=9.5                                          # lint, min score 9.5
+python -m pytest tests                                             # integration tests
 ```
+
+Tests live in `tests/` (pytest-homeassistant-custom-component). `tests/tests_common.py` maps the repo root to `custom_components.taphome`, builds SDK devices from API-shaped fixture dicts and fakes the TapHome HTTP API in memory (`FakeTapHomeApi`); `conftest.py` provides `mock_hub` (patches `TapHomeHubFactory.async_connect` + `TapHomeApi.async_get_location`) and `mock_config_entry`. `pytest.ini` sits in `tests/` on purpose — the repo root is a package and must not become pytest's rootdir.
 
 The TapHome SDK lives in its own repository (https://github.com/martindybal/taphome-sdk, PyPI package `taphome-sdk`); `sdk_locator.py` loads it from a sibling `../taphome-sdk/src` checkout during development (see `docs/development.md`). Its tests, ruff and mypy run in that repository.
 
@@ -38,7 +41,7 @@ Home Assistant conventions that apply here:
 - Entities never call APIs from property getters; they set `_attr_*` attributes and let HA read them.
 - State updates are pushed: `should_poll` is `False` on all entities.
 - Async: everything touching the network is `async`; use HA helpers (`entity_registry`, `area_registry`, `label_registry`, webhook, `config_validation as cv`).
-- This integration is **YAML-only** (no config flow / UI setup). The full schema is `CONFIG_SCHEMA` in `__init__.py` and is documented for users in `configuration.md`.
+- This integration is configured **via the UI** (config flow + options flow in `config_flow.py`, per-platform option metadata in `platform_descriptors.py`). Legacy YAML (`CONFIG_SCHEMA` in `__init__.py`) is deprecated and only imported into config entries on startup.
 
 ## Architecture
 
@@ -77,5 +80,5 @@ Follow the existing pattern: platform file at root with a `TapHome<X>Config` cla
 ## Conventions
 
 - User-facing changes are recorded in `changelog.md` and the version bumped in `manifest.json` (CalVer, e.g. `2026.2.0`).
-- User docs live in `readme.md` (install) and `configuration.md` (full YAML reference); keep them in sync with config changes.
+- User docs live in `readme.md` (overview + install) and `docs/user-guide.md` (setup wizard, Configure dialog, webhook, troubleshooting); keep them in sync with config-flow changes.
 - Deprecated config options are not removed abruptly — they log an error explaining the migration (see `language` and `update_interval` handling in `__init__.py`).
