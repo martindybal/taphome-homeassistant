@@ -8,6 +8,7 @@ import logging
 from typing import Any
 
 import aiohttp
+from aiohttp import ClientSession
 import voluptuous as vol
 
 from homeassistant.config_entries import (
@@ -27,6 +28,7 @@ from homeassistant.helpers import (
     entity_registry as er,
     label_registry as lr,
 )
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import (
     AreaSelector,
     BooleanSelector,
@@ -66,11 +68,12 @@ from .platform_descriptors import (
     OptionField,
     PlatformDescriptor,
 )
-from .taphome_sdk import (
+from taphome_sdk import (
     Device,
     Location,
     TapHomeApi,
     TapHomeAuthError,
+    TapHomeConnectionError,
     TapHomeHub,
     TapHomeHubFactory,
     ValueType,
@@ -184,7 +187,7 @@ def _is_yaml_fallback_unique_id(unique_id: str | None) -> bool:
 
 
 async def _async_validate_connection(
-    user_input: dict[str, Any], errors: dict[str, str]
+    session: ClientSession, user_input: dict[str, Any], errors: dict[str, str]
 ) -> tuple[str, Location] | None:
     """Validate the connection form input and return the resolved connection."""
     if user_input.get(CONF_USE_CLOUD, False):
@@ -197,7 +200,7 @@ async def _async_validate_connection(
         api_url = f"http://{ip}/api/TapHomeApi/v1"
 
     try:
-        location = await _async_get_location(api_url, user_input[CONF_TOKEN])
+        location = await _async_get_location(session, api_url, user_input[CONF_TOKEN])
     except TapHomeAuthError:
         errors["base"] = "invalid_auth"
     except CannotConnectError:
@@ -207,14 +210,21 @@ async def _async_validate_connection(
     return None
 
 
-async def _async_get_location(api_url: str, token: str) -> Location:
+async def _async_get_location(
+    session: ClientSession, api_url: str, token: str
+) -> Location:
     """Validate the connection by requesting the core location."""
-    api = TapHomeApi(api_url, token)
+    api = TapHomeApi(api_url, token, session)
     try:
         location = await api.async_get_location()
     except TapHomeAuthError:
         raise
-    except (aiohttp.ClientError, TimeoutError, ValueError) as error:
+    except (
+        TapHomeConnectionError,
+        aiohttp.ClientError,
+        TimeoutError,
+        ValueError,
+    ) as error:
         raise CannotConnectError from error
 
     if location is None:
@@ -222,10 +232,12 @@ async def _async_get_location(api_url: str, token: str) -> Location:
     return location
 
 
-async def _async_load_devices(api_url: str, token: str) -> dict[int, Device]:
+async def _async_load_devices(
+    session: ClientSession, api_url: str, token: str
+) -> dict[int, Device]:
     """Connect to the core and return its devices for the setup wizard."""
     try:
-        hub = await TapHomeHubFactory.async_connect(api_url, token)
+        hub = await TapHomeHubFactory.async_connect(api_url, token, session)
     except TapHomeAuthError:
         raise
     except Exception as error:
@@ -471,7 +483,9 @@ class _TapHomeSetupFlow:
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            connection = await _async_validate_connection(user_input, errors)
+            connection = await _async_validate_connection(
+                async_get_clientsession(self.hass), user_input, errors
+            )
             if connection is not None:
                 api_url, location = connection
                 if (
@@ -1173,14 +1187,18 @@ class TapHomeConfigFlow(_TapHomeSetupFlow, ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            connection = await _async_validate_connection(user_input, errors)
+            connection = await _async_validate_connection(
+                async_get_clientsession(self.hass), user_input, errors
+            )
             if connection is not None:
                 api_url, location = connection
                 await self.async_set_unique_id(location.location_id)
                 self._abort_if_unique_id_configured()
                 try:
                     self._wizard_devices = await _async_load_devices(
-                        api_url, user_input[CONF_TOKEN]
+                        async_get_clientsession(self.hass),
+                        api_url,
+                        user_input[CONF_TOKEN],
                     )
                 except TapHomeAuthError:
                     errors["base"] = "invalid_auth"
@@ -1244,7 +1262,9 @@ class TapHomeConfigFlow(_TapHomeSetupFlow, ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            connection = await _async_validate_connection(user_input, errors)
+            connection = await _async_validate_connection(
+                async_get_clientsession(self.hass), user_input, errors
+            )
             if connection is not None:
                 api_url, location = connection
                 await self.async_set_unique_id(location.location_id)
@@ -1298,7 +1318,11 @@ class TapHomeConfigFlow(_TapHomeSetupFlow, ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             token = user_input[CONF_TOKEN]
             try:
-                location = await _async_get_location(entry.data[CONF_API_URL], token)
+                location = await _async_get_location(
+                    async_get_clientsession(self.hass),
+                    entry.data[CONF_API_URL],
+                    token,
+                )
             except TapHomeAuthError:
                 errors["base"] = "invalid_auth"
             except CannotConnectError:
@@ -1334,7 +1358,9 @@ class TapHomeConfigFlow(_TapHomeSetupFlow, ConfigFlow, domain=DOMAIN):
 
         title = core_id or "TapHome"
         try:
-            location = await _async_get_location(api_url, token)
+            location = await _async_get_location(
+                async_get_clientsession(self.hass), api_url, token
+            )
         except (TapHomeAuthError, CannotConnectError) as error:
             # Keep the configuration even when the core is unreachable during
             # startup. Entry setup retries and reauth guides the user when

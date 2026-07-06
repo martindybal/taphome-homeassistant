@@ -30,7 +30,7 @@ from .const import (
     CONF_TIMES,
     CONF_VALVE,
 )
-from .taphome_sdk import (
+from taphome_sdk import (
     AnalogOutputDevice,
     BidirectionalDevice,
     ButtonAction,

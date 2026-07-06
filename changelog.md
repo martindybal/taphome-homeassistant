@@ -2,6 +2,8 @@
 
 ## 2026.7
 
+- **The TapHome SDK moved to its own repository and PyPI package** [`taphome-sdk`](https://github.com/martindybal/taphome-sdk); it is no longer bundled inside the integration. Production installs use the PyPI package (via `manifest.json` requirements once published); developers can keep a local `taphome-sdk` checkout next to this repository — see [docs/development.md](docs/development.md).
+
 - **Configuration via UI (config flow)**: The integration is now set up and managed entirely in the Home Assistant UI.
   - Add a core in _Settings → Devices & services_ with its token and either its IP address or the TapHome cloud; core settings (webhook, description flags, exposed attributes) can be filled in right when adding. Each core is a separate integration entry validated against the core.
   - The **Configure** dialog covers everything YAML supported: **Core settings** (connection, webhook, description flags, exposed attributes — the same fields as when adding the core), zone → area and category → label mapping with rename/ignore, adding, editing and removing devices via searchable pickers that show each device's room/zone, and advanced per-device options (device class, effects, climate controller ids, …).

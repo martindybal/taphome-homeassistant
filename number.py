@@ -8,8 +8,6 @@ from homeassistant.components.number import DOMAIN as NUMBER_DOMAIN, NumberEntit
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import (
     AddEntitiesCallback,
-    ConfigType,
-    DiscoveryInfoType,
 )
 
 from .add_entry_request import add_taphome_entities
@@ -17,7 +15,7 @@ from .const import CONF_NUMBERS
 from .taphome_config_entry import AddEntryRequest, TapHomeEntityConfig
 from .taphome_data import TapHomeConfigEntry
 from .taphome_entity import TapHomeEntity
-from .taphome_sdk import DeviceState, ValueType, VariableDevice, VariableState
+from taphome_sdk import DeviceState, ValueType, VariableDevice, VariableState
 
 _LOGGER = logging.getLogger(__name__)
 

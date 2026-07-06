@@ -15,7 +15,7 @@ from .button import TapHomeButtonConfig
 from .taphome_config_entry import AddEntryRequest
 from .taphome_data import TapHomeConfigEntry
 from .taphome_entity import TapHomeEntity
-from .taphome_sdk import ButtonAction, ButtonDevice
+from taphome_sdk import ButtonAction, ButtonDevice
 
 _LOGGER = logging.getLogger(__name__)
 

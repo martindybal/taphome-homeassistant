@@ -7,7 +7,7 @@ from typing import Generic, TypeVar
 
 from homeassistant.core import HomeAssistant
 
-from .taphome_sdk import TapHomeHub, get_optional, get_required
+from taphome_sdk import TapHomeHub, get_optional, get_required
 
 
 @dataclass(slots=True, frozen=True)

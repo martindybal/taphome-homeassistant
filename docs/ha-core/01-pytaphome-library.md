@@ -203,15 +203,20 @@ Po vydání `pytaphome==1.0.0`:
 
 ## Kontrolní seznam fáze 1
 
-- [ ] Repo `pytaphome`, přesun kódu, `py.typed`
-- [ ] 1.2.1 injektovaná session
-- [ ] 1.2.2 webhook bez `aiohttp.web`
-- [ ] 1.2.3 `exceptions.py` + vyhazující `async_connect`
-- [ ] 1.2.4 `location_id` / `location_name`
-- [ ] 1.2.5 typová metadata zařízení
-- [ ] 1.2.6 `async_disconnect`
-- [ ] 1.2.7 odhlašování odběrů
-- [ ] pyproject, README s příkladem, CHANGELOG
-- [ ] testy ≥ 90 %, `mypy --strict` zelené
-- [ ] CI + trusted publishing, release `1.0.0`
-- [ ] custom integrace přepnutá na `pytaphome` a ověřená v provozu
+Realizováno v repu [taphome-sdk](https://github.com/martindybal/taphome-sdk)
+(balíček `taphome-sdk`, ne `pytaphome`), větev `claude/sdk-package`:
+
+- [x] Repo `taphome-sdk`, přesun kódu (src layout), `py.typed`
+- [x] 1.2.1 injektovaná session (`TapHomeApi`/`TapHomeHub`/factory)
+- [x] 1.2.2 webhook bez `aiohttp.web` (přijímá rozparsovaný `dict`)
+- [x] 1.2.3 `exceptions.py` (`TapHomeError`, `TapHomeAuthError`, `TapHomeConnectionError`)
+- [x] 1.2.4 `location_id` / `location_name` (existovalo v `Location`)
+- [x] 1.2.5 typová metadata zařízení (`DeviceMetadata.device_type`/`usage` — existovalo)
+- [x] 1.2.6 ukončení přes `hub.disconnect()` (ruší periodic refresh; využívá `async_unload_entry`)
+- [x] 1.2.7 odhlašování odběrů (`Event.unsubscribe`/`-=` — existovalo)
+- [x] pyproject, README s příkladem, CHANGELOG
+- [x] testy (30), ruff, mypy zelené (striktní mypy zatím ne — TODO)
+- [x] CI + trusted publishing workflow
+- [ ] release `1.0.0` na PyPI — postup v [pypi-setup.md](pypi-setup.md)
+- [x] custom integrace přepnutá na externí `taphome_sdk` (`sdk_locator.py` pro lokální vývoj)
+- [ ] ověření na reálné instalaci

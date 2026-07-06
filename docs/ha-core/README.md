@@ -13,7 +13,7 @@ pouze definuje rozhraní, které config flow musí naplnit (obsah `entry.data`,
 
 | Fáze | Dokument | Obsah |
 |---|---|---|
-| 1 | [01-pytaphome-library.md](01-pytaphome-library.md) | Vyčlenění `taphome_sdk` do PyPI balíčku `pytaphome`: úpravy API knihovny, packaging, testy, CI, publikace |
+| 1 | [01-pytaphome-library.md](01-pytaphome-library.md) | Vyčlenění SDK do PyPI balíčku — **hotovo** jako [`taphome-sdk`](https://github.com/martindybal/taphome-sdk); zbývá release na PyPI ([pypi-setup.md](pypi-setup.md)) |
 | 2 | [02-integration-rewrite.md](02-integration-rewrite.md) | Přepis integrace na config entries: `__init__.py`, discovery entit, `entity.py`, webhook, `strings.json`, přepis platforem, odstraňované funkce |
 | 3 | [03-tests-quality-scale.md](03-tests-quality-scale.md) | Testy v Core, `quality_scale.yaml`, Bronze pravidla, lokální tooling (hassfest, ruff, mypy) |
 | 4 | [04-submission.md](04-submission.md) | Tři pull requesty: brands, dokumentace, core — obsah, pořadí, strategie malých PR |
@@ -24,7 +24,8 @@ pouze definuje rozhraní, které config flow musí naplnit (obsah `entry.data`,
 Fáze 1 blokuje vše ostatní (Core PR nesmí obsahovat kód protokolu).
 Brands PR (fáze 4a) je nezávislý a může běžet souběžně.
 
-- [ ] **1. `pytaphome` na PyPI** — repo, úpravy SDK, testy, CI, release `1.0.0`
+- [x] **1. SDK v samostatném repu** — [taphome-sdk](https://github.com/martindybal/taphome-sdk), balíček `taphome-sdk`: src layout, injektovaná session, typované výjimky, webhook bez `aiohttp.web`, py.typed, 30 testů, CI, release workflow (větev `claude/sdk-package`)
+- [ ] **1b. Release `1.0.0` na PyPI** — viz [pypi-setup.md](pypi-setup.md); poté doplnit `requirements` do manifestu
 - [ ] **4a. Brands PR** — logo a ikona v `home-assistant/brands`
 - [ ] **2. Přepis integrace** ve forku `home-assistant/core` (rozsah prvního PR: `light`)
 - [ ] **3. Testy + `quality_scale.yaml`** (Bronze)

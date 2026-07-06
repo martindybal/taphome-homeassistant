@@ -14,7 +14,7 @@ from homeassistant.helpers.entity import (
 )
 
 from .taphome_config_entry import AddEntryRequest, TapHomeEntityConfigT
-from .taphome_sdk import Device, DeviceState, HubConnectionState
+from taphome_sdk import Device, DeviceState, HubConnectionState
 
 
 class TapHomeEntity(Entity):

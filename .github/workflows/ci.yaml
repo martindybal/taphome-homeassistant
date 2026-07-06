@@ -12,6 +12,9 @@ jobs:
       - run: python -m venv .venv
       - run: .venv/bin/pip install --upgrade pip
       - run: .venv/bin/pip install homeassistant
+      # The SDK lives in its own repository and on PyPI; CI installs it from
+      # git so lint/compile checks resolve the taphome_sdk imports.
+      - run: .venv/bin/pip install "taphome-sdk @ git+https://github.com/martindybal/taphome-sdk.git@main"
       - run: tar -czf python-env.tar.gz .venv
       - uses: actions/upload-artifact@v4
         with:
@@ -31,13 +34,6 @@ jobs:
     with:
       package: "ruff"
       command: "ruff check ."
-
-  mypy:
-    needs: prepare-python-env
-    uses: ./.github/workflows/python-check.yml
-    with:
-      package: "mypy"
-      command: "mypy -p taphome_sdk --ignore-missing-imports --explicit-package-bases"
 
   pylint:
     needs: prepare-python-env
