@@ -12,13 +12,14 @@ There is no test suite. CI (`.github/workflows/ci.yaml`, Python 3.12) runs these
 
 ```bash
 python -m venv .venv && source .venv/bin/activate
-pip install homeassistant ruff mypy pylint
+pip install homeassistant ruff pylint "taphome-sdk @ git+https://github.com/martindybal/taphome-sdk.git@main"
 
 python -m compileall -q .                                          # compile check
 ruff check .                                                       # lint
-mypy -p taphome_sdk --ignore-missing-imports --explicit-package-bases  # types (SDK only)
 pylint . --fail-under=9.5                                          # lint, min score 9.5
 ```
+
+The TapHome SDK lives in its own repository (https://github.com/martindybal/taphome-sdk, PyPI package `taphome-sdk`); `sdk_locator.py` loads it from a sibling `../taphome-sdk/src` checkout during development (see `docs/development.md`). Its tests, ruff and mypy run in that repository.
 
 CI also runs HACS validation (`hacs/action`, category `integration`).
 

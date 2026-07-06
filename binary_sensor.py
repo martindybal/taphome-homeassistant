@@ -21,7 +21,7 @@ from .taphome_config_entry import (
 )
 from .taphome_data import TapHomeConfigEntry
 from .taphome_entity import TapHomeEntity
-from .taphome_sdk import Device, DeviceState, HubConnectionState, TapHomeHub, ValueType
+from taphome_sdk import Device, DeviceState, HubConnectionState, TapHomeHub, ValueType
 from .taphome_sdk.taphome_api import ApiConnectionType
 
 

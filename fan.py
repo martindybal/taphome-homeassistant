@@ -16,7 +16,7 @@ from .add_entry_request import add_taphome_entities
 from .taphome_config_entry import AddEntryRequest, TapHomeEntityConfig
 from .taphome_data import TapHomeConfigEntry
 from .taphome_entity import TapHomeEntity
-from .taphome_sdk import (
+from taphome_sdk import (
     GenericOutputAdapter,
     GenericOutputState,
     MultiValueSwitchDevice,

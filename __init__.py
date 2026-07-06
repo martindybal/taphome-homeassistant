@@ -1,5 +1,7 @@
 """TapHome integration."""
 
+from . import sdk_locator  # noqa: F401  # must run before taphome_sdk imports
+
 from dataclasses import dataclass
 import logging
 
@@ -42,6 +44,7 @@ from homeassistant.helpers import (
     entity_registry as er,
     issue_registry as ir,
 )
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import ConfigType
 
 from .binary_sensor import BinarySensorEntityConfig
@@ -87,7 +90,7 @@ from .taphome_config_entry import (
 )
 from .taphome_data import TapHomeConfigEntry, TapHomeRuntimeData
 from .taphome_issue_registry import TapHomeIssueRegistry
-from .taphome_sdk import (
+from taphome_sdk import (
     HubConnectionState,
     TapHomeAuthError,
     TapHomeHub,
@@ -252,6 +255,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TapHomeConfigEntry) -> b
         hub = await TapHomeHubFactory.async_connect(
             entry.data[CONF_API_URL],
             entry.data[CONF_TOKEN],
+            async_get_clientsession(hass),
         )
     except TapHomeAuthError as error:
         raise ConfigEntryAuthFailed(
@@ -447,7 +451,12 @@ def _register_webhook(
         _: HomeAssistant, webhook_id: str, request: Request
     ) -> None:
         _LOGGER.info("Taphome webhook triggered - webhook_id: %s", webhook_id)
-        await hub.async_handle_webhook(request)
+        try:
+            payload = await request.json()
+        except ValueError:
+            _LOGGER.warning("Ignoring TapHome webhook with an invalid JSON body")
+            return
+        await hub.async_handle_webhook(payload)
 
     async_register_webhook(
         hass, TAPHOME_PLATFORM, webhook_name, webhook_id, async_handle_webhook
