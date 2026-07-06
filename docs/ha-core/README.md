@@ -26,9 +26,9 @@ Brands PR (fáze 4a) je nezávislý a může běžet souběžně.
 
 - [x] **1. SDK v samostatném repu** — [taphome-sdk](https://github.com/martindybal/taphome-sdk), balíček `taphome-sdk`: src layout, injektovaná session, typované výjimky, webhook bez `aiohttp.web`, py.typed, 30 testů, CI, release workflow (větev `claude/sdk-package`)
 - [ ] **1b. Release `1.0.0` na PyPI** — viz [pypi-setup.md](pypi-setup.md); poté doplnit `requirements` do manifestu
-- [ ] **4a. Brands PR** — logo a ikona v `home-assistant/brands`
+- [x] **4a. Brands PR** — logo a ikona v `home-assistant/brands` (vyřešeno)
 - [ ] **2. Přepis integrace** ve forku `home-assistant/core` (rozsah prvního PR: `light`)
-- [ ] **3. Testy + `quality_scale.yaml`** (Bronze)
+- [ ] **3. Testy + `quality_scale.yaml`** (Bronze) — testovací suite už existuje v custom repu (`tests/`, 26 testů: config flow, options flow, init, webhook, YAML import, platformy) a přenese se do Core; zbývá `quality_scale.yaml` a přizpůsobení Core fixtures
 - [ ] **4b. Docs PR** — `home-assistant.io`
 - [ ] **4c. Core PR #1** — `__init__` + config flow + `entity` + `light` + testy
 - [ ] **4d. Follow-up PRs** — zbylé platformy po jednom (`sensor`, `cover`, `climate`, `switch`, `binary_sensor`, `select`, `fan`, `humidifier`, `valve`, `button`, `event`, `time`)

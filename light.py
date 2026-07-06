@@ -13,10 +13,6 @@ from homeassistant.components.light import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .add_entry_request import add_taphome_entities
-from .taphome_config_entry import AddEntryRequest, TapHomeEntityConfig
-from .taphome_data import TapHomeConfigEntry
-from .taphome_entity import TapHomeEntity
 from taphome_sdk import (
     AnalogOutputDevice,
     AnalogOutputState,
@@ -29,6 +25,11 @@ from taphome_sdk import (
     RGBLightDevice,
     RGBLightState,
 )
+
+from .add_entry_request import add_taphome_entities
+from .taphome_config_entry import AddEntryRequest, TapHomeEntityConfig
+from .taphome_data import TapHomeConfigEntry
+from .taphome_entity import TapHomeEntity
 
 
 class TapHomeLightConfig(TapHomeEntityConfig):

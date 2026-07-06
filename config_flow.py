@@ -47,6 +47,17 @@ from homeassistant.helpers.selector import (
     TextSelectorType,
 )
 
+from taphome_sdk import (
+    Device,
+    Location,
+    TapHomeApi,
+    TapHomeAuthError,
+    TapHomeConnectionError,
+    TapHomeHub,
+    TapHomeHubFactory,
+    ValueType,
+)
+
 from .const import (
     AVAILABLE_ATTRIBUTES,
     CONF_API_URL,
@@ -67,16 +78,6 @@ from .platform_descriptors import (
     FieldKind,
     OptionField,
     PlatformDescriptor,
-)
-from taphome_sdk import (
-    Device,
-    Location,
-    TapHomeApi,
-    TapHomeAuthError,
-    TapHomeConnectionError,
-    TapHomeHub,
-    TapHomeHubFactory,
-    ValueType,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -433,7 +434,13 @@ def apply_device_options(
 
 
 class _TapHomeSetupFlow:
-    """Shared zone, label and device setup steps for config and options flows."""
+    """Shared zone, label and device setup steps for config and options flows.
+
+    Mixed into ConfigFlow/OptionsFlow subclasses, which provide the flow
+    members pylint cannot see on the mixin itself.
+    """
+
+    # pylint: disable=no-member
 
     _options: dict[str, Any]
     _setup_wizard: bool = False

@@ -13,8 +13,9 @@ from homeassistant.helpers.entity import (
     cached_property,
 )
 
-from .taphome_config_entry import AddEntryRequest, TapHomeEntityConfigT
 from taphome_sdk import Device, DeviceState, HubConnectionState
+
+from .taphome_config_entry import AddEntryRequest, TapHomeEntityConfigT
 
 
 class TapHomeEntity(Entity):

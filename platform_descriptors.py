@@ -21,15 +21,6 @@ from homeassistant.const import (
     CONF_SWITCHES,
 )
 
-from .const import (
-    CONF_BUTTONS,
-    CONF_CLIMATES,
-    CONF_FAN,
-    CONF_HUMIDIFIER,
-    CONF_MULTIVALUE_SWITCHES,
-    CONF_TIMES,
-    CONF_VALVE,
-)
 from taphome_sdk import (
     AnalogOutputDevice,
     BidirectionalDevice,
@@ -42,6 +33,16 @@ from taphome_sdk import (
     RGBLightDevice,
     SessionDurationVariableDevice,
     ThermostatDevice,
+)
+
+from .const import (
+    CONF_BUTTONS,
+    CONF_CLIMATES,
+    CONF_FAN,
+    CONF_HUMIDIFIER,
+    CONF_MULTIVALUE_SWITCHES,
+    CONF_TIMES,
+    CONF_VALVE,
 )
 
 

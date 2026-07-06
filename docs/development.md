@@ -34,15 +34,26 @@ Same checks as CI (`.github/workflows/ci.yaml`):
 
 ```bash
 python -m venv .venv && source .venv/bin/activate
-pip install homeassistant ruff pylint "taphome-sdk @ git+https://github.com/martindybal/taphome-sdk.git@main"
+pip install homeassistant ruff pylint pytest-homeassistant-custom-component \
+    "taphome-sdk @ git+https://github.com/martindybal/taphome-sdk.git@main"
 
 python -m compileall -q .
 ruff check .
 pylint . --fail-under=9.5
+python -m pytest tests
 ```
+
+The pytest suite in `tests/` covers the config flow (setup wizard, reauth,
+reconfigure), the options flow, entry setup/unload, the webhook, YAML import
+and the light/switch/sensor platforms. `tests/tests_common.py` builds SDK
+devices from API-shaped fixtures and fakes the TapHome HTTP API in memory —
+tests exercise the real SDK and integration code without any network.
 
 SDK tests, lint and typing run in the taphome-sdk repository (`pytest`,
 `ruff check .`, `mypy`).
+
+`docs/mock_core/` contains a small mock TapHome API server useful for manual
+testing against a running Home Assistant.
 
 ## Releasing the SDK
 

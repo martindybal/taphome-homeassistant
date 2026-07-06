@@ -7,8 +7,9 @@ from dataclasses import dataclass
 
 from homeassistant.config_entries import ConfigEntry
 
-from .taphome_config_entry import AddEntryRequest, TapHomeCoreConfig
 from taphome_sdk import HubConnectionState, TapHomeHub
+
+from .taphome_config_entry import AddEntryRequest, TapHomeCoreConfig
 
 
 @dataclass(slots=True)

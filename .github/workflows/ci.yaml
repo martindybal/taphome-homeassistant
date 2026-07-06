@@ -42,6 +42,13 @@ jobs:
       package: "pylint"
       command: "pylint . --fail-under=9.5"
 
+  pytest:
+    needs: prepare-python-env
+    uses: ./.github/workflows/python-check.yml
+    with:
+      package: "pytest-homeassistant-custom-component"
+      command: "python -m pytest tests"
+
   validate-hacs:
     runs-on: ubuntu-latest
     steps:

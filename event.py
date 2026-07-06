@@ -10,12 +10,13 @@ from homeassistant.components.event import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from taphome_sdk import ButtonAction, ButtonDevice
+
 from .add_entry_request import add_taphome_entities
 from .button import TapHomeButtonConfig
 from .taphome_config_entry import AddEntryRequest
 from .taphome_data import TapHomeConfigEntry
 from .taphome_entity import TapHomeEntity
-from taphome_sdk import ButtonAction, ButtonDevice
 
 _LOGGER = logging.getLogger(__name__)
 
