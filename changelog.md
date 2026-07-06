@@ -1,5 +1,16 @@
 # Changelog
 
+## 2026.3
+- New Number entity type. TapHome Variables can now be exposed as writable number entities, allowing users to read and write numeric values from Home Assistant. Min/max bounds from TapHome metadata are respected.
+
+## 2026.2
+- **Home Assistant 2026.2 Compatibility Fix**: Fixed entity ID format validation errors introduced in Home Assistant 2026.2 (PR #160302)
+  - Home Assistant now enforces strict entity ID validation requiring `{domain}.{object_id}` format
+  - Domain part cannot contain underscores or multiple dots
+  - Refactored `TapHomeEntity` constructor to accept separate `domain` and `unique_id_determination` parameters for cleaner code
+  - Entity IDs now correctly generated as `button.press_device_name` instead of invalid `button.PRESS.device_name`
+  - Unique IDs remain unchanged to preserve existing entity configurations and automations
+
 ## 2025.8.1
 - Support covers without `blindsIsMoving`, assuming target position is reached immediately.
 

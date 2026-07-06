@@ -24,7 +24,8 @@ class TapHomeEntity(Entity):
         self,
         config: AddEntryRequest[TapHomeEntityConfigT],
         taphome_device: Device,
-        unique_id_determination: str,
+        domain: str,
+        unique_id_determination: str = "",
     ) -> None:
         """Initialize shared entity state."""
         super().__init__()
@@ -38,16 +39,19 @@ class TapHomeEntity(Entity):
         if config.entity.unique_id is not None:
             self._attr_unique_id = config.entity.unique_id
         else:
-            unique_id_core_id = (
-                f".{config.core.id}" if config.core.id is not None else ""
+            unique_id_core = f".{config.core.id}" if config.core.id is not None else ""
+            unique_id_device = (
+                f"{domain}.{unique_id_determination}"
+                if unique_id_determination
+                else domain
             )
-            self._attr_unique_id = f"taphome{unique_id_core_id}.{unique_id_determination}.{taphome_device.id}".lower()
+            self._attr_unique_id = f"taphome{unique_id_core}.{unique_id_device}.{taphome_device.id}".lower()
 
         if config.core.use_description_as_entity_id:
-            entity_id_format = unique_id_determination + ".{}"
+            entity_id_format = domain + ".{}"
             self.entity_id = async_generate_entity_id(
                 entity_id_format,
-                taphome_device.description,
+                f"{unique_id_determination} {taphome_device.description}",
                 hass=config.hass,
             )
 

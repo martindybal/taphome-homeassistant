@@ -15,6 +15,7 @@ from homeassistant.components.event import DOMAIN as EVENT_DOMAIN
 from homeassistant.components.fan import DOMAIN as FAN_DOMAIN
 from homeassistant.components.humidifier import DOMAIN as HUMIDIFIER_DOMAIN
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
+from homeassistant.components.number import DOMAIN as NUMBER_DOMAIN
 from homeassistant.components.select import DOMAIN as SELECT_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
@@ -52,6 +53,7 @@ from .const import (
     CONF_LABELS,
     CONF_LANGUAGE,
     CONF_MULTIVALUE_SWITCHES,
+    CONF_NUMBERS,
     CONF_TIMES,
     CONF_UPDATE_INTERVAL,
     CONF_VALVE,
@@ -116,6 +118,7 @@ CONFIG_SCHEMA = vol.Schema(
                             CONF_SWITCHES,
                             CONF_SENSORS,
                             CONF_BINARY_SENSORS,
+                            CONF_NUMBERS,
                             CONF_TIMES,
                         ),
                         {
@@ -161,6 +164,7 @@ CONFIG_SCHEMA = vol.Schema(
                                 CONF_BINARY_SENSORS, default=[]
                             ): cv.ensure_list,
                             vol.Optional(CONF_VALVE, default=[]): cv.ensure_list,
+                            vol.Optional(CONF_NUMBERS, default=[]): cv.ensure_list,
                             vol.Optional(CONF_TIMES, default=[]): cv.ensure_list,
                         },
                     )
@@ -204,6 +208,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         DomainDefinition(SELECT_DOMAIN, CONF_MULTIVALUE_SWITCHES, TapHomeEntityConfig),
         DomainDefinition(SENSOR_DOMAIN, CONF_SENSORS, TapHomeSensorConfig),
         DomainDefinition(SWITCH_DOMAIN, CONF_SWITCHES, TapHomeSwitchConfig),
+        DomainDefinition(NUMBER_DOMAIN, CONF_NUMBERS, TapHomeEntityConfig),
         DomainDefinition(TIME_DOMAIN, CONF_TIMES, TapHomeEntityConfig),
     ]
 
