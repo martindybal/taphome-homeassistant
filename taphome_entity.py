@@ -82,27 +82,30 @@ class TapHomeEntity(Entity):
 
     async def _async_set_area(self) -> None:
         mapping = self._core_config.zone_mapping
-        if mapping is None or self._zone is None or mapping.is_ignored(self._zone):
+        if mapping is None or self._zone is None:
             return
-        area_name = mapping.map(self._zone)
+        target = mapping.get(self._zone)
+        if target is None:
+            return
         area_registry = ar.async_get(self.hass)
         entity_registry = er.async_get(self.hass)
 
-        area = area_registry.async_get_area_by_name(area_name)
+        # A configured area id is used directly; a legacy YAML name is created
+        # on demand.
+        area = area_registry.async_get_area(
+            target
+        ) or area_registry.async_get_area_by_name(target)
         if area is None:
-            area = area_registry.async_create(area_name)
+            area = area_registry.async_create(target)
         entity_registry.async_update_entity(self.entity_id, area_id=area.id)
 
     async def _async_set_label(self) -> None:
         mapping = self._core_config.label_mapping
-        if (
-            mapping is None
-            or self._category is None
-            or mapping.is_ignored(self._category)
-        ):
+        if mapping is None or self._category is None:
             return
-
-        label_name = mapping.map(self._category)
+        target = mapping.get(self._category)
+        if target is None:
+            return
         label_registry = lr.async_get(self.hass)
         entity_registry = er.async_get(self.hass)
 
@@ -110,9 +113,13 @@ class TapHomeEntity(Entity):
         if entry is None:
             return
 
-        label = label_registry.async_get_label_by_name(label_name)
+        # A configured label id is used directly; a legacy YAML name is created
+        # on demand.
+        label = label_registry.async_get_label(
+            target
+        ) or label_registry.async_get_label_by_name(target)
         if label is None:
-            label = label_registry.async_create(label_name)
+            label = label_registry.async_create(target)
 
         entity_registry.async_update_entity(
             self.entity_id, labels=entry.labels | {label.label_id}

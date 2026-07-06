@@ -45,12 +45,39 @@
         "data": {
           "token": "Token"
         }
+      },
+      "zones": {
+        "title": "Zóny",
+        "description": "Mapovanie zón TapHome na oblasti Home Assistantu. Pri každej zóne môžete zadať nový názov — prázdne pole ponechá pôvodný názov — alebo zapnúť ignore a zónu preskočiť."
+      },
+      "labels": {
+        "title": "Štítky",
+        "description": "Mapovanie kategórií TapHome na štítky Home Assistantu. Pri každej kategórii môžete zadať nový názov — prázdne pole ponechá pôvodný názov — alebo zapnúť ignore a kategóriu preskočiť."
+      },
+      "add_devices": {
+        "title": "Pridať zariadenia",
+        "description": "Vyberte zariadenia TapHome, ktoré chcete pridať. Do poľa môžete písať a vyhľadávať. Pri zatiaľ nepridaných zariadeniach sa zobrazuje TapHome zóna a kategória, pri pridaných miestnosť.",
+        "data": {
+          "devices": "Zariadenia"
+        }
+      },
+      "add_devices_platform": {
+        "title": "Výber platforiem",
+        "description": "Pri každom zariadení zvoľte platformy, ako ktoré sa pridá. Môžete vybrať aj viac platforiem na zariadenie, alebo žiadnu a zariadenie tak preskočiť. Ponúkajú sa len platformy, ktoré sú pre dané zariadenie použiteľné."
+      },
+      "add_devices_options": {
+        "title": "Možnosti zariadenia",
+        "description": "Nastavte možnosti pre každé vybrané zariadenie a platformu. Každá sekcia je jedno zariadenie na jednej platforme. Prázdne polia použijú automatické predvolené hodnoty."
       }
     },
     "error": {
       "cannot_connect": "Pripojenie k TapHome core zlyhalo.",
       "invalid_auth": "TapHome core odmietol token.",
-      "ip_required": "Vyplňte IP adresu vášho core, alebo zapnite TapHome cloud."
+      "ip_required": "Vyplňte IP adresu vášho core, alebo zapnite TapHome cloud.",
+      "no_devices_selected": "Vyberte aspoň jedno zariadenie.",
+      "no_common_platform": "Vybrané zariadenia nie je možné pridať ako žiadnu platformu.",
+      "invalid_device": "Vyberte zariadenie zo zoznamu.",
+      "invalid_device_id": "Neplatné ID zariadenia."
     },
     "abort": {
       "already_configured": "Tento TapHome core je už nakonfigurovaný.",
@@ -107,24 +134,24 @@
         }
       },
       "add_devices_platform": {
-        "title": "Výber platformy",
-        "description": "Zvoľte platformu, ako ktorá sa vybrané zariadenia pridajú. Zariadenia, ktoré sa pre zvolenú platformu nehodia, budú preskočené. Vybrané: {devices}",
-        "data": {
-          "platform": "Platforma"
-        }
+        "title": "Výber platforiem",
+        "description": "Pri každom zariadení zvoľte platformy, ako ktoré sa pridá. Môžete vybrať aj viac platforiem na zariadenie, alebo žiadnu a zariadenie tak preskočiť. Ponúkajú sa len platformy, ktoré sú pre dané zariadenie použiteľné."
+      },
+      "add_devices_options": {
+        "title": "Možnosti zariadenia",
+        "description": "Nastavte možnosti pre každé vybrané zariadenie a platformu. Každá sekcia je jedno zariadenie na jednej platforme. Prázdne polia použijú automatické predvolené hodnoty."
       },
       "edit_devices": {
-        "title": "Upraviť zariadenie",
-        "description": "Vyberte zariadenie, ktoré chcete upraviť. Do poľa môžete písať a vyhľadávať.",
+        "title": "Upraviť zariadenia",
+        "description": "Vyberte zariadenia, ktoré chcete upraviť. Do poľa môžete písať a vyhľadávať.",
         "data": {
-          "device": "Zariadenie"
+          "devices": "Zariadenia"
         }
       },
       "edit_devices_form": {
         "title": "Možnosti zariadenia",
-        "description": "Pokročilé možnosti pre {device}. Prázdne polia použijú automatické predvolené hodnoty.",
+        "description": "Nastavte možnosti pre každé vybrané zariadenie. Každá sekcia je jedno zariadenie. Prázdne polia použijú automatické predvolené hodnoty.",
         "data": {
-          "unique_id": "Unikátne ID",
           "effect_id": "Viachodnotový prepínač efektov",
           "device_class": "Trieda zariadenia",
           "actions": "Akcie",

@@ -45,12 +45,39 @@
         "data": {
           "token": "Token"
         }
+      },
+      "zones": {
+        "title": "Zonen",
+        "description": "Ordnen Sie TapHome-Zonen den Bereichen von Home Assistant zu. Für jede Zone können Sie einen neuen Namen eingeben — ein leeres Feld behält den ursprünglichen Namen — oder ignore aktivieren, um die Zone zu überspringen."
+      },
+      "labels": {
+        "title": "Labels",
+        "description": "Ordnen Sie TapHome-Kategorien den Labels von Home Assistant zu. Für jede Kategorie können Sie einen neuen Namen eingeben — ein leeres Feld behält den ursprünglichen Namen — oder ignore aktivieren, um die Kategorie zu überspringen."
+      },
+      "add_devices": {
+        "title": "Geräte hinzufügen",
+        "description": "Wählen Sie die TapHome-Geräte aus, die Sie hinzufügen möchten. Tippen Sie in das Feld, um zu suchen. Noch nicht hinzugefügte Geräte zeigen ihre TapHome-Zone und -Kategorie, hinzugefügte Geräte ihren Raum.",
+        "data": {
+          "devices": "Geräte"
+        }
+      },
+      "add_devices_platform": {
+        "title": "Plattformen auswählen",
+        "description": "Wählen Sie für jedes Gerät die Plattformen, als die es hinzugefügt wird. Sie können pro Gerät mehrere Plattformen auswählen oder keine, um das Gerät zu überspringen. Es werden nur Plattformen angeboten, die mit dem jeweiligen Gerät kompatibel sind."
+      },
+      "add_devices_options": {
+        "title": "Geräteoptionen",
+        "description": "Legen Sie die Optionen für jedes ausgewählte Gerät und jede Plattform fest. Jeder Abschnitt ist ein Gerät auf einer Plattform. Leere Felder verwenden automatische Standardwerte."
       }
     },
     "error": {
       "cannot_connect": "Verbindung zum TapHome Core fehlgeschlagen.",
       "invalid_auth": "Der TapHome Core hat den Token abgelehnt.",
-      "ip_required": "Geben Sie die IP-Adresse Ihres Cores an oder aktivieren Sie die TapHome-Cloud."
+      "ip_required": "Geben Sie die IP-Adresse Ihres Cores an oder aktivieren Sie die TapHome-Cloud.",
+      "no_devices_selected": "Wählen Sie mindestens ein Gerät aus.",
+      "no_common_platform": "Die ausgewählten Geräte können als keine Plattform hinzugefügt werden.",
+      "invalid_device": "Wählen Sie ein Gerät aus der Liste.",
+      "invalid_device_id": "Ungültige Geräte-ID."
     },
     "abort": {
       "already_configured": "Dieser TapHome Core ist bereits konfiguriert.",
@@ -107,24 +134,24 @@
         }
       },
       "add_devices_platform": {
-        "title": "Plattform auswählen",
-        "description": "Wählen Sie die Plattform, als die die ausgewählten Geräte hinzugefügt werden. Geräte, die nicht zur gewählten Plattform passen, werden übersprungen. Ausgewählt: {devices}",
-        "data": {
-          "platform": "Plattform"
-        }
+        "title": "Plattformen auswählen",
+        "description": "Wählen Sie für jedes Gerät die Plattformen, als die es hinzugefügt wird. Sie können pro Gerät mehrere Plattformen auswählen oder keine, um das Gerät zu überspringen. Es werden nur Plattformen angeboten, die mit dem jeweiligen Gerät kompatibel sind."
+      },
+      "add_devices_options": {
+        "title": "Geräteoptionen",
+        "description": "Legen Sie die Optionen für jedes ausgewählte Gerät und jede Plattform fest. Jeder Abschnitt ist ein Gerät auf einer Plattform. Leere Felder verwenden automatische Standardwerte."
       },
       "edit_devices": {
-        "title": "Gerät bearbeiten",
-        "description": "Wählen Sie das Gerät aus, das Sie bearbeiten möchten. Tippen Sie in das Feld, um zu suchen.",
+        "title": "Geräte bearbeiten",
+        "description": "Wählen Sie die Geräte aus, die Sie bearbeiten möchten. Tippen Sie in das Feld, um zu suchen.",
         "data": {
-          "device": "Gerät"
+          "devices": "Geräte"
         }
       },
       "edit_devices_form": {
         "title": "Geräteoptionen",
-        "description": "Erweiterte Optionen für {device}. Leere Felder verwenden automatische Standardwerte.",
+        "description": "Legen Sie die Optionen für jedes ausgewählte Gerät fest. Jeder Abschnitt ist ein Gerät. Leere Felder verwenden automatische Standardwerte.",
         "data": {
-          "unique_id": "Eindeutige ID",
           "effect_id": "Mehrwertschalter für Effekte",
           "device_class": "Geräteklasse",
           "actions": "Aktionen",

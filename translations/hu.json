@@ -45,12 +45,39 @@
         "data": {
           "token": "Token"
         }
+      },
+      "zones": {
+        "title": "Zónák",
+        "description": "TapHome zónák hozzárendelése a Home Assistant területeihez. Minden zónánál megadhat új nevet — az üres mező megtartja az eredeti nevet —, vagy bekapcsolhatja az ignore kapcsolót a zóna kihagyásához."
+      },
+      "labels": {
+        "title": "Címkék",
+        "description": "TapHome kategóriák hozzárendelése a Home Assistant címkéihez. Minden kategóriánál megadhat új nevet — az üres mező megtartja az eredeti nevet —, vagy bekapcsolhatja az ignore kapcsolót a kategória kihagyásához."
+      },
+      "add_devices": {
+        "title": "Eszközök hozzáadása",
+        "description": "Válassza ki a hozzáadni kívánt TapHome eszközöket. A mezőbe gépelve kereshet. A még hozzá nem adott eszközöknél a TapHome zóna és kategória, a hozzáadottaknál a helyiség jelenik meg.",
+        "data": {
+          "devices": "Eszközök"
+        }
+      },
+      "add_devices_platform": {
+        "title": "Platformok kiválasztása",
+        "description": "Minden eszközhöz válassza ki a platformokat, amelyekként hozzáadásra kerül. Eszközönként több platformot is választhat, vagy egyet sem, hogy kihagyja az eszközt. Csak az adott eszközzel kompatibilis platformok jelennek meg."
+      },
+      "add_devices_options": {
+        "title": "Eszközbeállítások",
+        "description": "Állítsa be a beállításokat minden kiválasztott eszközhöz és platformhoz. Minden szakasz egy eszköz egy platformon. Az üres mezők automatikus alapértelmezett értékeket használnak."
       }
     },
     "error": {
       "cannot_connect": "Nem sikerült csatlakozni a TapHome core-hoz.",
       "invalid_auth": "A TapHome core elutasította a tokent.",
-      "ip_required": "Adja meg a core IP-címét, vagy kapcsolja be a TapHome felhőt."
+      "ip_required": "Adja meg a core IP-címét, vagy kapcsolja be a TapHome felhőt.",
+      "no_devices_selected": "Válasszon ki legalább egy eszközt.",
+      "no_common_platform": "A kiválasztott eszközök egyik platformként sem adhatók hozzá.",
+      "invalid_device": "Válasszon eszközt a listából.",
+      "invalid_device_id": "Érvénytelen eszközazonosító."
     },
     "abort": {
       "already_configured": "Ez a TapHome core már konfigurálva van.",
@@ -107,24 +134,24 @@
         }
       },
       "add_devices_platform": {
-        "title": "Platform kiválasztása",
-        "description": "Válassza ki a platformot, amelyként a kiválasztott eszközök hozzáadásra kerülnek. A választott platformhoz nem illő eszközök kimaradnak. Kiválasztva: {devices}",
-        "data": {
-          "platform": "Platform"
-        }
+        "title": "Platformok kiválasztása",
+        "description": "Minden eszközhöz válassza ki a platformokat, amelyekként hozzáadásra kerül. Eszközönként több platformot is választhat, vagy egyet sem, hogy kihagyja az eszközt. Csak az adott eszközzel kompatibilis platformok jelennek meg."
+      },
+      "add_devices_options": {
+        "title": "Eszközbeállítások",
+        "description": "Állítsa be a beállításokat minden kiválasztott eszközhöz és platformhoz. Minden szakasz egy eszköz egy platformon. Az üres mezők automatikus alapértelmezett értékeket használnak."
       },
       "edit_devices": {
-        "title": "Eszköz szerkesztése",
-        "description": "Válassza ki a szerkeszteni kívánt eszközt. A mezőbe gépelve kereshet.",
+        "title": "Eszközök szerkesztése",
+        "description": "Válassza ki a szerkeszteni kívánt eszközöket. A mezőbe gépelve kereshet.",
         "data": {
-          "device": "Eszköz"
+          "devices": "Eszközök"
         }
       },
       "edit_devices_form": {
         "title": "Eszközbeállítások",
-        "description": "Speciális beállítások: {device}. Az üres mezők automatikus alapértelmezéseket használnak.",
+        "description": "Állítsa be a beállításokat minden kiválasztott eszközhöz. Minden szakasz egy eszköz. Az üres mezők automatikus alapértelmezett értékeket használnak.",
         "data": {
-          "unique_id": "Egyedi azonosító",
           "effect_id": "Effektek többértékű kapcsolója",
           "device_class": "Eszközosztály",
           "actions": "Műveletek",
