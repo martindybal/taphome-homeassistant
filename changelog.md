@@ -11,6 +11,9 @@
   - Entity IDs now correctly generated as `button.press_device_name` instead of invalid `button.PRESS.device_name`
   - Unique IDs remain unchanged to preserve existing entity configurations and automations
 
+## 2025.8.1
+- Support covers without `blindsIsMoving`, assuming target position is reached immediately.
+
 ## 2025.8
 - Configure the TapHome core with `ip` or full `api_url`; conflicts raise an issue and `api_url` wins.
 - Completely rewritten TapHome integration (SDK 2.0). The integration has been rebuilt on TapHome SDK 2.0, offering:

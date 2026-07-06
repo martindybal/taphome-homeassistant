@@ -123,7 +123,10 @@ class BidirectionalDevice(Device[BidirectionalDeviceState]):
         if not self.supports_tilt:
             tilt = None
 
-        if self.state.position != position:
+        if (
+            self.supports_value(ValueType.BLINDS_IS_MOVING)
+            and self.state.position != position
+        ):
             self.state.set_movement_pending()
 
         await self.async_set_device_values(
