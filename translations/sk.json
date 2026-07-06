@@ -3,30 +3,40 @@
     "step": {
       "user": {
         "title": "Pripojiť TapHome core",
-        "description": "Zverejnite svoje zariadenia v aplikácii TapHome (Nastavenia → Zverejniť zariadenia → TapHome API) a zadajte nižšie token. Pre lokálny prístup vyplňte IP adresu vášho core; ponechajte obe adresné polia prázdne pre použitie TapHome cloudu.",
+        "description": "Zverejnite svoje zariadenia v aplikácii TapHome (Nastavenia → Zverejniť zariadenia → TapHome API) a zadajte nižšie token. Odporúčame lokálne pripojenie: „Použiť TapHome cloud“ zapnite len vtedy, keď sa ku core nedá pripojiť priamo vo vašej sieti — cloud aktualizuje stav menej často (približne raz za 20 sekúnd) a vyžaduje dostupnosť serverov TapHome. IP adresu vášho core nájdete v aplikácii TapHome v časti „Moja lokalita“.",
         "data": {
+          "token": "Token",
+          "use_cloud": "Použiť TapHome cloud",
           "ip": "IP adresa",
-          "api_url": "API URL",
-          "token": "Token"
+          "webhook_id": "Webhook ID",
+          "use_description_as_entity_id": "Použiť popisy TapHome ako ID entít",
+          "use_description_as_name": "Použiť popisy TapHome ako názvy entít",
+          "enabled_attributes": "Zverejnené atribúty"
         },
         "data_description": {
-          "ip": "IP adresa vášho TapHome core, napr. 192.168.1.3.",
-          "api_url": "Pokročilé: úplná API URL core. Vyplňte buď IP adresu, alebo API URL, nie oboje.",
-          "token": "Autorizačný token zobrazený v hornej časti obrazovky TapHome API."
+          "token": "Autorizačný token zobrazený v hornej časti obrazovky TapHome API.",
+          "use_cloud": "Pripojenie cez TapHome cloud namiesto lokálnej siete. Odporúčané len vtedy, keď core nie je dostupný lokálne — cloud je pomalší a vyžaduje internetové pripojenie. Pri zapnutí sa IP adresa ignoruje.",
+          "ip": "IP adresa vášho TapHome core vo vašej lokálnej sieti, napr. 192.168.1.3. Nájdete ju v aplikácii TapHome v časti Moja lokalita. Odporúčané namiesto cloudu pre rýchlejšie a spoľahlivejšie pripojenie.",
+          "webhook_id": "Odporúčané: core potom posiela zmeny okamžite, namiesto toho, aby ich Home Assistant zisťoval dotazom každé 2 sekundy. Zadajte ľubovoľný názov, napr. taphome_primary, a rovnaký nastavte aj v aplikácii TapHome na obrazovke Zverejniť zariadenia → zapnite Povoliť Web Hook a do Web Hook URL vyplňte napr. http://homeassistant.local:8123/api/webhook/taphome_primary — homeassistant.local nahraďte adresou vášho Home Assistant a taphome_primary názvom, ktorý ste zadali vyššie."
         }
       },
       "reconfigure": {
         "title": "Zmeniť nastavenie TapHome core",
-        "description": "Upravte nastavenie pripojenia k vášmu TapHome core.",
+        "description": "Upravte nastavenie pripojenia a core tohto TapHome core. Odporúčame lokálne pripojenie: „Použiť TapHome cloud“ zapnite len vtedy, keď sa ku core nedá pripojiť priamo vo vašej sieti — cloud aktualizuje stav menej často (približne raz za 20 sekúnd) a vyžaduje dostupnosť serverov TapHome. IP adresu vášho core nájdete v aplikácii TapHome v časti „Moja lokalita“.",
         "data": {
+          "token": "Token",
+          "use_cloud": "Použiť TapHome cloud",
           "ip": "IP adresa",
-          "api_url": "API URL",
-          "token": "Token"
+          "webhook_id": "Webhook ID",
+          "use_description_as_entity_id": "Použiť popisy TapHome ako ID entít",
+          "use_description_as_name": "Použiť popisy TapHome ako názvy entít",
+          "enabled_attributes": "Zverejnené atribúty"
         },
         "data_description": {
-          "ip": "IP adresa vášho TapHome core, napr. 192.168.1.3.",
-          "api_url": "Pokročilé: úplná API URL core. Vyplňte buď IP adresu, alebo API URL, nie oboje.",
-          "token": "Autorizačný token zobrazený v hornej časti obrazovky TapHome API."
+          "token": "Autorizačný token zobrazený v hornej časti obrazovky TapHome API.",
+          "use_cloud": "Pripojenie cez TapHome cloud namiesto lokálnej siete. Odporúčané len vtedy, keď core nie je dostupný lokálne — cloud je pomalší a vyžaduje internetové pripojenie. Pri zapnutí sa IP adresa ignoruje.",
+          "ip": "IP adresa vášho TapHome core vo vašej lokálnej sieti, napr. 192.168.1.3. Nájdete ju v aplikácii TapHome v časti Moja lokalita. Odporúčané namiesto cloudu pre rýchlejšie a spoľahlivejšie pripojenie.",
+          "webhook_id": "Odporúčané: core potom posiela zmeny okamžite, namiesto toho, aby ich Home Assistant zisťoval dotazom každé 2 sekundy. Zadajte ľubovoľný názov, napr. taphome_primary, a rovnaký nastavte aj v aplikácii TapHome na obrazovke Zverejniť zariadenia → zapnite Povoliť Web Hook a do Web Hook URL vyplňte napr. http://homeassistant.local:8123/api/webhook/taphome_primary — homeassistant.local nahraďte adresou vášho Home Assistant a taphome_primary názvom, ktorý ste zadali vyššie."
         }
       },
       "reauth_confirm": {
@@ -40,7 +50,7 @@
     "error": {
       "cannot_connect": "Pripojenie k TapHome core zlyhalo.",
       "invalid_auth": "TapHome core odmietol token.",
-      "ip_and_api_url_set": "Vyplňte buď IP adresu, alebo API URL, nie oboje."
+      "ip_required": "Vyplňte IP adresu vášho core, alebo zapnite TapHome cloud."
     },
     "abort": {
       "already_configured": "Tento TapHome core je už nakonfigurovaný.",
@@ -64,14 +74,21 @@
       "core_settings": {
         "title": "Nastavenie core",
         "data": {
+          "token": "Token",
+          "use_cloud": "Použiť TapHome cloud",
+          "ip": "IP adresa",
           "webhook_id": "Webhook ID",
           "use_description_as_entity_id": "Použiť popisy TapHome ako ID entít",
           "use_description_as_name": "Použiť popisy TapHome ako názvy entít",
           "enabled_attributes": "Zverejnené atribúty"
         },
         "data_description": {
-          "webhook_id": "Zaregistruje webhook pre okamžité push aktualizácie z core, napr. taphome_primary. Nechajte prázdne pre vypnutie."
-        }
+          "token": "Autorizačný token zobrazený v hornej časti obrazovky TapHome API.",
+          "use_cloud": "Pripojenie cez TapHome cloud namiesto lokálnej siete. Odporúčané len vtedy, keď core nie je dostupný lokálne — cloud je pomalší a vyžaduje internetové pripojenie. Pri zapnutí sa IP adresa ignoruje.",
+          "ip": "IP adresa vášho TapHome core vo vašej lokálnej sieti, napr. 192.168.1.3. Nájdete ju v aplikácii TapHome v časti Moja lokalita. Odporúčané namiesto cloudu pre rýchlejšie a spoľahlivejšie pripojenie.",
+          "webhook_id": "Odporúčané: core potom posiela zmeny okamžite, namiesto toho, aby ich Home Assistant zisťoval dotazom každé 2 sekundy. Zadajte ľubovoľný názov, napr. taphome_primary, a rovnaký nastavte aj v aplikácii TapHome na obrazovke Zverejniť zariadenia → zapnite Povoliť Web Hook a do Web Hook URL vyplňte napr. http://homeassistant.local:8123/api/webhook/taphome_primary — homeassistant.local nahraďte adresou vášho Home Assistant a taphome_primary názvom, ktorý ste zadali vyššie."
+        },
+        "description": "Upravte nastavenie pripojenia a core tohto TapHome core. Odporúčame lokálne pripojenie: „Použiť TapHome cloud“ zapnite len vtedy, keď sa ku core nedá pripojiť priamo vo vašej sieti — cloud aktualizuje stav menej často (približne raz za 20 sekúnd) a vyžaduje dostupnosť serverov TapHome. IP adresu vášho core nájdete v aplikácii TapHome v časti „Moja lokalita“."
       },
       "zones": {
         "title": "Zóny",
@@ -147,7 +164,11 @@
       }
     },
     "error": {
-      "invalid_device_id": "Neplatné ID zariadenia."
+      "invalid_device_id": "Neplatné ID zariadenia.",
+      "cannot_connect": "Pripojenie k TapHome core zlyhalo.",
+      "invalid_auth": "TapHome core odmietol token.",
+      "ip_required": "Vyplňte IP adresu vášho core, alebo zapnite TapHome cloud.",
+      "unique_id_mismatch": "Pripojený core nezodpovedá core, pre ktorý bol tento záznam vytvorený."
     },
     "abort": {
       "entry_not_loaded": "TapHome core nie je načítaný. Najprv opravte pripojenie.",
