@@ -296,7 +296,10 @@ class TapHomeConfigFlow(ConfigFlow, domain=DOMAIN):
                     options=options,
                 )
 
-        suggested_values = user_input or {CONF_WEBHOOK_ID: DEFAULT_WEBHOOK_ID}
+        suggested_values = user_input or {
+            CONF_WEBHOOK_ID: DEFAULT_WEBHOOK_ID,
+            USE_DESCRIPTION_AS_ENTITY_ID: True,
+        }
         return self.async_show_form(
             step_id="user",
             data_schema=self.add_suggested_values_to_schema(
