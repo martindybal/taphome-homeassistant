@@ -57,6 +57,7 @@ from .const import (
     CONF_FAN,
     CONF_HUMIDIFIER,
     CONF_IP,
+    CONF_KNOWN_DEVICE_IDS,
     CONF_LABELS,
     CONF_LANGUAGE,
     CONF_MULTIVALUE_SWITCHES,
@@ -75,6 +76,7 @@ from .cover import TapHomeCoverConfig
 from .fan import TapHomeFanConfig
 from .humidifier import TapHomeHumidifierConfig
 from .light import TapHomeLightConfig
+from .platform_descriptors import device_config_id
 from .sensor import TapHomeSensorConfig
 from .switch import TapHomeSwitchConfig
 from .taphome_config_entry import (
@@ -277,6 +279,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TapHomeConfigEntry) -> b
 
     _register_webhook(hass, entry, hub, core_config)
     _async_remove_stale_entities(hass, entry)
+    _async_detect_new_devices(hass, entry, hub, taphome_issue_registry)
 
     add_entry_requests = {
         domain.name: _map_add_entry_requests(
@@ -388,6 +391,43 @@ def _async_remove_stale_entities(
             continue
         if device_id not in configured_ids[registry_entry.domain]:
             entity_registry.async_remove(registry_entry.entity_id)
+
+
+def _all_configured_device_ids(entry: TapHomeConfigEntry) -> set[int]:
+    """Return the ids of every device configured on any platform."""
+    return {
+        device_config_id(device_config)
+        for domain in DOMAIN_DEFINITIONS
+        for device_config in entry.options.get(domain.config_key) or []
+    }
+
+
+def _async_detect_new_devices(
+    hass: HomeAssistant,
+    entry: TapHomeConfigEntry,
+    hub: TapHomeHub,
+    issue_registry: TapHomeIssueRegistry,
+) -> None:
+    """Report devices exposed since the entry was last known about.
+
+    On the first setup the currently exposed devices become the baseline, so
+    nothing is reported. Afterwards any device exposed in the API that is not in
+    the baseline and not already configured raises a fixable repair issue.
+    """
+    exposed = set(hub.devices)
+    configured = _all_configured_device_ids(entry)
+    known_raw = entry.data.get(CONF_KNOWN_DEVICE_IDS)
+
+    if known_raw is None:
+        hass.config_entries.async_update_entry(
+            entry,
+            data={**entry.data, CONF_KNOWN_DEVICE_IDS: sorted(exposed | configured)},
+        )
+        return
+
+    known = {int(value) for value in known_raw}
+    new_devices = exposed - known - configured
+    issue_registry.sync_new_device_issues(entry.entry_id, hub, new_devices)
 
 
 def _register_webhook(

@@ -304,6 +304,122 @@ def _device_qualifies(device: Device, descriptor: PlatformDescriptor) -> bool:
     )
 
 
+def build_field_selector(
+    option_field: OptionField,
+    devices: dict[int, Device],
+    device_label: Callable[[int], str],
+) -> Any:
+    """Build the selector for one per-device option field."""
+    if option_field.kind == FieldKind.DEVICE_ID:
+        options = [
+            SelectOptionDict(value=str(device.id), label=device_label(device.id))
+            for device in devices.values()
+            if not option_field.device_types
+            or isinstance(device, option_field.device_types)
+        ]
+        options.sort(key=lambda option: option["label"].casefold())
+        return SelectSelector(
+            SelectSelectorConfig(
+                options=options,
+                mode=SelectSelectorMode.DROPDOWN,
+                custom_value=True,
+            )
+        )
+    if option_field.kind == FieldKind.VALUE_TYPE:
+        options = [
+            SelectOptionDict(
+                value=str(value_type.value),
+                label=value_type.name.replace("_", " ").lower(),
+            )
+            for value_type in ValueType
+        ]
+        options.sort(key=lambda option: option["label"])
+        return SelectSelector(
+            SelectSelectorConfig(options=options, mode=SelectSelectorMode.DROPDOWN)
+        )
+    if option_field.kind in (FieldKind.ENUM, FieldKind.MULTI_ENUM):
+        return SelectSelector(
+            SelectSelectorConfig(
+                options=sorted(option_field.options),
+                multiple=option_field.kind == FieldKind.MULTI_ENUM,
+                mode=SelectSelectorMode.DROPDOWN,
+            )
+        )
+    if option_field.kind in (FieldKind.NUMBER_INT, FieldKind.NUMBER_FLOAT):
+        return NumberSelector(
+            NumberSelectorConfig(
+                min=option_field.min_value,
+                max=option_field.max_value,
+                step=option_field.step
+                or (1 if option_field.kind == FieldKind.NUMBER_INT else 0.1),
+                mode=NumberSelectorMode.BOX,
+            )
+        )
+    return TextSelector()
+
+
+def build_device_options_schema(
+    descriptor: PlatformDescriptor,
+    device_config: dict,
+    devices: dict[int, Device],
+    device_label: Callable[[int], str],
+) -> tuple[vol.Schema, dict[str, Any]]:
+    """Build the per-device options form and its suggested values."""
+    schema_dict: dict[Any, Any] = {}
+    suggested_values: dict[str, Any] = {}
+
+    for option_field in descriptor.fields:
+        schema_dict[vol.Optional(option_field.key)] = build_field_selector(
+            option_field, devices, device_label
+        )
+        value = device_config.get(option_field.key)
+        if value is None:
+            continue
+        if option_field.kind in (FieldKind.DEVICE_ID, FieldKind.VALUE_TYPE):
+            suggested_values[option_field.key] = str(value)
+        elif option_field.kind == FieldKind.MULTI_ENUM:
+            suggested_values[option_field.key] = [str(item) for item in value]
+        elif option_field.kind == FieldKind.ENUM:
+            suggested_values[option_field.key] = str(value)
+        else:
+            suggested_values[option_field.key] = value
+
+    return vol.Schema(schema_dict), suggested_values
+
+
+def apply_device_options(
+    descriptor: PlatformDescriptor,
+    device_config: dict,
+    user_input: dict[str, Any],
+    errors: dict[str, str],
+) -> dict:
+    """Merge submitted per-device options into the stored device config."""
+    new_config = dict(device_config)
+    # unique_id is a YAML-only option: any imported value is preserved by the
+    # copy above and is intentionally not exposed for editing in the UI.
+
+    for option_field in descriptor.fields:
+        value = user_input.get(option_field.key)
+        if value in (None, "", []):
+            new_config.pop(option_field.key, None)
+            continue
+        if option_field.kind in (FieldKind.DEVICE_ID, FieldKind.VALUE_TYPE):
+            try:
+                new_config[option_field.key] = int(value)
+            except (TypeError, ValueError):
+                errors[option_field.key] = "invalid_device_id"
+        elif option_field.kind == FieldKind.NUMBER_INT:
+            new_config[option_field.key] = int(value)
+        elif option_field.kind == FieldKind.NUMBER_FLOAT:
+            new_config[option_field.key] = float(value)
+        elif option_field.kind == FieldKind.MULTI_ENUM:
+            new_config[option_field.key] = list(value)
+        else:
+            new_config[option_field.key] = value
+
+    return new_config
+
+
 class _TapHomeSetupFlow:
     """Shared zone, label and device setup steps for config and options flows."""
 
@@ -432,8 +548,9 @@ class _TapHomeSetupFlow:
     ) -> ConfigFlowResult:
         """Pick the devices that should be added."""
         errors: dict[str, str] = {}
+        cleared = bool(user_input and user_input.get("clear_selection"))
 
-        if user_input is not None:
+        if user_input is not None and not cleared:
             try:
                 device_ids = [int(value) for value in user_input.get("devices", [])]
             except ValueError:
@@ -468,11 +585,19 @@ class _TapHomeSetupFlow:
                         multiple=True,
                         mode=SelectSelectorMode.DROPDOWN,
                     )
-                )
+                ),
+                vol.Optional("clear_selection", default=False): BooleanSelector(),
             }
         )
-        if user_input is not None:
-            schema = self.add_suggested_values_to_schema(schema, user_input)
+        if cleared:
+            # "Deselect all" was submitted: re-show the form with nothing picked.
+            schema = self.add_suggested_values_to_schema(
+                schema, {"devices": [], "clear_selection": False}
+            )
+        elif user_input is not None:
+            schema = self.add_suggested_values_to_schema(
+                schema, {**user_input, "clear_selection": False}
+            )
 
         return self.async_show_form(
             step_id="add_devices",
@@ -496,7 +621,7 @@ class _TapHomeSetupFlow:
             pairs: list[tuple[int, str]] = []
             for device in devices:
                 item = user_input.get(self._device_label(device.id)) or {}
-                selected = set(item.get("platforms") or [])
+                selected = set(item.get("domains") or [])
                 pairs.extend(
                     (device.id, descriptor.config_key)
                     for descriptor in PLATFORM_DESCRIPTORS
@@ -507,11 +632,14 @@ class _TapHomeSetupFlow:
                 return await self._async_commit("add_devices")
             return await self.async_step_add_devices_options()
 
+        # Each device is a section holding a domain multiselect. Field labels
+        # nested in a section cannot be localized, so the "domains" key shows as
+        # is, matching the raw option keys of the next step.
         schema_dict: dict[Any, Any] = {
             vol.Required(self._device_label(device.id)): section(
                 vol.Schema(
                     {
-                        vol.Optional("platforms", default=[]): SelectSelector(
+                        vol.Optional("domains", default=[]): SelectSelector(
                             SelectSelectorConfig(
                                 options=self._platforms_for_device(device.id),
                                 multiple=True,
@@ -561,7 +689,7 @@ class _TapHomeSetupFlow:
             )
             section_key = self._pair_section_key(device_id, config_key)
             schema_dict[vol.Optional(section_key)] = section(
-                field_schema, {"collapsed": False}
+                field_schema, {"collapsed": descriptor.advanced}
             )
             if field_suggested:
                 suggested_values[section_key] = field_suggested
@@ -715,7 +843,7 @@ class _TapHomeSetupFlow:
                 descriptor, device_config
             )
             schema_dict[vol.Optional(section_key)] = section(
-                field_schema, {"collapsed": False}
+                field_schema, {"collapsed": descriptor.advanced}
             )
             if field_suggested:
                 suggested_values[section_key] = field_suggested
@@ -969,77 +1097,13 @@ class _TapHomeSetupFlow:
         self, descriptor: PlatformDescriptor, device_config: dict
     ) -> tuple[vol.Schema, dict[str, Any]]:
         """Build the per-device options form and its suggested values."""
-        schema_dict: dict[Any, Any] = {}
-        suggested_values: dict[str, Any] = {}
-
-        for option_field in descriptor.fields:
-            schema_dict[vol.Optional(option_field.key)] = self._build_field_selector(
-                option_field
-            )
-            value = device_config.get(option_field.key)
-            if value is None:
-                continue
-            if option_field.kind in (FieldKind.DEVICE_ID, FieldKind.VALUE_TYPE):
-                suggested_values[option_field.key] = str(value)
-            elif option_field.kind == FieldKind.MULTI_ENUM:
-                suggested_values[option_field.key] = [str(item) for item in value]
-            elif option_field.kind == FieldKind.ENUM:
-                suggested_values[option_field.key] = str(value)
-            else:
-                suggested_values[option_field.key] = value
-
-        return vol.Schema(schema_dict), suggested_values
+        return build_device_options_schema(
+            descriptor, device_config, self._devices, self._device_label
+        )
 
     def _build_field_selector(self, option_field: OptionField) -> Any:
         """Build the selector for one per-device option field."""
-        if option_field.kind == FieldKind.DEVICE_ID:
-            options = [
-                SelectOptionDict(
-                    value=str(device.id), label=self._device_label(device.id)
-                )
-                for device in self._devices.values()
-                if not option_field.device_types
-                or isinstance(device, option_field.device_types)
-            ]
-            options.sort(key=lambda option: option["label"].casefold())
-            return SelectSelector(
-                SelectSelectorConfig(
-                    options=options,
-                    mode=SelectSelectorMode.DROPDOWN,
-                    custom_value=True,
-                )
-            )
-        if option_field.kind == FieldKind.VALUE_TYPE:
-            options = [
-                SelectOptionDict(
-                    value=str(value_type.value),
-                    label=value_type.name.replace("_", " ").lower(),
-                )
-                for value_type in ValueType
-            ]
-            options.sort(key=lambda option: option["label"])
-            return SelectSelector(
-                SelectSelectorConfig(options=options, mode=SelectSelectorMode.DROPDOWN)
-            )
-        if option_field.kind in (FieldKind.ENUM, FieldKind.MULTI_ENUM):
-            return SelectSelector(
-                SelectSelectorConfig(
-                    options=sorted(option_field.options),
-                    multiple=option_field.kind == FieldKind.MULTI_ENUM,
-                    mode=SelectSelectorMode.DROPDOWN,
-                )
-            )
-        if option_field.kind in (FieldKind.NUMBER_INT, FieldKind.NUMBER_FLOAT):
-            return NumberSelector(
-                NumberSelectorConfig(
-                    min=option_field.min_value,
-                    max=option_field.max_value,
-                    step=option_field.step
-                    or (1 if option_field.kind == FieldKind.NUMBER_INT else 0.1),
-                    mode=NumberSelectorMode.BOX,
-                )
-            )
-        return TextSelector()
+        return build_field_selector(option_field, self._devices, self._device_label)
 
     def _apply_device_options(
         self,
@@ -1049,30 +1113,7 @@ class _TapHomeSetupFlow:
         errors: dict[str, str],
     ) -> dict:
         """Merge submitted per-device options into the stored device config."""
-        new_config = dict(device_config)
-        # unique_id is a YAML-only option: any imported value is preserved by the
-        # copy above and is intentionally not exposed for editing in the UI.
-
-        for option_field in descriptor.fields:
-            value = user_input.get(option_field.key)
-            if value in (None, "", []):
-                new_config.pop(option_field.key, None)
-                continue
-            if option_field.kind in (FieldKind.DEVICE_ID, FieldKind.VALUE_TYPE):
-                try:
-                    new_config[option_field.key] = int(value)
-                except TypeError, ValueError:
-                    errors[option_field.key] = "invalid_device_id"
-            elif option_field.kind == FieldKind.NUMBER_INT:
-                new_config[option_field.key] = int(value)
-            elif option_field.kind == FieldKind.NUMBER_FLOAT:
-                new_config[option_field.key] = float(value)
-            elif option_field.kind == FieldKind.MULTI_ENUM:
-                new_config[option_field.key] = list(value)
-            else:
-                new_config[option_field.key] = value
-
-        return new_config
+        return apply_device_options(descriptor, device_config, user_input, errors)
 
 
 class TapHomeOptionsFlow(_TapHomeSetupFlow, OptionsFlow):
