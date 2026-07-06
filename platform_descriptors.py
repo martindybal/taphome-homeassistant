@@ -35,6 +35,7 @@ from .taphome_sdk import (
     BidirectionalDevice,
     ButtonAction,
     ButtonDevice,
+    Device,
     DigitalOutputDevice,
     DualWhiteLightDevice,
     MultiValueSwitchDevice,
@@ -76,6 +77,9 @@ class PlatformDescriptor:
     config_key: str
     candidate_types: tuple[type, ...]
     fields: tuple[OptionField, ...]
+    # Options detected automatically (sensors); their form section is collapsed
+    # and the repair "add device" flow skips the options step for them.
+    advanced: bool = False
 
 
 def _enum_values(enum_type: type[Enum]) -> tuple[str, ...]:
@@ -266,6 +270,7 @@ PLATFORM_DESCRIPTORS: tuple[PlatformDescriptor, ...] = (
                 "state_class", FieldKind.ENUM, options=_enum_values(SensorStateClass)
             ),
         ),
+        advanced=True,
     ),
     PlatformDescriptor(
         CONF_BINARY_SENSORS,
@@ -278,6 +283,7 @@ PLATFORM_DESCRIPTORS: tuple[PlatformDescriptor, ...] = (
             ),
             OptionField("value_type", FieldKind.VALUE_TYPE),
         ),
+        advanced=True,
     ),
     PlatformDescriptor(
         CONF_VALVE,
@@ -294,3 +300,20 @@ PLATFORM_DESCRIPTORS: tuple[PlatformDescriptor, ...] = (
 PLATFORM_DESCRIPTORS_BY_KEY: dict[str, PlatformDescriptor] = {
     descriptor.config_key: descriptor for descriptor in PLATFORM_DESCRIPTORS
 }
+
+
+def device_config_id(device_config: dict | int) -> int:
+    """Return the TapHome device id of a stored device configuration."""
+    if isinstance(device_config, dict):
+        return int(device_config["id"])
+    return int(device_config)
+
+
+def platforms_for_device(device: Device) -> list[str]:
+    """Return the config keys of platforms the device qualifies for."""
+    return [
+        descriptor.config_key
+        for descriptor in PLATFORM_DESCRIPTORS
+        if not descriptor.candidate_types
+        or isinstance(device, descriptor.candidate_types)
+    ]

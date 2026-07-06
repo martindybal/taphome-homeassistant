@@ -73,6 +73,39 @@ class TapHomeIssueRegistry:
             },
         )
 
+    def sync_new_device_issues(
+        self, config_entry_id: str, hub, new_device_ids: set[int]
+    ) -> None:
+        """Create fixable issues for new devices and clear resolved ones."""
+        registry = ir.async_get(self.hass)
+        prefix = f"{Issues.NEW_DEVICE}_{config_entry_id}_"
+        existing = {
+            issue.issue_id
+            for issue in registry.issues.values()
+            if issue.domain == TAPHOME_PLATFORM and issue.issue_id.startswith(prefix)
+        }
+        wanted = {f"{prefix}{device_id}": device_id for device_id in new_device_ids}
+
+        for issue_id in existing - set(wanted):
+            self.try_delete_issue(issue_id)
+
+        for issue_id, device_id in wanted.items():
+            if issue_id in existing:
+                continue
+            device = hub.devices.get(device_id)
+            device_name = device.name if device is not None else str(device_id)
+            self.create_issue(
+                issue_id,
+                is_fixable=True,
+                severity=IssueSeverity.WARNING,
+                data={"config_entry_id": config_entry_id, "device_id": device_id},
+                translation_key=Issues.NEW_DEVICE,
+                translation_placeholders={
+                    "device": f"{device_name} ({device_id})",
+                    "core_id": self.core_id,
+                },
+            )
+
     def _create_device_not_exposed_issue_id(self, taphome_device_id):
         return f"{Issues.DEVICE_NOT_EXPOSED}_{taphome_device_id}"
 

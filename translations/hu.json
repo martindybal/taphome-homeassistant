@@ -2,12 +2,13 @@
   "config": {
     "step": {
       "user": {
-        "title": "TapHome core csatlakoztatása",
-        "description": "Tegye közzé eszközeit a TapHome alkalmazásban (Beállítások → Eszközök közzététele → TapHome API), és adja meg alább a tokent. A helyi kapcsolat ajánlott: a „TapHome felhő használata” kapcsolót csak akkor kapcsolja be, ha a core nem érhető el közvetlenül a hálózatában — a felhő ritkábban frissít (kb. 20 másodpercenként), és a TapHome szervereinek elérhetőségétől függ. A core IP-címét a TapHome alkalmazásban a „Saját helyszín” alatt találja.",
+        "title": "TapHome Core csatlakoztatása",
+        "description": "Tegye közzé eszközeit a TapHome alkalmazásban (Beállítások → Eszközök közzététele → TapHome API), és adja meg alább a tokent. A helyi kapcsolat ajánlott: a „TapHome felhő használata” kapcsolót csak akkor kapcsolja be, ha a Core nem érhető el közvetlenül a hálózatában — a felhő ritkábban frissít (kb. 20 másodpercenként), és a TapHome szervereinek elérhetőségétől függ. A Core IP-címét a TapHome alkalmazásban a „Saját helyszín” alatt találja.",
         "data": {
           "token": "Token",
           "use_cloud": "TapHome felhő használata",
           "ip": "IP-cím",
+          "id": "Core azonosító",
           "webhook_id": "Webhook azonosító",
           "use_description_as_entity_id": "TapHome leírások használata entitásazonosítóként",
           "use_description_as_name": "TapHome leírások használata entitásnévként",
@@ -15,18 +16,21 @@
         },
         "data_description": {
           "token": "A TapHome API képernyő tetején megjelenő hitelesítési token.",
-          "use_cloud": "Kapcsolódás a TapHome felhőn keresztül a helyi hálózat helyett. Csak akkor ajánlott, ha a core helyileg nem érhető el — a felhő lassabb, és internetkapcsolatot igényel. Bekapcsolva az IP-cím figyelmen kívül marad.",
-          "ip": "A TapHome core IP-címe a helyi hálózatában, pl. 192.168.1.3. Megtalálja a TapHome alkalmazásban a Saját helyszín alatt. A felhő helyett ajánlott a gyorsabb, megbízhatóbb kapcsolatért.",
-          "webhook_id": "Ajánlott: a core ekkor azonnal elküldi a változásokat ahelyett, hogy a Home Assistant 2 másodpercenként lekérdezné. Adjon meg egy tetszőleges nevet, pl. taphome_primary, majd ugyanezt állítsa be a TapHome alkalmazásban az Eszközök közzététele képernyőn — kapcsolja be a Webhookot, és a Webhook URL-t állítsa be pl. http://homeassistant.local:8123/api/webhook/taphome értékre — a homeassistant.local helyére írja be a saját Home Assistant címét, a taphome_primary helyére pedig a fent megadott nevet."
-        }
+          "use_cloud": "Kapcsolódás a TapHome felhőn keresztül a helyi hálózat helyett. Csak akkor ajánlott, ha a Core helyileg nem érhető el — a felhő lassabb, és internetkapcsolatot igényel. Bekapcsolva az IP-cím figyelmen kívül marad.",
+          "ip": "Megtalálja a TapHome alkalmazásban a Saját helyszín alatt.",
+          "id": "Ennek a Core-nak a választható azonosítója. Csak akkor szükséges, ha egynél több Core-t használ.",
+          "webhook_id": "Ajánlott: a Core ekkor azonnal elküldi a változásokat ahelyett, hogy a Home Assistant 2 másodpercenként lekérdezné. Adjon meg egy tetszőleges nevet, pl. taphome_primary, majd ugyanezt állítsa be a TapHome alkalmazásban az Eszközök közzététele képernyőn — kapcsolja be a Webhookot, és a Webhook URL-t állítsa be pl. http://homeassistant.local:8123/api/webhook/taphome értékre — a homeassistant.local helyére írja be a saját Home Assistant címét, a taphome_primary helyére pedig a fent megadott nevet."
+        },
+        "submit": "Tovább"
       },
       "reconfigure": {
-        "title": "TapHome core újrakonfigurálása",
-        "description": "Frissítse a TapHome core kapcsolati és core beállításait. A helyi kapcsolat ajánlott: a „TapHome felhő használata” kapcsolót csak akkor kapcsolja be, ha a core nem érhető el közvetlenül a hálózatában — a felhő ritkábban frissít (kb. 20 másodpercenként), és a TapHome szervereinek elérhetőségétől függ. A core IP-címét a TapHome alkalmazásban a „Saját helyszín” alatt találja.",
+        "title": "TapHome Core újrakonfigurálása",
+        "description": "Frissítse a TapHome Core kapcsolati és Core beállításait. A helyi kapcsolat ajánlott: a „TapHome felhő használata” kapcsolót csak akkor kapcsolja be, ha a Core nem érhető el közvetlenül a hálózatában — a felhő ritkábban frissít (kb. 20 másodpercenként), és a TapHome szervereinek elérhetőségétől függ. A Core IP-címét a TapHome alkalmazásban a „Saját helyszín” alatt találja.",
         "data": {
           "token": "Token",
           "use_cloud": "TapHome felhő használata",
           "ip": "IP-cím",
+          "id": "Core azonosító",
           "webhook_id": "Webhook azonosító",
           "use_description_as_entity_id": "TapHome leírások használata entitásazonosítóként",
           "use_description_as_name": "TapHome leírások használata entitásnévként",
@@ -34,25 +38,28 @@
         },
         "data_description": {
           "token": "A TapHome API képernyő tetején megjelenő hitelesítési token.",
-          "use_cloud": "Kapcsolódás a TapHome felhőn keresztül a helyi hálózat helyett. Csak akkor ajánlott, ha a core helyileg nem érhető el — a felhő lassabb, és internetkapcsolatot igényel. Bekapcsolva az IP-cím figyelmen kívül marad.",
-          "ip": "A TapHome core IP-címe a helyi hálózatában, pl. 192.168.1.3. Megtalálja a TapHome alkalmazásban a Saját helyszín alatt. A felhő helyett ajánlott a gyorsabb, megbízhatóbb kapcsolatért.",
-          "webhook_id": "Ajánlott: a core ekkor azonnal elküldi a változásokat ahelyett, hogy a Home Assistant 2 másodpercenként lekérdezné. Adjon meg egy tetszőleges nevet, pl. taphome_primary, majd ugyanezt állítsa be a TapHome alkalmazásban az Eszközök közzététele képernyőn — kapcsolja be a Webhookot, és a Webhook URL-t állítsa be pl. http://homeassistant.local:8123/api/webhook/taphome értékre — a homeassistant.local helyére írja be a saját Home Assistant címét, a taphome_primary helyére pedig a fent megadott nevet."
-        }
+          "use_cloud": "Kapcsolódás a TapHome felhőn keresztül a helyi hálózat helyett. Csak akkor ajánlott, ha a Core helyileg nem érhető el — a felhő lassabb, és internetkapcsolatot igényel. Bekapcsolva az IP-cím figyelmen kívül marad.",
+          "ip": "Megtalálja a TapHome alkalmazásban a Saját helyszín alatt.",
+          "id": "Ennek a Core-nak a választható azonosítója. Csak akkor szükséges, ha egynél több Core-t használ.",
+          "webhook_id": "Ajánlott: a Core ekkor azonnal elküldi a változásokat ahelyett, hogy a Home Assistant 2 másodpercenként lekérdezné. Adjon meg egy tetszőleges nevet, pl. taphome_primary, majd ugyanezt állítsa be a TapHome alkalmazásban az Eszközök közzététele képernyőn — kapcsolja be a Webhookot, és a Webhook URL-t állítsa be pl. http://homeassistant.local:8123/api/webhook/taphome értékre — a homeassistant.local helyére írja be a saját Home Assistant címét, a taphome_primary helyére pedig a fent megadott nevet."
+        },
+        "submit": "Mentés"
       },
       "reauth_confirm": {
         "title": "TapHome újrahitelesítése",
         "description": "A(z) {name} tokenje már nem érvényes. Adjon meg egy új tokent.",
         "data": {
           "token": "Token"
-        }
+        },
+        "submit": "Mentés"
       },
       "zones": {
         "title": "Zónák",
-        "description": "TapHome zónák hozzárendelése a Home Assistant területeihez. Minden zónánál megadhat új nevet — az üres mező megtartja az eredeti nevet —, vagy bekapcsolhatja az ignore kapcsolót a zóna kihagyásához."
+        "description": "TapHome zónák hozzárendelése a Home Assistant területeihez. Válassza ki a területet minden zónához; hagyja üresen a zónát, ha nem rendel hozzá területet."
       },
       "labels": {
         "title": "Címkék",
-        "description": "TapHome kategóriák hozzárendelése a Home Assistant címkéihez. Minden kategóriánál megadhat új nevet — az üres mező megtartja az eredeti nevet —, vagy bekapcsolhatja az ignore kapcsolót a kategória kihagyásához."
+        "description": "TapHome kategóriák hozzárendelése a Home Assistant címkéihez. Válassza ki a címkét minden kategóriához; hagyja üresen a kategóriát, ha nem rendel hozzá címkét."
       },
       "add_devices": {
         "title": "Eszközök hozzáadása",
@@ -62,28 +69,29 @@
         }
       },
       "add_devices_platform": {
-        "title": "Platformok kiválasztása",
-        "description": "Minden eszközhöz válassza ki a platformokat, amelyekként hozzáadásra kerül. Eszközönként több platformot is választhat, vagy egyet sem, hogy kihagyja az eszközt. Csak az adott eszközzel kompatibilis platformok jelennek meg."
+        "title": "Domének kiválasztása",
+        "description": "Minden eszközhöz válassza ki a Home Assistant doméneket, amelyekként az eszköz megjelenik. Eszközönként több domént is választhat, vagy egyet sem, hogy kihagyja az eszközt. Csak az adott eszközzel kompatibilis domének jelennek meg."
       },
       "add_devices_options": {
         "title": "Eszközbeállítások",
-        "description": "Állítsa be a beállításokat minden kiválasztott eszközhöz és platformhoz. Minden szakasz egy eszköz egy platformon. Az üres mezők automatikus alapértelmezett értékeket használnak."
+        "description": "Állítsa be a beállításokat minden kiválasztott eszközhöz és doménhez. Minden szakasz egy eszköz egy doménben. Az üres mezők automatikus alapértelmezett értékeket használnak.",
+        "submit": "Hozzáadás"
       }
     },
     "error": {
-      "cannot_connect": "Nem sikerült csatlakozni a TapHome core-hoz.",
-      "invalid_auth": "A TapHome core elutasította a tokent.",
-      "ip_required": "Adja meg a core IP-címét, vagy kapcsolja be a TapHome felhőt.",
+      "cannot_connect": "Nem sikerült csatlakozni a TapHome Core-hoz.",
+      "invalid_auth": "A TapHome Core elutasította a tokent.",
+      "ip_required": "Adja meg a Core IP-címét, vagy kapcsolja be a TapHome felhőt.",
       "no_devices_selected": "Válasszon ki legalább egy eszközt.",
-      "no_common_platform": "A kiválasztott eszközök egyik platformként sem adhatók hozzá.",
+      "no_common_platform": "A kiválasztott eszközök egyetlen doménként sem jeleníthetők meg.",
       "invalid_device": "Válasszon eszközt a listából.",
       "invalid_device_id": "Érvénytelen eszközazonosító."
     },
     "abort": {
-      "already_configured": "Ez a TapHome core már konfigurálva van.",
+      "already_configured": "Ez a TapHome Core már konfigurálva van.",
       "reauth_successful": "Az újrahitelesítés sikeres volt.",
       "reconfigure_successful": "Az újrakonfigurálás sikeres volt.",
-      "unique_id_mismatch": "A csatlakoztatott core nem egyezik azzal a core-ral, amelyhez ez a bejegyzés készült."
+      "unique_id_mismatch": "A csatlakoztatott Core nem egyezik azzal a Core-ral, amelyhez ez a bejegyzés készült."
     }
   },
   "options": {
@@ -105,6 +113,7 @@
           "token": "Token",
           "use_cloud": "TapHome felhő használata",
           "ip": "IP-cím",
+          "id": "Core azonosító",
           "webhook_id": "Webhook azonosító",
           "use_description_as_entity_id": "TapHome leírások használata entitásazonosítóként",
           "use_description_as_name": "TapHome leírások használata entitásnévként",
@@ -112,34 +121,43 @@
         },
         "data_description": {
           "token": "A TapHome API képernyő tetején megjelenő hitelesítési token.",
-          "use_cloud": "Kapcsolódás a TapHome felhőn keresztül a helyi hálózat helyett. Csak akkor ajánlott, ha a core helyileg nem érhető el — a felhő lassabb, és internetkapcsolatot igényel. Bekapcsolva az IP-cím figyelmen kívül marad.",
-          "ip": "A TapHome core IP-címe a helyi hálózatában, pl. 192.168.1.3. Megtalálja a TapHome alkalmazásban a Saját helyszín alatt. A felhő helyett ajánlott a gyorsabb, megbízhatóbb kapcsolatért.",
-          "webhook_id": "Ajánlott: a core ekkor azonnal elküldi a változásokat ahelyett, hogy a Home Assistant 2 másodpercenként lekérdezné. Adjon meg egy tetszőleges nevet, pl. taphome_primary, majd ugyanezt állítsa be a TapHome alkalmazásban az Eszközök közzététele képernyőn — kapcsolja be a Webhookot, és a Webhook URL-t állítsa be pl. http://homeassistant.local:8123/api/webhook/taphome értékre — a homeassistant.local helyére írja be a saját Home Assistant címét, a taphome_primary helyére pedig a fent megadott nevet."
+          "use_cloud": "Kapcsolódás a TapHome felhőn keresztül a helyi hálózat helyett. Csak akkor ajánlott, ha a Core helyileg nem érhető el — a felhő lassabb, és internetkapcsolatot igényel. Bekapcsolva az IP-cím figyelmen kívül marad.",
+          "ip": "Megtalálja a TapHome alkalmazásban a Saját helyszín alatt.",
+          "id": "Ennek a Core-nak a választható azonosítója. Csak akkor szükséges, ha egynél több Core-t használ.",
+          "webhook_id": "Ajánlott: a Core ekkor azonnal elküldi a változásokat ahelyett, hogy a Home Assistant 2 másodpercenként lekérdezné. Adjon meg egy tetszőleges nevet, pl. taphome_primary, majd ugyanezt állítsa be a TapHome alkalmazásban az Eszközök közzététele képernyőn — kapcsolja be a Webhookot, és a Webhook URL-t állítsa be pl. http://homeassistant.local:8123/api/webhook/taphome értékre — a homeassistant.local helyére írja be a saját Home Assistant címét, a taphome_primary helyére pedig a fent megadott nevet."
         },
-        "description": "Frissítse a TapHome core kapcsolati és core beállításait. A helyi kapcsolat ajánlott: a „TapHome felhő használata” kapcsolót csak akkor kapcsolja be, ha a core nem érhető el közvetlenül a hálózatában — a felhő ritkábban frissít (kb. 20 másodpercenként), és a TapHome szervereinek elérhetőségétől függ. A core IP-címét a TapHome alkalmazásban a „Saját helyszín” alatt találja."
+        "description": "Frissítse a TapHome Core kapcsolati és Core beállításait. A helyi kapcsolat ajánlott: a „TapHome felhő használata” kapcsolót csak akkor kapcsolja be, ha a Core nem érhető el közvetlenül a hálózatában — a felhő ritkábban frissít (kb. 20 másodpercenként), és a TapHome szervereinek elérhetőségétől függ. A Core IP-címét a TapHome alkalmazásban a „Saját helyszín” alatt találja.",
+        "submit": "Mentés"
       },
       "zones": {
         "title": "Zónák",
-        "description": "TapHome zónák hozzárendelése a Home Assistant területeihez. Minden zónánál megadhat új nevet — az üres mező megtartja az eredeti nevet —, vagy bekapcsolhatja az ignore kapcsolót a zóna kihagyásához."
+        "description": "TapHome zónák hozzárendelése a Home Assistant területeihez. Válassza ki a területet minden zónához; hagyja üresen a zónát, ha nem rendel hozzá területet.",
+        "submit": "Mentés"
       },
       "labels": {
         "title": "Címkék",
-        "description": "TapHome kategóriák hozzárendelése a Home Assistant címkéihez. Minden kategóriánál megadhat új nevet — az üres mező megtartja az eredeti nevet —, vagy bekapcsolhatja az ignore kapcsolót a kategória kihagyásához."
+        "description": "TapHome kategóriák hozzárendelése a Home Assistant címkéihez. Válassza ki a címkét minden kategóriához; hagyja üresen a kategóriát, ha nem rendel hozzá címkét.",
+        "submit": "Mentés"
       },
       "add_devices": {
         "title": "Eszközök hozzáadása",
         "description": "Válassza ki a hozzáadni kívánt TapHome eszközöket. A mezőbe gépelve kereshet. A még hozzá nem adott eszközöknél a TapHome zóna és kategória, a hozzáadottaknál a helyiség jelenik meg.",
         "data": {
-          "devices": "Eszközök"
+          "devices": "Eszközök",
+          "clear_selection": "Kijelölés törlése"
+        },
+        "data_description": {
+          "clear_selection": "Kapcsolja be, és nyomja meg a Tovább gombot a teljes kijelölés törléséhez, majd válassza ki csak a kívánt eszközöket."
         }
       },
       "add_devices_platform": {
-        "title": "Platformok kiválasztása",
-        "description": "Minden eszközhöz válassza ki a platformokat, amelyekként hozzáadásra kerül. Eszközönként több platformot is választhat, vagy egyet sem, hogy kihagyja az eszközt. Csak az adott eszközzel kompatibilis platformok jelennek meg."
+        "title": "Domének kiválasztása",
+        "description": "Minden eszközhöz válassza ki a Home Assistant doméneket, amelyekként az eszköz megjelenik. Eszközönként több domént is választhat, vagy egyet sem, hogy kihagyja az eszközt. Csak az adott eszközzel kompatibilis domének jelennek meg."
       },
       "add_devices_options": {
         "title": "Eszközbeállítások",
-        "description": "Állítsa be a beállításokat minden kiválasztott eszközhöz és platformhoz. Minden szakasz egy eszköz egy platformon. Az üres mezők automatikus alapértelmezett értékeket használnak."
+        "description": "Állítsa be a beállításokat minden kiválasztott eszközhöz és doménhez. Minden szakasz egy eszköz egy doménben. Az üres mezők automatikus alapértelmezett értékeket használnak. Az érzékelők és bináris érzékelők típusa automatikusan felismerésre kerül; a beállításaik össze vannak csukva – egy szakaszt csak felülbíráláshoz nyisson ki.",
+        "submit": "Hozzáadás"
       },
       "edit_devices": {
         "title": "Eszközök szerkesztése",
@@ -150,7 +168,7 @@
       },
       "edit_devices_form": {
         "title": "Eszközbeállítások",
-        "description": "Állítsa be a beállításokat minden kiválasztott eszközhöz. Minden szakasz egy eszköz. Az üres mezők automatikus alapértelmezett értékeket használnak.",
+        "description": "Állítsa be a beállításokat minden kiválasztott eszközhöz. Minden szakasz egy eszköz. Az üres mezők automatikus alapértelmezett értékeket használnak. Az érzékelők és bináris érzékelők típusa automatikusan felismerésre kerül; a beállításaik össze vannak csukva – egy szakaszt csak felülbíráláshoz nyisson ki.",
         "data": {
           "effect_id": "Effektek többértékű kapcsolója",
           "device_class": "Eszközosztály",
@@ -178,65 +196,123 @@
           "value_type": "Értéktípus",
           "unit_of_measurement": "Mértékegység",
           "state_class": "Állapotosztály"
-        }
+        },
+        "submit": "Mentés"
       },
       "remove_devices": {
         "title": "Eszközök eltávolítása",
         "description": "Válassza ki az eltávolítani kívánt eszközöket. Az entitásaik eltávolításra kerülnek a Home Assistantból. A mezőbe gépelve kereshet.",
         "data": {
           "devices": "Eszközök"
-        }
+        },
+        "submit": "Eltávolítás"
       }
     },
     "error": {
       "invalid_device_id": "Érvénytelen eszközazonosító.",
-      "cannot_connect": "Nem sikerült csatlakozni a TapHome core-hoz.",
-      "invalid_auth": "A TapHome core elutasította a tokent.",
-      "ip_required": "Adja meg a core IP-címét, vagy kapcsolja be a TapHome felhőt.",
-      "unique_id_mismatch": "A csatlakoztatott core nem egyezik azzal a core-ral, amelyhez ez a bejegyzés készült.",
+      "cannot_connect": "Nem sikerült csatlakozni a TapHome Core-hoz.",
+      "invalid_auth": "A TapHome Core elutasította a tokent.",
+      "ip_required": "Adja meg a Core IP-címét, vagy kapcsolja be a TapHome felhőt.",
+      "unique_id_mismatch": "A csatlakoztatott Core nem egyezik azzal a Core-ral, amelyhez ez a bejegyzés készült.",
       "no_devices_selected": "Válasszon ki legalább egy eszközt.",
-      "no_common_platform": "A kiválasztott eszközök egyik platformként sem adhatók hozzá.",
+      "no_common_platform": "A kiválasztott eszközök egyetlen doménként sem jeleníthetők meg.",
       "invalid_device": "Válasszon eszközt a listából."
     },
     "abort": {
-      "entry_not_loaded": "A TapHome core nincs betöltve. Először javítsa a kapcsolatot.",
+      "entry_not_loaded": "A TapHome Core nincs betöltve. Először javítsa a kapcsolatot.",
       "no_devices_configured": "Még nincs konfigurált eszköz. Először használja az Eszközök hozzáadása lehetőséget."
     }
   },
   "selector": {
     "platform": {
       "options": {
-        "lights": "Lámpák",
-        "buttons": "Gombok",
-        "covers": "Redőnyök",
-        "climates": "Klímák",
-        "fans": "Ventilátorok",
-        "humidifiers": "Párásítók",
-        "multivalue_switches": "Többértékű kapcsolók",
-        "switches": "Kapcsolók",
-        "sensors": "Érzékelők",
-        "binary_sensors": "Bináris érzékelők",
-        "valves": "Szelepek",
-        "times": "Idők"
+        "lights": "Light",
+        "buttons": "Button / Event",
+        "covers": "Cover",
+        "climates": "Climate",
+        "fans": "Fan",
+        "humidifiers": "Humidifier",
+        "multivalue_switches": "Select",
+        "switches": "Switch",
+        "sensors": "Sensor",
+        "binary_sensors": "Binary sensor",
+        "valves": "Valve",
+        "times": "Time"
       }
     }
   },
   "issues": {
     "device_not_exposed": {
-      "title": "A(z) {device_id} eszköz nincs közzétéve a(z) core{core_id} számára",
-      "description": "A(z) {device_id} eszköz, amely core{core_id} számára van konfigurálva, nincs kitéve a TapHome API-ban. Ellenőrizze a TapHome beállításait."
+      "title": "A(z) {device_id} eszköz nincs közzétéve a(z) Core{core_id} számára",
+      "description": "A(z) {device_id} eszköz, amely Core{core_id} számára van konfigurálva, nincs kitéve a TapHome API-ban. Ellenőrizze a TapHome beállításait."
     },
     "core_unavailable": {
-      "title": "Nem sikerült csatlakozni a TapHome core{core_id} rendszerhez",
-      "description": "A Home Assistant nem tud kommunikálni a TapHome core{core_id} rendszerrel."
+      "title": "Nem sikerült csatlakozni a TapHome Core{core_id} rendszerhez",
+      "description": "A Home Assistant nem tud kommunikálni a TapHome Core{core_id} rendszerrel."
     },
     "device_type_mismatch": {
-      "title": "Nem támogatott eszköztípus {device_id} a(z) core{core_id} számára",
+      "title": "Nem támogatott eszköztípus {device_id} a(z) Core{core_id} számára",
       "description": "A(z) {device_id} azonosítójú eszköz típusa {device_type}, támogatott értékek [{supported_values}], várt: {expected}. Kérjük, ellenőrizze a TapHome beállításokat."
     },
     "yaml_deprecated": {
       "title": "A TapHome YAML-konfiguráció elavult",
       "description": "A TapHome YAML-konfigurációja importálásra került, és az integráció mostantól a felületen kezelhető (Beállítások → Eszközök és szolgáltatások). Távolítsa el a taphome szakaszt a configuration.yaml fájlból — az ott végzett módosítások már nem érvényesülnek."
+    },
+    "new_device": {
+      "title": "Új TapHome eszköz található: {device}",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "TapHome eszköz hozzáadása",
+            "description": "A(z) {device} eszköz elérhető a TapHome API-ban, de a Home Assistant még nem használja. Válassza ki a domént, amelyként hozzá szeretné adni, vagy kapcsolja be a Figyelmen kívül hagyást, hogy ne kapjon több értesítést erről az eszközről.",
+            "data": {
+              "platform": "Hozzáadás mint",
+              "ignore": "Eszköz figyelmen kívül hagyása"
+            }
+          },
+          "options": {
+            "title": "Eszközbeállítások",
+            "description": "Állítsa be a(z) {device} beállításait. Az üres mezők automatikus alapértelmezett értékeket használnak.",
+            "submit": "Hozzáadás",
+            "data": {
+              "effect_id": "Effektek többértékű kapcsolója",
+              "device_class": "Eszközosztály",
+              "actions": "Műveletek",
+              "close_threshold": "Zárási küszöb (%)",
+              "range_high_thermostat_id": "Tartomány felső termosztátja",
+              "range_low_thermostat_id": "Tartomány alsó termosztátja",
+              "target_temperature_step": "Célhőmérséklet lépésköze",
+              "precision": "Hőmérséklet pontossága",
+              "hvac_switch_id": "HVAC kapcsoló",
+              "hvac_mode": "Rögzített HVAC mód",
+              "hvac_mode_id": "HVAC mód többértékű kapcsolója",
+              "hvac_action_id": "HVAC művelet többértékű kapcsolója",
+              "preset_mode_id": "Előbeállítások többértékű kapcsolója",
+              "fan_mode_id": "Ventilátormódok többértékű kapcsolója",
+              "swing_mode_id": "Legyezési módok többértékű kapcsolója",
+              "swing_horizontal_mode_id": "Vízszintes legyezési módok többértékű kapcsolója",
+              "target_humidity_id": "Célpáratartalom analóg kimenete",
+              "min_humidity": "Minimális páratartalom (%)",
+              "max_humidity": "Maximális páratartalom (%)",
+              "switch_id": "Be/ki kapcsoló",
+              "action_id": "Művelet többértékű kapcsolója",
+              "mode_id": "Módok többértékű kapcsolója",
+              "humidity_sensor_id": "Páratartalom-érzékelő",
+              "value_type": "Értéktípus",
+              "unit_of_measurement": "Mértékegység",
+              "state_class": "Állapotosztály"
+            }
+          }
+        },
+        "error": {
+          "select_platform_or_ignore": "Válasszon domént, amelyként az eszközt hozzáadja, vagy kapcsolja be a Figyelmen kívül hagyást.",
+          "invalid_device_id": "Érvénytelen eszközazonosító."
+        },
+        "abort": {
+          "entry_not_loaded": "A TapHome Core nincs betöltve. Először javítsa a kapcsolatot.",
+          "device_gone": "Az eszköz már nem elérhető a TapHome API-ban."
+        }
+      }
     }
   }
 }

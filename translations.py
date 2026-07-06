@@ -10,3 +10,4 @@ class Issues(StrEnum):
     CORE_UNAVAILABLE = "core_unavailable"
     DEVICE_TYPE_MISMATCH = "device_type_mismatch"
     YAML_DEPRECATED = "yaml_deprecated"
+    NEW_DEVICE = "new_device"

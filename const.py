@@ -51,6 +51,10 @@ CONF_ZONES = "zones"
 CONF_LABELS = "labels"
 CONF_ENABLED_ATTRIBUTES = "enabled_attributes"
 
+# Baseline of device ids already known at setup, stored in the config entry
+# data. Devices exposed later that are not in this set are reported as new.
+CONF_KNOWN_DEVICE_IDS = "known_device_ids"
+
 # Configuration keys holding per-platform device lists
 DEVICE_CONFIG_KEYS = [
     CONF_LIGHTS,

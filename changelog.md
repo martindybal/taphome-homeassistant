@@ -9,6 +9,8 @@
 - **YAML configuration is deprecated**: An existing `taphome:` section is imported into the UI automatically on startup — entity unique IDs and history are preserved (the YAML core `id` is kept). A repair issue reminds you to remove the YAML section; changes made in YAML are no longer applied after the import.
 - Reloading or removing an integration entry now properly stops polling and unregisters the webhook.
 - Removing a device from the configuration also removes its entities from the entity registry — no manual cleanup in Home Assistant is needed.
+- New devices exposed in the TapHome API (found when the integration is reloaded or Home Assistant restarts) raise a repair issue that lets you add the device — pick the platform to expose it as, or ignore it so it is not reported again.
+- Sensor and binary sensor types are detected automatically; their per-device options are now collapsed as advanced (and skipped in the new-device repair flow), so they are out of the way but still available to override.
 - Minimum supported Home Assistant version is 2025.3.
 - The documented button `actions` value `long_press` (with underscore) is now parsed correctly.
 
