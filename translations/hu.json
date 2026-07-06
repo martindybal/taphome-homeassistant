@@ -65,10 +65,11 @@
         "title": "TapHome beállítások",
         "menu_options": {
           "core_settings": "Core beállítások",
+          "add_devices": "Eszközök hozzáadása",
+          "edit_devices": "Eszközök szerkesztése",
+          "remove_devices": "Eszközök eltávolítása",
           "zones": "Zónák (területek)",
-          "labels": "Címkék (kategóriák)",
-          "select_devices": "Eszközök kiválasztása",
-          "device_options": "Eszközbeállítások"
+          "labels": "Címkék (kategóriák)"
         }
       },
       "core_settings": {
@@ -92,44 +93,34 @@
       },
       "zones": {
         "title": "Zónák",
-        "description": "TapHome zónák leképezése Home Assistant területekre. Válassza ki a figyelmen kívül hagyandó zónákat, vagy adjon meg új nevet az átnevezéshez. Az üres mezők megtartják az eredeti nevet.",
-        "data": {
-          "ignored_names": "Figyelmen kívül hagyva"
-        }
+        "description": "TapHome zónák hozzárendelése a Home Assistant területeihez. Minden zónánál megadhat új nevet — az üres mező megtartja az eredeti nevet —, vagy bekapcsolhatja az ignore kapcsolót a zóna kihagyásához."
       },
       "labels": {
         "title": "Címkék",
-        "description": "TapHome kategóriák leképezése Home Assistant címkékre. Válassza ki a figyelmen kívül hagyandó kategóriákat, vagy adjon meg új nevet az átnevezéshez. Az üres mezők megtartják az eredeti nevet.",
-        "data": {
-          "ignored_names": "Figyelmen kívül hagyva"
-        }
+        "description": "TapHome kategóriák hozzárendelése a Home Assistant címkéihez. Minden kategóriánál megadhat új nevet — az üres mező megtartja az eredeti nevet —, vagy bekapcsolhatja az ignore kapcsolót a kategória kihagyásához."
       },
-      "select_devices": {
-        "title": "Platform kiválasztása",
-        "data": {
-          "platform": "Platform"
-        }
-      },
-      "select_devices_pick": {
-        "title": "Eszközök kiválasztása",
-        "description": "Válassza ki, mely TapHome eszközök jelenjenek meg mint {platform}. Egy eszköz kijelölésének megszüntetése eltávolítja az entitását.",
+      "add_devices": {
+        "title": "Eszközök hozzáadása",
+        "description": "Válassza ki a hozzáadni kívánt TapHome eszközöket. A mezőbe gépelve kereshet. A még hozzá nem adott eszközöknél a TapHome zóna és kategória, a hozzáadottaknál a helyiség jelenik meg.",
         "data": {
           "devices": "Eszközök"
         }
       },
-      "device_options": {
+      "add_devices_platform": {
         "title": "Platform kiválasztása",
+        "description": "Válassza ki a platformot, amelyként a kiválasztott eszközök hozzáadásra kerülnek. A választott platformhoz nem illő eszközök kimaradnak. Kiválasztva: {devices}",
         "data": {
           "platform": "Platform"
         }
       },
-      "device_options_pick": {
-        "title": "Eszköz kiválasztása",
+      "edit_devices": {
+        "title": "Eszköz szerkesztése",
+        "description": "Válassza ki a szerkeszteni kívánt eszközt. A mezőbe gépelve kereshet.",
         "data": {
           "device": "Eszköz"
         }
       },
-      "device_options_form": {
+      "edit_devices_form": {
         "title": "Eszközbeállítások",
         "description": "Speciális beállítások: {device}. Az üres mezők automatikus alapértelmezéseket használnak.",
         "data": {
@@ -161,6 +152,13 @@
           "unit_of_measurement": "Mértékegység",
           "state_class": "Állapotosztály"
         }
+      },
+      "remove_devices": {
+        "title": "Eszközök eltávolítása",
+        "description": "Válassza ki az eltávolítani kívánt eszközöket. Az entitásaik eltávolításra kerülnek a Home Assistantból. A mezőbe gépelve kereshet.",
+        "data": {
+          "devices": "Eszközök"
+        }
       }
     },
     "error": {
@@ -168,11 +166,14 @@
       "cannot_connect": "Nem sikerült csatlakozni a TapHome core-hoz.",
       "invalid_auth": "A TapHome core elutasította a tokent.",
       "ip_required": "Adja meg a core IP-címét, vagy kapcsolja be a TapHome felhőt.",
-      "unique_id_mismatch": "A csatlakoztatott core nem egyezik azzal a core-ral, amelyhez ez a bejegyzés készült."
+      "unique_id_mismatch": "A csatlakoztatott core nem egyezik azzal a core-ral, amelyhez ez a bejegyzés készült.",
+      "no_devices_selected": "Válasszon ki legalább egy eszközt.",
+      "no_common_platform": "A kiválasztott eszközök egyik platformként sem adhatók hozzá.",
+      "invalid_device": "Válasszon eszközt a listából."
     },
     "abort": {
       "entry_not_loaded": "A TapHome core nincs betöltve. Először javítsa a kapcsolatot.",
-      "no_devices_configured": "Még nincs konfigurált eszköz. Először használja az Eszközök kiválasztása lehetőséget."
+      "no_devices_configured": "Még nincs konfigurált eszköz. Először használja az Eszközök hozzáadása lehetőséget."
     }
   },
   "selector": {

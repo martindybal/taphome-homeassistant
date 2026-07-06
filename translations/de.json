@@ -65,10 +65,11 @@
         "title": "TapHome-Optionen",
         "menu_options": {
           "core_settings": "Core-Einstellungen",
+          "add_devices": "Geräte hinzufügen",
+          "edit_devices": "Geräte bearbeiten",
+          "remove_devices": "Geräte entfernen",
           "zones": "Zonen (Bereiche)",
-          "labels": "Labels (Kategorien)",
-          "select_devices": "Geräte auswählen",
-          "device_options": "Geräteoptionen"
+          "labels": "Labels (Kategorien)"
         }
       },
       "core_settings": {
@@ -92,44 +93,34 @@
       },
       "zones": {
         "title": "Zonen",
-        "description": "TapHome-Zonen auf Home-Assistant-Bereiche abbilden. Wählen Sie Zonen zum Ignorieren oder geben Sie einen neuen Namen zum Umbenennen ein. Leere Felder behalten den Originalnamen.",
-        "data": {
-          "ignored_names": "Ignoriert"
-        }
+        "description": "Ordnen Sie TapHome-Zonen den Bereichen von Home Assistant zu. Für jede Zone können Sie einen neuen Namen eingeben — ein leeres Feld behält den ursprünglichen Namen — oder ignore aktivieren, um die Zone zu überspringen."
       },
       "labels": {
         "title": "Labels",
-        "description": "TapHome-Kategorien auf Home-Assistant-Labels abbilden. Wählen Sie Kategorien zum Ignorieren oder geben Sie einen neuen Namen zum Umbenennen ein. Leere Felder behalten den Originalnamen.",
-        "data": {
-          "ignored_names": "Ignoriert"
-        }
+        "description": "Ordnen Sie TapHome-Kategorien den Labels von Home Assistant zu. Für jede Kategorie können Sie einen neuen Namen eingeben — ein leeres Feld behält den ursprünglichen Namen — oder ignore aktivieren, um die Kategorie zu überspringen."
       },
-      "select_devices": {
-        "title": "Plattform auswählen",
-        "data": {
-          "platform": "Plattform"
-        }
-      },
-      "select_devices_pick": {
-        "title": "Geräte auswählen",
-        "description": "Wählen Sie, welche TapHome-Geräte als {platform} bereitgestellt werden. Das Abwählen eines Geräts entfernt seine Entität.",
+      "add_devices": {
+        "title": "Geräte hinzufügen",
+        "description": "Wählen Sie die TapHome-Geräte aus, die Sie hinzufügen möchten. Tippen Sie in das Feld, um zu suchen. Noch nicht hinzugefügte Geräte zeigen ihre TapHome-Zone und -Kategorie, hinzugefügte Geräte ihren Raum.",
         "data": {
           "devices": "Geräte"
         }
       },
-      "device_options": {
+      "add_devices_platform": {
         "title": "Plattform auswählen",
+        "description": "Wählen Sie die Plattform, als die die ausgewählten Geräte hinzugefügt werden. Geräte, die nicht zur gewählten Plattform passen, werden übersprungen. Ausgewählt: {devices}",
         "data": {
           "platform": "Plattform"
         }
       },
-      "device_options_pick": {
-        "title": "Gerät auswählen",
+      "edit_devices": {
+        "title": "Gerät bearbeiten",
+        "description": "Wählen Sie das Gerät aus, das Sie bearbeiten möchten. Tippen Sie in das Feld, um zu suchen.",
         "data": {
           "device": "Gerät"
         }
       },
-      "device_options_form": {
+      "edit_devices_form": {
         "title": "Geräteoptionen",
         "description": "Erweiterte Optionen für {device}. Leere Felder verwenden automatische Standardwerte.",
         "data": {
@@ -161,6 +152,13 @@
           "unit_of_measurement": "Maßeinheit",
           "state_class": "Zustandsklasse"
         }
+      },
+      "remove_devices": {
+        "title": "Geräte entfernen",
+        "description": "Wählen Sie die Geräte aus, die Sie entfernen möchten. Ihre Entitäten werden aus Home Assistant entfernt. Tippen Sie in das Feld, um zu suchen.",
+        "data": {
+          "devices": "Geräte"
+        }
       }
     },
     "error": {
@@ -168,11 +166,14 @@
       "cannot_connect": "Verbindung zum TapHome Core fehlgeschlagen.",
       "invalid_auth": "Der TapHome Core hat den Token abgelehnt.",
       "ip_required": "Geben Sie die IP-Adresse Ihres Cores an oder aktivieren Sie die TapHome-Cloud.",
-      "unique_id_mismatch": "Der verbundene Core stimmt nicht mit dem Core überein, für den dieser Eintrag erstellt wurde."
+      "unique_id_mismatch": "Der verbundene Core stimmt nicht mit dem Core überein, für den dieser Eintrag erstellt wurde.",
+      "no_devices_selected": "Wählen Sie mindestens ein Gerät aus.",
+      "no_common_platform": "Die ausgewählten Geräte können als keine Plattform hinzugefügt werden.",
+      "invalid_device": "Wählen Sie ein Gerät aus der Liste."
     },
     "abort": {
       "entry_not_loaded": "Der TapHome Core ist nicht geladen. Beheben Sie zuerst die Verbindung.",
-      "no_devices_configured": "Es sind noch keine Geräte konfiguriert. Verwenden Sie zuerst „Geräte auswählen“."
+      "no_devices_configured": "Es sind noch keine Geräte konfiguriert. Verwenden Sie zuerst „Geräte hinzufügen“."
     }
   },
   "selector": {

@@ -65,10 +65,11 @@
         "title": "Možnosti TapHome",
         "menu_options": {
           "core_settings": "Nastavenie core",
+          "add_devices": "Pridať zariadenia",
+          "edit_devices": "Upraviť zariadenia",
+          "remove_devices": "Odobrať zariadenia",
           "zones": "Zóny (oblasti)",
-          "labels": "Štítky (kategórie)",
-          "select_devices": "Výber zariadení",
-          "device_options": "Možnosti zariadenia"
+          "labels": "Štítky (kategórie)"
         }
       },
       "core_settings": {
@@ -92,44 +93,34 @@
       },
       "zones": {
         "title": "Zóny",
-        "description": "Mapovanie zón TapHome na oblasti Home Assistantu. Vyberte zóny na ignorovanie, alebo vyplňte nový názov na premenovanie. Prázdne pole ponechá pôvodný názov.",
-        "data": {
-          "ignored_names": "Ignorované"
-        }
+        "description": "Mapovanie zón TapHome na oblasti Home Assistantu. Pri každej zóne môžete zadať nový názov — prázdne pole ponechá pôvodný názov — alebo zapnúť ignore a zónu preskočiť."
       },
       "labels": {
         "title": "Štítky",
-        "description": "Mapovanie kategórií TapHome na štítky Home Assistantu. Vyberte kategórie na ignorovanie, alebo vyplňte nový názov na premenovanie. Prázdne pole ponechá pôvodný názov.",
-        "data": {
-          "ignored_names": "Ignorované"
-        }
+        "description": "Mapovanie kategórií TapHome na štítky Home Assistantu. Pri každej kategórii môžete zadať nový názov — prázdne pole ponechá pôvodný názov — alebo zapnúť ignore a kategóriu preskočiť."
       },
-      "select_devices": {
-        "title": "Výber platformy",
-        "data": {
-          "platform": "Platforma"
-        }
-      },
-      "select_devices_pick": {
-        "title": "Výber zariadení",
-        "description": "Vyberte, ktoré zariadenia TapHome sa zverejnia ako {platform}. Odobratie zariadenia odstráni jeho entitu.",
+      "add_devices": {
+        "title": "Pridať zariadenia",
+        "description": "Vyberte zariadenia TapHome, ktoré chcete pridať. Do poľa môžete písať a vyhľadávať. Pri zatiaľ nepridaných zariadeniach sa zobrazuje TapHome zóna a kategória, pri pridaných miestnosť.",
         "data": {
           "devices": "Zariadenia"
         }
       },
-      "device_options": {
+      "add_devices_platform": {
         "title": "Výber platformy",
+        "description": "Zvoľte platformu, ako ktorá sa vybrané zariadenia pridajú. Zariadenia, ktoré sa pre zvolenú platformu nehodia, budú preskočené. Vybrané: {devices}",
         "data": {
           "platform": "Platforma"
         }
       },
-      "device_options_pick": {
-        "title": "Výber zariadenia",
+      "edit_devices": {
+        "title": "Upraviť zariadenie",
+        "description": "Vyberte zariadenie, ktoré chcete upraviť. Do poľa môžete písať a vyhľadávať.",
         "data": {
           "device": "Zariadenie"
         }
       },
-      "device_options_form": {
+      "edit_devices_form": {
         "title": "Možnosti zariadenia",
         "description": "Pokročilé možnosti pre {device}. Prázdne polia použijú automatické predvolené hodnoty.",
         "data": {
@@ -161,6 +152,13 @@
           "unit_of_measurement": "Jednotka merania",
           "state_class": "Trieda stavu"
         }
+      },
+      "remove_devices": {
+        "title": "Odobrať zariadenia",
+        "description": "Vyberte zariadenia, ktoré chcete odobrať. Ich entity budú z Home Assistantu odstránené. Do poľa môžete písať a vyhľadávať.",
+        "data": {
+          "devices": "Zariadenia"
+        }
       }
     },
     "error": {
@@ -168,11 +166,14 @@
       "cannot_connect": "Pripojenie k TapHome core zlyhalo.",
       "invalid_auth": "TapHome core odmietol token.",
       "ip_required": "Vyplňte IP adresu vášho core, alebo zapnite TapHome cloud.",
-      "unique_id_mismatch": "Pripojený core nezodpovedá core, pre ktorý bol tento záznam vytvorený."
+      "unique_id_mismatch": "Pripojený core nezodpovedá core, pre ktorý bol tento záznam vytvorený.",
+      "no_devices_selected": "Vyberte aspoň jedno zariadenie.",
+      "no_common_platform": "Vybrané zariadenia nie je možné pridať ako žiadnu platformu.",
+      "invalid_device": "Vyberte zariadenie zo zoznamu."
     },
     "abort": {
       "entry_not_loaded": "TapHome core nie je načítaný. Najprv opravte pripojenie.",
-      "no_devices_configured": "Zatiaľ nie sú nakonfigurované žiadne zariadenia. Najprv použite Výber zariadení."
+      "no_devices_configured": "Zatiaľ nie sú nakonfigurované žiadne zariadenia. Najprv použite Pridať zariadenia."
     }
   },
   "selector": {

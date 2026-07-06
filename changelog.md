@@ -4,10 +4,11 @@
 
 - **Configuration via UI (config flow)**: The integration is now set up and managed entirely in the Home Assistant UI.
   - Add a core in _Settings → Devices & services_ with its token and either its IP address or the TapHome cloud; core settings (webhook, description flags, exposed attributes) can be filled in right when adding. Each core is a separate integration entry validated against the core.
-  - The **Configure** dialog covers everything YAML supported: **Core settings** (connection, webhook, description flags, exposed attributes — the same fields as when adding the core), zone → area and category → label mapping with rename/ignore, per-platform device selection from devices discovered on the core, and advanced per-device options (device class, effects, climate controller ids, …).
+  - The **Configure** dialog covers everything YAML supported: **Core settings** (connection, webhook, description flags, exposed attributes — the same fields as when adding the core), zone → area and category → label mapping with rename/ignore, adding, editing and removing devices via searchable pickers that show each device's room/zone, and advanced per-device options (device class, effects, climate controller ids, …).
   - **Reconfigure** and **Configure → Core settings** both show the same connection and core settings fields, so the connection can be changed from either place; an automatic re-authentication flow also starts when the core rejects the token.
 - **YAML configuration is deprecated**: An existing `taphome:` section is imported into the UI automatically on startup — entity unique IDs and history are preserved (the YAML core `id` is kept). A repair issue reminds you to remove the YAML section; changes made in YAML are no longer applied after the import.
 - Reloading or removing an integration entry now properly stops polling and unregisters the webhook.
+- Removing a device from the configuration also removes its entities from the entity registry — no manual cleanup in Home Assistant is needed.
 - Minimum supported Home Assistant version is 2025.3.
 - The documented button `actions` value `long_press` (with underscore) is now parsed correctly.
 

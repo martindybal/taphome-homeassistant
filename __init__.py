@@ -37,7 +37,11 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import config_validation as cv, issue_registry as ir
+from homeassistant.helpers import (
+    config_validation as cv,
+    entity_registry as er,
+    issue_registry as ir,
+)
 from homeassistant.helpers.typing import ConfigType
 
 from .binary_sensor import BinarySensorEntityConfig
@@ -272,6 +276,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TapHomeConfigEntry) -> b
     hub.connection_state.changed += hub_connection_state_changed
 
     _register_webhook(hass, entry, hub, core_config)
+    _async_remove_stale_entities(hass, entry)
 
     add_entry_requests = {
         domain.name: _map_add_entry_requests(
@@ -340,6 +345,49 @@ def _build_core_config(entry: TapHomeConfigEntry) -> TapHomeCoreConfig:
         label_mapping,
         tuple(options.get(CONF_ENABLED_ATTRIBUTES, AVAILABLE_ATTRIBUTES)),
     )
+
+
+def _parse_device_id_from_unique_id(unique_id: str) -> int | None:
+    """Extract the TapHome device id from a generated entity unique id."""
+    if not unique_id.startswith("taphome"):
+        return None
+    try:
+        return int(unique_id.rsplit(".", 1)[-1])
+    except ValueError:
+        return None
+
+
+def _async_remove_stale_entities(
+    hass: HomeAssistant, entry: TapHomeConfigEntry
+) -> None:
+    """Remove registry entities whose device is no longer configured."""
+    configured_ids: dict[str, set[int]] = {}
+    custom_unique_ids: set[str] = set()
+    for domain in DOMAIN_DEFINITIONS:
+        ids = configured_ids.setdefault(domain.name, set())
+        for device_config in entry.options.get(domain.config_key) or []:
+            if isinstance(device_config, dict):
+                ids.add(int(device_config["id"]))
+                if device_config.get("unique_id"):
+                    custom_unique_ids.add(device_config["unique_id"])
+            else:
+                ids.add(int(device_config))
+
+    entity_registry = er.async_get(hass)
+    for registry_entry in er.async_entries_for_config_entry(
+        entity_registry, entry.entry_id
+    ):
+        if registry_entry.unique_id in custom_unique_ids:
+            continue
+        if registry_entry.domain not in configured_ids:
+            continue
+        # Custom unique ids do not parse to a device id and are kept above;
+        # anything else unparseable is left alone to stay on the safe side.
+        device_id = _parse_device_id_from_unique_id(registry_entry.unique_id)
+        if device_id is None:
+            continue
+        if device_id not in configured_ids[registry_entry.domain]:
+            entity_registry.async_remove(registry_entry.entity_id)
 
 
 def _register_webhook(

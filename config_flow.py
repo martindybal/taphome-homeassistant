@@ -20,6 +20,7 @@ from homeassistant.config_entries import (
 )
 from homeassistant.const import CONF_ID, CONF_TOKEN, CONF_WEBHOOK_ID
 from homeassistant.core import callback
+from homeassistant.data_entry_flow import section
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.selector import (
     BooleanSelector,
@@ -433,6 +434,13 @@ def _device_config_id(device_config: dict | int) -> int:
     return int(device_config)
 
 
+def _device_qualifies(device: Device, descriptor: PlatformDescriptor) -> bool:
+    """Return True when the device can be exposed on the descriptor's platform."""
+    return not descriptor.candidate_types or isinstance(
+        device, descriptor.candidate_types
+    )
+
+
 class TapHomeOptionsFlow(OptionsFlow):
     """Handle the TapHome options flow."""
 
@@ -441,6 +449,7 @@ class TapHomeOptionsFlow(OptionsFlow):
         self._options: dict[str, Any] = {}
         self._config_key: str | None = None
         self._device_index: int | None = None
+        self._pending_device_ids: list[int] = []
 
     @property
     def _hub(self) -> TapHomeHub:
@@ -460,10 +469,11 @@ class TapHomeOptionsFlow(OptionsFlow):
             step_id="init",
             menu_options=[
                 "core_settings",
+                "add_devices",
+                "edit_devices",
+                "remove_devices",
                 "zones",
                 "labels",
-                "select_devices",
-                "device_options",
             ],
         )
 
@@ -532,74 +542,42 @@ class TapHomeOptionsFlow(OptionsFlow):
             CONF_LABELS, "labels", user_input, lambda device: device.category
         )
 
-    async def async_step_select_devices(
+    async def async_step_add_devices(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Pick the platform whose devices should be selected."""
-        if user_input is not None:
-            self._config_key = user_input["platform"]
-            return await self.async_step_select_devices_pick()
-
-        return self.async_show_form(
-            step_id="select_devices",
-            data_schema=vol.Schema(
-                {
-                    vol.Required("platform"): SelectSelector(
-                        SelectSelectorConfig(
-                            options=[
-                                descriptor.config_key
-                                for descriptor in PLATFORM_DESCRIPTORS
-                            ],
-                            mode=SelectSelectorMode.DROPDOWN,
-                            translation_key="platform",
-                        )
-                    )
-                }
-            ),
-        )
-
-    async def async_step_select_devices_pick(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Select the devices exposed on the chosen platform."""
-        descriptor = PLATFORM_DESCRIPTORS_BY_KEY[self._config_key]
-        configured = {
-            _device_config_id(device_config): device_config
-            for device_config in self._options.get(self._config_key) or []
-        }
+        """Pick the devices that should be added."""
+        errors: dict[str, str] = {}
 
         if user_input is not None:
-            selected_ids = [int(value) for value in user_input.get("devices", [])]
-            new_devices = [
-                configured.get(device_id, {"id": device_id})
-                for device_id in selected_ids
-            ]
-            if new_devices:
-                self._options[self._config_key] = new_devices
-            else:
-                self._options.pop(self._config_key, None)
-            return self._async_save_options()
+            try:
+                device_ids = [int(value) for value in user_input.get("devices", [])]
+            except ValueError:
+                device_ids = []
+                errors["base"] = "invalid_device"
+            if not errors and not device_ids:
+                errors["base"] = "no_devices_selected"
+            if not errors and not self._platforms_for_devices(device_ids):
+                errors["base"] = "no_common_platform"
+            if not errors:
+                self._pending_device_ids = device_ids
+                return await self.async_step_add_devices_platform()
 
-        candidates = self._candidate_devices(descriptor)
         options = [
             SelectOptionDict(value=str(device.id), label=self._device_label(device.id))
-            for device in candidates
+            for device in self._hub.devices.values()
         ]
-        known_ids = {device.id for device in candidates}
-        options.extend(
-            SelectOptionDict(
-                value=str(device_id), label=self._device_label(device_id)
-            )
-            for device_id in configured
-            if device_id not in known_ids
-        )
         options.sort(key=lambda option: option["label"].casefold())
+
+        configured_ids = self._configured_device_ids()
+        unconfigured = [
+            option["value"]
+            for option in options
+            if int(option["value"]) not in configured_ids
+        ]
 
         schema = vol.Schema(
             {
-                vol.Optional(
-                    "devices", default=[str(device_id) for device_id in configured]
-                ): SelectSelector(
+                vol.Optional("devices", default=unconfigured): SelectSelector(
                     SelectSelectorConfig(
                         options=options,
                         multiple=True,
@@ -608,75 +586,137 @@ class TapHomeOptionsFlow(OptionsFlow):
                 )
             }
         )
+        if user_input is not None:
+            schema = self.add_suggested_values_to_schema(schema, user_input)
+
         return self.async_show_form(
-            step_id="select_devices_pick",
+            step_id="add_devices",
             data_schema=schema,
-            description_placeholders={"platform": self._config_key},
+            errors=errors,
+            last_step=False,
         )
 
-    async def async_step_device_options(
+    async def async_step_add_devices_platform(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Pick the platform whose device options should be edited."""
-        platforms = [
-            descriptor.config_key
-            for descriptor in PLATFORM_DESCRIPTORS
-            if self._options.get(descriptor.config_key)
-        ]
-        if not platforms:
-            return self.async_abort(reason="no_devices_configured")
-
+        """Pick the platform as which the selected devices are added."""
         if user_input is not None:
-            self._config_key = user_input["platform"]
-            return await self.async_step_device_options_pick()
+            config_key = user_input["platform"]
+            descriptor = PLATFORM_DESCRIPTORS_BY_KEY[config_key]
+            devices = list(self._options.get(config_key) or [])
+            existing_ids = {_device_config_id(dc) for dc in devices}
+            devices.extend(
+                {"id": device_id}
+                for device_id in self._pending_device_ids
+                if device_id not in existing_ids
+                and (device := self._hub.devices.get(device_id)) is not None
+                and _device_qualifies(device, descriptor)
+            )
+            self._options[config_key] = devices
+            return self._async_save_options()
+
+        device_names = []
+        for device_id in self._pending_device_ids:
+            device = self._hub.devices.get(device_id)
+            device_names.append(device.name if device else str(device_id))
+        if len(device_names) > 8:
+            device_names = [*device_names[:8], "…"]
 
         return self.async_show_form(
-            step_id="device_options",
+            step_id="add_devices_platform",
             data_schema=vol.Schema(
                 {
                     vol.Required("platform"): SelectSelector(
                         SelectSelectorConfig(
-                            options=platforms,
+                            options=self._platforms_for_devices(
+                                self._pending_device_ids
+                            ),
                             mode=SelectSelectorMode.DROPDOWN,
                             translation_key="platform",
                         )
                     )
                 }
             ),
+            description_placeholders={"devices": ", ".join(device_names)},
         )
 
-    async def async_step_device_options_pick(
+    async def async_step_edit_devices(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Pick the configured device to edit."""
-        devices = self._options.get(self._config_key) or []
+        """Pick the configured device that should be edited."""
+        configured = self._configured_device_entries()
+        if not configured:
+            return self.async_abort(reason="no_devices_configured")
 
+        errors: dict[str, str] = {}
         if user_input is not None:
-            self._device_index = int(user_input["device"])
-            return await self.async_step_device_options_form()
+            selection = user_input.get("device")
+            valid_keys = {
+                f"{config_key}:{index}" for config_key, index, _ in configured
+            }
+            if selection in valid_keys:
+                config_key, index = selection.rsplit(":", 1)
+                self._config_key = config_key
+                self._device_index = int(index)
+                return await self.async_step_edit_devices_form()
+            errors["device"] = "invalid_device"
 
-        options = [
-            SelectOptionDict(
-                value=str(index),
-                label=self._device_label(_device_config_id(device_config)),
-            )
-            for index, device_config in enumerate(devices)
-        ]
         return self.async_show_form(
-            step_id="device_options_pick",
+            step_id="edit_devices",
             data_schema=vol.Schema(
                 {
-                    vol.Required("device"): SelectSelector(
+                    vol.Optional("device"): SelectSelector(
                         SelectSelectorConfig(
-                            options=options, mode=SelectSelectorMode.DROPDOWN
+                            options=self._configured_device_options(configured),
+                            mode=SelectSelectorMode.DROPDOWN,
+                            custom_value=True,
                         )
                     )
                 }
             ),
-            description_placeholders={"platform": self._config_key},
+            errors=errors,
+            last_step=False,
         )
 
-    async def async_step_device_options_form(
+    async def async_step_remove_devices(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Pick the configured devices that should be removed."""
+        configured = self._configured_device_entries()
+        if not configured:
+            return self.async_abort(reason="no_devices_configured")
+
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            selections = user_input.get("devices", [])
+            valid_keys = {
+                f"{config_key}:{index}" for config_key, index, _ in configured
+            }
+            if not selections:
+                errors["base"] = "no_devices_selected"
+            elif not all(selection in valid_keys for selection in selections):
+                errors["base"] = "invalid_device"
+            else:
+                self._remove_devices(selections)
+                return self._async_save_options()
+
+        return self.async_show_form(
+            step_id="remove_devices",
+            data_schema=vol.Schema(
+                {
+                    vol.Optional("devices"): SelectSelector(
+                        SelectSelectorConfig(
+                            options=self._configured_device_options(configured),
+                            multiple=True,
+                            mode=SelectSelectorMode.DROPDOWN,
+                        )
+                    )
+                }
+            ),
+            errors=errors,
+        )
+
+    async def async_step_edit_devices_form(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Edit the options of one configured device."""
@@ -699,7 +739,7 @@ class TapHomeOptionsFlow(OptionsFlow):
             descriptor, device_config
         )
         return self.async_show_form(
-            step_id="device_options_form",
+            step_id="edit_devices_form",
             data_schema=self.add_suggested_values_to_schema(schema, suggested_values),
             errors=errors,
             description_placeholders={
@@ -711,13 +751,56 @@ class TapHomeOptionsFlow(OptionsFlow):
         """Store the edited options; the update listener reloads the entry."""
         return self.async_create_entry(title="", data=self._options)
 
-    def _candidate_devices(self, descriptor: PlatformDescriptor) -> list[Device]:
-        """Return the exposed devices that qualify for the platform."""
+    def _configured_device_entries(self) -> list[tuple[str, int, int]]:
+        """Return (config_key, index, device_id) of every configured device."""
         return [
+            (descriptor.config_key, index, _device_config_id(device_config))
+            for descriptor in PLATFORM_DESCRIPTORS
+            for index, device_config in enumerate(
+                self._options.get(descriptor.config_key) or []
+            )
+        ]
+
+    def _configured_device_options(
+        self, configured: list[tuple[str, int, int]]
+    ) -> list[SelectOptionDict]:
+        """Build the sorted selector options for configured devices."""
+        options = [
+            SelectOptionDict(
+                value=f"{config_key}:{index}",
+                label=f"{self._device_label(device_id)} · {config_key}",
+            )
+            for config_key, index, device_id in configured
+        ]
+        options.sort(key=lambda option: option["label"].casefold())
+        return options
+
+    def _remove_devices(self, selections: list[str]) -> None:
+        """Remove the selected config_key:index entries from the options."""
+        indexes_by_platform: dict[str, list[int]] = {}
+        for selection in selections:
+            config_key, index = selection.rsplit(":", 1)
+            indexes_by_platform.setdefault(config_key, []).append(int(index))
+        for config_key, indexes in indexes_by_platform.items():
+            devices = self._options[config_key]
+            for index in sorted(indexes, reverse=True):
+                devices.pop(index)
+            if not devices:
+                self._options.pop(config_key, None)
+
+    def _platforms_for_devices(self, device_ids: list[int]) -> list[str]:
+        """Return the platforms at least one of the given devices qualifies for."""
+        devices = [
             device
-            for device in self._hub.devices.values()
-            if not descriptor.candidate_types
-            or isinstance(device, descriptor.candidate_types)
+            for device_id in device_ids
+            if (device := self._hub.devices.get(device_id)) is not None
+        ]
+        if not devices:
+            return []
+        return [
+            descriptor.config_key
+            for descriptor in PLATFORM_DESCRIPTORS
+            if any(_device_qualifies(device, descriptor) for device in devices)
         ]
 
     def _device_label(self, device_id: int) -> str:
@@ -725,7 +808,35 @@ class TapHomeOptionsFlow(OptionsFlow):
         device = self._hub.devices.get(device_id)
         if device is None:
             return f"Unknown device ({device_id})"
-        return f"{device.name} ({device_id})"
+        label = f"{device.name} ({device_id})"
+        location = self._device_location(device)
+        return f"{label} — {location}" if location else label
+
+    def _device_location(self, device: Device) -> str | None:
+        """Describe where a device lives: its area, or its zone and category."""
+        if device.id in self._configured_device_ids():
+            return self._area_name(device.zone)
+        return (
+            " · ".join(part for part in (device.zone, device.category) if part)
+            or None
+        )
+
+    def _configured_device_ids(self) -> set[int]:
+        """Return the ids of all devices present in any platform list."""
+        return {
+            _device_config_id(device_config)
+            for descriptor in PLATFORM_DESCRIPTORS
+            for device_config in self._options.get(descriptor.config_key) or []
+        }
+
+    def _area_name(self, zone: str | None) -> str | None:
+        """Return the Home Assistant area name a TapHome zone maps to."""
+        if not zone:
+            return None
+        mapped = (self._options.get(CONF_ZONES) or {}).get(zone)
+        if isinstance(mapped, str):
+            return mapped
+        return zone
 
     async def _async_step_name_mapping(
         self,
@@ -734,7 +845,7 @@ class TapHomeOptionsFlow(OptionsFlow):
         user_input: dict[str, Any] | None,
         get_name: Callable[[Device], str | None],
     ) -> ConfigFlowResult:
-        """Edit a zone or label mapping with rename and ignore support."""
+        """Edit a zone or label mapping with per-name rename and ignore."""
         mapping = self._options.get(option_key) or {}
         discovered = {
             name for device in self._hub.devices.values() if (name := get_name(device))
@@ -742,13 +853,13 @@ class TapHomeOptionsFlow(OptionsFlow):
         names = sorted(discovered | set(mapping), key=str.casefold)
 
         if user_input is not None:
-            ignored = set(user_input.get("ignored_names", []))
             new_mapping: dict[str, Any] = {}
             for name in names:
-                if name in ignored:
+                item = user_input.get(name) or {}
+                if item.get("ignore"):
                     new_mapping[name] = {"ignore": True}
                     continue
-                target = (user_input.get(name) or "").strip()
+                target = (item.get("name") or "").strip()
                 if target and target != name:
                     new_mapping[name] = target
             if new_mapping:
@@ -757,31 +868,26 @@ class TapHomeOptionsFlow(OptionsFlow):
                 self._options.pop(option_key, None)
             return self._async_save_options()
 
-        currently_ignored = [
-            name
-            for name in names
-            if isinstance(mapping.get(name), dict) and mapping[name].get("ignore")
-        ]
-        schema_dict: dict[Any, Any] = {
-            vol.Optional("ignored_names", default=currently_ignored): SelectSelector(
-                SelectSelectorConfig(
-                    options=names,
-                    multiple=True,
-                    mode=SelectSelectorMode.DROPDOWN,
-                )
-            )
-        }
-        suggested_values: dict[str, Any] = {}
+        schema_dict: dict[Any, Any] = {}
         for name in names:
-            schema_dict[vol.Optional(name)] = TextSelector()
-            if isinstance(mapping.get(name), str):
-                suggested_values[name] = mapping[name]
+            mapped = mapping.get(name)
+            is_ignored = isinstance(mapped, dict) and bool(mapped.get("ignore"))
+            rename = mapped if isinstance(mapped, str) else None
+            schema_dict[vol.Required(name)] = section(
+                vol.Schema(
+                    {
+                        vol.Optional(
+                            "name",
+                            description={"suggested_value": rename},
+                        ): TextSelector(),
+                        vol.Optional("ignore", default=is_ignored): BooleanSelector(),
+                    }
+                ),
+                {"collapsed": False},
+            )
 
         return self.async_show_form(
-            step_id=step_id,
-            data_schema=self.add_suggested_values_to_schema(
-                vol.Schema(schema_dict), suggested_values
-            ),
+            step_id=step_id, data_schema=vol.Schema(schema_dict)
         )
 
     def _build_device_options_schema(
