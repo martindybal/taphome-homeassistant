@@ -45,7 +45,7 @@ python -m pytest tests
 
 The pytest suite in `tests/` covers the config flow (setup wizard, reauth,
 reconfigure), the options flow, entry setup/unload, the webhook, YAML import
-and the light/switch/sensor platforms. `tests/tests_common.py` builds SDK
+and the light, switch, sensor, cover, climate and select platforms. `tests/tests_common.py` builds SDK
 devices from API-shaped fixtures and fakes the TapHome HTTP API in memory —
 tests exercise the real SDK and integration code without any network.
 

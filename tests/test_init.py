@@ -109,7 +109,7 @@ async def test_first_setup_records_known_devices(
     """The first setup stores the exposed devices as the known baseline."""
     await setup_integration(hass, mock_config_entry)
 
-    assert sorted(mock_config_entry.data[CONF_KNOWN_DEVICE_IDS]) == [1, 2, 5]
+    assert sorted(mock_config_entry.data[CONF_KNOWN_DEVICE_IDS]) == [1, 2, 3, 4, 5, 6]
 
 
 async def test_new_device_creates_repair_issue(

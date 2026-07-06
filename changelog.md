@@ -2,7 +2,7 @@
 
 ## 2026.7
 
-- **Test suite**: the integration now has automated tests (config flow wizard, options flow, reauth/reconfigure, entry setup/unload, webhook push, YAML import, light/switch/sensor platforms) running in CI.
+- **Test suite**: the integration now has automated tests (config flow wizard, options flow, reauth/reconfigure, entry setup/unload, webhook push, YAML import, light/switch/sensor/cover/climate/select platforms) running in CI.
 - **Documentation rewritten for the UI era**: the YAML reference (`configuration.md`) and the YAML config generator were removed; the new [user guide](docs/user-guide.md) documents the setup wizard, the Configure dialog, webhook setup, migration from YAML and troubleshooting.
 
 - **The TapHome SDK moved to its own repository and PyPI package** [`taphome-sdk`](https://github.com/martindybal/taphome-sdk); it is no longer bundled inside the integration. Production installs use the PyPI package (via `manifest.json` requirements once published); developers can keep a local `taphome-sdk` checkout next to this repository — see [docs/development.md](docs/development.md).

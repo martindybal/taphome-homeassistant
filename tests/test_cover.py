@@ -1,0 +1,76 @@
+"""Tests for the TapHome cover platform."""
+
+from taphome_sdk import ValueType
+
+from homeassistant.components.cover import (
+    ATTR_CURRENT_POSITION,
+    ATTR_POSITION,
+    DOMAIN as COVER_DOMAIN,
+    SERVICE_CLOSE_COVER,
+    SERVICE_SET_COVER_POSITION,
+    CoverState,
+)
+from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.core import HomeAssistant
+
+from tests_common import make_config_entry, setup_integration
+
+ENTITY_ID = "cover.bedroom_blinds"
+
+
+async def test_cover_reports_position(hass: HomeAssistant, mock_hub) -> None:
+    """TapHome blinds level 0 is a fully open cover in Home Assistant."""
+    await setup_integration(hass, make_config_entry({"covers": [{"id": 4}]}))
+
+    state = hass.states.get(ENTITY_ID)
+    assert state.state == CoverState.OPEN
+    assert state.attributes[ATTR_CURRENT_POSITION] == 100
+
+
+async def test_cover_set_position(hass: HomeAssistant, mock_hub) -> None:
+    """Setting the position sends the inverted 0..1 level to the core."""
+    await setup_integration(hass, make_config_entry({"covers": [{"id": 4}]}))
+
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_SET_COVER_POSITION,
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_POSITION: 30},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    # HA position 30 % open = TapHome blinds level 0.7 closed.
+    assert any(
+        call[0] == 4 and call[1].get(ValueType.BLINDS_LEVEL) == 0.7
+        for call in mock_hub.api.set_calls
+    )
+    assert hass.states.get(ENTITY_ID).attributes[ATTR_CURRENT_POSITION] == 30
+
+
+async def test_cover_close(hass: HomeAssistant, mock_hub, freezer) -> None:
+    """Closing the cover drives the blinds level to 1."""
+    await setup_integration(hass, make_config_entry({"covers": [{"id": 4}]}))
+
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_CLOSE_COVER,
+        {ATTR_ENTITY_ID: ENTITY_ID},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    assert any(
+        call[0] == 4 and call[1].get(ValueType.BLINDS_LEVEL) == 1
+        for call in mock_hub.api.set_calls
+    )
+    # Right after the command the device reports pending movement.
+    assert hass.states.get(ENTITY_ID).state == CoverState.CLOSING
+
+    # Once the movement window passes and the core confirms the blinds
+    # stopped, the cover reports closed.
+    freezer.tick(4)
+    mock_hub.devices[4].state.apply_changes(
+        {ValueType.BLINDS_LEVEL: 1, ValueType.BLINDS_IS_MOVING: 0}, force=True
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get(ENTITY_ID).state == CoverState.CLOSED

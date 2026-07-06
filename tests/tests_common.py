@@ -107,6 +107,34 @@ DEVICE_DEFINITIONS: tuple[dict, ...] = (
         "values": {ValueType.SWITCH_STATE: 0.0},
     },
     {
+        "deviceId": 3,
+        "type": "Thermostat",
+        "name": "Living Room Thermostat",
+        "description": "Thermostat in the living room",
+        "supportedValues": [
+            {"valueTypeId": ValueType.REAL_TEMPERATURE.value, "readOnly": True},
+            {"valueTypeId": ValueType.TEMPERATURE_SET_POINT.value, "readOnly": False},
+        ],
+        "values": {
+            ValueType.REAL_TEMPERATURE: 21.3,
+            ValueType.TEMPERATURE_SET_POINT: 22.0,
+        },
+    },
+    {
+        "deviceId": 4,
+        "type": "Blinds",
+        "name": "Bedroom Blinds",
+        "description": "Blinds in the bedroom",
+        "supportedValues": [
+            {"valueTypeId": ValueType.BLINDS_LEVEL.value, "readOnly": False},
+            {"valueTypeId": ValueType.BLINDS_IS_MOVING.value, "readOnly": True},
+        ],
+        "values": {
+            ValueType.BLINDS_LEVEL: 0.0,
+            ValueType.BLINDS_IS_MOVING: 0.0,
+        },
+    },
+    {
         "deviceId": 5,
         "type": "Variable",
         "name": "Outside Temperature",
@@ -115,6 +143,31 @@ DEVICE_DEFINITIONS: tuple[dict, ...] = (
             {"valueTypeId": ValueType.VARIABLE_STATE.value, "readOnly": True},
         ],
         "values": {ValueType.VARIABLE_STATE: 23.4},
+    },
+    {
+        "deviceId": 6,
+        "type": "MultiValueSwitch",
+        "name": "Scene Switch",
+        "description": "Living room scenes",
+        "supportedValues": [
+            {
+                "valueTypeId": ValueType.MULTI_VALUE_SWITCH_STATE.value,
+                "readOnly": False,
+                "enumeratedValues": [
+                    {"value": 0, "name": "Off", "isEnabled": True},
+                    {"value": 1, "name": "Party", "isEnabled": True},
+                    {"value": 2, "name": "Relax", "isEnabled": True},
+                ],
+            },
+            {
+                "valueTypeId": ValueType.MULTI_VALUE_SWITCH_DESIRED_STATE.value,
+                "readOnly": False,
+            },
+        ],
+        "values": {
+            ValueType.MULTI_VALUE_SWITCH_STATE: 0.0,
+            ValueType.MULTI_VALUE_SWITCH_DESIRED_STATE: 0.0,
+        },
     },
 )
 
