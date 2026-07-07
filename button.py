@@ -1,6 +1,7 @@
 """TapHome button integration."""
 
 from collections.abc import Iterator
+from typing import override
 
 from taphome_sdk import ButtonAction, ButtonDevice, enum_from_string_required
 
@@ -30,10 +31,10 @@ class TapHomeButtonConfig(TapHomeEntityConfig):
         )
 
         config_actions = self.get_optional("actions", None)
+        self.actions: list[ButtonAction] = []
         if config_actions is None:
             self.actions = [ButtonAction.PRESS]
         else:
-            self.actions: list[ButtonAction] = []
             for config_action in config_actions:
                 action = enum_from_string_required(ButtonAction, config_action)
                 self.actions.append(action)
@@ -62,6 +63,7 @@ class TapHomeButton(TapHomeEntity, ButtonEntity):
             lambda value: value.name.replace("_", " ").lower(),
         )
 
+    @override
     async def async_press(self) -> None:
         """Send press command to the TapHome device."""
         await self._button.async_press(self._action)

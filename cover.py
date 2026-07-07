@@ -2,9 +2,13 @@
 
 from __future__ import annotations
 
+from typing import Any, override
+
 from taphome_sdk import BidirectionalDevice, BidirectionalDeviceState, PositionState
 
 from homeassistant.components.cover import (
+    ATTR_POSITION,
+    ATTR_TILT_POSITION,
     DOMAIN as COVER_DOMAIN,
     CoverDeviceClass,
     CoverEntity,
@@ -86,17 +90,20 @@ class TapHomeCover(TapHomeEntity, CoverEntity):
             self._attr_is_closing = position_state is PositionState.CLOSING
             self._attr_is_closed = position_state is PositionState.CLOSED
 
+    @override
     async def async_open_cover(self, **kwargs):
         """Open the cover."""
         await self.async_set_cover_position(position=100)
 
+    @override
     async def async_close_cover(self, **kwargs):
         """Close cover."""
         await self.async_set_cover_position(position=0)
 
-    async def async_set_cover_position(self, *, position: int, **kwargs):
+    @override
+    async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
-
+        position: int = kwargs[ATTR_POSITION]
         taphome_position = self.invert_ha_percentage_to_th(position)
         # TapHome also adjusts the tilt of the blind when changing the
         # position. This is not a demanding behavior for me, so we reuse
@@ -109,19 +116,20 @@ class TapHomeCover(TapHomeEntity, CoverEntity):
         if taphome_position is not None:
             await self._cover.async_set_position(taphome_position, taphome_tilt)
 
+    @override
     async def async_open_cover_tilt(self, **kwargs):
         """Open the cover tilt."""
         await self.async_set_cover_tilt_position(tilt_position=100)
 
+    @override
     async def async_close_cover_tilt(self, **kwargs):
         """Close the cover tilt."""
         await self.async_set_cover_tilt_position(tilt_position=0)
 
-    async def async_set_cover_tilt_position(
-        self, *, tilt_position: int | None, **kwargs
-    ):
+    @override
+    async def async_set_cover_tilt_position(self, **kwargs: Any) -> None:
         """Move the cover tilt to a specific position."""
-
+        tilt_position: int | None = kwargs.get(ATTR_TILT_POSITION)
         taphome_tilt = self.invert_ha_percentage_to_th(tilt_position)
         if taphome_tilt is not None:
             await self._cover.async_set_tilt(taphome_tilt)

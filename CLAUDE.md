@@ -93,7 +93,9 @@ be mirrored there. Intentional differences of the Core copy (do NOT port back):
 - Core `manifest.json` (no `version`, has `quality_scale`), `strings.json`
   instead of `translations/*.json`, `quality_scale.yaml`,
 - tests live in `tests/components/taphome` with `tests.common.MockConfigEntry`
-  and helpers in the test package `__init__.py`.
+  and helpers in the test package `__init__.py`,
+- the Core copy carries `@override` decorators and identity (`is`) enum
+  comparisons required by Core's mypy configuration.
 
 ## Conventions
 

@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import override
+
 from taphome_sdk import (
     BidirectionalDeviceState,
     GenericOutputAdapter,
@@ -67,22 +69,25 @@ class TapHomeValve(TapHomeEntity, ValveEntity):
         match current_state.device_state:
             case BidirectionalDeviceState() as bidirectional_state:
                 position_state = bidirectional_state.get_position_state()
-                self._attr_is_closed = position_state == PositionState.CLOSED
-                self._attr_is_opening = position_state == PositionState.OPENING
-                self._attr_is_closing = position_state == PositionState.CLOSING
+                self._attr_is_closed = position_state is PositionState.CLOSED
+                self._attr_is_opening = position_state is PositionState.OPENING
+                self._attr_is_closing = position_state is PositionState.CLOSING
             case _:
                 self._attr_is_closed = not current_state.is_on
 
+    @override
     async def async_open_valve(self) -> None:
         """Open the valve."""
         # After turning on, the last value is ignored and 100 % is used.
         # This behaviour is not desired.
         await self._valve_generic_output.async_turn_on()
 
+    @override
     async def async_close_valve(self) -> None:
         """Close the valve."""
         await self._valve_generic_output.async_turn_off()
 
+    @override
     async def async_set_valve_position(self, position: int) -> None:
         """Move the valve to a specific position."""
         await self._valve_generic_output.async_set_output_value(

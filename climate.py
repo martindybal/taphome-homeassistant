@@ -2,7 +2,7 @@
 
 from abc import ABC, abstractmethod
 from collections.abc import Generator
-from typing import final
+from typing import Any, final, override
 
 from taphome_sdk import (
     AnalogOutputDevice,
@@ -19,14 +19,16 @@ from taphome_sdk import (
 )
 
 from homeassistant.components.climate import (
+    ATTR_TARGET_TEMP_HIGH,
+    ATTR_TARGET_TEMP_LOW,
     DOMAIN as CLIMATE_DOMAIN,
     ClimateEntity,
     ClimateEntityFeature,
     HVACAction,
     HVACMode,
 )
+from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.config_validation import UnitOfTemperature
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .add_entry_request import add_taphome_entities
@@ -212,6 +214,7 @@ class SwitchHvacControllerBase(HvacController, ABC):
         """Return the HVAC mode when the switch is on."""
         raise NotImplementedError("This method should be overridden in subclasses.")
 
+    @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode):
         """Set new target hvac mode."""
         if hvac_mode == HVACMode.OFF:
@@ -259,6 +262,7 @@ class StaticSwitchHvacController(SwitchHvacControllerBase):
         self._mode = hvac_mode
         super().__init__(hub, hvac_switch_id, hvac_action_id)
 
+    @override
     def _hvac_mode_when_on(self) -> HVACMode | None:
         """Return the HVAC mode when the switch is on."""
         return self._mode
@@ -283,6 +287,7 @@ class DynamicSwitchHvacController(SwitchHvacControllerBase):
         self._hvac_mode_device.state.changed += self._on__hvac_mode_changed
         self._hvac_mode_device.state.changed.subscribe(self._on_hvac_can_changed)
 
+    @override
     def _hvac_mode_when_on(self) -> HVACMode | None:
         """Return the HVAC mode when the switch is on."""
         return self._map_hvac_mode(self._hvac_mode_device)
@@ -320,6 +325,7 @@ class EmptyHvacController(HvacController):
         """Handle changes in the HVAC action device state."""
         self.hvac_action.value = self._map_hvac_action(self._hvac_action_device)
 
+    @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode):
         """Set new target hvac mode."""
         raise NotImplementedError("HVAC mode control is not supported for this device")
@@ -350,6 +356,7 @@ class ModeHvacController(EmptyHvacController):
         """Handle changes in the HVAC mode device state."""
         self.hvac_mode.value = self._map_hvac_mode(self._hvac_mode_device)
 
+    @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode):
         """Set new target hvac mode."""
 
@@ -529,6 +536,7 @@ class TapHomeClimateBase(TapHomeEntity, ClimateEntity, ABC):
     ) -> None:
         self._attr_preset_mode = self._preset_mode_device.selected_option
 
+    @override
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
         await self._preset_mode_device.async_select_option(preset_mode)
@@ -538,6 +546,7 @@ class TapHomeClimateBase(TapHomeEntity, ClimateEntity, ABC):
     ) -> None:
         self._attr_fan_mode = self._fan_mode_device.selected_option
 
+    @override
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new target fan mode."""
         await self._fan_mode_device.async_select_option(fan_mode)
@@ -547,6 +556,7 @@ class TapHomeClimateBase(TapHomeEntity, ClimateEntity, ABC):
     ) -> None:
         self._attr_swing_mode = self._swing_mode_device.selected_option
 
+    @override
     async def async_set_swing_mode(self, swing_mode: str) -> None:
         """Set new target swing mode."""
         await self._swing_mode_device.async_select_option(swing_mode)
@@ -558,6 +568,7 @@ class TapHomeClimateBase(TapHomeEntity, ClimateEntity, ABC):
             self._swing_horizontal_mode_device.selected_option
         )
 
+    @override
     async def async_set_swing_horizontal_mode(self, swing_horizontal_mode: str) -> None:
         """Set new target horizontal swing mode."""
         await self._swing_horizontal_mode_device.async_select_option(
@@ -571,6 +582,7 @@ class TapHomeClimateBase(TapHomeEntity, ClimateEntity, ABC):
             current_state.output_value
         )
 
+    @override
     async def async_set_humidity(self, humidity: int) -> None:
         """Set new target humidity."""
         await self._target_humidity_device.async_set_output_value(
@@ -586,6 +598,7 @@ class TapHomeClimateBase(TapHomeEntity, ClimateEntity, ABC):
             current_state.humidity
         )
 
+    @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode):
         """Set new target hvac mode."""
         await self.hvac_controller.async_set_hvac_mode(hvac_mode)
@@ -613,9 +626,10 @@ class TapHomeClimate(TapHomeClimateBase):
     ) -> None:
         self._attr_target_temperature = current_state.desired_temperature
 
-    async def async_set_temperature(self, *, temperature: float, **kwargs):
+    @override
+    async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
-        await self.thermostat.async_set_desired_temperature(temperature)
+        await self.thermostat.async_set_desired_temperature(kwargs[ATTR_TEMPERATURE])
 
 
 class TapHomeRangeClimate(TapHomeClimateBase):
@@ -661,12 +675,15 @@ class TapHomeRangeClimate(TapHomeClimateBase):
     ) -> None:
         self._attr_target_temperature_low = current_state.desired_temperature
 
-    async def async_set_temperature(
-        self, *, target_temp_low: float, target_temp_high: float, **kwargs
-    ):
+    @override
+    async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
-        await self.low_thermostat.async_set_desired_temperature(target_temp_low)
-        await self.high_thermostat.async_set_desired_temperature(target_temp_high)
+        await self.low_thermostat.async_set_desired_temperature(
+            kwargs[ATTR_TARGET_TEMP_LOW]
+        )
+        await self.high_thermostat.async_set_desired_temperature(
+            kwargs[ATTR_TARGET_TEMP_HIGH]
+        )
 
 
 def _create_climate_entity(

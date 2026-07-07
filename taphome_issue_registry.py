@@ -1,7 +1,8 @@
 """TapHome Issue Registry."""
 
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
-from homeassistant.helpers.issue_registry import HomeAssistant, IssueSeverity
+from homeassistant.helpers.issue_registry import IssueSeverity
 
 from .const import TAPHOME_PLATFORM
 from .translations import Issues
@@ -58,6 +59,7 @@ class TapHomeIssueRegistry:
         expected_device_types: str,
         supported_values: str,
     ) -> None:
+        """Create an issue for a device with an unexpected type."""
         issue_id = self._create_device_type_mismatch_issue_id(taphome_device_id)
         self.create_issue(
             issue_id,

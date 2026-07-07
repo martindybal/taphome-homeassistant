@@ -177,4 +177,7 @@ async def async_create_fix_flow(
 ) -> RepairsFlow:
     """Create the repair flow for a TapHome issue."""
     data = data or {}
-    return NewDeviceRepairFlow(str(data["config_entry_id"]), int(data["device_id"]))
+    return NewDeviceRepairFlow(
+        str(data["config_entry_id"]),
+        int(data["device_id"]),  # type: ignore[arg-type]
+    )

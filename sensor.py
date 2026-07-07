@@ -6,6 +6,7 @@ from collections.abc import Callable
 from dataclasses import dataclass, replace
 from datetime import date, datetime
 from decimal import Decimal
+from typing import Any
 
 from taphome_sdk import Device, DeviceState, ValueType
 
@@ -359,7 +360,7 @@ def create_entities(
 
         for sensor_type in supported_sensor_types:
             if device.supports_value(sensor_type.value_type):
-                overrides = {}
+                overrides: dict[str, Any] = {}
                 if config.entity.device_class is not None:
                     overrides["device_class"] = config.entity.device_class
                 if config.entity.unit_of_measurement is not None:

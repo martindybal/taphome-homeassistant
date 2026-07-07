@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, override
 
 from taphome_sdk import (
     GenericOutputAdapter,
@@ -73,6 +73,7 @@ class TapHomeFan(TapHomeEntity, FanEntity):
     # The FanEntity assumes
     # self.percentage is not None and self.percentage > 0
     # or self.preset_mode is not None
+    @override
     def is_on(self) -> bool | None:
         """Return true if the entity is on."""
         return self._attr_is_on
@@ -91,6 +92,7 @@ class TapHomeFan(TapHomeEntity, FanEntity):
     ) -> None:
         self._attr_preset_mode = self._preset_mode_device.selected_option
 
+    @override
     async def async_turn_on(
         self,
         percentage: int | None = None,
@@ -106,17 +108,20 @@ class TapHomeFan(TapHomeEntity, FanEntity):
         if preset_mode is not None:
             await self.async_set_preset_mode(preset_mode)
 
+    @override
     async def async_set_percentage(self, percentage: int) -> None:
         """Set the speed percentage of the fan."""
         await self._fan_generic_output.async_set_output_value(
             self.convert_ha_percentage_to_th(percentage)
         )
 
+    @override
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set the preset mode of the fan."""
         if self._preset_mode_device:
             await self._preset_mode_device.async_select_option(preset_mode)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the fan."""
         await self._fan_generic_output.async_turn_off()

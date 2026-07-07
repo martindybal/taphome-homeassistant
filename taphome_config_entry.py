@@ -38,7 +38,7 @@ class NameMapping:
 class TapHomeCoreConfig:
     """Holds configuration options for a TapHome core instance."""
 
-    id: str
+    id: str | None
     zone_mapping: NameMapping | None
     label_mapping: NameMapping | None
     enabled_attributes: tuple[str, ...]

@@ -3,13 +3,13 @@
 from collections.abc import Callable, Iterable
 from typing import TypeVar
 
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-
 from taphome_sdk import DeviceNotExposedError, DeviceTypeError
 
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+from .entity import TapHomeEntity
 from .taphome_config_entry import AddEntryRequest, TapHomeEntityConfigT
 from .taphome_data import TapHomeConfigEntry
-from .entity import TapHomeEntity
 from .taphome_issue_registry import TapHomeIssueRegistry
 
 TapHomeEntityT = TypeVar("TapHomeEntityT", bound=TapHomeEntity)
@@ -17,7 +17,7 @@ TapHomeEntityT = TypeVar("TapHomeEntityT", bound=TapHomeEntity)
 
 def add_taphome_entities(
     entry: TapHomeConfigEntry,
-    add_entities: AddEntitiesCallback,
+    add_entities: AddEntitiesCallback | Callable[[Iterable[TapHomeEntityT]], None],
     platform_domain: str,
     taphome_entities_factory: Callable[
         [AddEntryRequest[TapHomeEntityConfigT]],
@@ -29,7 +29,7 @@ def add_taphome_entities(
         entry.runtime_data.add_entry_requests[platform_domain]
     )
 
-    all_entities = []
+    all_entities: list[TapHomeEntityT] = []
     for configuration in entities_configuration:
         try:
             entry_entities = taphome_entities_factory(configuration)
