@@ -1,4 +1,246 @@
 {
+  "config": {
+    "step": {
+      "user": {
+        "title": "TapHome Core verbinden",
+        "description": "Geben Sie Ihre Geräte in der TapHome-App frei (Einstellungen → Geräte freigeben → TapHome API) und tragen Sie unten den Token ein. Eine lokale Verbindung wird empfohlen: Aktivieren Sie „TapHome-Cloud verwenden“ nur, wenn der Core in Ihrem Netzwerk nicht direkt erreichbar ist — die Cloud aktualisiert seltener (etwa alle 20 Sekunden) und benötigt erreichbare TapHome-Server. Die IP-Adresse Ihres Cores finden Sie in der TapHome-App unter „Mein Standort“.",
+        "data": {
+          "token": "Token",
+          "use_cloud": "TapHome-Cloud verwenden",
+          "ip": "IP-Adresse",
+          "id": "Core-ID",
+          "webhook_id": "Webhook-ID",
+          "use_description_as_entity_id": "TapHome-Beschreibungen als Entitäts-IDs verwenden",
+          "use_description_as_name": "TapHome-Beschreibungen als Entitätsnamen verwenden",
+          "enabled_attributes": "Bereitgestellte Attribute"
+        },
+        "data_description": {
+          "token": "Autorisierungstoken, der oben auf dem TapHome-API-Bildschirm angezeigt wird.",
+          "use_cloud": "Verbindung über die TapHome-Cloud statt über das lokale Netzwerk. Nur empfohlen, wenn der Core lokal nicht erreichbar ist — die Cloud ist langsamer und benötigt eine Internetverbindung. Bei Aktivierung wird die IP-Adresse ignoriert.",
+          "ip": "In der TapHome-App unter Mein Standort zu finden.",
+          "id": "Optionale Kennung für diesen Core. Nur nötig, wenn Sie mehr als einen Core verwenden.",
+          "webhook_id": "Empfohlen: Der Core sendet Änderungen dann sofort, statt dass Home Assistant alle 2 Sekunden nachfragt. Geben Sie einen beliebigen Namen ein, z. B. taphome_primary, und tragen Sie denselben in der TapHome-App auf dem Bildschirm „Geräte freigeben“ ein — aktivieren Sie dort Webhook und setzen Sie die Webhook-URL z. B. auf http://homeassistant.local:8123/api/webhook/taphome — ersetzen Sie homeassistant.local durch die Adresse Ihres Home Assistant und taphome_primary durch den oben eingegebenen Namen."
+        },
+        "submit": "Weiter"
+      },
+      "reconfigure": {
+        "title": "TapHome Core neu konfigurieren",
+        "description": "Aktualisieren Sie die Verbindungs- und Core-Einstellungen Ihres TapHome Cores. Eine lokale Verbindung wird empfohlen: Aktivieren Sie „TapHome-Cloud verwenden“ nur, wenn der Core in Ihrem Netzwerk nicht direkt erreichbar ist — die Cloud aktualisiert seltener (etwa alle 20 Sekunden) und benötigt erreichbare TapHome-Server. Die IP-Adresse Ihres Cores finden Sie in der TapHome-App unter „Mein Standort“.",
+        "data": {
+          "token": "Token",
+          "use_cloud": "TapHome-Cloud verwenden",
+          "ip": "IP-Adresse",
+          "id": "Core-ID",
+          "webhook_id": "Webhook-ID",
+          "use_description_as_entity_id": "TapHome-Beschreibungen als Entitäts-IDs verwenden",
+          "use_description_as_name": "TapHome-Beschreibungen als Entitätsnamen verwenden",
+          "enabled_attributes": "Bereitgestellte Attribute"
+        },
+        "data_description": {
+          "token": "Autorisierungstoken, der oben auf dem TapHome-API-Bildschirm angezeigt wird.",
+          "use_cloud": "Verbindung über die TapHome-Cloud statt über das lokale Netzwerk. Nur empfohlen, wenn der Core lokal nicht erreichbar ist — die Cloud ist langsamer und benötigt eine Internetverbindung. Bei Aktivierung wird die IP-Adresse ignoriert.",
+          "ip": "In der TapHome-App unter Mein Standort zu finden.",
+          "id": "Optionale Kennung für diesen Core. Nur nötig, wenn Sie mehr als einen Core verwenden.",
+          "webhook_id": "Empfohlen: Der Core sendet Änderungen dann sofort, statt dass Home Assistant alle 2 Sekunden nachfragt. Geben Sie einen beliebigen Namen ein, z. B. taphome_primary, und tragen Sie denselben in der TapHome-App auf dem Bildschirm „Geräte freigeben“ ein — aktivieren Sie dort Webhook und setzen Sie die Webhook-URL z. B. auf http://homeassistant.local:8123/api/webhook/taphome — ersetzen Sie homeassistant.local durch die Adresse Ihres Home Assistant und taphome_primary durch den oben eingegebenen Namen."
+        },
+        "submit": "Speichern"
+      },
+      "reauth_confirm": {
+        "title": "TapHome erneut authentifizieren",
+        "description": "Der Token für {name} ist nicht mehr gültig. Geben Sie einen neuen Token ein.",
+        "data": {
+          "token": "Token"
+        },
+        "submit": "Speichern"
+      },
+      "zones": {
+        "title": "Zonen",
+        "description": "Ordnen Sie TapHome-Zonen den Bereichen von Home Assistant zu. Wählen Sie für jede Zone den Bereich; lassen Sie eine Zone leer, um keinen Bereich zuzuweisen."
+      },
+      "labels": {
+        "title": "Labels",
+        "description": "Ordnen Sie TapHome-Kategorien den Labels von Home Assistant zu. Wählen Sie für jede Kategorie das Label; lassen Sie eine Kategorie leer, um kein Label zuzuweisen."
+      },
+      "add_devices": {
+        "title": "Geräte hinzufügen",
+        "description": "Wählen Sie die TapHome-Geräte aus, die Sie hinzufügen möchten. Tippen Sie in das Feld, um zu suchen. Noch nicht hinzugefügte Geräte zeigen ihre TapHome-Zone und -Kategorie, hinzugefügte Geräte ihren Raum.",
+        "data": {
+          "devices": "Geräte"
+        }
+      },
+      "add_devices_platform": {
+        "title": "Domänen auswählen",
+        "description": "Wählen Sie für jedes Gerät die Home-Assistant-Domänen, als die es bereitgestellt wird. Sie können pro Gerät mehrere Domänen auswählen oder keine, um das Gerät zu überspringen. Es werden nur mit dem Gerät kompatible Domänen angeboten."
+      },
+      "add_devices_options": {
+        "title": "Geräteoptionen",
+        "description": "Legen Sie die Optionen für jedes ausgewählte Gerät und jede Domäne fest. Jeder Abschnitt ist ein Gerät in einer Domäne. Leere Felder verwenden automatische Standardwerte.",
+        "submit": "Hinzufügen"
+      }
+    },
+    "error": {
+      "cannot_connect": "Verbindung zum TapHome Core fehlgeschlagen.",
+      "invalid_auth": "Der TapHome Core hat den Token abgelehnt.",
+      "ip_required": "Geben Sie die IP-Adresse Ihres Cores an oder aktivieren Sie die TapHome-Cloud.",
+      "no_devices_selected": "Wählen Sie mindestens ein Gerät aus.",
+      "no_common_platform": "Die ausgewählten Geräte können in keiner Domäne bereitgestellt werden.",
+      "invalid_device": "Wählen Sie ein Gerät aus der Liste.",
+      "invalid_device_id": "Ungültige Geräte-ID."
+    },
+    "abort": {
+      "already_configured": "Dieser TapHome Core ist bereits konfiguriert.",
+      "reauth_successful": "Die erneute Authentifizierung war erfolgreich.",
+      "reconfigure_successful": "Die Neukonfiguration war erfolgreich.",
+      "unique_id_mismatch": "Der verbundene Core stimmt nicht mit dem Core überein, für den dieser Eintrag erstellt wurde."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "TapHome-Optionen",
+        "menu_options": {
+          "core_settings": "Core-Einstellungen",
+          "add_devices": "Geräte hinzufügen",
+          "edit_devices": "Geräte bearbeiten",
+          "remove_devices": "Geräte entfernen",
+          "zones": "Zonen (Bereiche)",
+          "labels": "Labels (Kategorien)"
+        }
+      },
+      "core_settings": {
+        "title": "Core-Einstellungen",
+        "data": {
+          "token": "Token",
+          "use_cloud": "TapHome-Cloud verwenden",
+          "ip": "IP-Adresse",
+          "id": "Core-ID",
+          "webhook_id": "Webhook-ID",
+          "use_description_as_entity_id": "TapHome-Beschreibungen als Entitäts-IDs verwenden",
+          "use_description_as_name": "TapHome-Beschreibungen als Entitätsnamen verwenden",
+          "enabled_attributes": "Bereitgestellte Attribute"
+        },
+        "data_description": {
+          "token": "Autorisierungstoken, der oben auf dem TapHome-API-Bildschirm angezeigt wird.",
+          "use_cloud": "Verbindung über die TapHome-Cloud statt über das lokale Netzwerk. Nur empfohlen, wenn der Core lokal nicht erreichbar ist — die Cloud ist langsamer und benötigt eine Internetverbindung. Bei Aktivierung wird die IP-Adresse ignoriert.",
+          "ip": "In der TapHome-App unter Mein Standort zu finden.",
+          "id": "Optionale Kennung für diesen Core. Nur nötig, wenn Sie mehr als einen Core verwenden.",
+          "webhook_id": "Empfohlen: Der Core sendet Änderungen dann sofort, statt dass Home Assistant alle 2 Sekunden nachfragt. Geben Sie einen beliebigen Namen ein, z. B. taphome_primary, und tragen Sie denselben in der TapHome-App auf dem Bildschirm „Geräte freigeben“ ein — aktivieren Sie dort Webhook und setzen Sie die Webhook-URL z. B. auf http://homeassistant.local:8123/api/webhook/taphome — ersetzen Sie homeassistant.local durch die Adresse Ihres Home Assistant und taphome_primary durch den oben eingegebenen Namen."
+        },
+        "description": "Aktualisieren Sie die Verbindungs- und Core-Einstellungen Ihres TapHome Cores. Eine lokale Verbindung wird empfohlen: Aktivieren Sie „TapHome-Cloud verwenden“ nur, wenn der Core in Ihrem Netzwerk nicht direkt erreichbar ist — die Cloud aktualisiert seltener (etwa alle 20 Sekunden) und benötigt erreichbare TapHome-Server. Die IP-Adresse Ihres Cores finden Sie in der TapHome-App unter „Mein Standort“.",
+        "submit": "Speichern"
+      },
+      "zones": {
+        "title": "Zonen",
+        "description": "Ordnen Sie TapHome-Zonen den Bereichen von Home Assistant zu. Wählen Sie für jede Zone den Bereich; lassen Sie eine Zone leer, um keinen Bereich zuzuweisen.",
+        "submit": "Speichern"
+      },
+      "labels": {
+        "title": "Labels",
+        "description": "Ordnen Sie TapHome-Kategorien den Labels von Home Assistant zu. Wählen Sie für jede Kategorie das Label; lassen Sie eine Kategorie leer, um kein Label zuzuweisen.",
+        "submit": "Speichern"
+      },
+      "add_devices": {
+        "title": "Geräte hinzufügen",
+        "description": "Wählen Sie die TapHome-Geräte aus, die Sie hinzufügen möchten. Tippen Sie in das Feld, um zu suchen. Noch nicht hinzugefügte Geräte zeigen ihre TapHome-Zone und -Kategorie, hinzugefügte Geräte ihren Raum.",
+        "data": {
+          "devices": "Geräte",
+          "clear_selection": "Alle abwählen"
+        },
+        "data_description": {
+          "clear_selection": "Einschalten und auf Weiter drücken, um die gesamte Auswahl zu löschen, dann nur die gewünschten Geräte wählen."
+        }
+      },
+      "add_devices_platform": {
+        "title": "Domänen auswählen",
+        "description": "Wählen Sie für jedes Gerät die Home-Assistant-Domänen, als die es bereitgestellt wird. Sie können pro Gerät mehrere Domänen auswählen oder keine, um das Gerät zu überspringen. Es werden nur mit dem Gerät kompatible Domänen angeboten."
+      },
+      "add_devices_options": {
+        "title": "Geräteoptionen",
+        "description": "Legen Sie die Optionen für jedes ausgewählte Gerät und jede Domäne fest. Jeder Abschnitt ist ein Gerät in einer Domäne. Leere Felder verwenden automatische Standardwerte. Sensor- und Binärsensortypen werden automatisch erkannt; ihre Optionen sind eingeklappt – klappen Sie einen Abschnitt nur auf, um sie zu überschreiben.",
+        "submit": "Hinzufügen"
+      },
+      "edit_devices": {
+        "title": "Geräte bearbeiten",
+        "description": "Wählen Sie die Geräte aus, die Sie bearbeiten möchten. Tippen Sie in das Feld, um zu suchen.",
+        "data": {
+          "devices": "Geräte"
+        }
+      },
+      "edit_devices_form": {
+        "title": "Geräteoptionen",
+        "description": "Legen Sie die Optionen für jedes ausgewählte Gerät fest. Jeder Abschnitt ist ein Gerät. Leere Felder verwenden automatische Standardwerte. Sensor- und Binärsensortypen werden automatisch erkannt; ihre Optionen sind eingeklappt – klappen Sie einen Abschnitt nur auf, um sie zu überschreiben.",
+        "data": {
+          "effect_id": "Mehrwertschalter für Effekte",
+          "device_class": "Geräteklasse",
+          "actions": "Aktionen",
+          "close_threshold": "Schließschwelle (%)",
+          "range_high_thermostat_id": "Oberer Bereichsthermostat",
+          "range_low_thermostat_id": "Unterer Bereichsthermostat",
+          "target_temperature_step": "Schrittweite der Zieltemperatur",
+          "precision": "Temperaturgenauigkeit",
+          "hvac_switch_id": "HVAC-Schalter",
+          "hvac_mode": "Fester HVAC-Modus",
+          "hvac_mode_id": "Mehrwertschalter für HVAC-Modus",
+          "hvac_action_id": "Mehrwertschalter für HVAC-Aktion",
+          "preset_mode_id": "Mehrwertschalter für Voreinstellungen",
+          "fan_mode_id": "Mehrwertschalter für Lüftermodi",
+          "swing_mode_id": "Mehrwertschalter für Schwenkmodi",
+          "swing_horizontal_mode_id": "Mehrwertschalter für horizontale Schwenkmodi",
+          "target_humidity_id": "Analogausgang für Zielfeuchtigkeit",
+          "min_humidity": "Minimale Luftfeuchtigkeit (%)",
+          "max_humidity": "Maximale Luftfeuchtigkeit (%)",
+          "switch_id": "Ein/Aus-Schalter",
+          "action_id": "Mehrwertschalter für Aktion",
+          "mode_id": "Mehrwertschalter für Modi",
+          "humidity_sensor_id": "Feuchtigkeitssensor",
+          "value_type": "Werttyp",
+          "unit_of_measurement": "Maßeinheit",
+          "state_class": "Zustandsklasse"
+        },
+        "submit": "Speichern"
+      },
+      "remove_devices": {
+        "title": "Geräte entfernen",
+        "description": "Wählen Sie die Geräte aus, die Sie entfernen möchten. Ihre Entitäten werden aus Home Assistant entfernt. Tippen Sie in das Feld, um zu suchen.",
+        "data": {
+          "devices": "Geräte"
+        },
+        "submit": "Entfernen"
+      }
+    },
+    "error": {
+      "invalid_device_id": "Ungültige Geräte-ID.",
+      "cannot_connect": "Verbindung zum TapHome Core fehlgeschlagen.",
+      "invalid_auth": "Der TapHome Core hat den Token abgelehnt.",
+      "ip_required": "Geben Sie die IP-Adresse Ihres Cores an oder aktivieren Sie die TapHome-Cloud.",
+      "unique_id_mismatch": "Der verbundene Core stimmt nicht mit dem Core überein, für den dieser Eintrag erstellt wurde.",
+      "no_devices_selected": "Wählen Sie mindestens ein Gerät aus.",
+      "no_common_platform": "Die ausgewählten Geräte können in keiner Domäne bereitgestellt werden.",
+      "invalid_device": "Wählen Sie ein Gerät aus der Liste."
+    },
+    "abort": {
+      "entry_not_loaded": "Der TapHome Core ist nicht geladen. Beheben Sie zuerst die Verbindung.",
+      "no_devices_configured": "Es sind noch keine Geräte konfiguriert. Verwenden Sie zuerst „Geräte hinzufügen“."
+    }
+  },
+  "selector": {
+    "platform": {
+      "options": {
+        "lights": "Light",
+        "buttons": "Button / Event",
+        "covers": "Cover",
+        "climates": "Climate",
+        "fans": "Fan",
+        "humidifiers": "Humidifier",
+        "multivalue_switches": "Select",
+        "switches": "Switch",
+        "sensors": "Sensor",
+        "binary_sensors": "Binary sensor",
+        "valves": "Valve",
+        "times": "Time"
+      }
+    }
+  },
   "issues": {
     "device_not_exposed": {
       "title": "Gerät {device_id} ist für Core{core_id} nicht freigegeben",
@@ -8,13 +250,69 @@
       "title": "Verbindung zum TapHome Core{core_id} fehlgeschlagen",
       "description": "Home Assistant kann nicht mit dem TapHome Core{core_id} kommunizieren."
     },
-    "ip_and_api_url_set": {
-      "title": "Für Core{core_id} sind sowohl api_url als auch ip gesetzt",
-      "description": "Für Core{core_id} sind sowohl api_url als auch ip konfiguriert. Es wird api_url verwendet."
-    },
     "device_type_mismatch": {
       "title": "Nicht unterstützter Typ für Gerät {device_id} im Core{core_id}",
-      "description": "Gerät {device_id} ist vom Typ {device_type} mit unterstützten Werten [{supported_values}], erwartet: {expected}. Bitte überprüfe deine TapHome-Konfiguration."
+      "description": "Gerät {device_id} ist vom Typ {device_type} mit unterstützten Werten [{supported_values}], erwartet: {expected}. Bitte überprüfen Sie Ihre TapHome-Konfiguration."
+    },
+    "yaml_deprecated": {
+      "title": "Die TapHome-YAML-Konfiguration ist veraltet",
+      "description": "Ihre TapHome-YAML-Konfiguration wurde importiert und die Integration wird nun über die Benutzeroberfläche verwaltet (Einstellungen → Geräte & Dienste). Entfernen Sie den Abschnitt taphome aus configuration.yaml — Änderungen dort werden nicht mehr übernommen."
+    },
+    "new_device": {
+      "title": "Neues TapHome-Gerät gefunden: {device}",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "TapHome-Gerät hinzufügen",
+            "description": "Das Gerät {device} ist in der TapHome-API freigegeben, wird aber noch nicht in Home Assistant verwendet. Wählen Sie die Domäne, als die es hinzugefügt werden soll, oder aktivieren Sie Ignorieren, um nicht mehr über dieses Gerät benachrichtigt zu werden.",
+            "data": {
+              "platform": "Hinzufügen als",
+              "ignore": "Dieses Gerät ignorieren"
+            }
+          },
+          "options": {
+            "title": "Geräteoptionen",
+            "description": "Legen Sie die Optionen für {device} fest. Leere Felder verwenden automatische Standardwerte.",
+            "submit": "Hinzufügen",
+            "data": {
+              "effect_id": "Mehrwertschalter für Effekte",
+              "device_class": "Geräteklasse",
+              "actions": "Aktionen",
+              "close_threshold": "Schließschwelle (%)",
+              "range_high_thermostat_id": "Oberer Bereichsthermostat",
+              "range_low_thermostat_id": "Unterer Bereichsthermostat",
+              "target_temperature_step": "Schrittweite der Zieltemperatur",
+              "precision": "Temperaturgenauigkeit",
+              "hvac_switch_id": "HVAC-Schalter",
+              "hvac_mode": "Fester HVAC-Modus",
+              "hvac_mode_id": "Mehrwertschalter für HVAC-Modus",
+              "hvac_action_id": "Mehrwertschalter für HVAC-Aktion",
+              "preset_mode_id": "Mehrwertschalter für Voreinstellungen",
+              "fan_mode_id": "Mehrwertschalter für Lüftermodi",
+              "swing_mode_id": "Mehrwertschalter für Schwenkmodi",
+              "swing_horizontal_mode_id": "Mehrwertschalter für horizontale Schwenkmodi",
+              "target_humidity_id": "Analogausgang für Zielfeuchtigkeit",
+              "min_humidity": "Minimale Luftfeuchtigkeit (%)",
+              "max_humidity": "Maximale Luftfeuchtigkeit (%)",
+              "switch_id": "Ein/Aus-Schalter",
+              "action_id": "Mehrwertschalter für Aktion",
+              "mode_id": "Mehrwertschalter für Modi",
+              "humidity_sensor_id": "Feuchtigkeitssensor",
+              "value_type": "Werttyp",
+              "unit_of_measurement": "Maßeinheit",
+              "state_class": "Zustandsklasse"
+            }
+          }
+        },
+        "error": {
+          "select_platform_or_ignore": "Wählen Sie eine Domäne, als die das Gerät hinzugefügt wird, oder aktivieren Sie Ignorieren.",
+          "invalid_device_id": "Ungültige Geräte-ID."
+        },
+        "abort": {
+          "entry_not_loaded": "Der TapHome Core ist nicht geladen. Beheben Sie zuerst die Verbindung.",
+          "device_gone": "Das Gerät ist in der TapHome-API nicht mehr freigegeben."
+        }
+      }
     }
   }
 }

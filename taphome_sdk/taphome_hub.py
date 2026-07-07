@@ -99,6 +99,9 @@ class TapHomeHub:
 
         self.devices: dict[int, Device] = {}
         self.periodic_refresh_task: Task | None = None
+        self._connection_type_changed_handler = (
+            lambda _, __: self._schedule_periodic_refresh()
+        )
 
     def get_generic_output_capable_device(self, device_id: int) -> OutputCapableDevice:
         """Get a digital output device by its ID."""
@@ -154,14 +157,20 @@ class TapHomeHub:
                     self.devices[metadata.id] = device
 
             self._schedule_periodic_refresh()
-            self.connection_type.changed += (
-                lambda _, __: self._schedule_periodic_refresh()
-            )
+            self.connection_type.changed += self._connection_type_changed_handler
             self.connection_state.value = HubConnectionState.CONNECTED
 
         except Exception as e:
             _LOGGER.error("Failed to connect to TapHome API: %s", e)
             raise
+
+    def disconnect(self) -> None:
+        """Stop periodic polling and mark the hub as disconnected."""
+        self.connection_type.changed -= self._connection_type_changed_handler
+        if self.periodic_refresh_task is not None:
+            self.periodic_refresh_task.cancel()
+            self.periodic_refresh_task = None
+        self.connection_state.value = HubConnectionState.DISCONNECTED
 
     async def async_handle_webhook(self, request: Request) -> None:
         """Handle incoming webhook requests."""

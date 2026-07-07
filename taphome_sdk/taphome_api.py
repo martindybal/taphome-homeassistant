@@ -20,6 +20,15 @@ _LOGGER = logging.getLogger(__name__)
 ResponseT = TypeVar("ResponseT", bound=FromDictProtocol)
 
 
+class TapHomeAuthError(Exception):
+    """Raised when the TapHome API rejects the token (HTTP 401/403)."""
+
+    def __init__(self, status: int) -> None:
+        """Store the HTTP status code."""
+        self.status = status
+        super().__init__(f"TapHome API rejected the token (HTTP {status})")
+
+
 class ApiConnectionType(Enum):
     """Enum representing the hub connection type."""
 
@@ -328,6 +337,8 @@ class _TapHomeHttpClient:
         try:
             json = await self._read_as_json(response)
             return response_class.from_dict(json)
+        except TapHomeAuthError:
+            raise
         except Exception:
             _LOGGER.debug(
                 "Request %s %s\nstatus %s %s\nheaders %s\ntext %s\n",
@@ -344,6 +355,9 @@ class _TapHomeHttpClient:
     async def _read_as_json(self, response: ClientResponse):
         if response.status == 200:
             return await response.json()
+
+        if response.status in (401, 403):
+            raise TapHomeAuthError(response.status)
 
         message = response.reason if response.reason else "Unexpected response"
         raise ClientResponseError(

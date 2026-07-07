@@ -1,20 +1,318 @@
 {
+  "config": {
+    "step": {
+      "user": {
+        "title": "Připojit TapHome Core",
+        "description": "Zveřejněte svá zařízení v aplikaci TapHome (Nastavení → Zveřejnit zařízení → TapHome API) a zadejte níže token. Doporučujeme lokální připojení: „Použít TapHome cloud“ zapněte jen tehdy, když se ke Core nedá připojit přímo ve vaší síti — cloud aktualizuje stav méně často (přibližně jednou za 20 sekund) a vyžaduje dostupnost serverů TapHome. IP adresu vašeho Core najdete v aplikaci TapHome v části „Moje lokace“.",
+        "data": {
+          "token": "Token",
+          "use_cloud": "Použít TapHome cloud",
+          "ip": "IP adresa",
+          "id": "ID Core",
+          "webhook_id": "Webhook ID",
+          "use_description_as_entity_id": "Použít popisy TapHome jako ID entit",
+          "use_description_as_name": "Použít popisy TapHome jako názvy entit",
+          "enabled_attributes": "Zveřejněné atributy"
+        },
+        "data_description": {
+          "token": "Autorizační token zobrazený v horní části obrazovky TapHome API.",
+          "use_cloud": "Připojení přes TapHome cloud místo lokální sítě. Doporučeno jen tehdy, když Core není dostupný lokálně — cloud je pomalejší a vyžaduje internetové připojení. Při zapnutí se IP adresa ignoruje.",
+          "ip": "Najdete ji v aplikaci TapHome v části Moje lokace.",
+          "id": "Volitelný identifikátor tohoto Core. Potřeba, jen když používáte více než jeden Core.",
+          "webhook_id": "Doporučeno: Core pak posílá změny okamžitě, místo aby je Home Assistant zjišťoval dotazem každé 2 sekundy. Zadejte libovolný název, např. taphome_primary, a stejný nastavte i v aplikaci TapHome na obrazovce Vystavit zařízení → zapněte Povolit Web Hook a do Web Hook URL vyplňte např. http://homeassistant.local:8123/api/webhook/taphome — homeassistant.local nahraďte adresou vašeho Home Assistant a taphome_primary názvem, který jste zadali výše."
+        },
+        "submit": "Další"
+      },
+      "reconfigure": {
+        "title": "Změnit nastavení TapHome Core",
+        "description": "Upravte nastavení připojení a Core u tohoto TapHome Core. Doporučujeme lokální připojení: „Použít TapHome cloud“ zapněte jen tehdy, když se ke Core nedá připojit přímo ve vaší síti — cloud aktualizuje stav méně často (přibližně jednou za 20 sekund) a vyžaduje dostupnost serverů TapHome. IP adresu vašeho Core najdete v aplikaci TapHome v části „Moje lokace“.",
+        "data": {
+          "token": "Token",
+          "use_cloud": "Použít TapHome cloud",
+          "ip": "IP adresa",
+          "id": "ID Core",
+          "webhook_id": "Webhook ID",
+          "use_description_as_entity_id": "Použít popisy TapHome jako ID entit",
+          "use_description_as_name": "Použít popisy TapHome jako názvy entit",
+          "enabled_attributes": "Zveřejněné atributy"
+        },
+        "data_description": {
+          "token": "Autorizační token zobrazený v horní části obrazovky TapHome API.",
+          "use_cloud": "Připojení přes TapHome cloud místo lokální sítě. Doporučeno jen tehdy, když Core není dostupný lokálně — cloud je pomalejší a vyžaduje internetové připojení. Při zapnutí se IP adresa ignoruje.",
+          "ip": "Najdete ji v aplikaci TapHome v části Moje lokace.",
+          "id": "Volitelný identifikátor tohoto Core. Potřeba, jen když používáte více než jeden Core.",
+          "webhook_id": "Doporučeno: Core pak posílá změny okamžitě, místo aby je Home Assistant zjišťoval dotazem každé 2 sekundy. Zadejte libovolný název, např. taphome_primary, a stejný nastavte i v aplikaci TapHome na obrazovce Vystavit zařízení → zapněte Povolit Web Hook a do Web Hook URL vyplňte např. http://homeassistant.local:8123/api/webhook/taphome — homeassistant.local nahraďte adresou vašeho Home Assistant a taphome_primary názvem, který jste zadali výše."
+        },
+        "submit": "Uložit"
+      },
+      "reauth_confirm": {
+        "title": "Znovu ověřit TapHome",
+        "description": "Token pro {name} již není platný. Zadejte nový token.",
+        "data": {
+          "token": "Token"
+        },
+        "submit": "Uložit"
+      },
+      "zones": {
+        "title": "Zóny",
+        "description": "Mapování zón TapHome na oblasti Home Assistantu. U každé zóny vyberte oblast; prázdné pole ponechá zónu bez oblasti."
+      },
+      "labels": {
+        "title": "Štítky",
+        "description": "Mapování kategorií TapHome na štítky Home Assistantu. U každé kategorie vyberte štítek; prázdné pole ponechá kategorii bez štítku."
+      },
+      "add_devices": {
+        "title": "Přidat zařízení",
+        "description": "Vyberte zařízení TapHome, která chcete přidat. Do pole můžete psát a vyhledávat. U zatím nepřidaných zařízení se zobrazuje TapHome zóna a kategorie, u přidaných místnost.",
+        "data": {
+          "devices": "Zařízení"
+        }
+      },
+      "add_devices_platform": {
+        "title": "Výběr domén",
+        "description": "U každého zařízení zvolte domény Home Assistantu, jako které se zařízení vystaví. Na jedno zařízení můžete vybrat i více domén, nebo žádnou a zařízení tak přeskočit. Nabízejí se jen domény použitelné pro dané zařízení."
+      },
+      "add_devices_options": {
+        "title": "Možnosti zařízení",
+        "description": "Nastavte možnosti pro každé vybrané zařízení a doménu. Každá sekce je jedno zařízení v jedné doméně. Prázdná pole použijí automatické výchozí hodnoty.",
+        "submit": "Přidat"
+      }
+    },
+    "error": {
+      "cannot_connect": "Připojení k TapHome Core se nezdařilo.",
+      "invalid_auth": "TapHome Core odmítl token.",
+      "ip_required": "Vyplňte IP adresu vašeho Core, nebo zapněte TapHome cloud.",
+      "no_devices_selected": "Vyberte alespoň jedno zařízení.",
+      "no_common_platform": "Vybraná zařízení nelze vystavit jako žádnou doménu.",
+      "invalid_device": "Vyberte zařízení ze seznamu.",
+      "invalid_device_id": "Neplatné ID zařízení."
+    },
+    "abort": {
+      "already_configured": "Tento TapHome Core je již nakonfigurován.",
+      "reauth_successful": "Opětovné ověření proběhlo úspěšně.",
+      "reconfigure_successful": "Změna nastavení proběhla úspěšně.",
+      "unique_id_mismatch": "Připojený Core neodpovídá Core, pro který byl tento záznam vytvořen."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Možnosti TapHome",
+        "menu_options": {
+          "core_settings": "Nastavení Core",
+          "add_devices": "Přidat zařízení",
+          "edit_devices": "Upravit zařízení",
+          "remove_devices": "Odebrat zařízení",
+          "zones": "Zóny (oblasti)",
+          "labels": "Štítky (kategorie)"
+        }
+      },
+      "core_settings": {
+        "title": "Nastavení Core",
+        "data": {
+          "token": "Token",
+          "use_cloud": "Použít TapHome cloud",
+          "ip": "IP adresa",
+          "id": "ID Core",
+          "webhook_id": "Webhook ID",
+          "use_description_as_entity_id": "Použít popisy TapHome jako ID entit",
+          "use_description_as_name": "Použít popisy TapHome jako názvy entit",
+          "enabled_attributes": "Zveřejněné atributy"
+        },
+        "data_description": {
+          "token": "Autorizační token zobrazený v horní části obrazovky TapHome API.",
+          "use_cloud": "Připojení přes TapHome cloud místo lokální sítě. Doporučeno jen tehdy, když Core není dostupný lokálně — cloud je pomalejší a vyžaduje internetové připojení. Při zapnutí se IP adresa ignoruje.",
+          "ip": "Najdete ji v aplikaci TapHome v části Moje lokace.",
+          "id": "Volitelný identifikátor tohoto Core. Potřeba, jen když používáte více než jeden Core.",
+          "webhook_id": "Doporučeno: Core pak posílá změny okamžitě, místo aby je Home Assistant zjišťoval dotazem každé 2 sekundy. Zadejte libovolný název, např. taphome_primary, a stejný nastavte i v aplikaci TapHome na obrazovce Vystavit zařízení → zapněte Povolit Web Hook a do Web Hook URL vyplňte např. http://homeassistant.local:8123/api/webhook/taphome — homeassistant.local nahraďte adresou vašeho Home Assistant a taphome_primary názvem, který jste zadali výše."
+        },
+        "description": "Upravte nastavení připojení a Core u tohoto TapHome Core. Doporučujeme lokální připojení: „Použít TapHome cloud“ zapněte jen tehdy, když se ke Core nedá připojit přímo ve vaší síti — cloud aktualizuje stav méně často (přibližně jednou za 20 sekund) a vyžaduje dostupnost serverů TapHome. IP adresu vašeho Core najdete v aplikaci TapHome v části „Moje lokace“.",
+        "submit": "Uložit"
+      },
+      "zones": {
+        "title": "Zóny",
+        "description": "Mapování zón TapHome na oblasti Home Assistantu. U každé zóny vyberte oblast; prázdné pole ponechá zónu bez oblasti.",
+        "submit": "Uložit"
+      },
+      "labels": {
+        "title": "Štítky",
+        "description": "Mapování kategorií TapHome na štítky Home Assistantu. U každé kategorie vyberte štítek; prázdné pole ponechá kategorii bez štítku.",
+        "submit": "Uložit"
+      },
+      "add_devices": {
+        "title": "Přidat zařízení",
+        "description": "Vyberte zařízení TapHome, která chcete přidat. Do pole můžete psát a vyhledávat. U zatím nepřidaných zařízení se zobrazuje TapHome zóna a kategorie, u přidaných místnost.",
+        "data": {
+          "devices": "Zařízení",
+          "clear_selection": "Zrušit výběr"
+        },
+        "data_description": {
+          "clear_selection": "Zapněte a stiskněte Další pro zrušení celého výběru, pak vyberte jen požadovaná zařízení."
+        }
+      },
+      "add_devices_platform": {
+        "title": "Výběr domén",
+        "description": "U každého zařízení zvolte domény Home Assistantu, jako které se zařízení vystaví. Na jedno zařízení můžete vybrat i více domén, nebo žádnou a zařízení tak přeskočit. Nabízejí se jen domény použitelné pro dané zařízení."
+      },
+      "add_devices_options": {
+        "title": "Možnosti zařízení",
+        "description": "Nastavte možnosti pro každé vybrané zařízení a doménu. Každá sekce je jedno zařízení v jedné doméně. Prázdná pole použijí automatické výchozí hodnoty. Typy senzorů a binárních senzorů se detekují automaticky; jejich možnosti jsou sbalené — sekci rozbalte jen pokud je chcete přepsat.",
+        "submit": "Přidat"
+      },
+      "edit_devices": {
+        "title": "Upravit zařízení",
+        "description": "Vyberte zařízení, která chcete upravit. Do pole můžete psát a vyhledávat.",
+        "data": {
+          "devices": "Zařízení"
+        }
+      },
+      "edit_devices_form": {
+        "title": "Možnosti zařízení",
+        "description": "Nastavte možnosti pro každé vybrané zařízení. Každá sekce je jedno zařízení. Prázdná pole použijí automatické výchozí hodnoty. Typy senzorů a binárních senzorů se detekují automaticky; jejich možnosti jsou sbalené — sekci rozbalte jen pokud je chcete přepsat.",
+        "data": {
+          "effect_id": "Vícehodnotový přepínač efektů",
+          "device_class": "Třída zařízení",
+          "actions": "Akce",
+          "close_threshold": "Práh zavření (%)",
+          "range_high_thermostat_id": "Horní termostat rozsahu",
+          "range_low_thermostat_id": "Dolní termostat rozsahu",
+          "target_temperature_step": "Krok cílové teploty",
+          "precision": "Přesnost teploty",
+          "hvac_switch_id": "Spínač HVAC",
+          "hvac_mode": "Pevný režim HVAC",
+          "hvac_mode_id": "Vícehodnotový přepínač režimu HVAC",
+          "hvac_action_id": "Vícehodnotový přepínač akce HVAC",
+          "preset_mode_id": "Vícehodnotový přepínač předvoleb",
+          "fan_mode_id": "Vícehodnotový přepínač režimů ventilátoru",
+          "swing_mode_id": "Vícehodnotový přepínač natáčení",
+          "swing_horizontal_mode_id": "Vícehodnotový přepínač horizontálního natáčení",
+          "target_humidity_id": "Analogový výstup cílové vlhkosti",
+          "min_humidity": "Minimální vlhkost (%)",
+          "max_humidity": "Maximální vlhkost (%)",
+          "switch_id": "Spínač zapnutí/vypnutí",
+          "action_id": "Vícehodnotový přepínač akce",
+          "mode_id": "Vícehodnotový přepínač režimů",
+          "humidity_sensor_id": "Senzor vlhkosti",
+          "value_type": "Typ hodnoty",
+          "unit_of_measurement": "Jednotka měření",
+          "state_class": "Třída stavu"
+        },
+        "submit": "Uložit"
+      },
+      "remove_devices": {
+        "title": "Odebrat zařízení",
+        "description": "Vyberte zařízení, která chcete odebrat. Jejich entity budou z Home Assistantu odstraněny. Do pole můžete psát a vyhledávat.",
+        "data": {
+          "devices": "Zařízení"
+        },
+        "submit": "Odebrat"
+      }
+    },
+    "error": {
+      "invalid_device_id": "Neplatné ID zařízení.",
+      "cannot_connect": "Připojení k TapHome Core se nezdařilo.",
+      "invalid_auth": "TapHome Core odmítl token.",
+      "ip_required": "Vyplňte IP adresu vašeho Core, nebo zapněte TapHome cloud.",
+      "unique_id_mismatch": "Připojený Core neodpovídá Core, pro který byl tento záznam vytvořen.",
+      "no_devices_selected": "Vyberte alespoň jedno zařízení.",
+      "no_common_platform": "Vybraná zařízení nelze vystavit jako žádnou doménu.",
+      "invalid_device": "Vyberte zařízení ze seznamu."
+    },
+    "abort": {
+      "entry_not_loaded": "TapHome Core není načtený. Nejprve opravte připojení.",
+      "no_devices_configured": "Zatím nejsou nakonfigurována žádná zařízení. Nejprve použijte Přidat zařízení."
+    }
+  },
+  "selector": {
+    "platform": {
+      "options": {
+        "lights": "Light",
+        "buttons": "Button / Event",
+        "covers": "Cover",
+        "climates": "Climate",
+        "fans": "Fan",
+        "humidifiers": "Humidifier",
+        "multivalue_switches": "Select",
+        "switches": "Switch",
+        "sensors": "Sensor",
+        "binary_sensors": "Binary sensor",
+        "valves": "Valve",
+        "times": "Time"
+      }
+    }
+  },
   "issues": {
     "device_not_exposed": {
-      "title": "Zařízení {device_id} není zveřejněno pro core{core_id}",
-      "description": "Zařízení {device_id} nastavené pro core{core_id} není dostupné v TapHome API. Zkontrolujte prosím nastavení TapHome."
+      "title": "Zařízení {device_id} není zveřejněno pro Core{core_id}",
+      "description": "Zařízení {device_id} nastavené pro Core{core_id} není dostupné v TapHome API. Zkontrolujte prosím nastavení TapHome."
     },
     "core_unavailable": {
-      "title": "Připojení k TapHome core{core_id} se nezdařilo",
-      "description": "Home Assistant se nemůže spojit s TapHome core{core_id}."
-    },
-    "ip_and_api_url_set": {
-      "title": "Pro core{core_id} jsou nastaveny api_url i ip",
-      "description": "Pro core{core_id} jsou nakonfigurovány hodnoty api_url i ip. Použije se api_url."
+      "title": "Připojení k TapHome Core{core_id} se nezdařilo",
+      "description": "Home Assistant se nemůže spojit s TapHome Core{core_id}."
     },
     "device_type_mismatch": {
-      "title": "Nepodporovaný typ zařízení {device_id} v core{core_id}",
+      "title": "Nepodporovaný typ zařízení {device_id} v Core{core_id}",
       "description": "Zařízení {device_id} je typu {device_type} s podporovanými hodnotami [{supported_values}], očekáváno: {expected}. Zkontrolujte prosím nastavení TapHome."
+    },
+    "yaml_deprecated": {
+      "title": "YAML konfigurace TapHome je zastaralá",
+      "description": "Vaše YAML konfigurace TapHome byla naimportována a integrace se nyní spravuje v UI (Nastavení → Zařízení a služby). Odstraňte sekci taphome z configuration.yaml — změny v ní se již nepromítají."
+    },
+    "new_device": {
+      "title": "Nalezeno nové zařízení TapHome: {device}",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "Přidat zařízení TapHome",
+            "description": "Zařízení {device} je zveřejněné v TapHome API, ale zatím se v Home Assistantu nepoužívá. Zvolte doménu, jako kterou se má přidat, nebo zapněte Ignorovat a přestat na toto zařízení upozorňovat.",
+            "data": {
+              "platform": "Přidat jako",
+              "ignore": "Ignorovat toto zařízení"
+            }
+          },
+          "options": {
+            "title": "Možnosti zařízení",
+            "description": "Nastavte možnosti pro {device}. Prázdná pole použijí automatické výchozí hodnoty.",
+            "submit": "Přidat",
+            "data": {
+              "effect_id": "Vícehodnotový přepínač efektů",
+              "device_class": "Třída zařízení",
+              "actions": "Akce",
+              "close_threshold": "Práh zavření (%)",
+              "range_high_thermostat_id": "Horní termostat rozsahu",
+              "range_low_thermostat_id": "Dolní termostat rozsahu",
+              "target_temperature_step": "Krok cílové teploty",
+              "precision": "Přesnost teploty",
+              "hvac_switch_id": "Spínač HVAC",
+              "hvac_mode": "Pevný režim HVAC",
+              "hvac_mode_id": "Vícehodnotový přepínač režimu HVAC",
+              "hvac_action_id": "Vícehodnotový přepínač akce HVAC",
+              "preset_mode_id": "Vícehodnotový přepínač předvoleb",
+              "fan_mode_id": "Vícehodnotový přepínač režimů ventilátoru",
+              "swing_mode_id": "Vícehodnotový přepínač natáčení",
+              "swing_horizontal_mode_id": "Vícehodnotový přepínač horizontálního natáčení",
+              "target_humidity_id": "Analogový výstup cílové vlhkosti",
+              "min_humidity": "Minimální vlhkost (%)",
+              "max_humidity": "Maximální vlhkost (%)",
+              "switch_id": "Spínač zapnutí/vypnutí",
+              "action_id": "Vícehodnotový přepínač akce",
+              "mode_id": "Vícehodnotový přepínač režimů",
+              "humidity_sensor_id": "Senzor vlhkosti",
+              "value_type": "Typ hodnoty",
+              "unit_of_measurement": "Jednotka měření",
+              "state_class": "Třída stavu"
+            }
+          }
+        },
+        "error": {
+          "select_platform_or_ignore": "Zvolte doménu, jako kterou se má zařízení přidat, nebo zapněte Ignorovat.",
+          "invalid_device_id": "Neplatné ID zařízení."
+        },
+        "abort": {
+          "entry_not_loaded": "TapHome Core není načtený. Nejprve opravte připojení.",
+          "device_gone": "Zařízení už není zveřejněné v TapHome API."
+        }
+      }
     }
   }
 }

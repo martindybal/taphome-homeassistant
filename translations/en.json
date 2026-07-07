@@ -1,20 +1,318 @@
 {
+  "config": {
+    "step": {
+      "user": {
+        "title": "Connect TapHome Core",
+        "description": "Expose your devices in the TapHome app (Settings → Expose devices → TapHome API) and enter the token below. A local connection is recommended: only enable \"Use TapHome cloud\" if you can't reach the Core directly on your network — the cloud updates less often (about every 20 seconds) and depends on TapHome's servers being reachable. Find your Core's IP address in the TapHome app under \"My location\".",
+        "data": {
+          "token": "Token",
+          "use_cloud": "Use TapHome cloud",
+          "ip": "IP address",
+          "id": "Core ID",
+          "webhook_id": "Webhook ID",
+          "use_description_as_entity_id": "Use TapHome descriptions as entity IDs",
+          "use_description_as_name": "Use TapHome descriptions as entity names",
+          "enabled_attributes": "Exposed attributes"
+        },
+        "data_description": {
+          "token": "Authorization token shown at the top of the TapHome API screen.",
+          "use_cloud": "Connect through the TapHome cloud instead of your local network. Only recommended when the Core is not reachable locally — the cloud is slower and requires an internet connection. The IP address is ignored when enabled.",
+          "ip": "Find it in the TapHome app under My location.",
+          "id": "Optional identifier for this Core. Only needed when you use more than one Core.",
+          "webhook_id": "Recommended: lets the Core push updates instantly instead of Home Assistant polling every 2 seconds. Enter any name, e.g. taphome_primary, then in the TapHome app on the Expose devices screen enable Webhook and set the Webhook URL to e.g. http://homeassistant.local:8123/api/webhook/taphome — replace homeassistant.local with your own Home Assistant address and taphome_primary with the name you entered above."
+        },
+        "submit": "Next"
+      },
+      "reconfigure": {
+        "title": "Reconfigure TapHome Core",
+        "description": "Update the connection and Core settings of your TapHome Core. A local connection is recommended: only enable \"Use TapHome cloud\" if you can't reach the Core directly on your network — the cloud updates less often (about every 20 seconds) and depends on TapHome's servers being reachable. Find your Core's IP address in the TapHome app under \"My location\".",
+        "data": {
+          "token": "Token",
+          "use_cloud": "Use TapHome cloud",
+          "ip": "IP address",
+          "id": "Core ID",
+          "webhook_id": "Webhook ID",
+          "use_description_as_entity_id": "Use TapHome descriptions as entity IDs",
+          "use_description_as_name": "Use TapHome descriptions as entity names",
+          "enabled_attributes": "Exposed attributes"
+        },
+        "data_description": {
+          "token": "Authorization token shown at the top of the TapHome API screen.",
+          "use_cloud": "Connect through the TapHome cloud instead of your local network. Only recommended when the Core is not reachable locally — the cloud is slower and requires an internet connection. The IP address is ignored when enabled.",
+          "ip": "Find it in the TapHome app under My location.",
+          "id": "Optional identifier for this Core. Only needed when you use more than one Core.",
+          "webhook_id": "Recommended: lets the Core push updates instantly instead of Home Assistant polling every 2 seconds. Enter any name, e.g. taphome_primary, then in the TapHome app on the Expose devices screen enable Webhook and set the Webhook URL to e.g. http://homeassistant.local:8123/api/webhook/taphome — replace homeassistant.local with your own Home Assistant address and taphome_primary with the name you entered above."
+        },
+        "submit": "Save"
+      },
+      "reauth_confirm": {
+        "title": "Re-authenticate TapHome",
+        "description": "The token for {name} is no longer valid. Enter a new token.",
+        "data": {
+          "token": "Token"
+        },
+        "submit": "Save"
+      },
+      "zones": {
+        "title": "Zones",
+        "description": "Map TapHome zones to Home Assistant areas. Pick the area for each zone; leave a zone empty to not assign an area."
+      },
+      "labels": {
+        "title": "Labels",
+        "description": "Map TapHome categories to Home Assistant labels. Pick the label for each category; leave a category empty to not assign a label."
+      },
+      "add_devices": {
+        "title": "Add devices",
+        "description": "Pick the TapHome devices you want to add. Type in the field to search. Devices that are not added yet show their TapHome zone and category, added devices show their room.",
+        "data": {
+          "devices": "Devices"
+        }
+      },
+      "add_devices_platform": {
+        "title": "Select domains",
+        "description": "For each device, choose the Home Assistant domains to expose it as. You can pick several domains per device, or none to skip the device. Only domains compatible with the device are offered."
+      },
+      "add_devices_options": {
+        "title": "Device options",
+        "description": "Set the options for each selected device and domain. Each section is one device on one domain. Empty fields use automatic defaults.",
+        "submit": "Add"
+      }
+    },
+    "error": {
+      "cannot_connect": "Failed to connect to the TapHome Core.",
+      "invalid_auth": "The TapHome Core rejected the token.",
+      "ip_required": "Fill in the IP address of your Core, or enable the TapHome cloud.",
+      "no_devices_selected": "Select at least one device.",
+      "no_common_platform": "The selected devices cannot be exposed as any domain.",
+      "invalid_device": "Select a device from the list.",
+      "invalid_device_id": "Invalid device ID."
+    },
+    "abort": {
+      "already_configured": "This TapHome Core is already configured.",
+      "reauth_successful": "Re-authentication was successful.",
+      "reconfigure_successful": "Reconfiguration was successful.",
+      "unique_id_mismatch": "The connected Core does not match the Core this entry was created for."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "TapHome options",
+        "menu_options": {
+          "core_settings": "Core settings",
+          "add_devices": "Add devices",
+          "edit_devices": "Edit devices",
+          "remove_devices": "Remove devices",
+          "zones": "Zones (areas)",
+          "labels": "Labels (categories)"
+        }
+      },
+      "core_settings": {
+        "title": "Core settings",
+        "data": {
+          "token": "Token",
+          "use_cloud": "Use TapHome cloud",
+          "ip": "IP address",
+          "id": "Core ID",
+          "webhook_id": "Webhook ID",
+          "use_description_as_entity_id": "Use TapHome descriptions as entity IDs",
+          "use_description_as_name": "Use TapHome descriptions as entity names",
+          "enabled_attributes": "Exposed attributes"
+        },
+        "data_description": {
+          "token": "Authorization token shown at the top of the TapHome API screen.",
+          "use_cloud": "Connect through the TapHome cloud instead of your local network. Only recommended when the Core is not reachable locally — the cloud is slower and requires an internet connection. The IP address is ignored when enabled.",
+          "ip": "Find it in the TapHome app under My location.",
+          "id": "Optional identifier for this Core. Only needed when you use more than one Core.",
+          "webhook_id": "Recommended: lets the Core push updates instantly instead of Home Assistant polling every 2 seconds. Enter any name, e.g. taphome_primary, then in the TapHome app on the Expose devices screen enable Webhook and set the Webhook URL to e.g. http://homeassistant.local:8123/api/webhook/taphome — replace homeassistant.local with your own Home Assistant address and taphome_primary with the name you entered above."
+        },
+        "description": "Update the connection and Core settings of your TapHome Core. A local connection is recommended: only enable \"Use TapHome cloud\" if you can't reach the Core directly on your network — the cloud updates less often (about every 20 seconds) and depends on TapHome's servers being reachable. Find your Core's IP address in the TapHome app under \"My location\".",
+        "submit": "Save"
+      },
+      "zones": {
+        "title": "Zones",
+        "description": "Map TapHome zones to Home Assistant areas. Pick the area for each zone; leave a zone empty to not assign an area.",
+        "submit": "Save"
+      },
+      "labels": {
+        "title": "Labels",
+        "description": "Map TapHome categories to Home Assistant labels. Pick the label for each category; leave a category empty to not assign a label.",
+        "submit": "Save"
+      },
+      "add_devices": {
+        "title": "Add devices",
+        "description": "Pick the TapHome devices you want to add. Type in the field to search. Devices that are not added yet show their TapHome zone and category, added devices show their room.",
+        "data": {
+          "devices": "Devices",
+          "clear_selection": "Deselect all"
+        },
+        "data_description": {
+          "clear_selection": "Turn on and press Next to clear the whole selection, then pick only the devices you want."
+        }
+      },
+      "add_devices_platform": {
+        "title": "Select domains",
+        "description": "For each device, choose the Home Assistant domains to expose it as. You can pick several domains per device, or none to skip the device. Only domains compatible with the device are offered."
+      },
+      "add_devices_options": {
+        "title": "Device options",
+        "description": "Set the options for each selected device and domain. Each section is one device on one domain. Empty fields use automatic defaults. Sensor and binary-sensor types are detected automatically; their options are collapsed — expand a section only to override them.",
+        "submit": "Add"
+      },
+      "edit_devices": {
+        "title": "Edit devices",
+        "description": "Pick the devices you want to edit. Type in the field to search.",
+        "data": {
+          "devices": "Devices"
+        }
+      },
+      "edit_devices_form": {
+        "title": "Device options",
+        "description": "Set the options for each selected device. Each section is one device. Empty fields use automatic defaults. Sensor and binary-sensor types are detected automatically; their options are collapsed — expand a section only to override them.",
+        "data": {
+          "effect_id": "Effects multi value switch",
+          "device_class": "Device class",
+          "actions": "Actions",
+          "close_threshold": "Close threshold (%)",
+          "range_high_thermostat_id": "Range high thermostat",
+          "range_low_thermostat_id": "Range low thermostat",
+          "target_temperature_step": "Target temperature step",
+          "precision": "Temperature precision",
+          "hvac_switch_id": "HVAC switch",
+          "hvac_mode": "Fixed HVAC mode",
+          "hvac_mode_id": "HVAC mode multi value switch",
+          "hvac_action_id": "HVAC action multi value switch",
+          "preset_mode_id": "Preset modes multi value switch",
+          "fan_mode_id": "Fan modes multi value switch",
+          "swing_mode_id": "Swing modes multi value switch",
+          "swing_horizontal_mode_id": "Horizontal swing modes multi value switch",
+          "target_humidity_id": "Target humidity analog output",
+          "min_humidity": "Minimum humidity (%)",
+          "max_humidity": "Maximum humidity (%)",
+          "switch_id": "On/off switch",
+          "action_id": "Action multi value switch",
+          "mode_id": "Modes multi value switch",
+          "humidity_sensor_id": "Humidity sensor",
+          "value_type": "Value type",
+          "unit_of_measurement": "Unit of measurement",
+          "state_class": "State class"
+        },
+        "submit": "Save"
+      },
+      "remove_devices": {
+        "title": "Remove devices",
+        "description": "Pick the devices you want to remove. Their entities will be removed from Home Assistant. Type in the field to search.",
+        "data": {
+          "devices": "Devices"
+        },
+        "submit": "Remove"
+      }
+    },
+    "error": {
+      "invalid_device_id": "Invalid device ID.",
+      "cannot_connect": "Failed to connect to the TapHome Core.",
+      "invalid_auth": "The TapHome Core rejected the token.",
+      "ip_required": "Fill in the IP address of your Core, or enable the TapHome cloud.",
+      "unique_id_mismatch": "The connected Core does not match the Core this entry was created for.",
+      "no_devices_selected": "Select at least one device.",
+      "no_common_platform": "The selected devices cannot be exposed as any domain.",
+      "invalid_device": "Select a device from the list."
+    },
+    "abort": {
+      "entry_not_loaded": "The TapHome Core is not loaded. Fix the connection first.",
+      "no_devices_configured": "No devices are configured yet. Use Add devices first."
+    }
+  },
+  "selector": {
+    "platform": {
+      "options": {
+        "lights": "Light",
+        "buttons": "Button / Event",
+        "covers": "Cover",
+        "climates": "Climate",
+        "fans": "Fan",
+        "humidifiers": "Humidifier",
+        "multivalue_switches": "Select",
+        "switches": "Switch",
+        "sensors": "Sensor",
+        "binary_sensors": "Binary sensor",
+        "valves": "Valve",
+        "times": "Time"
+      }
+    }
+  },
   "issues": {
     "device_not_exposed": {
-      "title": "Device {device_id} not exposed for core{core_id}",
-      "description": "Device {device_id} configured for core{core_id} is not exposed in the TapHome API. Please check your TapHome setup."
+      "title": "Device {device_id} not exposed for Core{core_id}",
+      "description": "Device {device_id} configured for Core{core_id} is not exposed in the TapHome API. Please check your TapHome setup."
     },
     "core_unavailable": {
-      "title": "Connection to TapHome core{core_id} failed",
-      "description": "Home Assistant cannot communicate with the TapHome core{core_id}."
-    },
-    "ip_and_api_url_set": {
-      "title": "Both api_url and ip set for core{core_id}",
-      "description": "Both api_url and ip are configured for core{core_id}. api_url will be used."
+      "title": "Connection to TapHome Core{core_id} failed",
+      "description": "Home Assistant cannot communicate with the TapHome Core{core_id}."
     },
     "device_type_mismatch": {
-      "title": "Unsupported type for device {device_id} in core{core_id}",
+      "title": "Unsupported type for device {device_id} in Core{core_id}",
       "description": "Device {device_id} is type {device_type} with supported values [{supported_values}] but expected: {expected}. Please check your TapHome setup."
+    },
+    "yaml_deprecated": {
+      "title": "TapHome YAML configuration is deprecated",
+      "description": "Your TapHome YAML configuration has been imported and the integration is now managed in the UI (Settings → Devices & services). Remove the taphome section from configuration.yaml — changes made there are no longer applied."
+    },
+    "new_device": {
+      "title": "New TapHome device found: {device}",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "Add TapHome device",
+            "description": "Device {device} is exposed in the TapHome API but not used in Home Assistant yet. Choose the domain to add it as, or turn on Ignore to stop being notified about this device.",
+            "data": {
+              "platform": "Add as",
+              "ignore": "Ignore this device"
+            }
+          },
+          "options": {
+            "title": "Device options",
+            "description": "Set the options for {device}. Empty fields use automatic defaults.",
+            "submit": "Add",
+            "data": {
+              "effect_id": "Effects multi value switch",
+              "device_class": "Device class",
+              "actions": "Actions",
+              "close_threshold": "Close threshold (%)",
+              "range_high_thermostat_id": "Range high thermostat",
+              "range_low_thermostat_id": "Range low thermostat",
+              "target_temperature_step": "Target temperature step",
+              "precision": "Temperature precision",
+              "hvac_switch_id": "HVAC switch",
+              "hvac_mode": "Fixed HVAC mode",
+              "hvac_mode_id": "HVAC mode multi value switch",
+              "hvac_action_id": "HVAC action multi value switch",
+              "preset_mode_id": "Preset modes multi value switch",
+              "fan_mode_id": "Fan modes multi value switch",
+              "swing_mode_id": "Swing modes multi value switch",
+              "swing_horizontal_mode_id": "Horizontal swing modes multi value switch",
+              "target_humidity_id": "Target humidity analog output",
+              "min_humidity": "Minimum humidity (%)",
+              "max_humidity": "Maximum humidity (%)",
+              "switch_id": "On/off switch",
+              "action_id": "Action multi value switch",
+              "mode_id": "Modes multi value switch",
+              "humidity_sensor_id": "Humidity sensor",
+              "value_type": "Value type",
+              "unit_of_measurement": "Unit of measurement",
+              "state_class": "State class"
+            }
+          }
+        },
+        "error": {
+          "select_platform_or_ignore": "Choose a domain to add the device as, or turn on Ignore.",
+          "invalid_device_id": "Invalid device ID."
+        },
+        "abort": {
+          "entry_not_loaded": "The TapHome Core is not loaded. Fix the connection first.",
+          "device_gone": "The device is no longer exposed in the TapHome API."
+        }
+      }
     }
   }
 }

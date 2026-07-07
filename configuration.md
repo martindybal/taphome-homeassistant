@@ -8,12 +8,28 @@ _Settings → Expose devices → TapHome API_.
 
 Then choose the devices that you want to expose to Home Assistant using the _Add device_ option.
 
-Every exposed device has a numeric id, you have to take these ids, the authorization token at top of the screen and insert in Home Assistant integration configuration file as show below. **Do not share your token anywhere!**.
+Take the authorization token at the top of the screen — you will enter it when adding the integration. **Do not share your token anywhere!**
 
 ### Local access
-The prefered way is local access with webhook (local_push). You have to provide `api_url` in your config. Format is _http://{Your_Core_IP}/api/cloudapi/v1_. Make sure that your core Ip address'll not change in the future.
+The preferred way is local access with webhook (local_push). Provide the IP address of your core when adding the integration and make sure that your core IP address will not change in the future.
 
-## YAML Configuration
+## Configuration via UI (recommended)
+
+1. In Home Assistant go to _Settings → Devices & services → Add integration_ and search for **TapHome**.
+2. Enter the authorization token and the IP address of your core (or enable **Use TapHome cloud** to connect through the TapHome cloud instead). The webhook and other core settings can be filled in here too. Each TapHome core is added as a separate integration entry.
+3. Open the integration entry and press **Configure** to manage everything else:
+   - **Core settings** – the same connection, webhook, description and exposed-attribute fields as when adding the core.
+   - **Zones (areas)** – rename TapHome zones to Home Assistant areas or ignore them.
+   - **Labels (categories)** – rename TapHome categories to Home Assistant labels or ignore them.
+   - **Add devices** – pick the devices exposed on the core (searchable, with each device's room/zone shown) and then the platform (lights, covers, climates, …) they should be added as.
+   - **Edit devices** – pick a configured device (searchable) and adjust the advanced per-device options (device class, effects, climate controller ids, …) matching the tables below.
+   - **Remove devices** – pick the devices whose entities should be removed from Home Assistant.
+
+The connection settings (token, IP address / cloud) can also be changed later via **Core settings** or the entry's **Reconfigure** action. When the core rejects the token, Home Assistant automatically starts a re-authentication flow.
+
+## YAML Configuration (deprecated)
+
+**YAML configuration is deprecated.** An existing `taphome:` section in `configuration.yaml` is imported into the UI automatically on startup — entities keep their unique IDs and history. After the import, remove the `taphome:` section; changes made in YAML are no longer applied. The tables below still document all options, which are all available in the UI as well.
 
 The integration is configured in `configuration.yaml`. Each TapHome core is defined under `taphome.cores`. Every core requires an authentication token and at least one platform configuration.
 

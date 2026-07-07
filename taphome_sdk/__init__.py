@@ -38,7 +38,7 @@ from .helpers import (
 )
 from .observable import Event, ObservableValue
 from .operation_mode import OperationMode
-from .taphome_api import ApiConnectionType
+from .taphome_api import ApiConnectionType, Location, TapHomeApi, TapHomeAuthError
 from .taphome_hub import (
     DeviceNotExposedError,
     DeviceTypeError,

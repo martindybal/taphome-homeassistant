@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import datetime
 
 from homeassistant.components.binary_sensor import (
@@ -10,17 +10,16 @@ from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
-from homeassistant.const import CONF_BINARY_SENSORS
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .add_entry_request import add_taphome_entities
-from .const import TAPHOME_PLATFORM
 from .taphome_config_entry import (
     AddEntryRequest,
     TapHomeCoreConfig,
     TapHomeEntityConfig,
 )
+from .taphome_data import TapHomeConfigEntry
 from .taphome_entity import TapHomeEntity
 from .taphome_sdk import Device, DeviceState, HubConnectionState, TapHomeHub, ValueType
 from .taphome_sdk.taphome_api import ApiConnectionType
@@ -201,7 +200,11 @@ class TapHomeBinarySensorFactory:
             for sensor_type in supported_sensor_types:
                 if _device.supports_value(sensor_type.value_type):
                     if self.config.entity.device_class is not None:
-                        sensor_type.device_class = self.config.entity.device_class
+                        # Copy instead of mutating the shared module constant.
+                        sensor_type = replace(
+                            sensor_type,
+                            device_class=self.config.entity.device_class,
+                        )
 
                     binary_sensor = TapHomeBinarySensor(
                         self.config,
@@ -211,28 +214,24 @@ class TapHomeBinarySensorFactory:
         return binary_sensors
 
 
-def setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    _config,
-    add_entities: AddEntitiesCallback,
-    _discovery_info=None,
+    entry: TapHomeConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up the binary sensor platform."""
+    """Set up TapHome binary sensors from a config entry."""
     binary_sensors: list[BinarySensorEntity] = []
 
     add_taphome_entities(
-        hass,
+        entry,
         binary_sensors.extend,
-        CONF_BINARY_SENSORS,
+        BINARY_SENSOR_DOMAIN,
         lambda config: TapHomeBinarySensorFactory(config).create_entities(),
     )
 
-    cores = {}
-    for domain in hass.data[TAPHOME_PLATFORM]:
-        for add_entry_request in hass.data[TAPHOME_PLATFORM][domain]:
-            cores[add_entry_request.core] = add_entry_request.hub
+    runtime_data = entry.runtime_data
+    binary_sensors.append(
+        TapHomeIsAliveSensor(runtime_data.core_config, runtime_data.hub)
+    )
 
-    for core_config, hub in cores.items():
-        binary_sensors.append(TapHomeIsAliveSensor(core_config, hub))
-
-    add_entities(binary_sensors)
+    async_add_entities(binary_sensors)

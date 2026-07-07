@@ -8,5 +8,6 @@ class Issues(StrEnum):
 
     DEVICE_NOT_EXPOSED = "device_not_exposed"
     CORE_UNAVAILABLE = "core_unavailable"
-    IP_AND_API_URL_SET = "ip_and_api_url_set"
     DEVICE_TYPE_MISMATCH = "device_type_mismatch"
+    YAML_DEPRECATED = "yaml_deprecated"
+    NEW_DEVICE = "new_device"
