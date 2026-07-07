@@ -131,7 +131,7 @@ class TapHomeEntity(Entity):
 
     @cached_property
     def should_poll(self) -> bool:
-        """No need to poll. Coordinator notifies entity of updates."""
+        """No need to poll. The hub pushes state updates to the entity."""
         return False
 
     def schedule_update_ha_state(self, force_refresh: bool = False) -> None:

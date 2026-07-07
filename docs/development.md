@@ -34,13 +34,12 @@ Same checks as CI (`.github/workflows/ci.yaml`):
 
 ```bash
 python -m venv .venv && source .venv/bin/activate
-pip install homeassistant ruff pylint pytest-homeassistant-custom-component \
-    "taphome-sdk @ git+https://github.com/martindybal/taphome-sdk.git@main"
+pip install homeassistant ruff pylint pytest-homeassistant-custom-component taphome-sdk
 
 python -m compileall -q .
 ruff check .
 pylint . --fail-under=9.5
-python -m pytest tests
+pytest tests  # the pytest script, not python -m: repo root on sys.path would shadow stdlib select/time
 ```
 
 The pytest suite in `tests/` covers the config flow (setup wizard, reauth,
@@ -60,6 +59,6 @@ testing against a running Home Assistant.
 See the [taphome-sdk README](https://github.com/martindybal/taphome-sdk#releasing):
 bump the version in `pyproject.toml`, update `CHANGELOG.md` and publish a
 GitHub release with a `v*` tag — the release workflow publishes to PyPI via
-trusted publishing. After the first release, add
-`"requirements": ["taphome-sdk==<version>"]` to `manifest.json` so production
-installs pull the SDK from PyPI.
+trusted publishing. After each release, bump
+`"requirements": ["taphome-sdk==<version>"]` in `manifest.json` so production
+installs pull the new SDK from PyPI.
