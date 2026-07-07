@@ -562,16 +562,11 @@ class _TapHomeSetupFlow:
         cleared = bool(user_input and user_input.get("clear_selection"))
 
         if user_input is not None and not cleared:
-            try:
-                device_ids = [int(value) for value in user_input.get("devices", [])]
-            except ValueError:
-                device_ids = []
-                errors["base"] = "invalid_device"
-            if not errors and not device_ids:
+            # The selector limits the values to the known device ids.
+            device_ids = [int(value) for value in user_input.get("devices", [])]
+            if not device_ids:
                 errors["base"] = "no_devices_selected"
-            if not errors and not self._platforms_for_devices(device_ids):
-                errors["base"] = "no_common_platform"
-            if not errors:
+            else:
                 self._pending_device_ids = device_ids
                 return await self.async_step_add_devices_platform()
 
@@ -695,15 +690,13 @@ class _TapHomeSetupFlow:
         suggested_values: dict[str, Any] = {}
         for device_id, config_key in pairs_with_options:
             descriptor = PLATFORM_DESCRIPTORS_BY_KEY[config_key]
-            field_schema, field_suggested = self._build_device_options_schema(
+            field_schema, _ = self._build_device_options_schema(
                 descriptor, {"id": device_id}
             )
             section_key = self._pair_section_key(device_id, config_key)
             schema_dict[vol.Optional(section_key)] = section(
                 field_schema, {"collapsed": descriptor.advanced}
             )
-            if field_suggested:
-                suggested_values[section_key] = field_suggested
 
         if user_input is not None:
             suggested_values = user_input
@@ -758,10 +751,9 @@ class _TapHomeSetupFlow:
         errors: dict[str, str] = {}
         if user_input is not None:
             entity_ids = user_input.get("devices", [])
+            # The selector limits the values to this entry's entities.
             if not entity_ids:
                 errors["base"] = "no_devices_selected"
-            elif not all(entity_id in entity_map for entity_id in entity_ids):
-                errors["base"] = "invalid_device"
             else:
                 self._edit_selection = list(
                     dict.fromkeys(entity_map[entity_id] for entity_id in entity_ids)
@@ -795,10 +787,9 @@ class _TapHomeSetupFlow:
         errors: dict[str, str] = {}
         if user_input is not None:
             entity_ids = user_input.get("devices", [])
+            # The selector limits the values to this entry's entities.
             if not entity_ids:
                 errors["base"] = "no_devices_selected"
-            elif not all(entity_id in entity_map for entity_id in entity_ids):
-                errors["base"] = "invalid_device"
             else:
                 self._remove_devices(
                     list(
@@ -968,21 +959,6 @@ class _TapHomeSetupFlow:
             if not devices:
                 self._options.pop(config_key, None)
 
-    def _platforms_for_devices(self, device_ids: list[int]) -> list[str]:
-        """Return the platforms at least one of the given devices qualifies for."""
-        devices = [
-            device
-            for device_id in device_ids
-            if (device := self._devices.get(device_id)) is not None
-        ]
-        if not devices:
-            return []
-        return [
-            descriptor.config_key
-            for descriptor in PLATFORM_DESCRIPTORS
-            if any(_device_qualifies(device, descriptor) for device in devices)
-        ]
-
     def _platforms_for_device(self, device_id: int) -> list[str]:
         """Return the platforms a single device qualifies for."""
         device = self._devices.get(device_id)
@@ -1111,10 +1087,6 @@ class _TapHomeSetupFlow:
         return build_device_options_schema(
             descriptor, device_config, self._devices, self._device_label
         )
-
-    def _build_field_selector(self, option_field: OptionField) -> Any:
-        """Build the selector for one per-device option field."""
-        return build_field_selector(option_field, self._devices, self._device_label)
 
     def _apply_device_options(
         self,

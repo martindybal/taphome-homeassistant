@@ -5,7 +5,11 @@ from typing import Any
 
 from taphome_sdk import Device, DeviceState, Event, HubConnectionState
 
-from homeassistant.helpers import entity_registry as er, label_registry as lr
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_registry as er,
+    label_registry as lr,
+)
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity, cached_property
 
@@ -76,7 +80,7 @@ class TapHomeEntity(TapHomeSubscriptionMixin, Entity):
             name=taphome_device.name,
             manufacturer="TapHome",
             model=taphome_device.device_type,
-            suggested_area=self._suggested_area(),
+            suggested_area=self._zone,
             via_device=(DOMAIN, location_id),
         )
 
@@ -102,44 +106,38 @@ class TapHomeEntity(TapHomeSubscriptionMixin, Entity):
         )
 
     async def async_added_to_hass(self) -> None:
-        """Subscribe to the SDK events and apply the label mapping."""
+        """Subscribe to the SDK events and apply the zone/label mappings."""
         await super().async_added_to_hass()
-        await self._async_set_label()
+        self._apply_zone_mapping()
+        self._apply_label_mapping()
 
-    def _suggested_area(self) -> str | None:
-        """Return the area suggested by the TapHome zone, if any."""
+    def _apply_zone_mapping(self) -> None:
+        """Move the device to the area its TapHome zone is mapped to."""
         mapping = self._core_config.zone_mapping
-        if self._zone is None:
-            return None
-        if mapping is None:
-            return self._zone
-        if mapping.is_ignored(self._zone):
-            return None
-        return mapping.map(self._zone)
+        if mapping is None or self._zone is None:
+            return
+        area_id = mapping.get(self._zone)
+        if area_id is None:
+            return
+        device_registry = dr.async_get(self.hass)
+        device = device_registry.async_get_device(self._attr_device_info["identifiers"])
+        if device is not None and device.area_id != area_id:
+            device_registry.async_update_device(device.id, area_id=area_id)
 
-    async def _async_set_label(self) -> None:
+    def _apply_label_mapping(self) -> None:
+        """Add the label its TapHome category is mapped to."""
         mapping = self._core_config.label_mapping
-        if (
-            mapping is None
-            or self._category is None
-            or mapping.is_ignored(self._category)
-        ):
+        if mapping is None or self._category is None:
             return
-
-        label_name = mapping.map(self._category)
-        label_registry = lr.async_get(self.hass)
+        label_id = mapping.get(self._category)
+        if label_id is None:
+            return
         entity_registry = er.async_get(self.hass)
-
         entry = entity_registry.async_get(self.entity_id)
-        if entry is None:
+        if entry is None or lr.async_get(self.hass).async_get_label(label_id) is None:
             return
-
-        label = label_registry.async_get_label_by_name(label_name)
-        if label is None:
-            label = label_registry.async_create(label_name)
-
         entity_registry.async_update_entity(
-            self.entity_id, labels=entry.labels | {label.label_id}
+            self.entity_id, labels=entry.labels | {label_id}
         )
 
     @cached_property

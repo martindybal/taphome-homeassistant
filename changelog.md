@@ -2,6 +2,8 @@
 
 ## 2026.7
 
+- **Devices and Home Assistant naming**: every TapHome device is now a device in the Home Assistant device registry (with the Core as its hub); entities take the device name and the TapHome zone pre-fills the suggested area. The `use description as entity id/name` options were removed — rename entities and devices in the Home Assistant UI. Entity unique ids (and therefore history and automations) are unchanged; displayed names may regenerate unless you renamed them earlier.
+
 - **Test suite**: the integration now has automated tests (config flow wizard, options flow, reauth/reconfigure, entry setup/unload, webhook push, YAML import, light/switch/sensor/cover/climate/select platforms) running in CI.
 - **Documentation rewritten for the UI era**: the YAML reference (`configuration.md`) and the YAML config generator were removed; the new [user guide](docs/user-guide.md) documents the setup wizard, the Configure dialog, webhook setup, migration from YAML and troubleshooting.
 
