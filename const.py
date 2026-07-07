@@ -55,6 +55,12 @@ CONF_ENABLED_ATTRIBUTES = "enabled_attributes"
 # data. Devices exposed later that are not in this set are reported as new.
 CONF_KNOWN_DEVICE_IDS = "known_device_ids"
 
+# Each exposed TapHome device is a config subentry of this type. Its ``data``
+# holds the device config dict plus SUBENTRY_DATA_PLATFORM, which names the
+# platform config bucket (a DEVICE_CONFIG_KEYS value) the device is exposed as.
+SUBENTRY_TYPE_DEVICE = "device"
+SUBENTRY_DATA_PLATFORM = "platform"
+
 # Configuration keys holding per-platform device lists
 DEVICE_CONFIG_KEYS = [
     CONF_LIGHTS,
@@ -69,6 +75,7 @@ DEVICE_CONFIG_KEYS = [
     CONF_BINARY_SENSORS,
     CONF_VALVE,
     CONF_TIMES,
+    CONF_NUMBERS,
 ]
 
 DEFAULT_CLOUD_API_URL = "https://api.taphome.com/api/TapHomeApi/v1"

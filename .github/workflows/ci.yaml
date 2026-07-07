@@ -8,7 +8,7 @@ jobs:
     steps:
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.12"
+          python-version: "3.14"
       - run: python -m venv .venv
       - run: .venv/bin/pip install --upgrade pip
       - run: .venv/bin/pip install homeassistant

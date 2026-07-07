@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass
 from enum import Enum
 
@@ -303,9 +304,13 @@ PLATFORM_DESCRIPTORS_BY_KEY: dict[str, PlatformDescriptor] = {
 }
 
 
-def device_config_id(device_config: dict | int) -> int:
-    """Return the TapHome device id of a stored device configuration."""
-    if isinstance(device_config, dict):
+def device_config_id(device_config: Mapping | int) -> int:
+    """Return the TapHome device id of a stored device configuration.
+
+    Accepts a mapping (dict or a subentry's ``mappingproxy`` ``data``) or a bare
+    device id (legacy YAML ``switches: [2]``).
+    """
+    if isinstance(device_config, Mapping):
         return int(device_config["id"])
     return int(device_config)
 

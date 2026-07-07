@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from copy import deepcopy
 from typing import Any
 
 import voluptuous as vol
@@ -24,6 +23,11 @@ from .platform_descriptors import (
     PLATFORM_DESCRIPTORS_BY_KEY,
     device_config_id,
     platforms_for_device,
+)
+from .subentry import (
+    build_device_subentry,
+    device_subentry_unique_id,
+    iter_device_subentries,
 )
 
 
@@ -153,14 +157,21 @@ class NewDeviceRepairFlow(RepairsFlow):
     def _add_device(
         self, entry: ConfigEntry, platform: str, device_config: dict
     ) -> None:
-        """Add the device to the chosen platform and mark it as known."""
-        options = deepcopy(dict(entry.options))
-        devices = list(options.get(platform) or [])
-        if self._device_id not in {device_config_id(dc) for dc in devices}:
-            devices.append(device_config)
-        options[platform] = devices
+        """Add the device as a subentry and mark it as known."""
+        device_id = device_config_id(device_config)
+        unique_id = device_subentry_unique_id(platform, device_id)
+        if all(
+            subentry.unique_id != unique_id
+            for subentry in iter_device_subentries(entry)
+        ):
+            self.hass.config_entries.async_add_subentry(
+                entry,
+                build_device_subentry(
+                    platform, device_config, self._device_label(device_id)
+                ),
+            )
         self.hass.config_entries.async_update_entry(
-            entry, data=self._data_with_known(entry), options=options
+            entry, data=self._data_with_known(entry)
         )
 
     def _data_with_known(self, entry: ConfigEntry) -> dict[str, Any]:

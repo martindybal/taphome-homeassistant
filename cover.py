@@ -15,7 +15,7 @@ from homeassistant.components.cover import (
     CoverEntityFeature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .add_entry_request import add_taphome_entities
 from .entity import TapHomeEntity
@@ -138,7 +138,7 @@ class TapHomeCover(TapHomeEntity, CoverEntity):
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: TapHomeConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up TapHome covers from a config entry."""
     add_taphome_entities(entry, async_add_entities, COVER_DOMAIN, TapHomeCover)

@@ -25,7 +25,7 @@ from homeassistant.components.light import (
     LightEntityFeature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .add_entry_request import add_taphome_entities
 from .entity import TapHomeEntity
@@ -245,7 +245,7 @@ def _create_light_entity(
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: TapHomeConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up TapHome lights from a config entry."""
     add_taphome_entities(entry, async_add_entities, LIGHT_DOMAIN, _create_light_entity)

@@ -28,6 +28,18 @@ async def _start_user_flow(hass: HomeAssistant):
     )
 
 
+def _subentry_configs(result, platform: str) -> list[dict]:
+    """Return the device configs of one platform from a flow result."""
+    from custom_components.taphome.const import SUBENTRY_DATA_PLATFORM
+
+    configs: list[dict] = []
+    for subentry in result.get("subentries") or ():
+        data = dict(subentry["data"])
+        if data.pop(SUBENTRY_DATA_PLATFORM, None) == platform:
+            configs.append(data)
+    return configs
+
+
 async def test_user_flow_creates_entry(hass: HomeAssistant, mock_hub) -> None:
     """The full setup wizard adds a device and creates the entry."""
     result = await _start_user_flow(hass)
@@ -62,7 +74,7 @@ async def test_user_flow_creates_entry(hass: HomeAssistant, mock_hub) -> None:
     assert result["title"] == TEST_LOCATION_NAME
     assert result["data"][CONF_TOKEN] == TEST_TOKEN
     assert result["data"][CONF_API_URL] == TEST_API_URL
-    assert result["options"]["switches"] == [{"id": 2}]
+    assert _subentry_configs(result, "switches") == [{"id": 2}]
     assert result["result"].unique_id == TEST_LOCATION_ID
 
 
@@ -238,7 +250,7 @@ async def test_user_flow_with_zones_and_labels(hass: HomeAssistant, mock_hub) ->
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["options"]["zones"] == {"Garden": area.id}
     assert result["options"]["labels"] == {"Lights": label.label_id}
-    assert result["options"]["switches"] == [{"id": 9}]
+    assert _subentry_configs(result, "switches") == [{"id": 9}]
 
 
 async def test_user_flow_without_devices_creates_entry(
@@ -306,7 +318,7 @@ async def test_add_devices_without_platforms_creates_entry(
     await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert "switches" not in result["options"]
+    assert _subentry_configs(result, "switches") == []
 
 
 async def test_add_device_without_options_skips_options_step(
@@ -326,7 +338,7 @@ async def test_add_device_without_options_skips_options_step(
     await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["options"]["multivalue_switches"] == [{"id": 6}]
+    assert _subentry_configs(result, "multivalue_switches") == [{"id": 6}]
 
 
 async def test_add_device_options_validation(hass: HomeAssistant, mock_hub) -> None:
@@ -355,7 +367,7 @@ async def test_add_device_options_validation(hass: HomeAssistant, mock_hub) -> N
     await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["options"]["lights"] == [{"id": 1, "effect_id": 6}]
+    assert _subentry_configs(result, "lights") == [{"id": 1, "effect_id": 6}]
 
 
 async def test_reauth_flow_errors(hass: HomeAssistant, mock_hub) -> None:
@@ -458,17 +470,9 @@ async def test_flow_helpers_handle_unknown_devices(hass: HomeAssistant) -> None:
     from custom_components.taphome.config_flow import TapHomeConfigFlow
 
     flow = TapHomeConfigFlow()
-    flow._options = {"switches": [{"id": 2}]}
-    flow._edit_selection = ["switches:5"]
 
     assert flow._platforms_for_device(99) == []
     assert flow._device_label(99) == "Unknown device (99)"
-    assert flow._resolve_edit_selection() == []
-
-    # An empty resolved selection aborts the edit form.
-    flow.hass = hass
-    flow.flow_id = "test-flow"
-    flow.handler = DOMAIN
-    result = await flow.async_step_edit_devices_form()
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "no_devices_configured"
+    # The setup wizard has no configured subentries to read.
+    assert flow._device_subentries() == []
+    assert flow._configured_device_ids() == set()

@@ -1,0 +1,26 @@
+# Tooling configuration only (this repo is a HACS integration package, not a
+# distributable Python project, so there is no [build-system]/[project]).
+
+[tool.pylint.MAIN]
+py-version = "3.14"
+
+[tool.pylint."MESSAGES CONTROL"]
+# Home Assistant entity/flow base classes and callback signatures trip these
+# checks the same way they do in Home Assistant core, which disables the same
+# set. ``wrong-import-order`` additionally misfires because ``taphome_sdk`` has a
+# namespace-stub folder in the repo, so pylint treats it as first-party.
+disable = [
+  "abstract-method",
+  "duplicate-code",
+  "import-outside-toplevel",
+  "too-few-public-methods",
+  "too-many-arguments",
+  "too-many-branches",
+  "too-many-instance-attributes",
+  "too-many-lines",
+  "too-many-locals",
+  "too-many-positional-arguments",
+  "too-many-statements",
+  "unused-argument",
+  "wrong-import-order",
+]

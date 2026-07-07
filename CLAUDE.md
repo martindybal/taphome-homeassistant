@@ -8,7 +8,8 @@ A [HACS](https://hacs.xyz/) custom integration that connects [TapHome](https://t
 
 ## Commands
 
-CI (`.github/workflows/ci.yaml`, Python 3.12) runs these checks — run them locally before pushing:
+CI (`.github/workflows/ci.yaml`, Python 3.14 — current Home Assistant requires
+`>=3.14.2`) runs these checks — run them locally before pushing:
 
 ```bash
 python -m venv .venv && source .venv/bin/activate
@@ -16,9 +17,15 @@ pip install homeassistant ruff pylint pytest-homeassistant-custom-component taph
 
 python -m compileall -q .                                          # compile check
 ruff check .                                                       # lint
-pylint . --fail-under=9.5                                          # lint, min score 9.5
+pylint . --fail-under=9.5                                          # lint, min score 9.5 (config in pyproject.toml)
 pytest tests                                                       # integration tests (use the pytest script, not python -m: the repo root on sys.path would shadow stdlib select/time)
 ```
+
+Home Assistant can only be imported on Linux (it uses `fcntl`/`resource` and a
+socket event-loop self-pipe), so the suite does not run on native Windows — use
+a Linux box, WSL, or a `python:3.14` container (mount the repo and its
+`../taphome-sdk` sibling). `pyproject.toml` holds only the pylint config
+(disables the HA-inherent false positives; the repo is not a pip package).
 
 Tests live in `tests/` (pytest-homeassistant-custom-component). `tests/tests_common.py` maps the repo root to `custom_components.taphome`, builds SDK devices from API-shaped fixture dicts and fakes the TapHome HTTP API in memory (`FakeTapHomeApi`); `conftest.py` provides `mock_hub` (patches `TapHomeHubFactory.async_connect` + `TapHomeApi.async_get_location`) and `mock_config_entry`. `pytest.ini` sits in `tests/` on purpose — the repo root is a package and must not become pytest's rootdir.
 
@@ -64,6 +71,14 @@ Two layers:
 3. Requests are grouped by a `DomainDefinition` list (one per HA platform; note `button` and `event` share the `buttons` config key), stashed in `hass.data["taphome"][config_key]`, then `load_platform` triggers each platform file.
 4. Each platform's `setup_platform` calls `add_taphome_entities(...)` (`add_entry_request.py`) with a factory that resolves the SDK device via `hub.get_typed_device` and picks the entity class by device type (see `light.py:_create_light_entity` for the canonical pattern).
 
+### Per-device config: config subentries
+
+Each exposed device is a **config subentry** (`subentry_type="device"`, constants in `const.py`); its `data` is the device-config dict plus a `SUBENTRY_DATA_PLATFORM` (`"platform"`) key naming the platform bucket (a former `options[<config_key>]` value, e.g. `switches`). Core-level config (zones, labels, webhook, enabled attributes) stays in `entry.options`. **`subentry.py` is the single source of truth for the subentry shape** — its unique-id format (`"{platform}:{id}"`), construction (`build_device_subentry[_data]`), iteration (`iter_device_subentries`) and extraction (`subentry_platform`, `device_config_from_subentry`) helpers are reused by every consumer; do not hand-build subentry dicts elsewhere.
+
+- `__init__.py:_map_subentry_requests` builds `add_entry_requests[domain] = [(subentry_id, AddEntryRequest), …]` from `entry.subentries`; `add_taphome_entities` adds each batch with `config_subentry_id=` so entities **and** their device belong to the subentry (that is what makes Edit/Delete appear on the device page).
+- Add/edit/remove of a single device is the `TapHomeDeviceSubentryFlowHandler` (`config_flow.py`, registered via `async_get_supported_subentry_types`); the setup wizard and the options **Add devices** step create subentries in bulk (`async_create_entry(subentries=…)` / `async_update_entry(subentries=…)`). Every subentry mutation fires the entry's update listener → automatic reload. The options flow has **no** Edit/Remove-devices steps.
+- `async_migrate_entry` (`MINOR_VERSION` 2) converts pre-subentry entries: it moves each `options[<config_key>]` device into a subentry and re-homes the existing entity (`config_subentry_id`, unchanged unique id → history preserved) and device (`add_config_subentry_id`).
+
 ### Entity layer
 
 - `taphome_entity.py:TapHomeEntity` is the base for all entities: builds `unique_id`, applies zone→area and category→label mappings via HA registries, exposes `taphome_*` extra state attributes (filterable via `enabled_attributes` config), and subscribes to `hub.connection_state` (drives `available`) and `device.state.changed` (drives state + `schedule_update_ha_state`).
@@ -85,17 +100,24 @@ be mirrored there. Intentional differences of the Core copy (do NOT port back):
 
 - no YAML support (`CONFIG_SCHEMA`, `async_setup` import shim, `async_step_import`,
   `resolve_api_url`, `_normalize_device_config`, `_yaml_core_to_options`,
-  YAML fallback unique ids, per-device `unique_id` option, `translations.py`
-  `YAML_DEPRECATED`),
+  `_yaml_device_subentries`, YAML fallback unique ids, per-device `unique_id`
+  option, `translations.py` `YAML_DEPRECATED`),
 - no `sdk_locator.py` (Core installs `taphome-sdk` from PyPI only),
 - no `from __future__ import annotations` (banned in Core; this repo needs it
   on Python < 3.14),
 - Core `manifest.json` (no `version`, has `quality_scale`), `strings.json`
   instead of `translations/*.json`, `quality_scale.yaml`,
+- no `pyproject.toml` (Core uses its own pylint config),
 - tests live in `tests/components/taphome` with `tests.common.MockConfigEntry`
   and helpers in the test package `__init__.py`,
 - the Core copy carries `@override` decorators and identity (`is`) enum
   comparisons required by Core's mypy configuration.
+
+`diagnostics.py` (config-entry + per-device diagnostics, token redacted),
+`entity.py:hub_device_id` (shared Core-hub identifier), the hub device's
+`configuration_url` (the Core's local `/localapilog` page, local API only) and
+`async_remove_config_entry_device` (removes a device the Core no longer exposes)
+are portable and should be mirrored to Core.
 
 ## Conventions
 

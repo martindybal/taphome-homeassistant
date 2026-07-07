@@ -1,13 +1,18 @@
-"""Tests for the TapHome options flow (the Configure dialog)."""
+"""Tests for the TapHome Configure dialog and device subentry flow."""
 
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_TOKEN, CONF_WEBHOOK_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from pytest_homeassistant_custom_component.common import MockConfigEntry
-
 from custom_components.taphome.const import CONF_IP
-from tests_common import TEST_TOKEN, make_config_entry, setup_integration
+from tests_common import (
+    TEST_TOKEN,
+    device_subentry,
+    device_subentry_configs,
+    make_config_entry,
+    setup_integration,
+)
 
 
 async def _start_options_flow(hass: HomeAssistant, entry):
@@ -16,17 +21,13 @@ async def _start_options_flow(hass: HomeAssistant, entry):
     return result
 
 
-def _device_ids(hass: HomeAssistant, *entity_ids: str) -> list[str]:
-    """Resolve entity ids to the Home Assistant device ids edit/remove expect."""
-    from homeassistant.helpers import entity_registry as er
-
-    registry = er.async_get(hass)
-    device_ids: list[str] = []
-    for entity_id in entity_ids:
-        entry = registry.async_get(entity_id)
-        assert entry is not None and entry.device_id is not None
-        device_ids.append(entry.device_id)
-    return device_ids
+async def _reconfigure(hass: HomeAssistant, entry, platform: str, device_id: int):
+    """Open the reconfigure flow of one device subentry."""
+    subentry = device_subentry(entry, platform, device_id)
+    assert subentry is not None
+    result = await entry.start_subentry_reconfigure_flow(hass, subentry.subentry_id)
+    assert result["step_id"] == "reconfigure"
+    return result
 
 
 async def test_options_menu_requires_loaded_entry(
@@ -71,7 +72,7 @@ async def test_options_core_settings_updates_webhook(
 
 
 async def test_options_add_device(hass: HomeAssistant, mock_hub) -> None:
-    """A not yet configured device can be added from the options menu."""
+    """The bulk Add devices step stores each picked device as a subentry."""
     entry = make_config_entry({"switches": []})
     await setup_integration(hass, entry)
 
@@ -95,7 +96,7 @@ async def test_options_add_device(hass: HomeAssistant, mock_hub) -> None:
     await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert entry.options["switches"] == [{"id": 2}]
+    assert device_subentry(entry, "switches", 2) is not None
     assert hass.states.get("switch.garden_socket") is not None
 
 
@@ -139,52 +140,49 @@ async def test_add_devices_skips_helper_referenced_device(
     assert "2" in options
 
 
-async def test_options_remove_device(hass: HomeAssistant, mock_hub) -> None:
-    """Removing a configured device drops its options and its entity."""
+async def test_subentry_add_single_device(hass: HomeAssistant, mock_hub) -> None:
+    """The device subentry flow adds one device via device → platform → options."""
+    entry = make_config_entry()
+    await setup_integration(hass, entry)
+
+    result = await hass.config_entries.subentries.async_init(
+        (entry.entry_id, "device"), context={"source": SOURCE_USER}
+    )
+    assert result["step_id"] == "user"
+
+    # Bedroom Blinds (4) is not configured yet; it qualifies for covers plus the
+    # generic sensor/binary-sensor platforms, so the platform step is shown.
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {"device": "4"}
+    )
+    assert result["step_id"] == "platform"
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {"platform": "covers"}
+    )
+    assert result["step_id"] == "configure"
+
+    result = await hass.config_entries.subentries.async_configure(result["flow_id"], {})
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert device_subentry(entry, "covers", 4) is not None
+    assert hass.states.get("cover.bedroom_blinds") is not None
+
+
+async def test_subentry_remove_device(hass: HomeAssistant, mock_hub) -> None:
+    """Removing a device subentry removes its entity from Home Assistant."""
     entry = make_config_entry()
     await setup_integration(hass, entry)
     assert hass.states.get("switch.garden_socket") is not None
 
-    result = await _start_options_flow(hass, entry)
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"], {"next_step_id": "remove_devices"}
-    )
-    assert result["step_id"] == "remove_devices"
-
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"], {"devices": _device_ids(hass, "switch.garden_socket")}
-    )
+    subentry = device_subentry(entry, "switches", 2)
+    assert subentry is not None
+    hass.config_entries.async_remove_subentry(entry, subentry.subentry_id)
     await hass.async_block_till_done()
 
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert not entry.options.get("switches")
+    assert device_subentry(entry, "switches", 2) is None
     assert hass.states.get("switch.garden_socket") is None
-
-
-async def test_options_edit_skips_core_hub_device(
-    hass: HomeAssistant, mock_hub
-) -> None:
-    """The Core hub device is offered by the selector but has no options."""
-    from homeassistant.helpers import device_registry as dr
-
-    from custom_components.taphome.const import DOMAIN
-    from tests_common import TEST_LOCATION_ID
-
-    entry = make_config_entry()
-    await setup_integration(hass, entry)
-
-    hub_device = dr.async_get(hass).async_get_device({(DOMAIN, TEST_LOCATION_ID)})
-    assert hub_device is not None
-
-    result = await _start_options_flow(hass, entry)
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"], {"next_step_id": "edit_devices"}
-    )
-    # Selecting only the hub (no configured entity) is treated as no selection.
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"], {"devices": [hub_device.id]}
-    )
-    assert result["errors"] == {"base": "no_devices_selected"}
 
 
 async def test_options_menu_zones_mapping(hass: HomeAssistant, mock_hub) -> None:
@@ -238,61 +236,37 @@ async def test_options_menu_zones_mapping(hass: HomeAssistant, mock_hub) -> None
     assert "zones" not in entry.options
 
 
-async def test_options_edit_device_field_kinds(hass: HomeAssistant, mock_hub) -> None:
-    """Editing devices converts every option field kind to its stored type."""
+async def test_subentry_reconfigure_field_kinds(
+    hass: HomeAssistant, mock_hub
+) -> None:
+    """Reconfiguring a device converts every option field kind to its type."""
     entry = make_config_entry(
         {"climates": [{"id": 3}], "lights": [{"id": 1, "effect_id": 6}]}
     )
     await setup_integration(hass, entry)
 
-    result = await _start_options_flow(hass, entry)
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"], {"next_step_id": "edit_devices"}
-    )
-    assert result["step_id"] == "edit_devices"
-
-    # Empty and unknown selections are rejected before the form opens.
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"], {"devices": []}
-    )
-    assert result["errors"] == {"base": "no_devices_selected"}
-
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        {
-            "devices": _device_ids(
-                hass, "climate.living_room_thermostat", "light.kitchen_light"
-            )
-        },
-    )
-    assert result["step_id"] == "edit_devices_form"
+    result = await _reconfigure(hass, entry, "climates", 3)
 
     # An invalid device id shows an error and keeps the form open.
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        {
-            "Living Room Thermostat (3) · climates": {"hvac_switch_id": "abc"},
-            "Kitchen Light (1) · lights": {},
-        },
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {"hvac_switch_id": "abc"}
     )
+    assert result["step_id"] == "reconfigure"
     assert result["errors"] == {"base": "invalid_device_id"}
 
-    result = await hass.config_entries.options.async_configure(
+    result = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
         {
-            "Living Room Thermostat (3) · climates": {
-                "hvac_switch_id": "2",
-                "hvac_mode": "heat",
-                "target_temperature_step": 0.5,
-                "min_humidity": 30,
-            },
-            "Kitchen Light (1) · lights": {"effect_id": ""},
+            "hvac_switch_id": "2",
+            "hvac_mode": "heat",
+            "target_temperature_step": 0.5,
+            "min_humidity": 30,
         },
     )
     await hass.async_block_till_done()
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert entry.options["climates"] == [
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert device_subentry_configs(entry, "climates") == [
         {
             "id": 3,
             "hvac_switch_id": 2,
@@ -301,40 +275,38 @@ async def test_options_edit_device_field_kinds(hass: HomeAssistant, mock_hub) ->
             "min_humidity": 30,
         }
     ]
-    # The cleared effect_id was removed from the light.
-    assert entry.options["lights"] == [{"id": 1}]
+
+    # Clearing the effect_id removes it from the light subentry.
+    result = await _reconfigure(hass, entry, "lights", 1)
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {"effect_id": ""}
+    )
+    await hass.async_block_till_done()
+    assert device_subentry_configs(entry, "lights") == [{"id": 1}]
 
 
-async def test_options_edit_sensor_value_type(hass: HomeAssistant, mock_hub) -> None:
+async def test_subentry_reconfigure_sensor_value_type(
+    hass: HomeAssistant, mock_hub
+) -> None:
     """Sensor overrides store the value type and free-text unit."""
     from taphome_sdk import ValueType
 
     entry = make_config_entry()
     await setup_integration(hass, entry)
 
-    result = await _start_options_flow(hass, entry)
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"], {"next_step_id": "edit_devices"}
-    )
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"], {"devices": _device_ids(hass, "sensor.outside_temperature")}
-    )
-    assert result["step_id"] == "edit_devices_form"
-
-    result = await hass.config_entries.options.async_configure(
+    result = await _reconfigure(hass, entry, "sensors", 5)
+    result = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
         {
-            "Outside Temperature (5) · sensors": {
-                "value_type": str(ValueType.VARIABLE_STATE.value),
-                "unit_of_measurement": "°C",
-                "device_class": "temperature",
-            }
+            "value_type": str(ValueType.VARIABLE_STATE.value),
+            "unit_of_measurement": "°C",
+            "device_class": "temperature",
         },
     )
     await hass.async_block_till_done()
 
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert entry.options["sensors"] == [
+    assert result["type"] is FlowResultType.ABORT
+    assert device_subentry_configs(entry, "sensors") == [
         {
             "id": 5,
             "value_type": ValueType.VARIABLE_STATE.value,
@@ -344,44 +316,61 @@ async def test_options_edit_sensor_value_type(hass: HomeAssistant, mock_hub) -> 
     ]
 
 
-async def test_options_edit_without_configured_devices_aborts(
+async def test_subentry_reconfigure_button_multi_enum(
     hass: HomeAssistant, mock_hub
 ) -> None:
-    """Edit and remove abort when nothing is configured yet."""
-    entry = make_config_entry()
-    entry_no_devices = MockConfigEntry(
-        domain=entry.domain,
-        title=entry.title,
-        unique_id="empty-location",
-        data=dict(entry.data),
-        options={},
+    """Multi-select options render their stored values and save as lists."""
+    from tests_common import make_device
+
+    from taphome_sdk import ValueType
+
+    make_device(
+        mock_hub,
+        {
+            "deviceId": 8,
+            "type": "WallButton",
+            "name": "Hall Button",
+            "description": "Button in the hall",
+            "supportedValues": [
+                {"valueTypeId": ValueType.BUTTON_PRESSED.value, "readOnly": True}
+            ],
+            "values": {ValueType.BUTTON_PRESSED: 0.0},
+        },
     )
-    await setup_integration(hass, entry_no_devices)
-
-    for menu_item in ("edit_devices", "remove_devices"):
-        result = await _start_options_flow(hass, entry_no_devices)
-        result = await hass.config_entries.options.async_configure(
-            result["flow_id"], {"next_step_id": menu_item}
-        )
-        assert result["type"] is FlowResultType.ABORT
-        assert result["reason"] == "no_devices_configured"
-
-
-async def test_options_remove_device_error_branches(
-    hass: HomeAssistant, mock_hub
-) -> None:
-    """Empty and unknown removal selections are rejected."""
-    entry = make_config_entry()
+    entry = make_config_entry(
+        {"buttons": [{"id": 8, "actions": ["press"], "device_class": "identify"}]}
+    )
     await setup_integration(hass, entry)
 
-    result = await _start_options_flow(hass, entry)
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"], {"next_step_id": "remove_devices"}
+    result = await _reconfigure(hass, entry, "buttons", 8)
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {"actions": ["press", "long_press"]}
     )
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"], {"devices": []}
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert device_subentry_configs(entry, "buttons") == [
+        {"id": 8, "actions": ["press", "long_press"]}
+    ]
+
+
+async def test_subentry_reconfigure_legacy_int_config(
+    hass: HomeAssistant, mock_hub
+) -> None:
+    """A device stored as a bare id (YAML legacy) can still be reconfigured."""
+    entry = make_config_entry({"switches": [2]})
+    await setup_integration(hass, entry)
+
+    result = await _reconfigure(hass, entry, "switches", 2)
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {"device_class": "outlet"}
     )
-    assert result["errors"] == {"base": "no_devices_selected"}
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert device_subentry_configs(entry, "switches") == [
+        {"id": 2, "device_class": "outlet"}
+    ]
 
 
 async def test_options_core_settings_rejects_other_core(
@@ -410,153 +399,13 @@ async def test_options_core_settings_rejects_other_core(
     assert result["errors"] == {"base": "unique_id_mismatch"}
 
 
-async def test_options_edit_button_multi_enum(hass: HomeAssistant, mock_hub) -> None:
-    """Multi-select options render their stored values and save as lists."""
-    from tests_common import make_device
-
-    from taphome_sdk import ValueType
-
-    make_device(
-        mock_hub,
-        {
-            "deviceId": 8,
-            "type": "WallButton",
-            "name": "Hall Button",
-            "description": "Button in the hall",
-            "supportedValues": [
-                {"valueTypeId": ValueType.BUTTON_PRESSED.value, "readOnly": True}
-            ],
-            "values": {ValueType.BUTTON_PRESSED: 0.0},
-        },
-    )
-    entry = make_config_entry(
-        {"buttons": [{"id": 8, "actions": ["press"], "device_class": "identify"}]}
-    )
-    await setup_integration(hass, entry)
-
-    result = await _start_options_flow(hass, entry)
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"], {"next_step_id": "edit_devices"}
-    )
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"], {"devices": _device_ids(hass, "button.hall_button")}
-    )
-    assert result["step_id"] == "edit_devices_form"
-
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        {"Hall Button (8) · buttons": {"actions": ["press", "long_press"]}},
-    )
-    await hass.async_block_till_done()
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert entry.options["buttons"] == [
-        {"id": 8, "actions": ["press", "long_press"]}
-    ]
-
-
-async def test_options_device_labels_show_mapped_area(
-    hass: HomeAssistant, mock_hub
-) -> None:
-    """Configured devices show their mapped area in the device labels."""
-    from tests_common import make_device
-
-    from homeassistant.helpers import area_registry as ar
-    from taphome_sdk import ValueType
-
-    area = ar.async_get(hass).async_create("Zahrada")
-    make_device(
-        mock_hub,
-        {
-            "deviceId": 9,
-            "type": "PowerOutlet",
-            "name": "Pool Pump",
-            "description": "Pump by the pool",
-            "zone": "Garden",
-            "supportedValues": [
-                {"valueTypeId": ValueType.SWITCH_STATE.value, "readOnly": False}
-            ],
-            "values": {ValueType.SWITCH_STATE: 0.0},
-        },
-    )
-    entry = make_config_entry(
-        {"switches": [{"id": 2}, {"id": 9}], "zones": {"Garden": area.id}}
-    )
-    await setup_integration(hass, entry)
-
-    result = await _start_options_flow(hass, entry)
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"], {"next_step_id": "edit_devices"}
-    )
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"], {"devices": _device_ids(hass, "switch.pool_pump")}
-    )
-    assert result["step_id"] == "edit_devices_form"
-
-    # The section key resolves the zone through the mapping to the area name.
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"], {"Pool Pump (9) — Zahrada · switches": {}}
-    )
-    await hass.async_block_till_done()
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-
-
-async def test_options_edit_legacy_int_config(hass: HomeAssistant, mock_hub) -> None:
-    """Device configs stored as bare ids (YAML legacy) can still be edited."""
-    entry = make_config_entry({"switches": [2]})
-    await setup_integration(hass, entry)
-
-    result = await _start_options_flow(hass, entry)
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"], {"next_step_id": "edit_devices"}
-    )
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"], {"devices": _device_ids(hass, "switch.garden_socket")}
-    )
-    assert result["step_id"] == "edit_devices_form"
-
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"], {"Garden Socket (2) · switches": {"device_class": "outlet"}}
-    )
-    await hass.async_block_till_done()
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert entry.options["switches"] == [{"id": 2, "device_class": "outlet"}]
-
-
-async def test_options_edit_skips_unmatchable_registry_entries(
-    hass: HomeAssistant, mock_hub
-) -> None:
-    """Registry entries that do not map to a configured device are skipped."""
-    from homeassistant.helpers import entity_registry as er
-
-    entry = make_config_entry()
-    await setup_integration(hass, entry)
-
-    registry = er.async_get(hass)
-    # A domain the integration has no configuration list for.
-    registry.async_get_or_create("lock", "taphome", "lock-unique", config_entry=entry)
-    # A unique id that does not encode a TapHome device id.
-    registry.async_get_or_create("light", "taphome", "custom-unique", config_entry=entry)
-    # A parseable device id that is not in the configured options.
-    registry.async_get_or_create(
-        "light", "taphome", "taphome.light.77", config_entry=entry
-    )
-
-    result = await _start_options_flow(hass, entry)
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"], {"next_step_id": "edit_devices"}
-    )
-    assert result["step_id"] == "edit_devices"
-
-
 async def test_options_mapping_renders_legacy_values(
     hass: HomeAssistant, mock_hub
 ) -> None:
     """Stored area/label names and unknown ids resolve when rendering."""
     from tests_common import make_device
 
-    from homeassistant.helpers import area_registry as ar
+    from homeassistant.helpers import area_registry as ar, label_registry as lr
     from taphome_sdk import ValueType
 
     ar.async_get(hass).async_create("Zahrada")
@@ -575,8 +424,6 @@ async def test_options_mapping_renders_legacy_values(
             "values": {ValueType.SWITCH_STATE: 0.0},
         },
     )
-    from homeassistant.helpers import label_registry as lr
-
     label = lr.async_get(hass).async_create("Rolety")
     entry = make_config_entry(
         {
@@ -592,71 +439,3 @@ async def test_options_mapping_renders_legacy_values(
             result["flow_id"], {"next_step_id": step}
         )
         assert result["step_id"] == step
-
-
-async def test_options_device_label_without_mapping_shows_zone(
-    hass: HomeAssistant, mock_hub
-) -> None:
-    """Without a zone mapping the raw TapHome zone appears in device labels."""
-    from tests_common import make_device
-
-    from taphome_sdk import ValueType
-
-    make_device(
-        mock_hub,
-        {
-            "deviceId": 9,
-            "type": "PowerOutlet",
-            "name": "Pool Pump",
-            "description": "Pump by the pool",
-            "zone": "Garden",
-            "supportedValues": [
-                {"valueTypeId": ValueType.SWITCH_STATE.value, "readOnly": False}
-            ],
-            "values": {ValueType.SWITCH_STATE: 0.0},
-        },
-    )
-    entry = make_config_entry({"switches": [{"id": 2}, {"id": 9}]})
-    await setup_integration(hass, entry)
-
-    result = await _start_options_flow(hass, entry)
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"], {"next_step_id": "edit_devices"}
-    )
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"], {"devices": _device_ids(hass, "switch.pool_pump")}
-    )
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"], {"Pool Pump (9) — Garden · switches": {}}
-    )
-    await hass.async_block_till_done()
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-
-
-async def test_options_edit_renders_stored_values(
-    hass: HomeAssistant, mock_hub
-) -> None:
-    """Stored option values of every kind are suggested when editing."""
-    from taphome_sdk import ValueType
-
-    entry = make_config_entry(
-        {
-            "climates": [{"id": 3, "target_temperature_step": 0.5}],
-            "sensors": [{"id": 5, "value_type": ValueType.VARIABLE_STATE.value}],
-        }
-    )
-    await setup_integration(hass, entry)
-
-    result = await _start_options_flow(hass, entry)
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"], {"next_step_id": "edit_devices"}
-    )
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        {
-            "devices": _device_ids(
-                hass, "climate.living_room_thermostat", "sensor.outside_temperature"
-            )
-        },
-    )
-    assert result["step_id"] == "edit_devices_form"

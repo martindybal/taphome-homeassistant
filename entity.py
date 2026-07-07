@@ -3,7 +3,7 @@
 from collections.abc import Callable
 from typing import Any, override
 
-from taphome_sdk import Device, DeviceState, Event, HubConnectionState
+from taphome_sdk import Device, DeviceState, Event, HubConnectionState, Location
 
 from homeassistant.helpers import (
     device_registry as dr,
@@ -15,6 +15,15 @@ from homeassistant.helpers.entity import Entity
 
 from .const import DOMAIN
 from .taphome_config_entry import AddEntryRequest, TapHomeEntityConfigT
+
+
+def hub_device_id(location: Location | None, core_id: str | None) -> str:
+    """Return the id part of the Core hub device identifier.
+
+    The Core is every device's ``via_device``; entity and setup code must
+    derive its id the same way for that link to hold.
+    """
+    return location.location_id if location else core_id or DOMAIN
 
 
 class TapHomeSubscriptionMixin:
@@ -74,8 +83,7 @@ class TapHomeEntity(TapHomeSubscriptionMixin, Entity):
             f"taphome{unique_id_core}.{unique_id_device}.{taphome_device.id}".lower()
         )
 
-        location = config.hub.location
-        location_id = location.location_id if location else config.core.id or DOMAIN
+        location_id = hub_device_id(config.hub.location, config.core.id)
         self._device_identifiers = {(DOMAIN, f"{location_id}_{taphome_device.id}")}
         self._attr_device_info = DeviceInfo(
             identifiers=self._device_identifiers,

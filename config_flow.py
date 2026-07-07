@@ -18,7 +18,10 @@ from homeassistant.config_entries import (
     ConfigEntryState,
     ConfigFlow,
     ConfigFlowResult,
+    ConfigSubentryData,
+    ConfigSubentryFlow,
     OptionsFlow,
+    SubentryFlowResult,
 )
 from homeassistant.const import CONF_ID, CONF_TOKEN, CONF_WEBHOOK_ID
 from homeassistant.core import callback
@@ -26,16 +29,12 @@ from homeassistant.data_entry_flow import section
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import (
     area_registry as ar,
-    entity_registry as er,
     label_registry as lr,
 )
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import (
     AreaSelector,
     BooleanSelector,
-    DeviceFilterSelectorConfig,
-    DeviceSelector,
-    DeviceSelectorConfig,
     LabelSelector,
     NumberSelector,
     NumberSelectorConfig,
@@ -71,6 +70,7 @@ from .const import (
     DEFAULT_CLOUD_API_URL,
     DEVICE_CONFIG_KEYS,
     DOMAIN,
+    SUBENTRY_TYPE_DEVICE,
     USE_DESCRIPTION_AS_ENTITY_ID,
     USE_DESCRIPTION_AS_NAME,
 )
@@ -80,6 +80,15 @@ from .platform_descriptors import (
     FieldKind,
     OptionField,
     PlatformDescriptor,
+    device_config_id,
+)
+from .subentry import (
+    build_device_subentry_data,
+    config_subentry_from_data,
+    device_config_from_subentry,
+    device_subentry_payload,
+    iter_device_subentries,
+    subentry_platform,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -289,21 +298,20 @@ def _yaml_core_to_options(core_config: dict) -> dict:
     if CONF_ENABLED_ATTRIBUTES in core_config:
         options[CONF_ENABLED_ATTRIBUTES] = list(core_config[CONF_ENABLED_ATTRIBUTES])
 
-    for config_key in DEVICE_CONFIG_KEYS:
-        devices = core_config.get(config_key) or []
-        if devices:
-            options[config_key] = [
-                _normalize_device_config(config_key, device) for device in devices
-            ]
-
     return options
 
 
-def _device_config_id(device_config: dict | int) -> int:
-    """Return the TapHome device id of a stored device configuration."""
-    if isinstance(device_config, dict):
-        return int(device_config["id"])
-    return int(device_config)
+def _yaml_device_subentries(core_config: dict) -> list[ConfigSubentryData]:
+    """Build one device subentry per device in a YAML core configuration."""
+    subentries: list[ConfigSubentryData] = []
+    for config_key in DEVICE_CONFIG_KEYS:
+        for device in core_config.get(config_key) or []:
+            device_config = _normalize_device_config(config_key, device)
+            title = f"TapHome device {device_config_id(device_config)}"
+            subentries.append(
+                build_device_subentry_data(config_key, device_config, title)
+            )
+    return subentries
 
 
 def _device_qualifies(device: Device, descriptor: PlatformDescriptor) -> bool:
@@ -446,9 +454,9 @@ class _TapHomeSetupFlow(ConfigEntryBaseFlow):
         """Initialize the shared setup flow state."""
         super().__init__()
         self._options = {}
-        self._edit_selection: list[str] = []
         self._pending_device_ids: list[int] = []
         self._pending_pairs: list[tuple[int, str]] = []
+        self._pending_subentries: list[ConfigSubentryData] = []
 
     @property
     def _devices(self) -> dict[int, Device]:
@@ -473,8 +481,6 @@ class _TapHomeSetupFlow(ConfigEntryBaseFlow):
             menu_options=[
                 "core_settings",
                 "add_devices",
-                "edit_devices",
-                "remove_devices",
                 "zones",
                 "labels",
             ],
@@ -713,288 +719,44 @@ class _TapHomeSetupFlow(ConfigEntryBaseFlow):
         )
 
     def _add_pending_pairs(self, user_input: dict[str, Any]) -> dict[str, str]:
-        """Add the pending device/platform pairs to the options.
+        """Build a device subentry for each pending device/platform pair.
 
-        Returns the form errors; an empty mapping means everything was applied.
+        Returns the form errors; an empty mapping means everything was applied
+        and the resulting subentries are stored in ``self._pending_subentries``.
         """
         errors: dict[str, str] = {}
-        new_configs: dict[str, list[dict]] = {}
+        configured = self._configured_pairs()
+        subentries: list[ConfigSubentryData] = []
         for device_id, config_key in self._pending_pairs:
+            if (config_key, device_id) in configured:
+                continue
             descriptor = PLATFORM_DESCRIPTORS_BY_KEY[config_key]
             section_input = (
                 user_input.get(self._pair_section_key(device_id, config_key)) or {}
             )
             field_errors: dict[str, str] = {}
-            new_config = self._apply_device_options(
+            device_config = self._apply_device_options(
                 descriptor, {"id": device_id}, section_input, field_errors
             )
             if field_errors:
                 errors["base"] = "invalid_device_id"
-            new_configs.setdefault(config_key, []).append(new_config)
+            subentries.append(self._device_subentry_data(config_key, device_config))
+            configured.add((config_key, device_id))
         if errors:
             return errors
-        for config_key, configs in new_configs.items():
-            devices = list(self._options.get(config_key) or [])
-            existing_ids = {_device_config_id(dc) for dc in devices}
-            for config in configs:
-                if _device_config_id(config) not in existing_ids:
-                    devices.append(config)
-                    existing_ids.add(_device_config_id(config))
-            self._options[config_key] = devices
+        self._pending_subentries = subentries
         return {}
 
-    async def async_step_edit_devices(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Pick the configured devices that should be edited."""
-        device_map = self._device_selection_map()
-        if not device_map:
-            return self.async_abort(reason="no_devices_configured")
-
-        errors: dict[str, str] = {}
-        if user_input is not None:
-            selection = self._selection_for_devices(
-                user_input.get("devices", []), device_map
-            )
-            if not selection:
-                errors["base"] = "no_devices_selected"
-            else:
-                self._edit_selection = selection
-                return await self.async_step_edit_devices_form()
-
-        return self.async_show_form(
-            step_id="edit_devices",
-            data_schema=vol.Schema(
-                {
-                    vol.Optional("devices"): DeviceSelector(
-                        DeviceSelectorConfig(
-                            multiple=True,
-                            filter=[DeviceFilterSelectorConfig(integration=DOMAIN)],
-                        )
-                    )
-                }
-            ),
-            errors=errors,
-            last_step=False,
-        )
-
-    async def async_step_remove_devices(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Pick the configured devices that should be removed."""
-        device_map = self._device_selection_map()
-        if not device_map:
-            return self.async_abort(reason="no_devices_configured")
-
-        errors: dict[str, str] = {}
-        if user_input is not None:
-            selection = self._selection_for_devices(
-                user_input.get("devices", []), device_map
-            )
-            if not selection:
-                errors["base"] = "no_devices_selected"
-            else:
-                self._remove_devices(selection)
-                return self._async_save_options()
-
-        return self.async_show_form(
-            step_id="remove_devices",
-            data_schema=vol.Schema(
-                {
-                    vol.Optional("devices"): DeviceSelector(
-                        DeviceSelectorConfig(
-                            multiple=True,
-                            filter=[DeviceFilterSelectorConfig(integration=DOMAIN)],
-                        )
-                    )
-                }
-            ),
-            errors=errors,
-        )
-
-    async def async_step_edit_devices_form(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Edit the options of each selected device."""
-        entries = self._resolve_edit_selection()
-        if not entries:
-            return self.async_abort(reason="no_devices_configured")
-
-        errors: dict[str, str] = {}
-        if user_input is not None:
-            updates: list[tuple[str, int, dict]] = []
-            for section_key, config_key, index, descriptor, device_config in entries:
-                section_input = user_input.get(section_key) or {}
-                field_errors: dict[str, str] = {}
-                new_config = self._apply_device_options(
-                    descriptor, device_config, section_input, field_errors
-                )
-                if field_errors:
-                    errors["base"] = "invalid_device_id"
-                updates.append((config_key, index, new_config))
-            if not errors:
-                for config_key, index, new_config in updates:
-                    self._options[config_key][index] = new_config
-                return self._async_save_options()
-
-        schema_dict: dict[Any, Any] = {}
-        suggested_values: dict[str, Any] = {}
-        for section_key, _config_key, _index, descriptor, device_config in entries:
-            field_schema, field_suggested = self._build_device_options_schema(
-                descriptor, device_config
-            )
-            schema_dict[vol.Optional(section_key)] = section(
-                field_schema, {"collapsed": descriptor.advanced}
-            )
-            if field_suggested:
-                suggested_values[section_key] = field_suggested
-
-        if user_input is not None:
-            suggested_values = user_input
-
-        return self.async_show_form(
-            step_id="edit_devices_form",
-            data_schema=self.add_suggested_values_to_schema(
-                vol.Schema(schema_dict), suggested_values
-            ),
-            errors=errors,
-        )
-
-    def _resolve_edit_selection(
-        self,
-    ) -> list[tuple[str, str, int, PlatformDescriptor, dict]]:
-        """Resolve the edit selection to one form section per selected device."""
-        entries: list[tuple[str, str, int, PlatformDescriptor, dict]] = []
-        label_counts: dict[str, int] = {}
-        for selection in self._edit_selection:
-            config_key, index_str = selection.rsplit(":", 1)
-            index = int(index_str)
-            devices = self._options.get(config_key) or []
-            if index >= len(devices):
-                continue
-            device_config = devices[index]
-            if not isinstance(device_config, dict):
-                device_config = {"id": device_config}
-            base_key = self._pair_section_key(
-                _device_config_id(device_config), config_key
-            )
-            count = label_counts.get(base_key, 0)
-            label_counts[base_key] = count + 1
-            section_key = base_key if count == 0 else f"{base_key} ({count + 1})"
-            entries.append(
-                (
-                    section_key,
-                    config_key,
-                    index,
-                    PLATFORM_DESCRIPTORS_BY_KEY[config_key],
-                    device_config,
-                )
-            )
-        return entries
+    def _device_subentry_data(
+        self, config_key: str, device_config: dict
+    ) -> ConfigSubentryData:
+        """Build the subentry payload for one exposed device."""
+        title = self._device_label(device_config_id(device_config))
+        return build_device_subentry_data(config_key, device_config, title)
 
     def _async_save_options(self) -> ConfigFlowResult:
         """Store the edited options; the update listener reloads the entry."""
         return self.async_create_entry(title="", data=self._options)
-
-    def _entity_selection_map(self) -> dict[str, str]:
-        """Map this entry's entity ids to their 'config_key:index' selection.
-
-        Edit and remove operate on configured devices, whose Home Assistant
-        entities already exist. Picking an entity is resolved back to its device
-        configuration through the entity registry (custom unique id or the device
-        id encoded in the generated unique id).
-        """
-        from . import (  # noqa: PLC0415
-            DOMAIN_DEFINITIONS,
-            _parse_device_id_from_unique_id,
-        )
-
-        domain_to_key = {
-            definition.name: definition.config_key for definition in DOMAIN_DEFINITIONS
-        }
-        index_by_device: dict[tuple[str, int], int] = {}
-        selection_by_unique_id: dict[str, str] = {}
-        for descriptor in PLATFORM_DESCRIPTORS:
-            for index, device_config in enumerate(
-                self._options.get(descriptor.config_key) or []
-            ):
-                device_id = _device_config_id(device_config)
-                index_by_device[(descriptor.config_key, device_id)] = index
-                if isinstance(device_config, dict) and device_config.get("unique_id"):
-                    selection_by_unique_id[device_config["unique_id"]] = (
-                        f"{descriptor.config_key}:{index}"
-                    )
-
-        registry = er.async_get(self.hass)
-        selections: dict[str, str] = {}
-        for entry in er.async_entries_for_config_entry(
-            registry, self.config_entry.entry_id
-        ):
-            selection = selection_by_unique_id.get(entry.unique_id)
-            if selection is None:
-                config_key = domain_to_key.get(entry.domain)
-                if config_key is None:
-                    continue
-                device_id = _parse_device_id_from_unique_id(entry.unique_id)
-                if device_id is None:
-                    continue
-                index = index_by_device.get((config_key, device_id))
-                if index is None:
-                    continue
-                selection = f"{config_key}:{index}"
-            selections[entry.entity_id] = selection
-        return selections
-
-    def _device_selection_map(self) -> dict[str, list[str]]:
-        """Map this entry's Home Assistant device ids to their selections.
-
-        Every TapHome device is a Home Assistant device, so edit and remove let
-        the user pick devices. A device can back several configured entries (for
-        example a device exposed on two platforms), so each device id maps to the
-        list of its ``config_key:index`` selections, resolved through its
-        entities by :meth:`_entity_selection_map`.
-        """
-        registry = er.async_get(self.hass)
-        device_selections: dict[str, list[str]] = {}
-        for entity_id, selection in self._entity_selection_map().items():
-            entry = registry.async_get(entity_id)
-            if entry is None or entry.device_id is None:
-                continue
-            selections = device_selections.setdefault(entry.device_id, [])
-            if selection not in selections:
-                selections.append(selection)
-        return device_selections
-
-    @staticmethod
-    def _selection_for_devices(
-        device_ids: list[str], device_map: dict[str, list[str]]
-    ) -> list[str]:
-        """Flatten selected device ids to their de-duplicated selections.
-
-        Device ids that do not belong to this entry (the Core hub device or
-        another Core's devices, both matched by the integration selector) are
-        not in ``device_map`` and are skipped.
-        """
-        return list(
-            dict.fromkeys(
-                selection
-                for device_id in device_ids
-                for selection in device_map.get(device_id, [])
-            )
-        )
-
-    def _remove_devices(self, selections: list[str]) -> None:
-        """Remove the selected config_key:index entries from the options."""
-        indexes_by_platform: dict[str, list[int]] = {}
-        for selection in selections:
-            config_key, index_str = selection.rsplit(":", 1)
-            indexes_by_platform.setdefault(config_key, []).append(int(index_str))
-        for config_key, indexes in indexes_by_platform.items():
-            devices = self._options[config_key]
-            for index in sorted(indexes, reverse=True):
-                devices.pop(index)
-            if not devices:
-                self._options.pop(config_key, None)
 
     def _platforms_for_device(self, device_id: int) -> list[str]:
         """Return the platforms a single device qualifies for."""
@@ -1028,12 +790,29 @@ class _TapHomeSetupFlow(ConfigEntryBaseFlow):
             " · ".join(part for part in (device.zone, device.category) if part) or None
         )
 
+    def _device_subentries(self) -> list[dict]:
+        """Return the data of the configured device subentries.
+
+        Overridden by the options flow, which reads the loaded entry. The setup
+        wizard has no entry yet, so nothing is configured while it runs.
+        """
+        return []
+
+    def _configured_pairs(self) -> set[tuple[str, int]]:
+        """Return the (platform, device id) pairs already exposed."""
+        pairs: set[tuple[str, int]] = set()
+        for data in self._device_subentries():
+            platform = subentry_platform(data)
+            if platform is not None and "id" in data:
+                pairs.add((platform, device_config_id(data)))
+        return pairs
+
     def _configured_device_ids(self) -> set[int]:
-        """Return the ids of all devices present in any platform list."""
+        """Return the ids of all devices exposed by a subentry."""
         return {
-            _device_config_id(device_config)
-            for descriptor in PLATFORM_DESCRIPTORS
-            for device_config in self._options.get(descriptor.config_key) or []
+            device_config_id(data)
+            for data in self._device_subentries()
+            if "id" in data
         }
 
     def _referenced_device_ids(self) -> set[int]:
@@ -1047,25 +826,20 @@ class _TapHomeSetupFlow(ConfigEntryBaseFlow):
         separately.
         """
         referenced: set[int] = set()
-        for descriptor in PLATFORM_DESCRIPTORS:
-            id_keys = [
-                field.key
-                for field in descriptor.fields
-                if field.kind == FieldKind.DEVICE_ID
-            ]
-            if not id_keys:
+        for data in self._device_subentries():
+            descriptor = PLATFORM_DESCRIPTORS_BY_KEY.get(subentry_platform(data))
+            if descriptor is None:
                 continue
-            for device_config in self._options.get(descriptor.config_key) or []:
-                if not isinstance(device_config, dict):
+            for field in descriptor.fields:
+                if field.kind != FieldKind.DEVICE_ID:
                     continue
-                for key in id_keys:
-                    value = device_config.get(key)
-                    if value is None:
-                        continue
-                    try:
-                        referenced.add(int(value))
-                    except (TypeError, ValueError):
-                        continue
+                value = data.get(field.key)
+                if value is None:
+                    continue
+                try:
+                    referenced.add(int(value))
+                except (TypeError, ValueError):
+                    continue
         return referenced
 
     def _area_name(self, zone: str | None) -> str | None:
@@ -1181,8 +955,21 @@ class TapHomeOptionsFlow(_TapHomeSetupFlow, OptionsFlow):
         """Return the devices discovered by the loaded core."""
         return self._hub.devices
 
+    def _device_subentries(self) -> list[dict]:
+        """Return the data of the loaded entry's device subentries."""
+        return [
+            dict(subentry.data)
+            for subentry in iter_device_subentries(self.config_entry)
+        ]
+
     async def _async_commit(self, completed: str) -> ConfigFlowResult:
-        """Save the edited options; the update listener reloads the entry."""
+        """Persist the completed section; the update listener reloads the entry."""
+        if completed == "add_devices":
+            for data in self._pending_subentries:
+                self.hass.config_entries.async_add_subentry(
+                    self.config_entry, config_subentry_from_data(data)
+                )
+            self._pending_subentries = []
         return self._async_save_options()
 
 
@@ -1190,7 +977,7 @@ class TapHomeConfigFlow(_TapHomeSetupFlow, ConfigFlow, domain=DOMAIN):
     """Handle the TapHome config flow."""
 
     VERSION = 1
-    MINOR_VERSION = 1
+    MINOR_VERSION = 2
 
     def __init__(self) -> None:
         """Initialize the config flow state."""
@@ -1204,6 +991,14 @@ class TapHomeConfigFlow(_TapHomeSetupFlow, ConfigFlow, domain=DOMAIN):
     def async_get_options_flow(config_entry: ConfigEntry) -> TapHomeOptionsFlow:
         """Create the options flow handler."""
         return TapHomeOptionsFlow()
+
+    @classmethod
+    @callback
+    def async_get_supported_subentry_types(
+        cls, config_entry: ConfigEntry
+    ) -> dict[str, type[ConfigSubentryFlow]]:
+        """Return the subentry types this integration supports."""
+        return {SUBENTRY_TYPE_DEVICE: TapHomeDeviceSubentryFlowHandler}
 
     @property
     def _devices(self) -> dict[int, Device]:
@@ -1285,10 +1080,12 @@ class TapHomeConfigFlow(_TapHomeSetupFlow, ConfigFlow, domain=DOMAIN):
 
     def _async_create_wizard_entry(self) -> ConfigFlowResult:
         """Create the config entry with the options gathered in the wizard."""
-        return self.async_create_entry(
+        # pylint mis-resolves the ConfigFlow.async_create_entry override.
+        return self.async_create_entry(  # pylint: disable=unexpected-keyword-arg
             title=self._wizard_title,
             data=self._wizard_data,
             options=self._options,
+            subentries=self._pending_subentries,
         )
 
     async def async_step_reconfigure(
@@ -1409,7 +1206,8 @@ class TapHomeConfigFlow(_TapHomeSetupFlow, ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(unique_id)
         self._abort_if_unique_id_configured()
 
-        return self.async_create_entry(
+        # pylint mis-resolves the ConfigFlow.async_create_entry override.
+        return self.async_create_entry(  # pylint: disable=unexpected-keyword-arg
             title=title,
             data={
                 CONF_TOKEN: token,
@@ -1417,4 +1215,221 @@ class TapHomeConfigFlow(_TapHomeSetupFlow, ConfigFlow, domain=DOMAIN):
                 CONF_ID: core_id,
             },
             options=_yaml_core_to_options(import_data),
+            subentries=_yaml_device_subentries(import_data),
+        )
+
+
+class TapHomeDeviceSubentryFlowHandler(ConfigSubentryFlow):
+    """Add, edit and remove a single exposed TapHome device.
+
+    Each subentry is one device exposed on one platform. Adding walks device →
+    platform → options; the device page's Edit reconfigures the options and
+    Delete removes the subentry (its update fires the entry's reload listener).
+    """
+
+    def __init__(self) -> None:
+        """Initialize the device subentry flow state."""
+        super().__init__()
+        self._device_id: int | None = None
+        self._config_key: str | None = None
+
+    @property
+    def _entry(self) -> ConfigEntry:
+        """Return the parent config entry."""
+        return self._get_entry()
+
+    @property
+    def _devices(self) -> dict[int, Device]:
+        """Return the devices discovered by the loaded core."""
+        return self._entry.runtime_data.hub.devices
+
+    def _device_label(self, device: Device) -> str:
+        """Return a human readable label of a TapHome device."""
+        location = " · ".join(part for part in (device.zone, device.category) if part)
+        label = f"{device.name} ({device.id})"
+        return f"{label} — {location}" if location else label
+
+    def _helper_label(self, device_id: int) -> str:
+        """Label a device referenced from another device's option field."""
+        device = self._devices.get(device_id)
+        return self._device_label(device) if device else f"Unknown device ({device_id})"
+
+    def _configured_pairs(self) -> set[tuple[str, int]]:
+        """Return the (platform, device id) pairs already exposed."""
+        pairs: set[tuple[str, int]] = set()
+        for subentry in iter_device_subentries(self._entry):
+            platform = subentry_platform(subentry.data)
+            device_id = subentry.data.get("id")
+            if isinstance(platform, str) and isinstance(device_id, int):
+                pairs.add((platform, device_id))
+        return pairs
+
+    def _available_platforms(self, device_id: int) -> list[str]:
+        """Return platforms a device qualifies for and is not yet exposed as."""
+        device = self._devices.get(device_id)
+        if device is None:
+            return []
+        configured = self._configured_pairs()
+        return [
+            descriptor.config_key
+            for descriptor in PLATFORM_DESCRIPTORS
+            if _device_qualifies(device, descriptor)
+            and (descriptor.config_key, device_id) not in configured
+        ]
+
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """Pick the device to expose."""
+        if self._entry.state is not ConfigEntryState.LOADED:
+            return self.async_abort(reason="entry_not_loaded")
+
+        addable = [
+            device
+            for device in self._devices.values()
+            if self._available_platforms(device.id)
+        ]
+        if not addable:
+            return self.async_abort(reason="no_devices_available")
+
+        if user_input is not None:
+            self._device_id = int(user_input["device"])
+            platforms = self._available_platforms(self._device_id)
+            if len(platforms) == 1:
+                self._config_key = platforms[0]
+                return await self._async_configure_or_create()
+            return await self.async_step_platform()
+
+        options = [
+            SelectOptionDict(value=str(device.id), label=self._device_label(device))
+            for device in addable
+        ]
+        options.sort(key=lambda option: option["label"].casefold())
+        return self.async_show_form(
+            step_id="user",
+            data_schema=vol.Schema(
+                {
+                    vol.Required("device"): SelectSelector(
+                        SelectSelectorConfig(
+                            options=options, mode=SelectSelectorMode.DROPDOWN
+                        )
+                    )
+                }
+            ),
+        )
+
+    async def async_step_platform(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """Pick the platform the selected device should be exposed as."""
+        assert self._device_id is not None
+        platforms = self._available_platforms(self._device_id)
+
+        if user_input is not None:
+            self._config_key = user_input["platform"]
+            return await self._async_configure_or_create()
+
+        return self.async_show_form(
+            step_id="platform",
+            data_schema=vol.Schema(
+                {
+                    vol.Required("platform"): SelectSelector(
+                        SelectSelectorConfig(
+                            options=platforms,
+                            mode=SelectSelectorMode.DROPDOWN,
+                            translation_key="platform",
+                        )
+                    )
+                }
+            ),
+        )
+
+    async def _async_configure_or_create(self) -> SubentryFlowResult:
+        """Open the option form, or create the subentry when there are none."""
+        assert self._config_key is not None
+        if PLATFORM_DESCRIPTORS_BY_KEY[self._config_key].fields:
+            return await self.async_step_configure()
+        return self._create_subentry({"id": self._device_id})
+
+    async def async_step_configure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """Configure the options of the device being added."""
+        assert self._device_id is not None and self._config_key is not None
+        descriptor = PLATFORM_DESCRIPTORS_BY_KEY[self._config_key]
+
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            field_errors: dict[str, str] = {}
+            device_config = apply_device_options(
+                descriptor, {"id": self._device_id}, user_input, field_errors
+            )
+            if field_errors:
+                errors["base"] = "invalid_device_id"
+            else:
+                return self._create_subentry(device_config)
+
+        schema, suggested = build_device_options_schema(
+            descriptor, {"id": self._device_id}, self._devices, self._helper_label
+        )
+        return self.async_show_form(
+            step_id="configure",
+            data_schema=self.add_suggested_values_to_schema(
+                schema, user_input or suggested
+            ),
+            errors=errors,
+        )
+
+    def _create_subentry(self, device_config: dict) -> SubentryFlowResult:
+        """Persist the collected device configuration as a subentry."""
+        assert self._device_id is not None and self._config_key is not None
+        device = self._devices.get(self._device_id)
+        title = (
+            self._device_label(device)
+            if device
+            else f"TapHome device {self._device_id}"
+        )
+        data = build_device_subentry_data(self._config_key, device_config, title)
+        return self.async_create_entry(
+            title=data["title"], data=data["data"], unique_id=data["unique_id"]
+        )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """Edit the options of an already exposed device."""
+        if self._entry.state is not ConfigEntryState.LOADED:
+            return self.async_abort(reason="entry_not_loaded")
+
+        subentry = self._get_reconfigure_subentry()
+        config_key = subentry_platform(subentry.data)
+        descriptor = PLATFORM_DESCRIPTORS_BY_KEY.get(config_key)
+        if descriptor is None:
+            return self.async_abort(reason="unknown_subentry")
+        device_config = device_config_from_subentry(subentry.data)
+
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            field_errors: dict[str, str] = {}
+            new_config = apply_device_options(
+                descriptor, device_config, user_input, field_errors
+            )
+            if field_errors:
+                errors["base"] = "invalid_device_id"
+            else:
+                return self.async_update_and_abort(
+                    self._entry,
+                    subentry,
+                    data=device_subentry_payload(config_key, new_config),
+                )
+
+        schema, suggested = build_device_options_schema(
+            descriptor, device_config, self._devices, self._helper_label
+        )
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                schema, user_input or suggested
+            ),
+            errors=errors,
         )

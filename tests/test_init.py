@@ -174,6 +174,94 @@ async def test_devices_are_registered(
     assert socket.name == "Garden Socket"
     assert socket.manufacturer == "TapHome"
     assert socket.via_device_id == hub_device.id
+    # The hub device links to the Core's local log page (local API connection).
+    assert hub_device.configuration_url == "http://10.0.0.5/localapilog"
+
+
+async def test_remove_config_entry_device(
+    hass: HomeAssistant, mock_hub, mock_config_entry: MockConfigEntry
+) -> None:
+    """Only the hub and devices no longer exposed by the Core can be removed."""
+    from homeassistant.helpers import device_registry as dr
+
+    from custom_components.taphome import async_remove_config_entry_device
+    from tests_common import TEST_LOCATION_ID
+
+    await setup_integration(hass, mock_config_entry)
+    registry = dr.async_get(hass)
+    hub_device = registry.async_get_device({(DOMAIN, TEST_LOCATION_ID)})
+    socket = registry.async_get_device({(DOMAIN, f"{TEST_LOCATION_ID}_2")})
+
+    # The Core hub device and a device still exposed by the Core are kept.
+    assert not await async_remove_config_entry_device(hass, mock_config_entry, hub_device)
+    assert not await async_remove_config_entry_device(hass, mock_config_entry, socket)
+
+    # A device the Core no longer exposes can be removed.
+    mock_hub.devices.pop(2)
+    assert await async_remove_config_entry_device(hass, mock_config_entry, socket)
+
+
+async def test_migration_moves_option_devices_to_subentries(
+    hass: HomeAssistant, mock_hub
+) -> None:
+    """A pre-subentry entry migrates its device lists, preserving unique ids."""
+    from homeassistant.const import CONF_ID, CONF_TOKEN
+    from homeassistant.helpers import device_registry as dr, entity_registry as er
+
+    from custom_components.taphome.const import CONF_API_URL, SUBENTRY_TYPE_DEVICE
+    from tests_common import TEST_API_URL, TEST_LOCATION_ID, TEST_TOKEN
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="TapHome",
+        unique_id=TEST_LOCATION_ID,
+        version=1,
+        minor_version=1,
+        data={CONF_TOKEN: TEST_TOKEN, CONF_API_URL: TEST_API_URL, CONF_ID: None},
+        options={"switches": [{"id": 2}]},
+    )
+    entry.add_to_hass(hass)
+
+    # A pre-subentry install already has the device and entity in the registries.
+    device_registry = dr.async_get(hass)
+    entity_registry = er.async_get(hass)
+    device = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, f"{TEST_LOCATION_ID}_2")},
+        name="Garden Socket",
+    )
+    entity = entity_registry.async_get_or_create(
+        "switch",
+        DOMAIN,
+        "taphome.switch.2",
+        config_entry=entry,
+        device_id=device.id,
+    )
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.minor_version == 2
+    assert "switches" not in entry.options
+    subentries = [
+        subentry
+        for subentry in entry.subentries.values()
+        if subentry.subentry_type == SUBENTRY_TYPE_DEVICE
+    ]
+    assert len(subentries) == 1
+    subentry = subentries[0]
+    assert subentry.data["platform"] == "switches"
+    assert subentry.data["id"] == 2
+
+    # The entity keeps its unique id (history) and now belongs to the subentry.
+    migrated = entity_registry.async_get(entity.entity_id)
+    assert migrated.unique_id == "taphome.switch.2"
+    assert migrated.config_subentry_id == subentry.subentry_id
+
+    migrated_device = device_registry.async_get(device.id)
+    assert migrated_device.config_entries_subentries[entry.entry_id] == {
+        subentry.subentry_id
+    }
 
 
 async def test_zone_and_label_mapping_apply_to_device(
@@ -222,9 +310,14 @@ async def test_zone_and_label_mapping_apply_to_device(
     assert device.area_id == area.id
     assert label.label_id in device.labels
 
-    entity_entry = er.async_get(hass).async_get("switch.garden_socket")
-    assert entity_entry is not None
-    assert label.label_id in entity_entry.labels
+    entity_registry = er.async_get(hass)
+    switch_entities = [
+        registry_entry
+        for registry_entry in er.async_entries_for_device(entity_registry, device.id)
+        if registry_entry.domain == "switch"
+    ]
+    assert len(switch_entities) == 1
+    assert label.label_id in switch_entities[0].labels
 
 
 async def test_unload_unsubscribes_entities(

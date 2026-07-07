@@ -75,13 +75,19 @@ offers:
 - **Add devices** — the same device picker as during setup. Devices already
   configured are pre-unselected; adding a device again on another platform is
   supported (e.g. one output as both switch and light).
-- **Edit devices** — pick configured devices from the device picker and change
-  their per-device options (device class, effects, climate controller links, …).
-- **Remove devices** — pick configured devices from the device picker; this
-  removes the device configuration **and** its entities from Home Assistant. No
-  manual registry cleanup is needed.
 - **Zones** / **Labels** — edit the zone → area and category → label mapping
   at any time.
+
+Each exposed device is a **device subentry** of the Core, so editing and
+removing a single device is done where the device lives:
+
+- **Edit a device** — open the device (from the Core's device list, or _Settings
+  → Devices & services → Devices_) and use its **⋮ → Edit** to change the
+  per-device options (device class, effects, climate controller links, …).
+- **Remove a device** — the device's **⋮ → Delete** removes the device **and**
+  its entities from Home Assistant. No manual registry cleanup is needed.
+- **Add a single device** — the Core entry page also has **+ Add device** to
+  expose one more device without going through the Configure dialog.
 
 Changes are applied by reloading the integration entry automatically.
 

@@ -14,7 +14,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .add_entry_request import add_taphome_entities
 from .entity import TapHomeEntity, TapHomeSubscriptionMixin
@@ -223,26 +223,20 @@ class TapHomeBinarySensorFactory:
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: TapHomeConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up TapHome binary sensors from a config entry."""
-    binary_sensors: list[BinarySensorEntity] = []
 
     def _create_entities(
         config: AddEntryRequest[BinarySensorEntityConfig],
     ) -> list[TapHomeBinarySensor]:
         return TapHomeBinarySensorFactory(config).create_entities()
 
-    add_taphome_entities(
-        entry,
-        binary_sensors.extend,
-        BINARY_SENSOR_DOMAIN,
-        _create_entities,
-    )
+    # Per-device binary sensors are added under their device subentry; the
+    # core-level "is alive" sensor has no device and belongs to the entry.
+    add_taphome_entities(entry, async_add_entities, BINARY_SENSOR_DOMAIN, _create_entities)
 
     runtime_data = entry.runtime_data
-    binary_sensors.append(
-        TapHomeIsAliveSensor(runtime_data.core_config, runtime_data.hub)
+    async_add_entities(
+        [TapHomeIsAliveSensor(runtime_data.core_config, runtime_data.hub)]
     )
-
-    async_add_entities(binary_sensors)

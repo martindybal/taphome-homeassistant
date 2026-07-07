@@ -90,8 +90,6 @@
       "invalid_auth": "The TapHome Core rejected the token.",
       "ip_required": "Fill in the IP address of your Core, or enable the TapHome cloud.",
       "no_devices_selected": "Select at least one device.",
-      "no_common_platform": "The selected devices cannot be exposed as any domain.",
-      "invalid_device": "Select a device from the list.",
       "invalid_device_id": "Invalid device ID."
     },
     "abort": {
@@ -108,8 +106,6 @@
         "menu_options": {
           "core_settings": "Core settings",
           "add_devices": "Add devices",
-          "edit_devices": "Edit devices",
-          "remove_devices": "Remove devices",
           "zones": "Zones (areas)",
           "labels": "Labels (categories)"
         }
@@ -165,54 +161,6 @@
         "title": "Device options",
         "description": "Set the options for each selected device and domain. Each section is one device on one domain. Empty fields use automatic defaults. Sensor and binary-sensor types are detected automatically; their options are collapsed — expand a section only to override them.",
         "submit": "Add"
-      },
-      "edit_devices": {
-        "title": "Edit devices",
-        "description": "Pick the devices you want to edit. Type in the field to search.",
-        "data": {
-          "devices": "Devices"
-        }
-      },
-      "edit_devices_form": {
-        "title": "Device options",
-        "description": "Set the options for each selected device. Each section is one device. Empty fields use automatic defaults. Sensor and binary-sensor types are detected automatically; their options are collapsed — expand a section only to override them.",
-        "data": {
-          "effect_id": "Effects multi value switch",
-          "device_class": "Device class",
-          "actions": "Actions",
-          "close_threshold": "Close threshold (%)",
-          "range_high_thermostat_id": "Range high thermostat",
-          "range_low_thermostat_id": "Range low thermostat",
-          "target_temperature_step": "Target temperature step",
-          "precision": "Temperature precision",
-          "hvac_switch_id": "HVAC switch",
-          "hvac_mode": "Fixed HVAC mode",
-          "hvac_mode_id": "HVAC mode multi value switch",
-          "hvac_action_id": "HVAC action multi value switch",
-          "preset_mode_id": "Preset modes multi value switch",
-          "fan_mode_id": "Fan modes multi value switch",
-          "swing_mode_id": "Swing modes multi value switch",
-          "swing_horizontal_mode_id": "Horizontal swing modes multi value switch",
-          "target_humidity_id": "Target humidity analog output",
-          "min_humidity": "Minimum humidity (%)",
-          "max_humidity": "Maximum humidity (%)",
-          "switch_id": "On/off switch",
-          "action_id": "Action multi value switch",
-          "mode_id": "Modes multi value switch",
-          "humidity_sensor_id": "Humidity sensor",
-          "value_type": "Value type",
-          "unit_of_measurement": "Unit of measurement",
-          "state_class": "State class"
-        },
-        "submit": "Save"
-      },
-      "remove_devices": {
-        "title": "Remove devices",
-        "description": "Pick the devices you want to remove. Their entities will be removed from Home Assistant. Type in the field to search.",
-        "data": {
-          "devices": "Devices"
-        },
-        "submit": "Remove"
       }
     },
     "error": {
@@ -221,13 +169,10 @@
       "invalid_auth": "The TapHome Core rejected the token.",
       "ip_required": "Fill in the IP address of your Core, or enable the TapHome cloud.",
       "unique_id_mismatch": "The connected Core does not match the Core this entry was created for.",
-      "no_devices_selected": "Select at least one device.",
-      "no_common_platform": "The selected devices cannot be exposed as any domain.",
-      "invalid_device": "Select a device from the list."
+      "no_devices_selected": "Select at least one device."
     },
     "abort": {
-      "entry_not_loaded": "The TapHome Core is not loaded. Fix the connection first.",
-      "no_devices_configured": "No devices are configured yet. Use Add devices first."
+      "entry_not_loaded": "The TapHome Core is not loaded. Fix the connection first."
     }
   },
   "selector": {
@@ -319,6 +264,107 @@
           "entry_not_loaded": "The TapHome Core is not loaded. Fix the connection first.",
           "device_gone": "The device is no longer exposed in the TapHome API."
         }
+      }
+    }
+  },
+  "config_subentries": {
+    "device": {
+      "initiate_flow": {
+        "user": "Add device"
+      },
+      "entry_type": "Device",
+      "step": {
+        "user": {
+          "title": "Add TapHome device",
+          "data": {
+            "device": "Device"
+          },
+          "data_description": {
+            "device": "Pick the TapHome device to expose."
+          }
+        },
+        "platform": {
+          "title": "Select domain",
+          "data": {
+            "platform": "Expose as"
+          }
+        },
+        "configure": {
+          "title": "Device options",
+          "description": "Set the options for this device. Empty fields use automatic defaults.",
+          "data": {
+            "effect_id": "Effects multi value switch",
+            "device_class": "Device class",
+            "actions": "Actions",
+            "close_threshold": "Close threshold (%)",
+            "range_high_thermostat_id": "Range high thermostat",
+            "range_low_thermostat_id": "Range low thermostat",
+            "target_temperature_step": "Target temperature step",
+            "precision": "Temperature precision",
+            "hvac_switch_id": "HVAC switch",
+            "hvac_mode": "Fixed HVAC mode",
+            "hvac_mode_id": "HVAC mode multi value switch",
+            "hvac_action_id": "HVAC action multi value switch",
+            "preset_mode_id": "Preset modes multi value switch",
+            "fan_mode_id": "Fan modes multi value switch",
+            "swing_mode_id": "Swing modes multi value switch",
+            "swing_horizontal_mode_id": "Horizontal swing modes multi value switch",
+            "target_humidity_id": "Target humidity analog output",
+            "min_humidity": "Minimum humidity (%)",
+            "max_humidity": "Maximum humidity (%)",
+            "switch_id": "On/off switch",
+            "action_id": "Action multi value switch",
+            "mode_id": "Modes multi value switch",
+            "humidity_sensor_id": "Humidity sensor",
+            "value_type": "Value type",
+            "unit_of_measurement": "Unit of measurement",
+            "state_class": "State class"
+          },
+          "submit": "Add"
+        },
+        "reconfigure": {
+          "title": "Device options",
+          "description": "Change the options for this device. Empty fields use automatic defaults.",
+          "data": {
+            "effect_id": "Effects multi value switch",
+            "device_class": "Device class",
+            "actions": "Actions",
+            "close_threshold": "Close threshold (%)",
+            "range_high_thermostat_id": "Range high thermostat",
+            "range_low_thermostat_id": "Range low thermostat",
+            "target_temperature_step": "Target temperature step",
+            "precision": "Temperature precision",
+            "hvac_switch_id": "HVAC switch",
+            "hvac_mode": "Fixed HVAC mode",
+            "hvac_mode_id": "HVAC mode multi value switch",
+            "hvac_action_id": "HVAC action multi value switch",
+            "preset_mode_id": "Preset modes multi value switch",
+            "fan_mode_id": "Fan modes multi value switch",
+            "swing_mode_id": "Swing modes multi value switch",
+            "swing_horizontal_mode_id": "Horizontal swing modes multi value switch",
+            "target_humidity_id": "Target humidity analog output",
+            "min_humidity": "Minimum humidity (%)",
+            "max_humidity": "Maximum humidity (%)",
+            "switch_id": "On/off switch",
+            "action_id": "Action multi value switch",
+            "mode_id": "Modes multi value switch",
+            "humidity_sensor_id": "Humidity sensor",
+            "value_type": "Value type",
+            "unit_of_measurement": "Unit of measurement",
+            "state_class": "State class"
+          },
+          "submit": "Save"
+        }
+      },
+      "error": {
+        "invalid_device_id": "Invalid device ID."
+      },
+      "abort": {
+        "entry_not_loaded": "The TapHome Core is not loaded. Fix the connection first.",
+        "no_devices_available": "Every TapHome device is already exposed on every compatible domain.",
+        "unknown_subentry": "This device configuration is no longer valid.",
+        "already_configured": "This device is already exposed on this domain.",
+        "reconfigure_successful": "Reconfiguration was successful."
       }
     }
   }

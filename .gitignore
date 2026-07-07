@@ -1,2 +1,5 @@
 __pycache__/
 codex-apply.sh
+.venv/
+.pytest_cache/
+.ruff_cache/

@@ -8,7 +8,7 @@ from taphome_sdk import SessionDurationVariableDevice, SessionDurationVariableSt
 
 from homeassistant.components.time import DOMAIN as TIME_DOMAIN, TimeEntity
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .add_entry_request import add_taphome_entities
 from .entity import TapHomeEntity
@@ -47,7 +47,7 @@ class TapHomeTime(TapHomeEntity, TimeEntity):
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: TapHomeConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up TapHome times from a config entry."""
     add_taphome_entities(entry, async_add_entities, TIME_DOMAIN, TapHomeTime)

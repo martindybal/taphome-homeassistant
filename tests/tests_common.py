@@ -255,27 +255,53 @@ def make_hub(api: FakeTapHomeApi | None = None) -> TapHomeHub:
 
 
 def make_config_entry(extra_options: dict | None = None):
-    """Return a config entry as created by the config flow."""
+    """Return a config entry as created by the config flow (device subentries)."""
     from pytest_homeassistant_custom_component.common import MockConfigEntry
 
-    from custom_components.taphome.const import CONF_API_URL, DOMAIN
+    from custom_components.taphome.const import (
+        CONF_API_URL,
+        DEVICE_CONFIG_KEYS,
+        DOMAIN,
+    )
+    from custom_components.taphome.subentry import build_device_subentry_data
+    from homeassistant.config_entries import ConfigSubentryData
     from homeassistant.const import CONF_ID, CONF_TOKEN
+
+    raw = {
+        "lights": [{"id": 1}],
+        "switches": [{"id": 2}],
+        "sensors": [{"id": 5}],
+        **(extra_options or {}),
+    }
+    device_keys = set(DEVICE_CONFIG_KEYS)
+
+    options: dict = {}
+    subentries: list[ConfigSubentryData] = []
+    for key, value in raw.items():
+        if key not in device_keys or not isinstance(value, list):
+            options[key] = value
+            continue
+        for device_config in value:
+            config = (
+                dict(device_config)
+                if isinstance(device_config, dict)
+                else {"id": device_config}
+            )
+            title = f"TapHome device {int(config['id'])}"
+            subentries.append(build_device_subentry_data(key, config, title))
 
     return MockConfigEntry(
         domain=DOMAIN,
         title=TEST_LOCATION_NAME,
         unique_id=TEST_LOCATION_ID,
+        minor_version=2,
         data={
             CONF_TOKEN: TEST_TOKEN,
             CONF_API_URL: TEST_API_URL,
             CONF_ID: None,
         },
-        options={
-            "lights": [{"id": 1}],
-            "switches": [{"id": 2}],
-            "sensors": [{"id": 5}],
-            **(extra_options or {}),
-        },
+        options=options,
+        subentries_data=subentries,
     )
 
 
@@ -284,3 +310,34 @@ async def setup_integration(hass: HomeAssistant, config_entry) -> None:
     config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
+
+
+def device_subentry(config_entry, platform: str, device_id: int):
+    """Return the device subentry for one platform/device, or None."""
+    from custom_components.taphome.subentry import (
+        iter_device_subentries,
+        subentry_platform,
+    )
+
+    for subentry in iter_device_subentries(config_entry):
+        if (
+            subentry_platform(subentry.data) == platform
+            and int(subentry.data.get("id")) == device_id
+        ):
+            return subentry
+    return None
+
+
+def device_subentry_configs(config_entry, platform: str) -> list[dict]:
+    """Return the device configs (minus the platform key) for one platform."""
+    from custom_components.taphome.subentry import (
+        device_config_from_subentry,
+        iter_device_subentries,
+        subentry_platform,
+    )
+
+    return [
+        device_config_from_subentry(subentry.data)
+        for subentry in iter_device_subentries(config_entry)
+        if subentry_platform(subentry.data) == platform
+    ]
