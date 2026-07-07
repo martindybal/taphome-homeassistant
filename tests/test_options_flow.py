@@ -16,6 +16,19 @@ async def _start_options_flow(hass: HomeAssistant, entry):
     return result
 
 
+def _device_ids(hass: HomeAssistant, *entity_ids: str) -> list[str]:
+    """Resolve entity ids to the Home Assistant device ids edit/remove expect."""
+    from homeassistant.helpers import entity_registry as er
+
+    registry = er.async_get(hass)
+    device_ids: list[str] = []
+    for entity_id in entity_ids:
+        entry = registry.async_get(entity_id)
+        assert entry is not None and entry.device_id is not None
+        device_ids.append(entry.device_id)
+    return device_ids
+
+
 async def test_options_menu_requires_loaded_entry(
     hass: HomeAssistant, mock_hub
 ) -> None:
@@ -86,6 +99,46 @@ async def test_options_add_device(hass: HomeAssistant, mock_hub) -> None:
     assert hass.states.get("switch.garden_socket") is not None
 
 
+def _devices_field(data_schema):
+    """Return the (default, selector) of the add-devices ``devices`` field."""
+    for marker, selector in data_schema.schema.items():
+        if getattr(marker, "schema", marker) == "devices":
+            return marker.default(), selector
+    raise AssertionError("no 'devices' field in the add_devices schema")
+
+
+async def test_add_devices_skips_helper_referenced_device(
+    hass: HomeAssistant, mock_hub
+) -> None:
+    """A device used only as another device's helper is not preselected."""
+    # Garden Socket (2) is not exposed on its own; it is only used as the
+    # thermostat's hvac switch. It is in use, so it must not be preselected,
+    # while a genuinely unused device (Bedroom Blinds, 4) still is.
+    entry = make_config_entry(
+        {
+            "switches": [],
+            "climates": [{"id": 3, "hvac_switch_id": 2, "hvac_mode": "heat"}],
+        }
+    )
+    await setup_integration(hass, entry)
+
+    result = await _start_options_flow(hass, entry)
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], {"next_step_id": "add_devices"}
+    )
+    assert result["step_id"] == "add_devices"
+
+    default, selector = _devices_field(result["data_schema"])
+    # Configured (1, 3, 5) and helper-referenced (2) devices are excluded; a
+    # genuinely unused device (4) is still preselected.
+    assert "2" not in default
+    assert "4" in default
+    assert {"1", "3", "5"}.isdisjoint(default)
+    # Device 2 remains a selectable option so it can still be added manually.
+    options = {option["value"] for option in selector.config["options"]}
+    assert "2" in options
+
+
 async def test_options_remove_device(hass: HomeAssistant, mock_hub) -> None:
     """Removing a configured device drops its options and its entity."""
     entry = make_config_entry()
@@ -99,13 +152,39 @@ async def test_options_remove_device(hass: HomeAssistant, mock_hub) -> None:
     assert result["step_id"] == "remove_devices"
 
     result = await hass.config_entries.options.async_configure(
-        result["flow_id"], {"devices": ["switch.garden_socket"]}
+        result["flow_id"], {"devices": _device_ids(hass, "switch.garden_socket")}
     )
     await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert not entry.options.get("switches")
     assert hass.states.get("switch.garden_socket") is None
+
+
+async def test_options_edit_skips_core_hub_device(
+    hass: HomeAssistant, mock_hub
+) -> None:
+    """The Core hub device is offered by the selector but has no options."""
+    from homeassistant.helpers import device_registry as dr
+
+    from custom_components.taphome.const import DOMAIN
+    from tests_common import TEST_LOCATION_ID
+
+    entry = make_config_entry()
+    await setup_integration(hass, entry)
+
+    hub_device = dr.async_get(hass).async_get_device({(DOMAIN, TEST_LOCATION_ID)})
+    assert hub_device is not None
+
+    result = await _start_options_flow(hass, entry)
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], {"next_step_id": "edit_devices"}
+    )
+    # Selecting only the hub (no configured entity) is treated as no selection.
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], {"devices": [hub_device.id]}
+    )
+    assert result["errors"] == {"base": "no_devices_selected"}
 
 
 async def test_options_menu_zones_mapping(hass: HomeAssistant, mock_hub) -> None:
@@ -180,7 +259,11 @@ async def test_options_edit_device_field_kinds(hass: HomeAssistant, mock_hub) ->
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
-        {"devices": ["climate.living_room_thermostat", "light.kitchen_light"]},
+        {
+            "devices": _device_ids(
+                hass, "climate.living_room_thermostat", "light.kitchen_light"
+            )
+        },
     )
     assert result["step_id"] == "edit_devices_form"
 
@@ -234,7 +317,7 @@ async def test_options_edit_sensor_value_type(hass: HomeAssistant, mock_hub) -> 
         result["flow_id"], {"next_step_id": "edit_devices"}
     )
     result = await hass.config_entries.options.async_configure(
-        result["flow_id"], {"devices": ["sensor.outside_temperature"]}
+        result["flow_id"], {"devices": _device_ids(hass, "sensor.outside_temperature")}
     )
     assert result["step_id"] == "edit_devices_form"
 
@@ -356,7 +439,7 @@ async def test_options_edit_button_multi_enum(hass: HomeAssistant, mock_hub) -> 
         result["flow_id"], {"next_step_id": "edit_devices"}
     )
     result = await hass.config_entries.options.async_configure(
-        result["flow_id"], {"devices": ["button.hall_button"]}
+        result["flow_id"], {"devices": _device_ids(hass, "button.hall_button")}
     )
     assert result["step_id"] == "edit_devices_form"
 
@@ -406,7 +489,7 @@ async def test_options_device_labels_show_mapped_area(
         result["flow_id"], {"next_step_id": "edit_devices"}
     )
     result = await hass.config_entries.options.async_configure(
-        result["flow_id"], {"devices": ["switch.pool_pump"]}
+        result["flow_id"], {"devices": _device_ids(hass, "switch.pool_pump")}
     )
     assert result["step_id"] == "edit_devices_form"
 
@@ -428,7 +511,7 @@ async def test_options_edit_legacy_int_config(hass: HomeAssistant, mock_hub) -> 
         result["flow_id"], {"next_step_id": "edit_devices"}
     )
     result = await hass.config_entries.options.async_configure(
-        result["flow_id"], {"devices": ["switch.garden_socket"]}
+        result["flow_id"], {"devices": _device_ids(hass, "switch.garden_socket")}
     )
     assert result["step_id"] == "edit_devices_form"
 
@@ -541,7 +624,7 @@ async def test_options_device_label_without_mapping_shows_zone(
         result["flow_id"], {"next_step_id": "edit_devices"}
     )
     result = await hass.config_entries.options.async_configure(
-        result["flow_id"], {"devices": ["switch.pool_pump"]}
+        result["flow_id"], {"devices": _device_ids(hass, "switch.pool_pump")}
     )
     result = await hass.config_entries.options.async_configure(
         result["flow_id"], {"Pool Pump (9) — Garden · switches": {}}
@@ -570,6 +653,10 @@ async def test_options_edit_renders_stored_values(
     )
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
-        {"devices": ["climate.living_room_thermostat", "sensor.outside_temperature"]},
+        {
+            "devices": _device_ids(
+                hass, "climate.living_room_thermostat", "sensor.outside_temperature"
+            )
+        },
     )
     assert result["step_id"] == "edit_devices_form"

@@ -1,5 +1,8 @@
 {
   "config": {
+    "initiate_flow": {
+      "user": "Pridať TapHome Core"
+    },
     "step": {
       "user": {
         "title": "Pripojiť TapHome Core",
@@ -65,7 +68,11 @@
         "title": "Pridať zariadenia",
         "description": "Vyberte zariadenia TapHome, ktoré chcete pridať. Do poľa môžete písať a vyhľadávať. Pri zatiaľ nepridaných zariadeniach sa zobrazuje TapHome zóna a kategória, pri pridaných miestnosť.",
         "data": {
-          "devices": "Zariadenia"
+          "devices": "Zariadenia",
+          "clear_selection": "Zrušiť výber"
+        },
+        "data_description": {
+          "clear_selection": "Zapnite a stlačte Ďalej pre zrušenie celého výberu, potom vyberte len požadované zariadenia."
         }
       },
       "add_devices_platform": {

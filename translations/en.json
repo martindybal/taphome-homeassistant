@@ -1,5 +1,8 @@
 {
   "config": {
+    "initiate_flow": {
+      "user": "Add TapHome Core"
+    },
     "step": {
       "user": {
         "title": "Connect TapHome Core",
@@ -65,7 +68,11 @@
         "title": "Add devices",
         "description": "Pick the TapHome devices you want to add. Type in the field to search. Devices that are not added yet show their TapHome zone and category, added devices show their room.",
         "data": {
-          "devices": "Devices"
+          "devices": "Devices",
+          "clear_selection": "Deselect all"
+        },
+        "data_description": {
+          "clear_selection": "Turn on and press Next to clear the whole selection, then pick only the devices you want."
         }
       },
       "add_devices_platform": {

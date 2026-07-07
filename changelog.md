@@ -2,7 +2,7 @@
 
 ## 2026.7
 
-- **Devices and Home Assistant naming**: every TapHome device is now a device in the Home Assistant device registry (with the Core as its hub); entities take the device name and the TapHome zone pre-fills the suggested area. The `use description as entity id/name` options were removed — rename entities and devices in the Home Assistant UI. Entity unique ids (and therefore history and automations) are unchanged; displayed names may regenerate unless you renamed them earlier.
+- **Devices and Home Assistant naming**: every TapHome device is now a device in the Home Assistant device registry (with the Core as its hub); entities take the device name and the TapHome zone pre-fills the suggested area. Configured zone → area and category → label mappings are applied to the device itself (the category label is added to the entity as well). The `use description as entity id/name` options were removed — rename entities and devices in the Home Assistant UI. Entity unique ids (and therefore history and automations) are unchanged; displayed names may regenerate unless you renamed them earlier.
 
 - **Test suite**: the integration now has automated tests (config flow wizard, options flow, reauth/reconfigure, entry setup/unload, webhook push, YAML import, light/switch/sensor/cover/climate/select platforms) running in CI.
 - **Documentation rewritten for the UI era**: the YAML reference (`configuration.md`) and the YAML config generator were removed; the new [user guide](docs/user-guide.md) documents the setup wizard, the Configure dialog, webhook setup, migration from YAML and troubleshooting.
@@ -13,10 +13,12 @@
   - Add a core in _Settings → Devices & services_ with its token and either its IP address or the TapHome cloud; core settings (webhook, description flags, exposed attributes) can be filled in right when adding. Each core is a separate integration entry validated against the core.
   - The **Configure** dialog covers everything YAML supported: **Core settings** (connection, webhook, description flags, exposed attributes — the same fields as when adding the core), zone → area and category → label mapping with rename/ignore, adding, editing and removing devices via searchable pickers that show each device's room/zone, and advanced per-device options (device class, effects, climate controller ids, …).
   - **Reconfigure** and **Configure → Core settings** both show the same connection and core settings fields, so the connection can be changed from either place; an automatic re-authentication flow also starts when the core rejects the token.
+  - The button that starts the setup now reads **Add TapHome Core** instead of the generic Home Assistant "Add hub".
 - **YAML configuration is deprecated**: An existing `taphome:` section is imported into the UI automatically on startup — entity unique IDs and history are preserved (the YAML core `id` is kept). A repair issue reminds you to remove the YAML section; changes made in YAML are no longer applied after the import.
 - Reloading or removing an integration entry now properly stops polling and unregisters the webhook.
 - Removing a device from the configuration also removes its entities from the entity registry — no manual cleanup in Home Assistant is needed.
 - New devices exposed in the TapHome API (found when the integration is reloaded or Home Assistant restarts) raise a repair issue that lets you add the device — pick the platform to expose it as, or ignore it so it is not reported again.
+- The **Add devices** picker no longer pre-selects a device that is already used as another device's helper (for example a thermostat's HVAC switch); it can still be selected manually to expose it on its own.
 - Sensor and binary sensor types are detected automatically; their per-device options are now collapsed as advanced (and skipped in the new-device repair flow), so they are out of the way but still available to override.
 - Minimum supported Home Assistant version is 2025.3.
 - The documented button `actions` value `long_press` (with underscore) is now parsed correctly.

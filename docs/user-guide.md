@@ -31,7 +31,8 @@ _Settings → Devices & services → Add integration → **TapHome**_
 3. **Zones** (shown only when your devices have zones) — map TapHome zones to
    Home Assistant areas, or ignore zones you do not want mapped.
 4. **Labels** (shown only when your devices have categories) — map TapHome
-   categories to Home Assistant labels.
+   categories to Home Assistant labels. The label is applied to the device and
+   to its entity.
 5. **Devices** — pick the devices to add. For each device choose the
    platform(s) it should be exposed as (light, switch, cover, …) and fill in
    optional per-device settings. Only platforms compatible with the device
@@ -74,10 +75,11 @@ offers:
 - **Add devices** — the same device picker as during setup. Devices already
   configured are pre-unselected; adding a device again on another platform is
   supported (e.g. one output as both switch and light).
-- **Edit devices** — pick configured devices by entity and change their
-  per-device options (device class, effects, climate controller links, …).
-- **Remove devices** — removes the device configuration **and** its entities
-  from Home Assistant. No manual registry cleanup is needed.
+- **Edit devices** — pick configured devices from the device picker and change
+  their per-device options (device class, effects, climate controller links, …).
+- **Remove devices** — pick configured devices from the device picker; this
+  removes the device configuration **and** its entities from Home Assistant. No
+  manual registry cleanup is needed.
 - **Zones** / **Labels** — edit the zone → area and category → label mapping
   at any time.
 

@@ -33,8 +33,9 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import (
     AreaSelector,
     BooleanSelector,
-    EntitySelector,
-    EntitySelectorConfig,
+    DeviceFilterSelectorConfig,
+    DeviceSelector,
+    DeviceSelectorConfig,
     LabelSelector,
     NumberSelector,
     NumberSelectorConfig,
@@ -578,11 +579,11 @@ class _TapHomeSetupFlow(ConfigEntryBaseFlow):
         ]
         options.sort(key=lambda option: option["label"].casefold())
 
-        configured_ids = self._configured_device_ids()
+        used_ids = self._configured_device_ids() | self._referenced_device_ids()
         unconfigured = [
             option["value"]
             for option in options
-            if int(option["value"]) not in configured_ids
+            if int(option["value"]) not in used_ids
         ]
 
         schema = vol.Schema(
@@ -746,30 +747,29 @@ class _TapHomeSetupFlow(ConfigEntryBaseFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Pick the configured devices that should be edited."""
-        entity_map = self._entity_selection_map()
-        if not entity_map:
+        device_map = self._device_selection_map()
+        if not device_map:
             return self.async_abort(reason="no_devices_configured")
 
         errors: dict[str, str] = {}
         if user_input is not None:
-            entity_ids = user_input.get("devices", [])
-            # The selector limits the values to this entry's entities.
-            if not entity_ids:
+            selection = self._selection_for_devices(
+                user_input.get("devices", []), device_map
+            )
+            if not selection:
                 errors["base"] = "no_devices_selected"
             else:
-                self._edit_selection = list(
-                    dict.fromkeys(entity_map[entity_id] for entity_id in entity_ids)
-                )
+                self._edit_selection = selection
                 return await self.async_step_edit_devices_form()
 
         return self.async_show_form(
             step_id="edit_devices",
             data_schema=vol.Schema(
                 {
-                    vol.Optional("devices"): EntitySelector(
-                        EntitySelectorConfig(
+                    vol.Optional("devices"): DeviceSelector(
+                        DeviceSelectorConfig(
                             multiple=True,
-                            include_entities=sorted(entity_map),
+                            filter=[DeviceFilterSelectorConfig(integration=DOMAIN)],
                         )
                     )
                 }
@@ -782,32 +782,29 @@ class _TapHomeSetupFlow(ConfigEntryBaseFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Pick the configured devices that should be removed."""
-        entity_map = self._entity_selection_map()
-        if not entity_map:
+        device_map = self._device_selection_map()
+        if not device_map:
             return self.async_abort(reason="no_devices_configured")
 
         errors: dict[str, str] = {}
         if user_input is not None:
-            entity_ids = user_input.get("devices", [])
-            # The selector limits the values to this entry's entities.
-            if not entity_ids:
+            selection = self._selection_for_devices(
+                user_input.get("devices", []), device_map
+            )
+            if not selection:
                 errors["base"] = "no_devices_selected"
             else:
-                self._remove_devices(
-                    list(
-                        dict.fromkeys(entity_map[entity_id] for entity_id in entity_ids)
-                    )
-                )
+                self._remove_devices(selection)
                 return self._async_save_options()
 
         return self.async_show_form(
             step_id="remove_devices",
             data_schema=vol.Schema(
                 {
-                    vol.Optional("devices"): EntitySelector(
-                        EntitySelectorConfig(
+                    vol.Optional("devices"): DeviceSelector(
+                        DeviceSelectorConfig(
                             multiple=True,
-                            include_entities=sorted(entity_map),
+                            filter=[DeviceFilterSelectorConfig(integration=DOMAIN)],
                         )
                     )
                 }
@@ -948,6 +945,44 @@ class _TapHomeSetupFlow(ConfigEntryBaseFlow):
             selections[entry.entity_id] = selection
         return selections
 
+    def _device_selection_map(self) -> dict[str, list[str]]:
+        """Map this entry's Home Assistant device ids to their selections.
+
+        Every TapHome device is a Home Assistant device, so edit and remove let
+        the user pick devices. A device can back several configured entries (for
+        example a device exposed on two platforms), so each device id maps to the
+        list of its ``config_key:index`` selections, resolved through its
+        entities by :meth:`_entity_selection_map`.
+        """
+        registry = er.async_get(self.hass)
+        device_selections: dict[str, list[str]] = {}
+        for entity_id, selection in self._entity_selection_map().items():
+            entry = registry.async_get(entity_id)
+            if entry is None or entry.device_id is None:
+                continue
+            selections = device_selections.setdefault(entry.device_id, [])
+            if selection not in selections:
+                selections.append(selection)
+        return device_selections
+
+    @staticmethod
+    def _selection_for_devices(
+        device_ids: list[str], device_map: dict[str, list[str]]
+    ) -> list[str]:
+        """Flatten selected device ids to their de-duplicated selections.
+
+        Device ids that do not belong to this entry (the Core hub device or
+        another Core's devices, both matched by the integration selector) are
+        not in ``device_map`` and are skipped.
+        """
+        return list(
+            dict.fromkeys(
+                selection
+                for device_id in device_ids
+                for selection in device_map.get(device_id, [])
+            )
+        )
+
     def _remove_devices(self, selections: list[str]) -> None:
         """Remove the selected config_key:index entries from the options."""
         indexes_by_platform: dict[str, list[int]] = {}
@@ -1000,6 +1035,38 @@ class _TapHomeSetupFlow(ConfigEntryBaseFlow):
             for descriptor in PLATFORM_DESCRIPTORS
             for device_config in self._options.get(descriptor.config_key) or []
         }
+
+    def _referenced_device_ids(self) -> set[int]:
+        """Return the ids of devices used as a helper of a configured device.
+
+        A device referenced through another device's options (e.g. a
+        thermostat's ``hvac_switch_id`` or a light's ``effect_id``) has no
+        entity of its own, so it is not caught by ``_configured_device_ids``.
+        It is still in use, though, and must not be preselected in the "add
+        devices" step. The user can still pick it manually to expose it
+        separately.
+        """
+        referenced: set[int] = set()
+        for descriptor in PLATFORM_DESCRIPTORS:
+            id_keys = [
+                field.key
+                for field in descriptor.fields
+                if field.kind == FieldKind.DEVICE_ID
+            ]
+            if not id_keys:
+                continue
+            for device_config in self._options.get(descriptor.config_key) or []:
+                if not isinstance(device_config, dict):
+                    continue
+                for key in id_keys:
+                    value = device_config.get(key)
+                    if value is None:
+                        continue
+                    try:
+                        referenced.add(int(value))
+                    except (TypeError, ValueError):
+                        continue
+        return referenced
 
     def _area_name(self, zone: str | None) -> str | None:
         """Return the Home Assistant area name a TapHome zone maps to."""

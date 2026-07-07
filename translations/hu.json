@@ -1,5 +1,8 @@
 {
   "config": {
+    "initiate_flow": {
+      "user": "TapHome Core hozzáadása"
+    },
     "step": {
       "user": {
         "title": "TapHome Core csatlakoztatása",
@@ -65,7 +68,11 @@
         "title": "Eszközök hozzáadása",
         "description": "Válassza ki a hozzáadni kívánt TapHome eszközöket. A mezőbe gépelve kereshet. A még hozzá nem adott eszközöknél a TapHome zóna és kategória, a hozzáadottaknál a helyiség jelenik meg.",
         "data": {
-          "devices": "Eszközök"
+          "devices": "Eszközök",
+          "clear_selection": "Kijelölés törlése"
+        },
+        "data_description": {
+          "clear_selection": "Kapcsolja be, és nyomja meg a Tovább gombot a teljes kijelölés törléséhez, majd válassza ki csak a kívánt eszközöket."
         }
       },
       "add_devices_platform": {
