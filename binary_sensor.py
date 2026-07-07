@@ -5,6 +5,9 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import datetime
 
+from taphome_sdk import Device, DeviceState, HubConnectionState, TapHomeHub, ValueType
+from taphome_sdk.taphome_api import ApiConnectionType
+
 from homeassistant.components.binary_sensor import (
     DOMAIN as BINARY_SENSOR_DOMAIN,
     BinarySensorDeviceClass,
@@ -13,20 +16,17 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from taphome_sdk import Device, DeviceState, HubConnectionState, TapHomeHub, ValueType
-
 from .add_entry_request import add_taphome_entities
+from .entity import TapHomeEntity, TapHomeSubscriptionMixin
 from .taphome_config_entry import (
     AddEntryRequest,
     TapHomeCoreConfig,
     TapHomeEntityConfig,
 )
 from .taphome_data import TapHomeConfigEntry
-from .taphome_entity import TapHomeEntity
-from taphome_sdk.taphome_api import ApiConnectionType
 
 
-class TapHomeIsAliveSensor(BinarySensorEntity):
+class TapHomeIsAliveSensor(TapHomeSubscriptionMixin, BinarySensorEntity):
     """Binary sensor reporting availability of the TapHome core."""
 
     sensor_value_type = ValueType.MOTION
@@ -50,10 +50,15 @@ class TapHomeIsAliveSensor(BinarySensorEntity):
         if not hasattr(self, "_attr_extra_state_attributes"):
             self._attr_extra_state_attributes = {}
 
-        hub.connection_state.changed += self._on_hub_connection_state_change
-        hub.connection_type.changed += self._on_hub_connection_type_change
-        hub.last_update_success_time.changed += (
-            self._on_hub_last_update_success_time_change
+        self._subscribe(
+            hub.connection_state.changed, self._on_hub_connection_state_change
+        )
+        self._subscribe(
+            hub.connection_type.changed, self._on_hub_connection_type_change
+        )
+        self._subscribe(
+            hub.last_update_success_time.changed,
+            self._on_hub_last_update_success_time_change,
         )
 
     def _on_hub_connection_state_change(
@@ -155,9 +160,13 @@ class TapHomeBinarySensor(TapHomeEntity, BinarySensorEntity):
 
         self._device = config.hub.get_typed_device(config.entity.id, Device)
 
-        self._device.state.changed += self._on_device_state_change
-        super().__init__(config, self._device, BINARY_SENSOR_DOMAIN, 
-                        self._sensor_type.value_type.name.replace('_', ''))
+        self._subscribe(self._device.state.changed, self._on_device_state_change)
+        super().__init__(
+            config,
+            self._device,
+            BINARY_SENSOR_DOMAIN,
+            self._sensor_type.value_type.name.replace("_", ""),
+        )
 
     def _on_device_state_change(
         self, _: DeviceState | None, current_state: DeviceState

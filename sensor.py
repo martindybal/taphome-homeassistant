@@ -7,6 +7,8 @@ from dataclasses import dataclass, replace
 from datetime import date, datetime
 from decimal import Decimal
 
+from taphome_sdk import Device, DeviceState, ValueType
+
 from homeassistant.components.sensor import (
     DOMAIN as SENSOR_DOMAIN,
     SensorDeviceClass,
@@ -32,12 +34,10 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from taphome_sdk import Device, DeviceState, ValueType
-
 from .add_entry_request import add_taphome_entities
+from .entity import TapHomeEntity
 from .taphome_config_entry import AddEntryRequest, TapHomeEntityConfig
 from .taphome_data import TapHomeConfigEntry
-from .taphome_entity import TapHomeEntity
 
 
 @dataclass(slots=True)
@@ -292,9 +292,13 @@ class TapHomeSensor(TapHomeEntity, SensorEntity):
 
         self._device = config.hub.get_typed_device(config.entity.id, Device)
 
-        self._device.state.changed += self._on_device_state_change
-        super().__init__(config, self._device, SENSOR_DOMAIN,
-                        self._sensor_type.value_type.name.replace('_', ''))
+        self._subscribe(self._device.state.changed, self._on_device_state_change)
+        super().__init__(
+            config,
+            self._device,
+            SENSOR_DOMAIN,
+            self._sensor_type.value_type.name.replace("_", ""),
+        )
 
     def _on_device_state_change(
         self, _: DeviceState | None, current_state: DeviceState

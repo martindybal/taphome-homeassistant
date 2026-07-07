@@ -4,19 +4,17 @@ from __future__ import annotations
 
 import logging
 
+from taphome_sdk import DeviceState, ValueType, VariableDevice, VariableState
+
 from homeassistant.components.number import DOMAIN as NUMBER_DOMAIN, NumberEntity
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import (
-    AddEntitiesCallback,
-)
-
-from taphome_sdk import DeviceState, ValueType, VariableDevice, VariableState
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .add_entry_request import add_taphome_entities
 from .const import CONF_NUMBERS
+from .entity import TapHomeEntity
 from .taphome_config_entry import AddEntryRequest, TapHomeEntityConfig
 from .taphome_data import TapHomeConfigEntry
-from .taphome_entity import TapHomeEntity
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -45,6 +45,10 @@ def ensure_custom_components_package() -> None:
 
 ensure_custom_components_package()
 
+# Import the integration before pytest-homeassistant-custom-component installs
+# its own custom_components module, so the package stays cached in sys.modules.
+import custom_components.taphome  # noqa: E402,F401
+
 from taphome_sdk import (  # noqa: E402
     HubConnectionState,
     Location,

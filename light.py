@@ -4,17 +4,6 @@ from __future__ import annotations
 
 from abc import ABC
 
-from homeassistant.components.light import (
-    DEFAULT_MAX_KELVIN,
-    DEFAULT_MIN_KELVIN,
-    DOMAIN as LIGHT_DOMAIN,
-    ColorMode,
-    LightEntity,
-    LightEntityFeature,
-)
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-
 from taphome_sdk import (
     AnalogOutputDevice,
     AnalogOutputState,
@@ -28,10 +17,19 @@ from taphome_sdk import (
     RGBLightState,
 )
 
+from homeassistant.components.light import (
+    DOMAIN as LIGHT_DOMAIN,
+    ColorMode,
+    LightEntity,
+    LightEntityFeature,
+)
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
 from .add_entry_request import add_taphome_entities
+from .entity import TapHomeEntity
 from .taphome_config_entry import AddEntryRequest, TapHomeEntityConfig
 from .taphome_data import TapHomeConfigEntry
-from .taphome_entity import TapHomeEntity
 
 
 class TapHomeLightConfig(TapHomeEntityConfig):
@@ -56,7 +54,7 @@ class TapHomeLight(TapHomeEntity, LightEntity, ABC):
     ) -> None:
         """Initialize TapHome light entity."""
         self._light = light
-        self._light.state.changed.subscribe(self._on_light_state_change)
+        self._subscribe(self._light.state.changed, self._on_light_state_change)
 
         if config.entity.effect_id:
             self._attr_supported_features = LightEntityFeature.EFFECT
@@ -64,7 +62,7 @@ class TapHomeLight(TapHomeEntity, LightEntity, ABC):
                 config.entity.effect_id, MultiValueSwitchDevice
             )
             self._attr_effect_list = self._effect_device.options
-            self._effect_device.state.changed += self._on_effect_change
+            self._subscribe(self._effect_device.state.changed, self._on_effect_change)
             self._schedule_update_when_changed(self._effect_device)
 
         super().__init__(config, self._light, LIGHT_DOMAIN)
@@ -105,7 +103,9 @@ class TapHomeGenericOutputLight(TapHomeLight):
                     ColorMode.BRIGHTNESS,
                 }
                 self._attr_color_mode = ColorMode.BRIGHTNESS
-                light.state.changed += self._light_analog_output_state_change
+                self._subscribe(
+                    light.state.changed, self._light_analog_output_state_change
+                )
             case DigitalOutputDevice():
                 self._attr_supported_color_modes = {
                     ColorMode.ONOFF,
@@ -170,7 +170,7 @@ class TapHomeColorLight(TapHomeLight):
                     ColorMode.COLOR_TEMP,
                 }
 
-        light.state.changed.subscribe(self._on_color_light_state_change)
+        self._subscribe(light.state.changed, self._on_color_light_state_change)
         super().__init__(config, light)
 
     def _on_color_light_state_change(

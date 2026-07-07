@@ -1,15 +1,15 @@
 """TapHome light integration."""
 
+from taphome_sdk import MultiValueSwitchDevice, MultiValueSwitchState
+
 from homeassistant.components.select import DOMAIN as SELECT_DOMAIN, SelectEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from taphome_sdk import MultiValueSwitchDevice, MultiValueSwitchState
-
 from .add_entry_request import add_taphome_entities
+from .entity import TapHomeEntity
 from .taphome_config_entry import AddEntryRequest, TapHomeEntityConfig
 from .taphome_data import TapHomeConfigEntry
-from .taphome_entity import TapHomeEntity
 
 
 class TapHomeSelect(TapHomeEntity, SelectEntity):
@@ -24,8 +24,9 @@ class TapHomeSelect(TapHomeEntity, SelectEntity):
         self._multi_value_switch = config.hub.get_typed_device(
             config.entity.id, MultiValueSwitchDevice
         )
-        self._multi_value_switch.state.changed += (
-            self._on__multi_value_switch_state_change
+        self._subscribe(
+            self._multi_value_switch.state.changed,
+            self._on__multi_value_switch_state_change,
         )
 
         self._attr_options = self._multi_value_switch.options

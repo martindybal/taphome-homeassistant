@@ -2,6 +2,8 @@
 
 from collections.abc import Iterator
 
+from taphome_sdk import ButtonAction, ButtonDevice, enum_from_string_required
+
 from homeassistant.components.button import (
     DOMAIN as BUTTON_DOMAIN,
     ButtonDeviceClass,
@@ -10,12 +12,10 @@ from homeassistant.components.button import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from taphome_sdk import ButtonAction, ButtonDevice, enum_from_string_required
-
 from .add_entry_request import add_taphome_entities
+from .entity import TapHomeEntity
 from .taphome_config_entry import AddEntryRequest, TapHomeEntityConfig
 from .taphome_data import TapHomeConfigEntry
-from .taphome_entity import TapHomeEntity
 
 
 class TapHomeButtonConfig(TapHomeEntityConfig):
@@ -53,7 +53,9 @@ class TapHomeButton(TapHomeEntity, ButtonEntity):
         self._attr_device_class = config.entity.device_class
         self._action = action
 
-        super().__init__(config, self._button, BUTTON_DOMAIN, action.name.replace('_', ''))
+        super().__init__(
+            config, self._button, BUTTON_DOMAIN, action.name.replace("_", "")
+        )
         self._add_state_attributes(
             "taphome_button_action",
             action,
