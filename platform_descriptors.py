@@ -5,6 +5,20 @@ from __future__ import annotations
 from dataclasses import dataclass
 from enum import Enum
 
+from taphome_sdk import (
+    AnalogOutputDevice,
+    BidirectionalDevice,
+    ButtonAction,
+    ButtonDevice,
+    Device,
+    DigitalOutputDevice,
+    DualWhiteLightDevice,
+    MultiValueSwitchDevice,
+    RGBLightDevice,
+    SessionDurationVariableDevice,
+    ThermostatDevice,
+)
+
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.button import ButtonDeviceClass
 from homeassistant.components.climate import HVACMode
@@ -19,20 +33,6 @@ from homeassistant.const import (
     CONF_LIGHTS,
     CONF_SENSORS,
     CONF_SWITCHES,
-)
-
-from taphome_sdk import (
-    AnalogOutputDevice,
-    BidirectionalDevice,
-    ButtonAction,
-    ButtonDevice,
-    Device,
-    DigitalOutputDevice,
-    DualWhiteLightDevice,
-    MultiValueSwitchDevice,
-    RGBLightDevice,
-    SessionDurationVariableDevice,
-    ThermostatDevice,
 )
 
 from .const import (
@@ -94,7 +94,7 @@ _GENERIC_OUTPUT_TYPES = (
 )
 
 _BUTTON_ACTIONS = tuple(
-    action.name.lower() for action in ButtonAction if action != ButtonAction.NONE
+    action.name.lower() for action in ButtonAction if action is not ButtonAction.NONE
 )
 
 # One descriptor per device-list configuration key. The candidate types must

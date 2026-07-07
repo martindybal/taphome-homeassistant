@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, override
 
 from taphome_sdk import DigitalOutputDevice, DigitalOutputState
 
@@ -48,10 +48,12 @@ class TapHomeSwitch(TapHomeEntity, SwitchEntity):
     ) -> None:
         self._attr_is_on = current_state.is_on
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         await self._switch.async_turn_on()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         await self._switch.async_turn_off()

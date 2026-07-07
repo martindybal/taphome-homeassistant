@@ -2,6 +2,7 @@
 
 from datetime import time
 import logging
+from typing import override
 
 from taphome_sdk import SessionDurationVariableDevice, SessionDurationVariableState
 
@@ -37,6 +38,7 @@ class TapHomeTime(TapHomeEntity, TimeEntity):
     ) -> None:
         self._attr_native_value = current_state.to_time()
 
+    @override
     async def async_set_value(self, value: time) -> None:
         """Persist new time value on the device."""
         await self._variable.async_set_time(value)

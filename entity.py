@@ -1,7 +1,7 @@
 """Common entity abstractions for the TapHome integration."""
 
 from collections.abc import Callable
-from typing import Any
+from typing import Any, override
 
 from taphome_sdk import Device, DeviceState, Event, HubConnectionState
 
@@ -11,7 +11,7 @@ from homeassistant.helpers import (
     label_registry as lr,
 )
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity import Entity, cached_property
+from homeassistant.helpers.entity import Entity
 
 from .const import DOMAIN
 from .taphome_config_entry import AddEntryRequest, TapHomeEntityConfigT
@@ -47,6 +47,7 @@ class TapHomeEntity(TapHomeSubscriptionMixin, Entity):
     """Base class for all TapHome entities."""
 
     _attr_has_entity_name = True
+    _attr_should_poll = False
 
     def __init__(
         self,
@@ -75,8 +76,9 @@ class TapHomeEntity(TapHomeSubscriptionMixin, Entity):
 
         location = config.hub.location
         location_id = location.location_id if location else config.core.id or DOMAIN
+        self._device_identifiers = {(DOMAIN, f"{location_id}_{taphome_device.id}")}
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, f"{location_id}_{taphome_device.id}")},
+            identifiers=self._device_identifiers,
             name=taphome_device.name,
             manufacturer="TapHome",
             model=taphome_device.device_type,
@@ -105,6 +107,7 @@ class TapHomeEntity(TapHomeSubscriptionMixin, Entity):
             device.state.changed, lambda _, __: self.schedule_update_ha_state()
         )
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Subscribe to the SDK events and apply the zone/label mappings."""
         await super().async_added_to_hass()
@@ -120,7 +123,7 @@ class TapHomeEntity(TapHomeSubscriptionMixin, Entity):
         if area_id is None:
             return
         device_registry = dr.async_get(self.hass)
-        device = device_registry.async_get_device(self._attr_device_info["identifiers"])
+        device = device_registry.async_get_device(self._device_identifiers)
         if device is not None and device.area_id != area_id:
             device_registry.async_update_device(device.id, area_id=area_id)
 
@@ -140,11 +143,7 @@ class TapHomeEntity(TapHomeSubscriptionMixin, Entity):
             self.entity_id, labels=entry.labels | {label_id}
         )
 
-    @cached_property
-    def should_poll(self) -> bool:
-        """No need to poll. The hub pushes state updates to the entity."""
-        return False
-
+    @override
     def schedule_update_ha_state(self, force_refresh: bool = False) -> None:
         """Write the state to the state machine."""
         if self.hass is not None:
@@ -154,7 +153,7 @@ class TapHomeEntity(TapHomeSubscriptionMixin, Entity):
         self, _: HubConnectionState, current_state: HubConnectionState
     ) -> None:
         """Handle connection state changes."""
-        self._attr_available = current_state == HubConnectionState.CONNECTED
+        self._attr_available = current_state is HubConnectionState.CONNECTED
         self.schedule_update_ha_state()
 
     def _state_changed(self, _: DeviceState | None, current_state: DeviceState) -> None:

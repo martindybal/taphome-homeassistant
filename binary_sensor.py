@@ -66,7 +66,7 @@ class TapHomeIsAliveSensor(TapHomeSubscriptionMixin, BinarySensorEntity):
     ) -> None:
         """Handle hub connection state changes."""
 
-        self._attr_is_on = current_state == HubConnectionState.CONNECTED
+        self._attr_is_on = current_state is HubConnectionState.CONNECTED
 
     def _on_hub_connection_type_change(
         self, old_type: ApiConnectionType | None, current_type: ApiConnectionType
@@ -228,11 +228,16 @@ async def async_setup_entry(
     """Set up TapHome binary sensors from a config entry."""
     binary_sensors: list[BinarySensorEntity] = []
 
+    def _create_entities(
+        config: AddEntryRequest[BinarySensorEntityConfig],
+    ) -> list[TapHomeBinarySensor]:
+        return TapHomeBinarySensorFactory(config).create_entities()
+
     add_taphome_entities(
         entry,
         binary_sensors.extend,
         BINARY_SENSOR_DOMAIN,
-        lambda config: TapHomeBinarySensorFactory(config).create_entities(),
+        _create_entities,
     )
 
     runtime_data = entry.runtime_data

@@ -1,5 +1,7 @@
 """TapHome light integration."""
 
+from typing import override
+
 from taphome_sdk import MultiValueSwitchDevice, MultiValueSwitchState
 
 from homeassistant.components.select import DOMAIN as SELECT_DOMAIN, SelectEntity
@@ -40,6 +42,7 @@ class TapHomeSelect(TapHomeEntity, SelectEntity):
     ) -> None:
         self._attr_current_option = self._multi_value_switch.selected_option
 
+    @override
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
         await self._multi_value_switch.async_select_option(option)

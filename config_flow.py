@@ -14,6 +14,7 @@ import voluptuous as vol
 from homeassistant.config_entries import (
     SOURCE_IMPORT,
     ConfigEntry,
+    ConfigEntryBaseFlow,
     ConfigEntryState,
     ConfigFlow,
     ConfigFlowResult,
@@ -353,15 +354,16 @@ def build_field_selector(
             )
         )
     if option_field.kind in (FieldKind.NUMBER_INT, FieldKind.NUMBER_FLOAT):
-        return NumberSelector(
-            NumberSelectorConfig(
-                min=option_field.min_value,
-                max=option_field.max_value,
-                step=option_field.step
-                or (1 if option_field.kind == FieldKind.NUMBER_INT else 0.1),
-                mode=NumberSelectorMode.BOX,
-            )
+        number_config = NumberSelectorConfig(
+            step=option_field.step
+            or (1 if option_field.kind == FieldKind.NUMBER_INT else 0.1),
+            mode=NumberSelectorMode.BOX,
         )
+        if option_field.min_value is not None:
+            number_config["min"] = option_field.min_value
+        if option_field.max_value is not None:
+            number_config["max"] = option_field.max_value
+        return NumberSelector(number_config)
     return TextSelector()
 
 
@@ -407,7 +409,7 @@ def apply_device_options(
 
     for option_field in descriptor.fields:
         value = user_input.get(option_field.key)
-        if value in (None, "", []):
+        if value is None or value in ("", []):
             new_config.pop(option_field.key, None)
             continue
         if option_field.kind in (FieldKind.DEVICE_ID, FieldKind.VALUE_TYPE):
@@ -427,14 +429,14 @@ def apply_device_options(
     return new_config
 
 
-class _TapHomeSetupFlow:
+class _TapHomeSetupFlow(ConfigEntryBaseFlow):
     """Shared zone, label and device setup steps for config and options flows.
 
-    Mixed into ConfigFlow/OptionsFlow subclasses, which provide the flow
-    members pylint cannot see on the mixin itself.
+    Mixed into ConfigFlow/OptionsFlow subclasses. ``config_entry`` is only
+    touched by the options-flow steps, where OptionsFlow provides it.
     """
 
-    # pylint: disable=no-member
+    config_entry: ConfigEntry
 
     _options: dict[str, Any]
     _setup_wizard: bool = False
@@ -950,8 +952,8 @@ class _TapHomeSetupFlow:
         """Remove the selected config_key:index entries from the options."""
         indexes_by_platform: dict[str, list[int]] = {}
         for selection in selections:
-            config_key, index = selection.rsplit(":", 1)
-            indexes_by_platform.setdefault(config_key, []).append(int(index))
+            config_key, index_str = selection.rsplit(":", 1)
+            indexes_by_platform.setdefault(config_key, []).append(int(index_str))
         for config_key, indexes in indexes_by_platform.items():
             devices = self._options[config_key]
             for index in sorted(indexes, reverse=True):

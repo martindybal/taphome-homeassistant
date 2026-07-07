@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from abc import ABC
+from typing import override
 
 from taphome_sdk import (
     AnalogOutputDevice,
@@ -80,6 +81,7 @@ class TapHomeLight(TapHomeEntity, LightEntity, ABC):
     ) -> None:
         self._attr_effect = self._effect_device.selected_option
 
+    @override
     async def async_turn_off(self, **kwargs):
         """Turn device off."""
         await self._light.async_turn_off()
@@ -122,6 +124,7 @@ class TapHomeGenericOutputLight(TapHomeLight):
             current_state.output_value
         )
 
+    @override
     async def async_turn_on(
         self,
         *,
@@ -148,8 +151,10 @@ class TapHomeColorLight(TapHomeLight):
     ) -> None:
         """Initialize TapHome light entity."""
 
-        self._attr_min_color_temp_kelvin = light.min_color_temperature
-        self._attr_max_color_temp_kelvin = light.max_color_temperature
+        if light.min_color_temperature is not None:
+            self._attr_min_color_temp_kelvin = light.min_color_temperature
+        if light.max_color_temperature is not None:
+            self._attr_max_color_temp_kelvin = light.max_color_temperature
 
         match light:
             case RGBLightDevice():
@@ -193,6 +198,7 @@ class TapHomeColorLight(TapHomeLight):
             else None
         )
 
+    @override
     async def async_turn_on(
         self,
         *,
