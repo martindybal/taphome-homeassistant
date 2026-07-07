@@ -49,6 +49,16 @@ ensure_custom_components_package()
 # its own custom_components module, so the package stays cached in sys.modules.
 import custom_components.taphome  # noqa: E402,F401
 
+# aiodns (used by aiohttp/Home Assistant) lazily spawns a process-wide pycares
+# shutdown daemon thread. Start it before the first test so the thread-leak
+# check of pytest-homeassistant-custom-component sees it in its baseline.
+try:
+    import pycares  # noqa: E402
+
+    pycares._shutdown_manager.start()  # noqa: SLF001
+except (ImportError, AttributeError):
+    pass
+
 from taphome_sdk import (  # noqa: E402
     HubConnectionState,
     Location,
