@@ -90,8 +90,6 @@
       "invalid_auth": "Der TapHome Core hat den Token abgelehnt.",
       "ip_required": "Geben Sie die IP-Adresse Ihres Cores an oder aktivieren Sie die TapHome-Cloud.",
       "no_devices_selected": "Wählen Sie mindestens ein Gerät aus.",
-      "no_common_platform": "Die ausgewählten Geräte können in keiner Domäne bereitgestellt werden.",
-      "invalid_device": "Wählen Sie ein Gerät aus der Liste.",
       "invalid_device_id": "Ungültige Geräte-ID."
     },
     "abort": {
@@ -108,8 +106,6 @@
         "menu_options": {
           "core_settings": "Core-Einstellungen",
           "add_devices": "Geräte hinzufügen",
-          "edit_devices": "Geräte bearbeiten",
-          "remove_devices": "Geräte entfernen",
           "zones": "Zonen (Bereiche)",
           "labels": "Labels (Kategorien)"
         }
@@ -165,54 +161,6 @@
         "title": "Geräteoptionen",
         "description": "Legen Sie die Optionen für jedes ausgewählte Gerät und jede Domäne fest. Jeder Abschnitt ist ein Gerät in einer Domäne. Leere Felder verwenden automatische Standardwerte. Sensor- und Binärsensortypen werden automatisch erkannt; ihre Optionen sind eingeklappt – klappen Sie einen Abschnitt nur auf, um sie zu überschreiben.",
         "submit": "Hinzufügen"
-      },
-      "edit_devices": {
-        "title": "Geräte bearbeiten",
-        "description": "Wählen Sie die Geräte aus, die Sie bearbeiten möchten. Tippen Sie in das Feld, um zu suchen.",
-        "data": {
-          "devices": "Geräte"
-        }
-      },
-      "edit_devices_form": {
-        "title": "Geräteoptionen",
-        "description": "Legen Sie die Optionen für jedes ausgewählte Gerät fest. Jeder Abschnitt ist ein Gerät. Leere Felder verwenden automatische Standardwerte. Sensor- und Binärsensortypen werden automatisch erkannt; ihre Optionen sind eingeklappt – klappen Sie einen Abschnitt nur auf, um sie zu überschreiben.",
-        "data": {
-          "effect_id": "Mehrwertschalter für Effekte",
-          "device_class": "Geräteklasse",
-          "actions": "Aktionen",
-          "close_threshold": "Schließschwelle (%)",
-          "range_high_thermostat_id": "Oberer Bereichsthermostat",
-          "range_low_thermostat_id": "Unterer Bereichsthermostat",
-          "target_temperature_step": "Schrittweite der Zieltemperatur",
-          "precision": "Temperaturgenauigkeit",
-          "hvac_switch_id": "HVAC-Schalter",
-          "hvac_mode": "Fester HVAC-Modus",
-          "hvac_mode_id": "Mehrwertschalter für HVAC-Modus",
-          "hvac_action_id": "Mehrwertschalter für HVAC-Aktion",
-          "preset_mode_id": "Mehrwertschalter für Voreinstellungen",
-          "fan_mode_id": "Mehrwertschalter für Lüftermodi",
-          "swing_mode_id": "Mehrwertschalter für Schwenkmodi",
-          "swing_horizontal_mode_id": "Mehrwertschalter für horizontale Schwenkmodi",
-          "target_humidity_id": "Analogausgang für Zielfeuchtigkeit",
-          "min_humidity": "Minimale Luftfeuchtigkeit (%)",
-          "max_humidity": "Maximale Luftfeuchtigkeit (%)",
-          "switch_id": "Ein/Aus-Schalter",
-          "action_id": "Mehrwertschalter für Aktion",
-          "mode_id": "Mehrwertschalter für Modi",
-          "humidity_sensor_id": "Feuchtigkeitssensor",
-          "value_type": "Werttyp",
-          "unit_of_measurement": "Maßeinheit",
-          "state_class": "Zustandsklasse"
-        },
-        "submit": "Speichern"
-      },
-      "remove_devices": {
-        "title": "Geräte entfernen",
-        "description": "Wählen Sie die Geräte aus, die Sie entfernen möchten. Ihre Entitäten werden aus Home Assistant entfernt. Tippen Sie in das Feld, um zu suchen.",
-        "data": {
-          "devices": "Geräte"
-        },
-        "submit": "Entfernen"
       }
     },
     "error": {
@@ -221,13 +169,10 @@
       "invalid_auth": "Der TapHome Core hat den Token abgelehnt.",
       "ip_required": "Geben Sie die IP-Adresse Ihres Cores an oder aktivieren Sie die TapHome-Cloud.",
       "unique_id_mismatch": "Der verbundene Core stimmt nicht mit dem Core überein, für den dieser Eintrag erstellt wurde.",
-      "no_devices_selected": "Wählen Sie mindestens ein Gerät aus.",
-      "no_common_platform": "Die ausgewählten Geräte können in keiner Domäne bereitgestellt werden.",
-      "invalid_device": "Wählen Sie ein Gerät aus der Liste."
+      "no_devices_selected": "Wählen Sie mindestens ein Gerät aus."
     },
     "abort": {
-      "entry_not_loaded": "Der TapHome Core ist nicht geladen. Beheben Sie zuerst die Verbindung.",
-      "no_devices_configured": "Es sind noch keine Geräte konfiguriert. Verwenden Sie zuerst „Geräte hinzufügen“."
+      "entry_not_loaded": "Der TapHome Core ist nicht geladen. Beheben Sie zuerst die Verbindung."
     }
   },
   "selector": {
@@ -319,6 +264,107 @@
           "entry_not_loaded": "Der TapHome Core ist nicht geladen. Beheben Sie zuerst die Verbindung.",
           "device_gone": "Das Gerät ist in der TapHome-API nicht mehr freigegeben."
         }
+      }
+    }
+  },
+  "config_subentries": {
+    "device": {
+      "initiate_flow": {
+        "user": "Gerät hinzufügen"
+      },
+      "entry_type": "Gerät",
+      "step": {
+        "user": {
+          "title": "TapHome-Gerät hinzufügen",
+          "data": {
+            "device": "Gerät"
+          },
+          "data_description": {
+            "device": "Wählen Sie das hinzuzufügende TapHome-Gerät aus."
+          }
+        },
+        "platform": {
+          "title": "Domäne auswählen",
+          "data": {
+            "platform": "Hinzufügen als"
+          }
+        },
+        "configure": {
+          "title": "Geräteoptionen",
+          "description": "Legen Sie die Optionen für dieses Gerät fest. Leere Felder verwenden automatische Standardwerte.",
+          "data": {
+            "effect_id": "Mehrwertschalter für Effekte",
+            "device_class": "Geräteklasse",
+            "actions": "Aktionen",
+            "close_threshold": "Schließschwelle (%)",
+            "range_high_thermostat_id": "Oberer Bereichsthermostat",
+            "range_low_thermostat_id": "Unterer Bereichsthermostat",
+            "target_temperature_step": "Schrittweite der Zieltemperatur",
+            "precision": "Temperaturgenauigkeit",
+            "hvac_switch_id": "HVAC-Schalter",
+            "hvac_mode": "Fester HVAC-Modus",
+            "hvac_mode_id": "Mehrwertschalter für HVAC-Modus",
+            "hvac_action_id": "Mehrwertschalter für HVAC-Aktion",
+            "preset_mode_id": "Mehrwertschalter für Voreinstellungen",
+            "fan_mode_id": "Mehrwertschalter für Lüftermodi",
+            "swing_mode_id": "Mehrwertschalter für Schwenkmodi",
+            "swing_horizontal_mode_id": "Mehrwertschalter für horizontale Schwenkmodi",
+            "target_humidity_id": "Analogausgang für Zielfeuchtigkeit",
+            "min_humidity": "Minimale Luftfeuchtigkeit (%)",
+            "max_humidity": "Maximale Luftfeuchtigkeit (%)",
+            "switch_id": "Ein/Aus-Schalter",
+            "action_id": "Mehrwertschalter für Aktion",
+            "mode_id": "Mehrwertschalter für Modi",
+            "humidity_sensor_id": "Feuchtigkeitssensor",
+            "value_type": "Werttyp",
+            "unit_of_measurement": "Maßeinheit",
+            "state_class": "Zustandsklasse"
+          },
+          "submit": "Hinzufügen"
+        },
+        "reconfigure": {
+          "title": "Geräteoptionen",
+          "description": "Ändern Sie die Optionen für dieses Gerät. Leere Felder verwenden automatische Standardwerte.",
+          "data": {
+            "effect_id": "Mehrwertschalter für Effekte",
+            "device_class": "Geräteklasse",
+            "actions": "Aktionen",
+            "close_threshold": "Schließschwelle (%)",
+            "range_high_thermostat_id": "Oberer Bereichsthermostat",
+            "range_low_thermostat_id": "Unterer Bereichsthermostat",
+            "target_temperature_step": "Schrittweite der Zieltemperatur",
+            "precision": "Temperaturgenauigkeit",
+            "hvac_switch_id": "HVAC-Schalter",
+            "hvac_mode": "Fester HVAC-Modus",
+            "hvac_mode_id": "Mehrwertschalter für HVAC-Modus",
+            "hvac_action_id": "Mehrwertschalter für HVAC-Aktion",
+            "preset_mode_id": "Mehrwertschalter für Voreinstellungen",
+            "fan_mode_id": "Mehrwertschalter für Lüftermodi",
+            "swing_mode_id": "Mehrwertschalter für Schwenkmodi",
+            "swing_horizontal_mode_id": "Mehrwertschalter für horizontale Schwenkmodi",
+            "target_humidity_id": "Analogausgang für Zielfeuchtigkeit",
+            "min_humidity": "Minimale Luftfeuchtigkeit (%)",
+            "max_humidity": "Maximale Luftfeuchtigkeit (%)",
+            "switch_id": "Ein/Aus-Schalter",
+            "action_id": "Mehrwertschalter für Aktion",
+            "mode_id": "Mehrwertschalter für Modi",
+            "humidity_sensor_id": "Feuchtigkeitssensor",
+            "value_type": "Werttyp",
+            "unit_of_measurement": "Maßeinheit",
+            "state_class": "Zustandsklasse"
+          },
+          "submit": "Speichern"
+        }
+      },
+      "error": {
+        "invalid_device_id": "Ungültige Geräte-ID."
+      },
+      "abort": {
+        "entry_not_loaded": "Der TapHome Core ist nicht geladen. Beheben Sie zuerst die Verbindung.",
+        "no_devices_available": "Alle TapHome-Geräte sind bereits in allen kompatiblen Domänen vorhanden.",
+        "unknown_subentry": "Diese Gerätekonfiguration ist nicht mehr gültig.",
+        "already_configured": "Dieses Gerät ist in dieser Domäne bereits vorhanden.",
+        "reconfigure_successful": "Die Neukonfiguration war erfolgreich."
       }
     }
   }

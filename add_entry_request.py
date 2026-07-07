@@ -5,7 +5,7 @@ from typing import TypeVar
 
 from taphome_sdk import DeviceNotExposedError, DeviceTypeError
 
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .entity import TapHomeEntity
 from .taphome_config_entry import AddEntryRequest, TapHomeEntityConfigT
@@ -17,20 +17,24 @@ TapHomeEntityT = TypeVar("TapHomeEntityT", bound=TapHomeEntity)
 
 def add_taphome_entities(
     entry: TapHomeConfigEntry,
-    add_entities: AddEntitiesCallback | Callable[[Iterable[TapHomeEntityT]], None],
+    add_entities: AddConfigEntryEntitiesCallback,
     platform_domain: str,
     taphome_entities_factory: Callable[
         [AddEntryRequest[TapHomeEntityConfigT]],
         TapHomeEntityT | Iterable[TapHomeEntityT],
     ],
 ) -> None:
-    """Create entities for one platform from the entry's stored requests."""
-    entities_configuration: list[AddEntryRequest[TapHomeEntityConfigT]] = (
+    """Create entities for one platform from the entry's stored requests.
+
+    Requests are grouped by their device's config subentry so each batch is
+    added under the right ``config_subentry_id`` (which ties the entities and
+    their device to that subentry).
+    """
+    requests: list[tuple[str, AddEntryRequest[TapHomeEntityConfigT]]] = (
         entry.runtime_data.add_entry_requests[platform_domain]
     )
 
-    all_entities: list[TapHomeEntityT] = []
-    for configuration in entities_configuration:
+    for subentry_id, configuration in requests:
         try:
             entry_entities = taphome_entities_factory(configuration)
 
@@ -57,6 +61,4 @@ def add_taphome_entities(
             )
             continue
 
-        all_entities.extend(entry_entities)
-
-    add_entities(all_entities)
+        add_entities(list(entry_entities), config_subentry_id=subentry_id)

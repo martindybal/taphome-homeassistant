@@ -90,8 +90,6 @@
       "invalid_auth": "TapHome Core odmietol token.",
       "ip_required": "Vyplňte IP adresu vášho Core, alebo zapnite TapHome cloud.",
       "no_devices_selected": "Vyberte aspoň jedno zariadenie.",
-      "no_common_platform": "Vybrané zariadenia nie je možné vystaviť ako žiadnu doménu.",
-      "invalid_device": "Vyberte zariadenie zo zoznamu.",
       "invalid_device_id": "Neplatné ID zariadenia."
     },
     "abort": {
@@ -108,8 +106,6 @@
         "menu_options": {
           "core_settings": "Nastavenie Core",
           "add_devices": "Pridať zariadenia",
-          "edit_devices": "Upraviť zariadenia",
-          "remove_devices": "Odobrať zariadenia",
           "zones": "Zóny (oblasti)",
           "labels": "Štítky (kategórie)"
         }
@@ -165,54 +161,6 @@
         "title": "Možnosti zariadenia",
         "description": "Nastavte možnosti pre každé vybrané zariadenie a doménu. Každá sekcia je jedno zariadenie v jednej doméne. Prázdne polia použijú automatické predvolené hodnoty. Typy senzorov a binárnych senzorov sa detegujú automaticky; ich možnosti sú zbalené — sekciu rozbaľte len ak ich chcete prepísať.",
         "submit": "Pridať"
-      },
-      "edit_devices": {
-        "title": "Upraviť zariadenia",
-        "description": "Vyberte zariadenia, ktoré chcete upraviť. Do poľa môžete písať a vyhľadávať.",
-        "data": {
-          "devices": "Zariadenia"
-        }
-      },
-      "edit_devices_form": {
-        "title": "Možnosti zariadenia",
-        "description": "Nastavte možnosti pre každé vybrané zariadenie. Každá sekcia je jedno zariadenie. Prázdne polia použijú automatické predvolené hodnoty. Typy senzorov a binárnych senzorov sa detegujú automaticky; ich možnosti sú zbalené — sekciu rozbaľte len ak ich chcete prepísať.",
-        "data": {
-          "effect_id": "Viachodnotový prepínač efektov",
-          "device_class": "Trieda zariadenia",
-          "actions": "Akcie",
-          "close_threshold": "Prah zatvorenia (%)",
-          "range_high_thermostat_id": "Horný termostat rozsahu",
-          "range_low_thermostat_id": "Dolný termostat rozsahu",
-          "target_temperature_step": "Krok cieľovej teploty",
-          "precision": "Presnosť teploty",
-          "hvac_switch_id": "Spínač HVAC",
-          "hvac_mode": "Pevný režim HVAC",
-          "hvac_mode_id": "Viachodnotový prepínač režimu HVAC",
-          "hvac_action_id": "Viachodnotový prepínač akcie HVAC",
-          "preset_mode_id": "Viachodnotový prepínač predvolieb",
-          "fan_mode_id": "Viachodnotový prepínač režimov ventilátora",
-          "swing_mode_id": "Viachodnotový prepínač natáčania",
-          "swing_horizontal_mode_id": "Viachodnotový prepínač horizontálneho natáčania",
-          "target_humidity_id": "Analógový výstup cieľovej vlhkosti",
-          "min_humidity": "Minimálna vlhkosť (%)",
-          "max_humidity": "Maximálna vlhkosť (%)",
-          "switch_id": "Spínač zapnutia/vypnutia",
-          "action_id": "Viachodnotový prepínač akcie",
-          "mode_id": "Viachodnotový prepínač režimov",
-          "humidity_sensor_id": "Senzor vlhkosti",
-          "value_type": "Typ hodnoty",
-          "unit_of_measurement": "Jednotka merania",
-          "state_class": "Trieda stavu"
-        },
-        "submit": "Uložiť"
-      },
-      "remove_devices": {
-        "title": "Odobrať zariadenia",
-        "description": "Vyberte zariadenia, ktoré chcete odobrať. Ich entity budú z Home Assistantu odstránené. Do poľa môžete písať a vyhľadávať.",
-        "data": {
-          "devices": "Zariadenia"
-        },
-        "submit": "Odobrať"
       }
     },
     "error": {
@@ -221,13 +169,10 @@
       "invalid_auth": "TapHome Core odmietol token.",
       "ip_required": "Vyplňte IP adresu vášho Core, alebo zapnite TapHome cloud.",
       "unique_id_mismatch": "Pripojený Core nezodpovedá Core, pre ktorý bol tento záznam vytvorený.",
-      "no_devices_selected": "Vyberte aspoň jedno zariadenie.",
-      "no_common_platform": "Vybrané zariadenia nie je možné vystaviť ako žiadnu doménu.",
-      "invalid_device": "Vyberte zariadenie zo zoznamu."
+      "no_devices_selected": "Vyberte aspoň jedno zariadenie."
     },
     "abort": {
-      "entry_not_loaded": "TapHome Core nie je načítaný. Najprv opravte pripojenie.",
-      "no_devices_configured": "Zatiaľ nie sú nakonfigurované žiadne zariadenia. Najprv použite Pridať zariadenia."
+      "entry_not_loaded": "TapHome Core nie je načítaný. Najprv opravte pripojenie."
     }
   },
   "selector": {
@@ -319,6 +264,107 @@
           "entry_not_loaded": "TapHome Core nie je načítaný. Najprv opravte pripojenie.",
           "device_gone": "Zariadenie už nie je zverejnené v TapHome API."
         }
+      }
+    }
+  },
+  "config_subentries": {
+    "device": {
+      "initiate_flow": {
+        "user": "Pridať zariadenie"
+      },
+      "entry_type": "Zariadenie",
+      "step": {
+        "user": {
+          "title": "Pridať zariadenie TapHome",
+          "data": {
+            "device": "Zariadenie"
+          },
+          "data_description": {
+            "device": "Vyberte zariadenie TapHome, ktoré chcete pridať."
+          }
+        },
+        "platform": {
+          "title": "Vyberte doménu",
+          "data": {
+            "platform": "Pridať ako"
+          }
+        },
+        "configure": {
+          "title": "Možnosti zariadenia",
+          "description": "Nastavte možnosti tohto zariadenia. Prázdne polia použijú automatické predvolené hodnoty.",
+          "data": {
+            "effect_id": "Viachodnotový prepínač efektov",
+            "device_class": "Trieda zariadenia",
+            "actions": "Akcie",
+            "close_threshold": "Prah zatvorenia (%)",
+            "range_high_thermostat_id": "Horný termostat rozsahu",
+            "range_low_thermostat_id": "Dolný termostat rozsahu",
+            "target_temperature_step": "Krok cieľovej teploty",
+            "precision": "Presnosť teploty",
+            "hvac_switch_id": "Spínač HVAC",
+            "hvac_mode": "Pevný režim HVAC",
+            "hvac_mode_id": "Viachodnotový prepínač režimu HVAC",
+            "hvac_action_id": "Viachodnotový prepínač akcie HVAC",
+            "preset_mode_id": "Viachodnotový prepínač predvolieb",
+            "fan_mode_id": "Viachodnotový prepínač režimov ventilátora",
+            "swing_mode_id": "Viachodnotový prepínač natáčania",
+            "swing_horizontal_mode_id": "Viachodnotový prepínač horizontálneho natáčania",
+            "target_humidity_id": "Analógový výstup cieľovej vlhkosti",
+            "min_humidity": "Minimálna vlhkosť (%)",
+            "max_humidity": "Maximálna vlhkosť (%)",
+            "switch_id": "Spínač zapnutia/vypnutia",
+            "action_id": "Viachodnotový prepínač akcie",
+            "mode_id": "Viachodnotový prepínač režimov",
+            "humidity_sensor_id": "Senzor vlhkosti",
+            "value_type": "Typ hodnoty",
+            "unit_of_measurement": "Jednotka merania",
+            "state_class": "Trieda stavu"
+          },
+          "submit": "Pridať"
+        },
+        "reconfigure": {
+          "title": "Možnosti zariadenia",
+          "description": "Zmeňte možnosti tohto zariadenia. Prázdne polia použijú automatické predvolené hodnoty.",
+          "data": {
+            "effect_id": "Viachodnotový prepínač efektov",
+            "device_class": "Trieda zariadenia",
+            "actions": "Akcie",
+            "close_threshold": "Prah zatvorenia (%)",
+            "range_high_thermostat_id": "Horný termostat rozsahu",
+            "range_low_thermostat_id": "Dolný termostat rozsahu",
+            "target_temperature_step": "Krok cieľovej teploty",
+            "precision": "Presnosť teploty",
+            "hvac_switch_id": "Spínač HVAC",
+            "hvac_mode": "Pevný režim HVAC",
+            "hvac_mode_id": "Viachodnotový prepínač režimu HVAC",
+            "hvac_action_id": "Viachodnotový prepínač akcie HVAC",
+            "preset_mode_id": "Viachodnotový prepínač predvolieb",
+            "fan_mode_id": "Viachodnotový prepínač režimov ventilátora",
+            "swing_mode_id": "Viachodnotový prepínač natáčania",
+            "swing_horizontal_mode_id": "Viachodnotový prepínač horizontálneho natáčania",
+            "target_humidity_id": "Analógový výstup cieľovej vlhkosti",
+            "min_humidity": "Minimálna vlhkosť (%)",
+            "max_humidity": "Maximálna vlhkosť (%)",
+            "switch_id": "Spínač zapnutia/vypnutia",
+            "action_id": "Viachodnotový prepínač akcie",
+            "mode_id": "Viachodnotový prepínač režimov",
+            "humidity_sensor_id": "Senzor vlhkosti",
+            "value_type": "Typ hodnoty",
+            "unit_of_measurement": "Jednotka merania",
+            "state_class": "Trieda stavu"
+          },
+          "submit": "Uložiť"
+        }
+      },
+      "error": {
+        "invalid_device_id": "Neplatné ID zariadenia."
+      },
+      "abort": {
+        "entry_not_loaded": "TapHome Core nie je načítaný. Najprv opravte pripojenie.",
+        "no_devices_available": "Všetky zariadenia TapHome sú už pridané vo všetkých kompatibilných doménach.",
+        "unknown_subentry": "Táto konfigurácia zariadenia už nie je platná.",
+        "already_configured": "Toto zariadenie je už v tejto doméne pridané.",
+        "reconfigure_successful": "Rekonfigurácia bola úspešná."
       }
     }
   }

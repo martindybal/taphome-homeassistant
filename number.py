@@ -9,7 +9,7 @@ from taphome_sdk import DeviceState, ValueType, VariableDevice, VariableState
 
 from homeassistant.components.number import DOMAIN as NUMBER_DOMAIN, NumberEntity
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .add_entry_request import add_taphome_entities
 from .const import CONF_NUMBERS
@@ -65,7 +65,7 @@ class TapHomeNumber(TapHomeEntity, NumberEntity):
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: TapHomeConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up TapHome numbers from a config entry."""
     add_taphome_entities(entry, async_add_entities, CONF_NUMBERS, TapHomeNumber)

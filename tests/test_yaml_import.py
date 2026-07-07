@@ -5,7 +5,11 @@ from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
 
 from custom_components.taphome.const import CONF_API_URL, DOMAIN
-from tests_common import TEST_LOCATION_ID, TEST_TOKEN
+from tests_common import (
+    TEST_LOCATION_ID,
+    TEST_TOKEN,
+    device_subentry_configs,
+)
 
 
 async def test_yaml_import_creates_entry_and_repair_issue(
@@ -31,8 +35,10 @@ async def test_yaml_import_creates_entry_and_repair_issue(
     [entry] = hass.config_entries.async_entries(DOMAIN)
     assert entry.unique_id == TEST_LOCATION_ID
     assert entry.data[CONF_API_URL] == "http://10.0.0.5/api/TapHomeApi/v1"
-    assert entry.options["lights"] == [{"id": 1}]
-    assert entry.options["switches"] == [{"id": 2, "device_class": "outlet"}]
+    assert device_subentry_configs(entry, "lights") == [{"id": 1}]
+    assert device_subentry_configs(entry, "switches") == [
+        {"id": 2, "device_class": "outlet"}
+    ]
 
     issue_registry = ir.async_get(hass)
     assert any(

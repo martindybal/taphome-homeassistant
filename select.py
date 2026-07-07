@@ -6,7 +6,7 @@ from taphome_sdk import MultiValueSwitchDevice, MultiValueSwitchState
 
 from homeassistant.components.select import DOMAIN as SELECT_DOMAIN, SelectEntity
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .add_entry_request import add_taphome_entities
 from .entity import TapHomeEntity
@@ -51,7 +51,7 @@ class TapHomeSelect(TapHomeEntity, SelectEntity):
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: TapHomeConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up TapHome selects from a config entry."""
     add_taphome_entities(entry, async_add_entities, SELECT_DOMAIN, TapHomeSelect)

@@ -18,7 +18,9 @@ class TapHomeRuntimeData:
 
     hub: TapHomeHub
     core_config: TapHomeCoreConfig
-    add_entry_requests: dict[str, list[AddEntryRequest]]
+    # Per platform domain, the (subentry id, request) pairs to add. Entities are
+    # added grouped by subentry so each is tied to its device's config subentry.
+    add_entry_requests: dict[str, list[tuple[str, AddEntryRequest]]]
     connection_state_handler: Callable[[HubConnectionState, HubConnectionState], None]
 
 

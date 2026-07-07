@@ -90,8 +90,6 @@
       "invalid_auth": "Il TapHome Core ha rifiutato il token.",
       "ip_required": "Inserisci l'indirizzo IP del tuo Core oppure attiva il cloud TapHome.",
       "no_devices_selected": "Seleziona almeno un dispositivo.",
-      "no_common_platform": "I dispositivi selezionati non possono essere esposti in alcun dominio.",
-      "invalid_device": "Seleziona un dispositivo dall'elenco.",
       "invalid_device_id": "ID dispositivo non valido."
     },
     "abort": {
@@ -108,8 +106,6 @@
         "menu_options": {
           "core_settings": "Impostazioni Core",
           "add_devices": "Aggiungi dispositivi",
-          "edit_devices": "Modifica dispositivi",
-          "remove_devices": "Rimuovi dispositivi",
           "zones": "Zone (aree)",
           "labels": "Etichette (categorie)"
         }
@@ -165,54 +161,6 @@
         "title": "Opzioni dispositivo",
         "description": "Imposta le opzioni per ogni dispositivo e dominio selezionati. Ogni sezione è un dispositivo in un dominio. I campi vuoti usano i valori predefiniti automatici. I tipi di sensore e sensore binario vengono rilevati automaticamente; le loro opzioni sono compresse — espandi una sezione solo per sovrascriverle.",
         "submit": "Aggiungi"
-      },
-      "edit_devices": {
-        "title": "Modifica dispositivi",
-        "description": "Scegli i dispositivi da modificare. Digita nel campo per cercare.",
-        "data": {
-          "devices": "Dispositivi"
-        }
-      },
-      "edit_devices_form": {
-        "title": "Opzioni dispositivo",
-        "description": "Imposta le opzioni per ogni dispositivo selezionato. Ogni sezione è un dispositivo. I campi vuoti usano i valori predefiniti automatici. I tipi di sensore e sensore binario vengono rilevati automaticamente; le loro opzioni sono compresse — espandi una sezione solo per sovrascriverle.",
-        "data": {
-          "effect_id": "Selettore multivalore effetti",
-          "device_class": "Classe dispositivo",
-          "actions": "Azioni",
-          "close_threshold": "Soglia di chiusura (%)",
-          "range_high_thermostat_id": "Termostato alto dell'intervallo",
-          "range_low_thermostat_id": "Termostato basso dell'intervallo",
-          "target_temperature_step": "Passo temperatura target",
-          "precision": "Precisione temperatura",
-          "hvac_switch_id": "Interruttore HVAC",
-          "hvac_mode": "Modalità HVAC fissa",
-          "hvac_mode_id": "Selettore multivalore modalità HVAC",
-          "hvac_action_id": "Selettore multivalore azione HVAC",
-          "preset_mode_id": "Selettore multivalore preimpostazioni",
-          "fan_mode_id": "Selettore multivalore modalità ventola",
-          "swing_mode_id": "Selettore multivalore oscillazione",
-          "swing_horizontal_mode_id": "Selettore multivalore oscillazione orizzontale",
-          "target_humidity_id": "Uscita analogica umidità target",
-          "min_humidity": "Umidità minima (%)",
-          "max_humidity": "Umidità massima (%)",
-          "switch_id": "Interruttore on/off",
-          "action_id": "Selettore multivalore azione",
-          "mode_id": "Selettore multivalore modalità",
-          "humidity_sensor_id": "Sensore di umidità",
-          "value_type": "Tipo di valore",
-          "unit_of_measurement": "Unità di misura",
-          "state_class": "Classe di stato"
-        },
-        "submit": "Salva"
-      },
-      "remove_devices": {
-        "title": "Rimuovi dispositivi",
-        "description": "Scegli i dispositivi da rimuovere. Le loro entità verranno rimosse da Home Assistant. Digita nel campo per cercare.",
-        "data": {
-          "devices": "Dispositivi"
-        },
-        "submit": "Rimuovi"
       }
     },
     "error": {
@@ -221,13 +169,10 @@
       "invalid_auth": "Il TapHome Core ha rifiutato il token.",
       "ip_required": "Inserisci l'indirizzo IP del tuo Core oppure attiva il cloud TapHome.",
       "unique_id_mismatch": "Il Core connesso non corrisponde al Core per cui è stata creata questa voce.",
-      "no_devices_selected": "Seleziona almeno un dispositivo.",
-      "no_common_platform": "I dispositivi selezionati non possono essere esposti in alcun dominio.",
-      "invalid_device": "Seleziona un dispositivo dall'elenco."
+      "no_devices_selected": "Seleziona almeno un dispositivo."
     },
     "abort": {
-      "entry_not_loaded": "Il TapHome Core non è caricato. Correggi prima la connessione.",
-      "no_devices_configured": "Nessun dispositivo configurato. Usa prima Aggiungi dispositivi."
+      "entry_not_loaded": "Il TapHome Core non è caricato. Correggi prima la connessione."
     }
   },
   "selector": {
@@ -319,6 +264,107 @@
           "entry_not_loaded": "Il TapHome Core non è caricato. Correggi prima la connessione.",
           "device_gone": "Il dispositivo non è più esposto nell'API TapHome."
         }
+      }
+    }
+  },
+  "config_subentries": {
+    "device": {
+      "initiate_flow": {
+        "user": "Aggiungi dispositivo"
+      },
+      "entry_type": "Dispositivo",
+      "step": {
+        "user": {
+          "title": "Aggiungi dispositivo TapHome",
+          "data": {
+            "device": "Dispositivo"
+          },
+          "data_description": {
+            "device": "Seleziona il dispositivo TapHome da aggiungere."
+          }
+        },
+        "platform": {
+          "title": "Seleziona dominio",
+          "data": {
+            "platform": "Aggiungi come"
+          }
+        },
+        "configure": {
+          "title": "Opzioni dispositivo",
+          "description": "Imposta le opzioni per questo dispositivo. I campi vuoti usano valori predefiniti automatici.",
+          "data": {
+            "effect_id": "Selettore multivalore effetti",
+            "device_class": "Classe dispositivo",
+            "actions": "Azioni",
+            "close_threshold": "Soglia di chiusura (%)",
+            "range_high_thermostat_id": "Termostato alto dell'intervallo",
+            "range_low_thermostat_id": "Termostato basso dell'intervallo",
+            "target_temperature_step": "Passo temperatura target",
+            "precision": "Precisione temperatura",
+            "hvac_switch_id": "Interruttore HVAC",
+            "hvac_mode": "Modalità HVAC fissa",
+            "hvac_mode_id": "Selettore multivalore modalità HVAC",
+            "hvac_action_id": "Selettore multivalore azione HVAC",
+            "preset_mode_id": "Selettore multivalore preimpostazioni",
+            "fan_mode_id": "Selettore multivalore modalità ventola",
+            "swing_mode_id": "Selettore multivalore oscillazione",
+            "swing_horizontal_mode_id": "Selettore multivalore oscillazione orizzontale",
+            "target_humidity_id": "Uscita analogica umidità target",
+            "min_humidity": "Umidità minima (%)",
+            "max_humidity": "Umidità massima (%)",
+            "switch_id": "Interruttore on/off",
+            "action_id": "Selettore multivalore azione",
+            "mode_id": "Selettore multivalore modalità",
+            "humidity_sensor_id": "Sensore di umidità",
+            "value_type": "Tipo di valore",
+            "unit_of_measurement": "Unità di misura",
+            "state_class": "Classe di stato"
+          },
+          "submit": "Aggiungi"
+        },
+        "reconfigure": {
+          "title": "Opzioni dispositivo",
+          "description": "Modifica le opzioni per questo dispositivo. I campi vuoti usano valori predefiniti automatici.",
+          "data": {
+            "effect_id": "Selettore multivalore effetti",
+            "device_class": "Classe dispositivo",
+            "actions": "Azioni",
+            "close_threshold": "Soglia di chiusura (%)",
+            "range_high_thermostat_id": "Termostato alto dell'intervallo",
+            "range_low_thermostat_id": "Termostato basso dell'intervallo",
+            "target_temperature_step": "Passo temperatura target",
+            "precision": "Precisione temperatura",
+            "hvac_switch_id": "Interruttore HVAC",
+            "hvac_mode": "Modalità HVAC fissa",
+            "hvac_mode_id": "Selettore multivalore modalità HVAC",
+            "hvac_action_id": "Selettore multivalore azione HVAC",
+            "preset_mode_id": "Selettore multivalore preimpostazioni",
+            "fan_mode_id": "Selettore multivalore modalità ventola",
+            "swing_mode_id": "Selettore multivalore oscillazione",
+            "swing_horizontal_mode_id": "Selettore multivalore oscillazione orizzontale",
+            "target_humidity_id": "Uscita analogica umidità target",
+            "min_humidity": "Umidità minima (%)",
+            "max_humidity": "Umidità massima (%)",
+            "switch_id": "Interruttore on/off",
+            "action_id": "Selettore multivalore azione",
+            "mode_id": "Selettore multivalore modalità",
+            "humidity_sensor_id": "Sensore di umidità",
+            "value_type": "Tipo di valore",
+            "unit_of_measurement": "Unità di misura",
+            "state_class": "Classe di stato"
+          },
+          "submit": "Salva"
+        }
+      },
+      "error": {
+        "invalid_device_id": "ID dispositivo non valido."
+      },
+      "abort": {
+        "entry_not_loaded": "Il TapHome Core non è caricato. Correggi prima la connessione.",
+        "no_devices_available": "Tutti i dispositivi TapHome sono già esposti in tutti i domini compatibili.",
+        "unknown_subentry": "Questa configurazione del dispositivo non è più valida.",
+        "already_configured": "Questo dispositivo è già esposto in questo dominio.",
+        "reconfigure_successful": "Riconfigurazione completata con successo."
       }
     }
   }
