@@ -3,11 +3,11 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Generic, TypeVar
-
-from homeassistant.core import HomeAssistant
+from typing import TypeVar
 
 from taphome_sdk import TapHomeHub, get_optional, get_required
+
+from homeassistant.core import HomeAssistant
 
 
 @dataclass(slots=True, frozen=True)
@@ -39,8 +39,6 @@ class TapHomeCoreConfig:
     """Holds configuration options for a TapHome core instance."""
 
     id: str
-    use_description_as_entity_id: bool
-    use_description_as_name: bool
     zone_mapping: NameMapping | None
     label_mapping: NameMapping | None
     enabled_attributes: tuple[str, ...]
@@ -57,7 +55,6 @@ class TapHomeEntityConfig:
         """Initialize TapHome entity configuration."""
         self._device_config = device_config
         self.id: int = self._get_id()
-        self.unique_id: str | None = self.get_optional("unique_id", None)
 
     def _get_id(self) -> int:
         if isinstance(self._device_config, int):
@@ -77,10 +74,10 @@ TapHomeEntityConfigT = TypeVar("TapHomeEntityConfigT", bound=TapHomeEntityConfig
 
 
 @dataclass(slots=True, frozen=True)
-class AddEntryRequest(Generic[TapHomeEntityConfigT]):
+class AddEntryRequest[ConfigT: TapHomeEntityConfig]:
     """Store parameters required for entity creation."""
 
     hass: HomeAssistant
     core: TapHomeCoreConfig
-    entity: TapHomeEntityConfigT
+    entity: ConfigT
     hub: TapHomeHub

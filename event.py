@@ -2,6 +2,8 @@
 
 import logging
 
+from taphome_sdk import ButtonAction, ButtonDevice
+
 from homeassistant.components.event import (
     DOMAIN as EVENT_DOMAIN,
     EventDeviceClass,
@@ -10,13 +12,11 @@ from homeassistant.components.event import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from taphome_sdk import ButtonAction, ButtonDevice
-
 from .add_entry_request import add_taphome_entities
 from .button import TapHomeButtonConfig
+from .entity import TapHomeEntity
 from .taphome_config_entry import AddEntryRequest
 from .taphome_data import TapHomeConfigEntry
-from .taphome_entity import TapHomeEntity
 
 _LOGGER = logging.getLogger(__name__)
 

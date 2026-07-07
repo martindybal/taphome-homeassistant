@@ -150,3 +150,43 @@ async def test_new_device_creates_repair_issue(
         issue.domain == DOMAIN and "new_device" in issue.issue_id
         for issue in issue_registry.issues.values()
     )
+
+
+async def test_devices_are_registered(
+    hass: HomeAssistant, mock_hub, mock_config_entry: MockConfigEntry
+) -> None:
+    """The Core and every TapHome device appear in the device registry."""
+    from homeassistant.helpers import device_registry as dr
+
+    from tests_common import TEST_LOCATION_ID, TEST_LOCATION_NAME
+
+    await setup_integration(hass, mock_config_entry)
+
+    device_registry = dr.async_get(hass)
+    hub_device = device_registry.async_get_device({(DOMAIN, TEST_LOCATION_ID)})
+    assert hub_device is not None
+    assert hub_device.manufacturer == "TapHome"
+    assert hub_device.model == "Core"
+    assert hub_device.name == TEST_LOCATION_NAME
+
+    socket = device_registry.async_get_device({(DOMAIN, f"{TEST_LOCATION_ID}_2")})
+    assert socket is not None
+    assert socket.name == "Garden Socket"
+    assert socket.manufacturer == "TapHome"
+    assert socket.via_device_id == hub_device.id
+
+
+async def test_unload_unsubscribes_entities(
+    hass: HomeAssistant, mock_hub, mock_config_entry: MockConfigEntry
+) -> None:
+    """Unloading the entry removes all entity subscriptions from the SDK."""
+    event = mock_hub.devices[2].state.changed
+    baseline = len(event._handlers)
+
+    await setup_integration(hass, mock_config_entry)
+    assert len(event._handlers) > baseline
+
+    assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert len(event._handlers) == baseline

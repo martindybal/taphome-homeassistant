@@ -102,8 +102,6 @@ CORE_SCHEMA = CONNECTION_SCHEMA.extend(
     {
         vol.Optional(CONF_ID): TextSelector(),
         vol.Optional(CONF_WEBHOOK_ID): TextSelector(),
-        vol.Optional(USE_DESCRIPTION_AS_ENTITY_ID, default=False): BooleanSelector(),
-        vol.Optional(USE_DESCRIPTION_AS_NAME, default=False): BooleanSelector(),
         vol.Optional(
             CONF_ENABLED_ATTRIBUTES, default=AVAILABLE_ATTRIBUTES
         ): SelectSelector(
@@ -168,10 +166,6 @@ def _apply_core_settings(options: dict[str, Any], user_input: dict[str, Any]) ->
         options[CONF_WEBHOOK_ID] = user_input[CONF_WEBHOOK_ID].strip()
     else:
         options.pop(CONF_WEBHOOK_ID, None)
-    options[USE_DESCRIPTION_AS_ENTITY_ID] = user_input.get(
-        USE_DESCRIPTION_AS_ENTITY_ID, False
-    )
-    options[USE_DESCRIPTION_AS_NAME] = user_input.get(USE_DESCRIPTION_AS_NAME, False)
     options[CONF_ENABLED_ATTRIBUTES] = user_input.get(
         CONF_ENABLED_ATTRIBUTES, AVAILABLE_ATTRIBUTES
     )
@@ -520,10 +514,6 @@ class _TapHomeSetupFlow:
                 self.config_entry.data.get(CONF_API_URL) or ""
             ),
             CONF_WEBHOOK_ID: self._options.get(CONF_WEBHOOK_ID),
-            USE_DESCRIPTION_AS_ENTITY_ID: self._options.get(
-                USE_DESCRIPTION_AS_ENTITY_ID, False
-            ),
-            USE_DESCRIPTION_AS_NAME: self._options.get(USE_DESCRIPTION_AS_NAME, False),
             CONF_ENABLED_ATTRIBUTES: self._options.get(
                 CONF_ENABLED_ATTRIBUTES, AVAILABLE_ATTRIBUTES
             ),
@@ -1224,7 +1214,6 @@ class TapHomeConfigFlow(_TapHomeSetupFlow, ConfigFlow, domain=DOMAIN):
 
         suggested_values = user_input or {
             CONF_WEBHOOK_ID: DEFAULT_WEBHOOK_ID,
-            USE_DESCRIPTION_AS_ENTITY_ID: True,
         }
         return self.async_show_form(
             step_id="user",
@@ -1295,10 +1284,6 @@ class TapHomeConfigFlow(_TapHomeSetupFlow, ConfigFlow, domain=DOMAIN):
             CONF_ID: entry.data.get(CONF_ID),
             **_connection_values_from_api_url(entry.data.get(CONF_API_URL) or ""),
             CONF_WEBHOOK_ID: entry.options.get(CONF_WEBHOOK_ID),
-            USE_DESCRIPTION_AS_ENTITY_ID: entry.options.get(
-                USE_DESCRIPTION_AS_ENTITY_ID, False
-            ),
-            USE_DESCRIPTION_AS_NAME: entry.options.get(USE_DESCRIPTION_AS_NAME, False),
             CONF_ENABLED_ATTRIBUTES: entry.options.get(
                 CONF_ENABLED_ATTRIBUTES, AVAILABLE_ATTRIBUTES
             ),

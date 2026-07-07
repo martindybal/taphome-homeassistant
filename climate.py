@@ -4,17 +4,6 @@ from abc import ABC, abstractmethod
 from collections.abc import Generator
 from typing import final
 
-from homeassistant.components.climate import (
-    DOMAIN as CLIMATE_DOMAIN,
-    ClimateEntity,
-    ClimateEntityFeature,
-    HVACAction,
-    HVACMode,
-)
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.config_validation import UnitOfTemperature
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-
 from taphome_sdk import (
     AnalogOutputDevice,
     AnalogOutputState,
@@ -29,10 +18,21 @@ from taphome_sdk import (
     enum_from_string_optional,
 )
 
+from homeassistant.components.climate import (
+    DOMAIN as CLIMATE_DOMAIN,
+    ClimateEntity,
+    ClimateEntityFeature,
+    HVACAction,
+    HVACMode,
+)
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.config_validation import UnitOfTemperature
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
 from .add_entry_request import add_taphome_entities
+from .entity import TapHomeEntity
 from .taphome_config_entry import AddEntryRequest, TapHomeEntityConfig
 from .taphome_data import TapHomeConfigEntry
-from .taphome_entity import TapHomeEntity
 
 
 class TapHomeClimateConfig(TapHomeEntityConfig):
@@ -412,7 +412,7 @@ class TapHomeClimateBase(TapHomeEntity, ClimateEntity, ABC):
         self._attr_temperature_unit = UnitOfTemperature.CELSIUS
 
         thermostat = config.hub.get_typed_device(config.entity.id, ThermostatDevice)
-        thermostat.state.changed += self._on_thermostat_state_change
+        self._subscribe(thermostat.state.changed, self._on_thermostat_state_change)
 
         if config.entity.precision is not None:
             self._attr_precision = config.entity.precision
@@ -437,9 +437,15 @@ class TapHomeClimateBase(TapHomeEntity, ClimateEntity, ABC):
             config.entity.hvac_mode_id,
             config.entity.hvac_action_id,
         )
-        self.hvac_controller.hvac_action.changed += self._on_hvac_action_changed
-        self.hvac_controller.hvac_mode.changed += self._on_hvac_mode_changed
-        self.hvac_controller.hvac_modes.changed += self._on_hvac_modes_changed
+        self._subscribe(
+            self.hvac_controller.hvac_action.changed, self._on_hvac_action_changed
+        )
+        self._subscribe(
+            self.hvac_controller.hvac_mode.changed, self._on_hvac_mode_changed
+        )
+        self._subscribe(
+            self.hvac_controller.hvac_modes.changed, self._on_hvac_modes_changed
+        )
 
         if config.entity.preset_mode_id:
             self._preset_mode_device = config.hub.get_typed_device(
@@ -447,7 +453,9 @@ class TapHomeClimateBase(TapHomeEntity, ClimateEntity, ABC):
             )
             self._attr_supported_features |= ClimateEntityFeature.PRESET_MODE
             self._attr_preset_modes = self._preset_mode_device.options
-            self._preset_mode_device.state.changed += self._on_preset_mode_change
+            self._subscribe(
+                self._preset_mode_device.state.changed, self._on_preset_mode_change
+            )
             self._schedule_update_when_changed(self._preset_mode_device)
 
         if config.entity.fan_mode_id:
@@ -456,7 +464,9 @@ class TapHomeClimateBase(TapHomeEntity, ClimateEntity, ABC):
             )
             self._attr_supported_features |= ClimateEntityFeature.FAN_MODE
             self._attr_fan_modes = self._fan_mode_device.options
-            self._fan_mode_device.state.changed += self._on_fan_mode_change
+            self._subscribe(
+                self._fan_mode_device.state.changed, self._on_fan_mode_change
+            )
             self._schedule_update_when_changed(self._fan_mode_device)
 
         if config.entity.swing_mode_id:
@@ -465,7 +475,9 @@ class TapHomeClimateBase(TapHomeEntity, ClimateEntity, ABC):
             )
             self._attr_supported_features |= ClimateEntityFeature.SWING_MODE
             self._attr_swing_modes = self._swing_mode_device.options
-            self._swing_mode_device.state.changed += self._on_swing_mode_change
+            self._subscribe(
+                self._swing_mode_device.state.changed, self._on_swing_mode_change
+            )
             self._schedule_update_when_changed(self._swing_mode_device)
 
         if config.entity.swing_horizontal_mode_id:
@@ -476,8 +488,9 @@ class TapHomeClimateBase(TapHomeEntity, ClimateEntity, ABC):
             self._attr_swing_horizontal_modes = (
                 self._swing_horizontal_mode_device.options
             )
-            self._swing_horizontal_mode_device.state.changed += (
-                self._on_swing_horizontal_mode_change
+            self._subscribe(
+                self._swing_horizontal_mode_device.state.changed,
+                self._on_swing_horizontal_mode_change,
             )
             self._schedule_update_when_changed(self._swing_horizontal_mode_device)
 
@@ -491,8 +504,9 @@ class TapHomeClimateBase(TapHomeEntity, ClimateEntity, ABC):
             self._target_humidity_device = config.hub.get_typed_device(
                 config.entity.target_humidity_id, AnalogOutputDevice
             )
-            self._target_humidity_device.state.changed += (
-                self._on_target_humidity_change
+            self._subscribe(
+                self._target_humidity_device.state.changed,
+                self._on_target_humidity_change,
             )
             self._schedule_update_when_changed(self._target_humidity_device)
 
@@ -589,7 +603,9 @@ class TapHomeClimate(TapHomeClimateBase):
         self.thermostat = config.hub.get_typed_device(
             config.entity.id, ThermostatDevice
         )
-        self.thermostat.state.changed += self._on_target_thermostat_change
+        self._subscribe(
+            self.thermostat.state.changed, self._on_target_thermostat_change
+        )
         super().__init__(config)
 
     def _on_target_thermostat_change(
@@ -622,12 +638,16 @@ class TapHomeRangeClimate(TapHomeClimateBase):
         self.high_thermostat = config.hub.get_typed_device(
             config.entity.range_high_thermostat_id, ThermostatDevice
         )
-        self.high_thermostat.state.changed += self._on_high_temperature_change
+        self._subscribe(
+            self.high_thermostat.state.changed, self._on_high_temperature_change
+        )
 
         self.low_thermostat = config.hub.get_typed_device(
             config.entity.range_low_thermostat_id, ThermostatDevice
         )
-        self.low_thermostat.state.changed += self._on_low_temperature_change
+        self._subscribe(
+            self.low_thermostat.state.changed, self._on_low_temperature_change
+        )
 
         super().__init__(config)
 
