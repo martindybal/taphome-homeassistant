@@ -75,6 +75,26 @@ Two layers:
 
 Follow the existing pattern: platform file at root with a `TapHome<X>Config` class, entity class(es) inheriting `TapHomeEntity` + the HA entity class, a `_create_*_entity` factory, and `async_setup_entry` calling `add_taphome_entities`; then register a `DomainDefinition` in `__init__.py`, add the config key to `const.py` and `PLATFORMS`, add a `PlatformDescriptor` in `platform_descriptors.py`, and document it in `docs/user-guide.md`.
 
+## Keeping the Home Assistant Core port in sync
+
+This repository is the **source of truth**. The integration is being upstreamed
+to Home Assistant Core (fork: martindybal/home-assistant-core, branch
+`taphome`, PR #1); the Core copy in `homeassistant/components/taphome` is a
+conversion of this repo. Until the Core PR is merged, every change here must
+be mirrored there. Intentional differences of the Core copy (do NOT port back):
+
+- no YAML support (`CONFIG_SCHEMA`, `async_setup` import shim, `async_step_import`,
+  `resolve_api_url`, `_normalize_device_config`, `_yaml_core_to_options`,
+  YAML fallback unique ids, per-device `unique_id` option, `translations.py`
+  `YAML_DEPRECATED`),
+- no `sdk_locator.py` (Core installs `taphome-sdk` from PyPI only),
+- no `from __future__ import annotations` (banned in Core; this repo needs it
+  on Python < 3.14),
+- Core `manifest.json` (no `version`, has `quality_scale`), `strings.json`
+  instead of `translations/*.json`, `quality_scale.yaml`,
+- tests live in `tests/components/taphome` with `tests.common.MockConfigEntry`
+  and helpers in the test package `__init__.py`.
+
 ## Conventions
 
 - User-facing changes are recorded in `changelog.md` and the version bumped in `manifest.json` (CalVer, e.g. `2026.2.0`).

@@ -1,12 +1,14 @@
 """Tests for the TapHome config flow."""
 
-from taphome_sdk import TapHomeAuthError, TapHomeConnectionError
+from taphome_sdk import TapHomeAuthError, TapHomeConnectionError, ValueType
 
 from custom_components.taphome.const import CONF_API_URL, CONF_IP, DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+
+from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from tests_common import (
     TEST_API_URL,
@@ -177,3 +179,296 @@ async def test_reconfigure_flow_updates_connection(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
     assert entry.data[CONF_API_URL] == "http://10.0.0.99/api/TapHomeApi/v1"
+
+
+async def test_user_flow_with_zones_and_labels(hass: HomeAssistant, mock_hub) -> None:
+    """Zones and labels discovered on devices walk through the mapping steps."""
+    from tests_common import make_device
+
+    from homeassistant.helpers import area_registry as ar, label_registry as lr
+
+    area = ar.async_get(hass).async_create("Zahrada")
+    label = lr.async_get(hass).async_create("Osvětlení")
+    make_device(
+        mock_hub,
+        {
+            "deviceId": 9,
+            "type": "PowerOutlet",
+            "name": "Pool Pump",
+            "description": "Pump by the pool",
+            "zone": "Garden",
+            "category": "Lights",
+            "supportedValues": [
+                {"valueTypeId": ValueType.SWITCH_STATE.value, "readOnly": False}
+            ],
+            "values": {ValueType.SWITCH_STATE: 0.0},
+        },
+    )
+
+    result = await _start_user_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], USER_INPUT
+    )
+    assert result["step_id"] == "zones"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"Garden": {"area": area.id}}
+    )
+    assert result["step_id"] == "labels"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"Lights": {"label": label.label_id}}
+    )
+    assert result["step_id"] == "add_devices"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"devices": ["9"]}
+    )
+    assert result["step_id"] == "add_devices_platform"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"Pool Pump (9) — Garden · Lights": {"domains": ["switches"]}},
+    )
+    assert result["step_id"] == "add_devices_options"
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["options"]["zones"] == {"Garden": area.id}
+    assert result["options"]["labels"] == {"Lights": label.label_id}
+    assert result["options"]["switches"] == [{"id": 9}]
+
+
+async def test_user_flow_without_devices_creates_entry(
+    hass: HomeAssistant, mock_hub
+) -> None:
+    """A core with no exposed devices is added without the wizard."""
+    mock_hub.devices.clear()
+
+    result = await _start_user_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], USER_INPUT
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+async def test_user_flow_device_load_errors(hass: HomeAssistant, mock_hub) -> None:
+    """Errors while loading the devices are shown on the connection form."""
+    mock_hub.mock_connect.side_effect = TapHomeAuthError(401)
+    result = await _start_user_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], USER_INPUT
+    )
+    assert result["errors"] == {"base": "invalid_auth"}
+
+    mock_hub.mock_connect.side_effect = TapHomeConnectionError("boom")
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], USER_INPUT
+    )
+    assert result["errors"] == {"base": "cannot_connect"}
+
+
+async def test_add_devices_error_branches(hass: HomeAssistant, mock_hub) -> None:
+    """The deselect-all helper re-shows the picker with nothing selected."""
+    result = await _start_user_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], USER_INPUT
+    )
+    assert result["step_id"] == "add_devices"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"devices": ["2"], "clear_selection": True}
+    )
+    assert result["step_id"] == "add_devices"
+    assert not result.get("errors")
+
+
+async def test_add_devices_without_platforms_creates_entry(
+    hass: HomeAssistant, mock_hub
+) -> None:
+    """Leaving every platform unselected finishes without adding devices."""
+    result = await _start_user_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], USER_INPUT
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"devices": ["2"]}
+    )
+    assert result["step_id"] == "add_devices_platform"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"Garden Socket (2)": {"domains": []}}
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert "switches" not in result["options"]
+
+
+async def test_add_device_without_options_skips_options_step(
+    hass: HomeAssistant, mock_hub
+) -> None:
+    """Platforms without per-device options are added directly."""
+    result = await _start_user_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], USER_INPUT
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"devices": ["6"]}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"Scene Switch (6)": {"domains": ["multivalue_switches"]}}
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["options"]["multivalue_switches"] == [{"id": 6}]
+
+
+async def test_add_device_options_validation(hass: HomeAssistant, mock_hub) -> None:
+    """Invalid per-device options show an error and the flow recovers."""
+    result = await _start_user_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], USER_INPUT
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"devices": ["1"]}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"Kitchen Light (1)": {"domains": ["lights"]}}
+    )
+    assert result["step_id"] == "add_devices_options"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"Kitchen Light (1) · lights": {"effect_id": "abc"}}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "invalid_device_id"}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"Kitchen Light (1) · lights": {"effect_id": "6"}}
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["options"]["lights"] == [{"id": 1, "effect_id": 6}]
+
+
+async def test_reauth_flow_errors(hass: HomeAssistant, mock_hub) -> None:
+    """Connection errors and a different core are rejected during reauth."""
+    from tests_common import TEST_LOCATION
+
+    entry = make_config_entry()
+    await setup_integration(hass, entry)
+
+    entry.async_start_reauth(hass)
+    await hass.async_block_till_done()
+    [flow] = hass.config_entries.flow.async_progress()
+
+    mock_hub.mock_get_location.side_effect = TapHomeConnectionError("boom")
+    result = await hass.config_entries.flow.async_configure(
+        flow["flow_id"], {CONF_TOKEN: "new-token"}
+    )
+    assert result["errors"] == {"base": "cannot_connect"}
+
+    mock_hub.mock_get_location.side_effect = TapHomeAuthError(401)
+    result = await hass.config_entries.flow.async_configure(
+        flow["flow_id"], {CONF_TOKEN: "new-token"}
+    )
+    assert result["errors"] == {"base": "invalid_auth"}
+
+    from dataclasses import replace
+
+    mock_hub.mock_get_location.side_effect = None
+    mock_hub.mock_get_location.return_value = replace(
+        TEST_LOCATION, location_id="other-location"
+    )
+    result = await hass.config_entries.flow.async_configure(
+        flow["flow_id"], {CONF_TOKEN: "new-token"}
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unique_id_mismatch"
+
+
+async def test_setup_flow_base_class_contract(hass: HomeAssistant) -> None:
+    """The shared setup flow requires subclasses to provide the state."""
+    import pytest
+
+    from custom_components.taphome.config_flow import _TapHomeSetupFlow
+
+    flow = _TapHomeSetupFlow()
+    with pytest.raises(NotImplementedError):
+        _ = flow._devices
+    with pytest.raises(NotImplementedError):
+        await flow._async_commit("zones")
+
+
+async def test_user_flow_via_cloud(hass: HomeAssistant, mock_hub) -> None:
+    """Enabling the cloud connection uses the TapHome cloud API URL."""
+    mock_hub.devices.clear()
+    result = await _start_user_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_TOKEN: TEST_TOKEN, "use_cloud": True}
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"][CONF_API_URL] == "https://api.taphome.com/api/TapHomeApi/v1"
+
+
+async def test_user_flow_empty_location_response(
+    hass: HomeAssistant, mock_hub
+) -> None:
+    """An empty location response counts as a connection failure."""
+    mock_hub.mock_get_location.return_value = None
+    result = await _start_user_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], USER_INPUT
+    )
+    assert result["errors"] == {"base": "cannot_connect"}
+
+
+async def test_reconfigure_renders_stored_connection(
+    hass: HomeAssistant, mock_hub
+) -> None:
+    """The reconfigure form derives its defaults from the stored API URL."""
+    from custom_components.taphome.const import DEFAULT_CLOUD_API_URL
+
+    for index, api_url in enumerate(
+        (DEFAULT_CLOUD_API_URL, "https://proxy.example/taphome")
+    ):
+        entry = MockConfigEntry(
+            domain=DOMAIN,
+            title=f"TapHome {index}",
+            unique_id=f"loc-{index}",
+            data={CONF_TOKEN: TEST_TOKEN, CONF_API_URL: api_url, "id": None},
+            options={},
+        )
+        await setup_integration(hass, entry)
+        result = await entry.start_reconfigure_flow(hass)
+        assert result["step_id"] == "reconfigure"
+
+
+async def test_flow_helpers_handle_unknown_devices(hass: HomeAssistant) -> None:
+    """Selection helpers cope with devices that disappeared from the core."""
+    from custom_components.taphome.config_flow import TapHomeConfigFlow
+
+    flow = TapHomeConfigFlow()
+    flow._options = {"switches": [{"id": 2}]}
+    flow._edit_selection = ["switches:5"]
+
+    assert flow._platforms_for_device(99) == []
+    assert flow._device_label(99) == "Unknown device (99)"
+    assert flow._resolve_edit_selection() == []
+
+    # An empty resolved selection aborts the edit form.
+    flow.hass = hass
+    flow.flow_id = "test-flow"
+    flow.handler = DOMAIN
+    result = await flow.async_step_edit_devices_form()
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "no_devices_configured"
