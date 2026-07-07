@@ -1,5 +1,8 @@
 {
   "config": {
+    "initiate_flow": {
+      "user": "TapHome Core hinzufügen"
+    },
     "step": {
       "user": {
         "title": "TapHome Core verbinden",
@@ -65,7 +68,11 @@
         "title": "Geräte hinzufügen",
         "description": "Wählen Sie die TapHome-Geräte aus, die Sie hinzufügen möchten. Tippen Sie in das Feld, um zu suchen. Noch nicht hinzugefügte Geräte zeigen ihre TapHome-Zone und -Kategorie, hinzugefügte Geräte ihren Raum.",
         "data": {
-          "devices": "Geräte"
+          "devices": "Geräte",
+          "clear_selection": "Alle abwählen"
+        },
+        "data_description": {
+          "clear_selection": "Einschalten und auf Weiter drücken, um die gesamte Auswahl zu löschen, dann nur die gewünschten Geräte wählen."
         }
       },
       "add_devices_platform": {

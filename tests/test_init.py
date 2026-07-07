@@ -176,6 +176,57 @@ async def test_devices_are_registered(
     assert socket.via_device_id == hub_device.id
 
 
+async def test_zone_and_label_mapping_apply_to_device(
+    hass: HomeAssistant, mock_hub
+) -> None:
+    """A mapped zone/category sets the device area and labels device + entity."""
+    from homeassistant.helpers import (
+        area_registry as ar,
+        device_registry as dr,
+        entity_registry as er,
+        label_registry as lr,
+    )
+
+    from tests_common import TEST_LOCATION_ID, make_device
+
+    # Give the switch device (id 2) a zone and a category to map.
+    make_device(
+        mock_hub,
+        {
+            "deviceId": 2,
+            "type": "PowerOutlet",
+            "name": "Garden Socket",
+            "description": "Socket by the terrace",
+            "zone": "Garden",
+            "category": "Curtains",
+            "supportedValues": [
+                {"valueTypeId": ValueType.SWITCH_STATE.value, "readOnly": False},
+            ],
+            "values": {ValueType.SWITCH_STATE: 0.0},
+        },
+    )
+
+    area = ar.async_get(hass).async_create("Zahrada")
+    label = lr.async_get(hass).async_create("Rolety")
+
+    entry = make_config_entry(
+        {
+            "zones": {"Garden": area.id},
+            "labels": {"Curtains": label.label_id},
+        }
+    )
+    await setup_integration(hass, entry)
+
+    device = dr.async_get(hass).async_get_device({(DOMAIN, f"{TEST_LOCATION_ID}_2")})
+    assert device is not None
+    assert device.area_id == area.id
+    assert label.label_id in device.labels
+
+    entity_entry = er.async_get(hass).async_get("switch.garden_socket")
+    assert entity_entry is not None
+    assert label.label_id in entity_entry.labels
+
+
 async def test_unload_unsubscribes_entities(
     hass: HomeAssistant, mock_hub, mock_config_entry: MockConfigEntry
 ) -> None:

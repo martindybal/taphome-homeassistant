@@ -128,20 +128,34 @@ class TapHomeEntity(TapHomeSubscriptionMixin, Entity):
             device_registry.async_update_device(device.id, area_id=area_id)
 
     def _apply_label_mapping(self) -> None:
-        """Add the label its TapHome category is mapped to."""
+        """Add the label its TapHome category is mapped to.
+
+        The label is applied to both the device and its entity, so the mapping
+        shows up on the device-registry entry the same way its area (from the
+        zone mapping) does, as well as on the entity itself.
+        """
         mapping = self._core_config.label_mapping
         if mapping is None or self._category is None:
             return
         label_id = mapping.get(self._category)
         if label_id is None:
             return
+        if lr.async_get(self.hass).async_get_label(label_id) is None:
+            return
+
+        device_registry = dr.async_get(self.hass)
+        device = device_registry.async_get_device(self._device_identifiers)
+        if device is not None and label_id not in device.labels:
+            device_registry.async_update_device(
+                device.id, labels=device.labels | {label_id}
+            )
+
         entity_registry = er.async_get(self.hass)
         entry = entity_registry.async_get(self.entity_id)
-        if entry is None or lr.async_get(self.hass).async_get_label(label_id) is None:
-            return
-        entity_registry.async_update_entity(
-            self.entity_id, labels=entry.labels | {label_id}
-        )
+        if entry is not None and label_id not in entry.labels:
+            entity_registry.async_update_entity(
+                self.entity_id, labels=entry.labels | {label_id}
+            )
 
     @override
     def schedule_update_ha_state(self, force_refresh: bool = False) -> None:
