@@ -12,12 +12,12 @@ CI (`.github/workflows/ci.yaml`, Python 3.12) runs these checks — run them loc
 
 ```bash
 python -m venv .venv && source .venv/bin/activate
-pip install homeassistant ruff pylint pytest-homeassistant-custom-component "taphome-sdk @ git+https://github.com/martindybal/taphome-sdk.git@main"
+pip install homeassistant ruff pylint pytest-homeassistant-custom-component taphome-sdk
 
 python -m compileall -q .                                          # compile check
 ruff check .                                                       # lint
 pylint . --fail-under=9.5                                          # lint, min score 9.5
-python -m pytest tests                                             # integration tests
+pytest tests                                                       # integration tests (use the pytest script, not python -m: the repo root on sys.path would shadow stdlib select/time)
 ```
 
 Tests live in `tests/` (pytest-homeassistant-custom-component). `tests/tests_common.py` maps the repo root to `custom_components.taphome`, builds SDK devices from API-shaped fixture dicts and fakes the TapHome HTTP API in memory (`FakeTapHomeApi`); `conftest.py` provides `mock_hub` (patches `TapHomeHubFactory.async_connect` + `TapHomeApi.async_get_location`) and `mock_config_entry`. `pytest.ini` sits in `tests/` on purpose — the repo root is a package and must not become pytest's rootdir.
@@ -27,8 +27,6 @@ The TapHome SDK lives in its own repository (https://github.com/martindybal/taph
 CI also runs HACS validation (`hacs/action`, category `integration`).
 
 To run the integration for real: set up the [Home Assistant dev container](https://developers.home-assistant.io/docs/development_environment) and bind-mount this repo into `config/custom_components/taphome/` (see "Contributing" in `readme.md`).
-
-`docs/config-generator/` is a separate small Vue/TypeScript web app for generating YAML config (`npm install && tsc` inside that folder); it is unrelated to the Python integration.
 
 ## Home Assistant development context
 
@@ -75,7 +73,7 @@ Two layers:
 
 ### Adding a new platform
 
-Follow the existing pattern: platform file at root with a `TapHome<X>Config` class, entity class(es) inheriting `TapHomeEntity` + the HA entity class, a `_create_*_entity` factory, and `setup_platform` calling `add_taphome_entities`; then register a `DomainDefinition` in `__init__.py`, add the config key to `const.py` and `CONFIG_SCHEMA`, and document it in `configuration.md`.
+Follow the existing pattern: platform file at root with a `TapHome<X>Config` class, entity class(es) inheriting `TapHomeEntity` + the HA entity class, a `_create_*_entity` factory, and `async_setup_entry` calling `add_taphome_entities`; then register a `DomainDefinition` in `__init__.py`, add the config key to `const.py` and `PLATFORMS`, add a `PlatformDescriptor` in `platform_descriptors.py`, and document it in `docs/user-guide.md`.
 
 ## Conventions
 

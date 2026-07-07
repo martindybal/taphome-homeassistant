@@ -11,5 +11,5 @@
     "@martindybal"
   ],
   "integration_type": "hub",
-  "requirements": []
+  "requirements": ["taphome-sdk==1.0.0"]
 }
