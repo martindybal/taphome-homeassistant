@@ -304,12 +304,23 @@ def _device_qualifies(device: Device, descriptor: PlatformDescriptor) -> bool:
     )
 
 
+# Placeholder / leading-option label marking a field that is detected
+# automatically, so the user knows an empty field is not "unset".
+_AUTO_LABEL = "Auto"
+
+
 def build_field_selector(
     option_field: OptionField,
     devices: dict[int, Device],
     device_label: Callable[[int], str],
+    auto: bool = False,
 ) -> Any:
-    """Build the selector for one per-device option field."""
+    """Build the selector for one per-device option field.
+
+    When ``auto`` is set the field is auto-detected, so dropdowns get a
+    pre-selectable "Auto" option (mapping to the empty value) and text fields an
+    "Auto" placeholder.
+    """
     if option_field.kind == FieldKind.DEVICE_ID:
         options = [
             SelectOptionDict(value=str(device.id), label=device_label(device.id))
@@ -334,16 +345,28 @@ def build_field_selector(
             for value_type in ValueType
         ]
         options.sort(key=lambda option: option["label"])
+        if auto:
+            options.insert(0, SelectOptionDict(value="", label=_AUTO_LABEL))
         return SelectSelector(
             SelectSelectorConfig(options=options, mode=SelectSelectorMode.DROPDOWN)
         )
-    if option_field.kind in (FieldKind.ENUM, FieldKind.MULTI_ENUM):
+    if option_field.kind == FieldKind.MULTI_ENUM:
         return SelectSelector(
             SelectSelectorConfig(
                 options=sorted(option_field.options),
-                multiple=option_field.kind == FieldKind.MULTI_ENUM,
+                multiple=True,
                 mode=SelectSelectorMode.DROPDOWN,
             )
+        )
+    if option_field.kind == FieldKind.ENUM:
+        options = [
+            SelectOptionDict(value=value, label=value)
+            for value in sorted(option_field.options)
+        ]
+        if auto:
+            options.insert(0, SelectOptionDict(value="", label=_AUTO_LABEL))
+        return SelectSelector(
+            SelectSelectorConfig(options=options, mode=SelectSelectorMode.DROPDOWN)
         )
     if option_field.kind in (FieldKind.NUMBER_INT, FieldKind.NUMBER_FLOAT):
         return NumberSelector(
@@ -355,6 +378,8 @@ def build_field_selector(
                 mode=NumberSelectorMode.BOX,
             )
         )
+    if auto:
+        return TextSelector(TextSelectorConfig(placeholder=_AUTO_LABEL))
     return TextSelector()
 
 
@@ -365,15 +390,19 @@ def build_device_options_schema(
     device_label: Callable[[int], str],
 ) -> tuple[vol.Schema, dict[str, Any]]:
     """Build the per-device options form and its suggested values."""
+    auto = descriptor.advanced
     schema_dict: dict[Any, Any] = {}
     suggested_values: dict[str, Any] = {}
 
     for option_field in descriptor.fields:
         schema_dict[vol.Optional(option_field.key)] = build_field_selector(
-            option_field, devices, device_label
+            option_field, devices, device_label, auto
         )
         value = device_config.get(option_field.key)
         if value is None:
+            # Pre-select the "Auto" dropdown option so the field is not blank.
+            if auto and option_field.kind in (FieldKind.ENUM, FieldKind.VALUE_TYPE):
+                suggested_values[option_field.key] = ""
             continue
         if option_field.kind in (FieldKind.DEVICE_ID, FieldKind.VALUE_TYPE):
             suggested_values[option_field.key] = str(value)

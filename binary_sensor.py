@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import datetime
 
 from homeassistant.components.binary_sensor import (
@@ -200,7 +200,11 @@ class TapHomeBinarySensorFactory:
             for sensor_type in supported_sensor_types:
                 if _device.supports_value(sensor_type.value_type):
                     if self.config.entity.device_class is not None:
-                        sensor_type.device_class = self.config.entity.device_class
+                        # Copy instead of mutating the shared module constant.
+                        sensor_type = replace(
+                            sensor_type,
+                            device_class=self.config.entity.device_class,
+                        )
 
                     binary_sensor = TapHomeBinarySensor(
                         self.config,

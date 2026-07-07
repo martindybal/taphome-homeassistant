@@ -10,7 +10,8 @@
 - Reloading or removing an integration entry now properly stops polling and unregisters the webhook.
 - Removing a device from the configuration also removes its entities from the entity registry — no manual cleanup in Home Assistant is needed.
 - New devices exposed in the TapHome API (found when the integration is reloaded or Home Assistant restarts) raise a repair issue that lets you add the device — pick the platform to expose it as, or ignore it so it is not reported again.
-- Sensor and binary sensor types are detected automatically; their per-device options are now collapsed as advanced (and skipped in the new-device repair flow), so they are out of the way but still available to override.
+- Sensor and binary sensor types are detected automatically; their per-device options are collapsed as advanced (and skipped in the new-device repair flow) and pre-filled with an "Auto" marker, so they are out of the way but still available to override.
+- Fixed a binary sensor `device_class` override leaking to other devices of the same type until a restart.
 - Minimum supported Home Assistant version is 2025.3.
 - The documented button `actions` value `long_press` (with underscore) is now parsed correctly.
 
