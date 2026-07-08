@@ -40,6 +40,12 @@ async def test_yaml_import_creates_entry_and_repair_issue(
         {"id": 2, "device_class": "outlet"}
     ]
 
+    # Imported subentries are titled with the API id and discovery metadata.
+    from tests_common import device_subentry
+
+    socket = device_subentry(entry, "switches", 2)
+    assert socket.title == "TapHome api device 2 - Socket by the terrace"
+
     issue_registry = ir.async_get(hass)
     assert any(
         issue.domain == DOMAIN and issue.issue_id == "yaml_deprecated"

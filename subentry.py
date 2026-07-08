@@ -23,9 +23,18 @@ from .const import SUBENTRY_DATA_PLATFORM, SUBENTRY_TYPE_DEVICE
 from .platform_descriptors import device_config_id
 
 
-def device_subentry_unique_id(platform: str, device_id: int) -> str:
-    """Return the stable unique id of a device exposed on one platform."""
-    return f"{platform}:{device_id}"
+def device_subentry_unique_id(
+    platform: str, device_id: int, value: int | None = None
+) -> str:
+    """Return the stable unique id of a device exposed on one platform.
+
+    Sensor-like platforms may expose a single device value per subentry; the
+    value id is then part of the identity so one device can have several
+    per-value subentries while duplicates of the same value stay impossible.
+    """
+    if value is None:
+        return f"{platform}:{device_id}"
+    return f"{platform}:{device_id}:{value}"
 
 
 def device_subentry_payload(platform: str, device_config: Mapping[str, Any]) -> dict:
@@ -41,7 +50,9 @@ def build_device_subentry_data(
         data=device_subentry_payload(platform, device_config),
         subentry_type=SUBENTRY_TYPE_DEVICE,
         title=title,
-        unique_id=device_subentry_unique_id(platform, device_config_id(device_config)),
+        unique_id=device_subentry_unique_id(
+            platform, device_config_id(device_config), device_config.get("value")
+        ),
     )
 
 

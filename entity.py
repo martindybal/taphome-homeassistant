@@ -5,7 +5,9 @@ from typing import Any, override
 
 from taphome_sdk import Device, DeviceState, Event, HubConnectionState, Location
 
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import (
+    area_registry as ar,
     device_registry as dr,
     entity_registry as er,
     label_registry as lr,
@@ -14,7 +16,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 
 from .const import DOMAIN
-from .taphome_config_entry import AddEntryRequest, TapHomeEntityConfigT
+from .taphome_config_entry import AddEntryRequest, NameMapping, TapHomeEntityConfigT
 
 
 def hub_device_id(location: Location | None, core_id: str | None) -> str:
@@ -24,6 +26,24 @@ def hub_device_id(location: Location | None, core_id: str | None) -> str:
     derive its id the same way for that link to hold.
     """
     return location.location_id if location else core_id or DOMAIN
+
+
+def _resolve_suggested_area(
+    hass: HomeAssistant, mapping: NameMapping, zone: str | None
+) -> str | None:
+    """Return the area name a new device should be created in.
+
+    Ignored zones suggest nothing; mapped zones resolve to the target area's
+    name (the target is an area id from the options flow or a name from YAML);
+    unmapped zones fall back to the TapHome zone name.
+    """
+    if zone is None or mapping.is_ignored(zone):
+        return None
+    target = mapping.map(zone)
+    if target == zone:
+        return zone
+    area = ar.async_get(hass).async_get_area(target)
+    return area.name if area else target
 
 
 class TapHomeSubscriptionMixin:
@@ -90,7 +110,9 @@ class TapHomeEntity(TapHomeSubscriptionMixin, Entity):
             name=taphome_device.name,
             manufacturer="TapHome",
             model=taphome_device.device_type,
-            suggested_area=self._zone,
+            suggested_area=_resolve_suggested_area(
+                config.hass, config.core.zone_mapping, self._zone
+            ),
             via_device=(DOMAIN, location_id),
         )
 
@@ -123,46 +145,61 @@ class TapHomeEntity(TapHomeSubscriptionMixin, Entity):
         self._apply_label_mapping()
 
     def _apply_zone_mapping(self) -> None:
-        """Move the device to the area its TapHome zone is mapped to."""
+        """Move the device to the area its TapHome zone is mapped to.
+
+        Unmapped zones already land in an area of the same name through
+        ``suggested_area``; ignored zones get no assignment at all. A mapped
+        target is an area id (options flow) or a name (YAML), created when
+        missing.
+        """
         mapping = self._core_config.zone_mapping
-        if mapping is None or self._zone is None:
+        if self._zone is None or mapping.is_ignored(self._zone):
             return
-        area_id = mapping.get(self._zone)
-        if area_id is None:
+        target = mapping.map(self._zone)
+        if target == self._zone:
             return
+        registry = ar.async_get(self.hass)
+        area = (
+            registry.async_get_area(target)
+            or registry.async_get_area_by_name(target)
+            or registry.async_create(target)
+        )
         device_registry = dr.async_get(self.hass)
         device = device_registry.async_get_device(self._device_identifiers)
-        if device is not None and device.area_id != area_id:
-            device_registry.async_update_device(device.id, area_id=area_id)
+        if device is not None and device.area_id != area.id:
+            device_registry.async_update_device(device.id, area_id=area.id)
 
     def _apply_label_mapping(self) -> None:
-        """Add the label its TapHome category is mapped to.
+        """Label the device and entity after its TapHome category.
 
-        The label is applied to both the device and its entity, so the mapping
-        shows up on the device-registry entry the same way its area (from the
-        zone mapping) does, as well as on the entity itself.
+        Every category becomes a label (created when missing) unless it is
+        ignored; the mapping may rename it. A mapped target is a label id
+        (options flow) or a name (YAML). The label goes to both the device and
+        its entity so it shows everywhere labels are used.
         """
         mapping = self._core_config.label_mapping
-        if mapping is None or self._category is None:
+        if self._category is None or mapping.is_ignored(self._category):
             return
-        label_id = mapping.get(self._category)
-        if label_id is None:
-            return
-        if lr.async_get(self.hass).async_get_label(label_id) is None:
-            return
+        target = mapping.map(self._category)
+        registry = lr.async_get(self.hass)
+        label = (
+            registry.async_get_label(target)
+            or registry.async_get_label_by_name(target)
+            or registry.async_create(target)
+        )
 
         device_registry = dr.async_get(self.hass)
         device = device_registry.async_get_device(self._device_identifiers)
-        if device is not None and label_id not in device.labels:
+        if device is not None and label.label_id not in device.labels:
             device_registry.async_update_device(
-                device.id, labels=device.labels | {label_id}
+                device.id, labels=device.labels | {label.label_id}
             )
 
         entity_registry = er.async_get(self.hass)
         entry = entity_registry.async_get(self.entity_id)
-        if entry is not None and label_id not in entry.labels:
+        if entry is not None and label.label_id not in entry.labels:
             entity_registry.async_update_entity(
-                self.entity_id, labels=entry.labels | {label_id}
+                self.entity_id, labels=entry.labels | {label.label_id}
             )
 
     @override

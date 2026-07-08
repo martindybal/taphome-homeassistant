@@ -320,6 +320,98 @@ async def test_zone_and_label_mapping_apply_to_device(
     assert label.label_id in switch_entities[0].labels
 
 
+async def test_zone_mapping_by_name_and_ignore(
+    hass: HomeAssistant, mock_hub
+) -> None:
+    """YAML name targets create areas; ignored zones get no area at all."""
+    from homeassistant.helpers import area_registry as ar, device_registry as dr
+
+    from tests_common import TEST_LOCATION_ID, make_device
+
+    for device_id, zone in ((2, "Garden"), (9, "Zvlhčovač")):
+        make_device(
+            mock_hub,
+            {
+                "deviceId": device_id,
+                "type": "PowerOutlet",
+                "name": f"Socket {device_id}",
+                "description": "",
+                "zone": zone,
+                "supportedValues": [
+                    {"valueTypeId": ValueType.SWITCH_STATE.value, "readOnly": False},
+                ],
+                "values": {ValueType.SWITCH_STATE: 0.0},
+            },
+        )
+    entry = make_config_entry(
+        {
+            "switches": [{"id": 2}, {"id": 9}],
+            "zones": {"Garden": "Zahrada", "Zvlhčovač": {"ignore": True}},
+        }
+    )
+    await setup_integration(hass, entry)
+
+    area_registry = ar.async_get(hass)
+    device_registry = dr.async_get(hass)
+
+    # The YAML mapping target is a name: the area is created and assigned.
+    zahrada = area_registry.async_get_area_by_name("Zahrada")
+    assert zahrada is not None
+    mapped = device_registry.async_get_device({(DOMAIN, f"{TEST_LOCATION_ID}_2")})
+    assert mapped.area_id == zahrada.id
+    # The raw TapHome zone name must not leak into an area of its own.
+    assert area_registry.async_get_area_by_name("Garden") is None
+
+    # An ignored zone assigns no area and creates none.
+    ignored = device_registry.async_get_device({(DOMAIN, f"{TEST_LOCATION_ID}_9")})
+    assert ignored.area_id is None
+    assert area_registry.async_get_area_by_name("Zvlhčovač") is None
+
+
+async def test_labels_created_from_categories(
+    hass: HomeAssistant, mock_hub
+) -> None:
+    """Without a mapping every category becomes a label of the same name."""
+    from homeassistant.helpers import (
+        device_registry as dr,
+        entity_registry as er,
+        label_registry as lr,
+    )
+
+    from tests_common import TEST_LOCATION_ID, make_device
+
+    make_device(
+        mock_hub,
+        {
+            "deviceId": 2,
+            "type": "PowerOutlet",
+            "name": "Garden Socket",
+            "description": "Socket by the terrace",
+            "category": "Osvětlení",
+            "supportedValues": [
+                {"valueTypeId": ValueType.SWITCH_STATE.value, "readOnly": False},
+            ],
+            "values": {ValueType.SWITCH_STATE: 0.0},
+        },
+    )
+    entry = make_config_entry()
+    await setup_integration(hass, entry)
+
+    label = lr.async_get(hass).async_get_label_by_name("Osvětlení")
+    assert label is not None
+
+    device = dr.async_get(hass).async_get_device({(DOMAIN, f"{TEST_LOCATION_ID}_2")})
+    assert label.label_id in device.labels
+
+    entity_registry = er.async_get(hass)
+    switch_entities = [
+        registry_entry
+        for registry_entry in er.async_entries_for_device(entity_registry, device.id)
+        if registry_entry.domain == "switch"
+    ]
+    assert label.label_id in switch_entities[0].labels
+
+
 async def test_unload_unsubscribes_entities(
     hass: HomeAssistant, mock_hub, mock_config_entry: MockConfigEntry
 ) -> None:

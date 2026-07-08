@@ -257,6 +257,36 @@ VARIABLE_SENSOR = TapHomeSensorType(
     convert_th_to_ha=lambda v: round(v, 1),
 )
 
+# Every value interpretation the sensor platform can auto-detect; the subentry
+# add flow offers these per device so a single value can be exposed alone.
+KNOWN_SENSOR_TYPES: tuple[TapHomeSensorType, ...] = (
+    HUMIDITY_SENSOR,
+    TEMPERATURE_SENSOR,
+    ELECTRIC_DEMAND_SENSOR,
+    ELECTRIC_CONSUMPTION_SENSOR,
+    CO2_SENSOR,
+    BRIGHTNESS_SENSOR,
+    WIND_SPEED_SENSOR,
+    ANALOG_INPUT_SENSOR,
+    PULSE_TOTAL_IMPULSE_SENSOR,
+    PULSE_CURRENT_HOUR_SENSOR,
+    PULSE_FREQUENCY_SENSOR,
+    GAS_CONSUMPTION_SENSOR,
+    GAS_DEMAND_SENSOR,
+    WATER_CONSUMPTION_SENSOR,
+    WATER_DEMAND_SENSOR,
+    WATER_LEVEL_SENSOR,
+    RAINFALL_RATE_SENSOR,
+    RAIN_COUNTER_SENSOR,
+    WATER_PRESSURE_SENSOR,
+    LIGHT_INTENSITY_SENSOR,
+    BATTERY_PERCENTAGE_SENSOR,
+    ELECTRIC_VOLTAGE_SENSOR,
+    ELECTRIC_CURRENT_SENSOR,
+    VARIABLE_SENSOR,
+    PERCENTAGES_SENSOR,
+)
+
 
 class TapHomeSensorConfig(TapHomeEntityConfig):
     """Configuration options for TapHome sensor entities."""
@@ -267,6 +297,9 @@ class TapHomeSensorConfig(TapHomeEntityConfig):
         self.device_class: SensorDeviceClass | None = self.get_optional(
             "device_class", None
         )
+        # Expose exactly this device value (per-value subentries); None keeps
+        # the legacy behavior of auto-detecting every known supported value.
+        self.value: int | None = self.get_optional("value", None)
         self.value_type: ValueType | None = self.get_optional("value_type", None)
         self.unit_of_measurement: str | None = self.get_optional(
             "unit_of_measurement", None
@@ -319,44 +352,34 @@ def create_entities(
     sensors: list[TapHomeSensor] = []
     device = config.hub.get_typed_device(config.entity.id, Device)
     if device is not None:
-        supported_sensor_types: list[TapHomeSensorType] = [
-            HUMIDITY_SENSOR,
-            TEMPERATURE_SENSOR,
-            ELECTRIC_DEMAND_SENSOR,
-            ELECTRIC_CONSUMPTION_SENSOR,
-            CO2_SENSOR,
-            BRIGHTNESS_SENSOR,
-            WIND_SPEED_SENSOR,
-            ANALOG_INPUT_SENSOR,
-            PULSE_TOTAL_IMPULSE_SENSOR,
-            PULSE_CURRENT_HOUR_SENSOR,
-            PULSE_FREQUENCY_SENSOR,
-            GAS_CONSUMPTION_SENSOR,
-            GAS_DEMAND_SENSOR,
-            WATER_CONSUMPTION_SENSOR,
-            WATER_DEMAND_SENSOR,
-            WATER_LEVEL_SENSOR,
-            RAINFALL_RATE_SENSOR,
-            RAIN_COUNTER_SENSOR,
-            WATER_PRESSURE_SENSOR,
-            LIGHT_INTENSITY_SENSOR,
-            BATTERY_PERCENTAGE_SENSOR,
-            ELECTRIC_VOLTAGE_SENSOR,
-            ELECTRIC_CURRENT_SENSOR,
-            VARIABLE_SENSOR,
-            PERCENTAGES_SENSOR,
-        ]
-
-        if config.entity.value_type:
-            supported_sensor_types.append(
-                TapHomeSensorType(
-                    ValueType(config.entity.value_type),
-                    config.entity.device_class,
-                    config.entity.unit_of_measurement,
-                    SensorStateClass.MEASUREMENT,
-                    lambda v: v,
+        if config.entity.value is not None:
+            # A per-value subentry exposes exactly the selected device value.
+            selected = ValueType(config.entity.value)
+            supported_sensor_types = [
+                next(
+                    (
+                        known
+                        for known in KNOWN_SENSOR_TYPES
+                        if known.value_type is selected
+                    ),
+                    TapHomeSensorType(
+                        selected, state_class=SensorStateClass.MEASUREMENT
+                    ),
                 )
-            )
+            ]
+        else:
+            supported_sensor_types = list(KNOWN_SENSOR_TYPES)
+
+            if config.entity.value_type:
+                supported_sensor_types.append(
+                    TapHomeSensorType(
+                        ValueType(config.entity.value_type),
+                        config.entity.device_class,
+                        config.entity.unit_of_measurement,
+                        SensorStateClass.MEASUREMENT,
+                        lambda v: v,
+                    )
+                )
 
         for sensor_type in supported_sensor_types:
             if device.supports_value(sensor_type.value_type):

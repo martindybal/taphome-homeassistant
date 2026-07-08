@@ -29,10 +29,11 @@ _Settings → Devices & services → Add integration → **TapHome**_
 2. The integration verifies the connection and reads the devices exposed in
    the TapHome API.
 3. **Zones** (shown only when your devices have zones) — map TapHome zones to
-   Home Assistant areas, or ignore zones you do not want mapped.
-4. **Labels** (shown only when your devices have categories) — map TapHome
-   categories to Home Assistant labels. The label is applied to the device and
-   to its entity.
+   Home Assistant areas. A zone left empty uses its TapHome name as the area;
+   tick **Ignore** to assign no area at all.
+4. **Labels** (shown only when your devices have categories) — every category
+   becomes a label on the device and its entities; the mapping renames it and
+   **Ignore** skips it.
 5. **Devices** — pick the devices to add. For each device choose the
    platform(s) it should be exposed as (light, switch, cover, …) and fill in
    optional per-device settings. Only platforms compatible with the device
@@ -72,22 +73,32 @@ offers:
     individual entities afterwards works as usual in Home Assistant.
   - *Exposed attributes*: which `taphome_*` state attributes entities carry
     (id, name, description, zone, category, operation mode).
-- **Add devices** — the same device picker as during setup. Devices already
-  configured are pre-unselected; adding a device again on another platform is
-  supported (e.g. one output as both switch and light).
+- **Add device** — the same typed add flow as the **+ Add device** button on
+  the integration page (see below).
+- **Edit device** — find a configured device by picking the device *or any of
+  its entities* (whichever you know), then change its options. Advanced options
+  (including other variants of the same device type) are collapsed at the
+  bottom, so a simple thermostat can be upgraded to a controlled one.
+- **Remove device** — the same picker; a summary shows the device, its
+  configurations and entities before everything is removed.
 - **Zones** / **Labels** — edit the zone → area and category → label mapping
   at any time.
 
-Each exposed device is a **device subentry** of the Core, so editing and
-removing a single device is done where the device lives:
+Each exposed device is a **device subentry** of the Core; devices are added and
+managed right where they live:
 
+- **Add a device** — the Core entry page has **+ Add device**, and Configure
+  offers the identical flow (the bulk picker exists only in the initial setup
+  wizard). Pick the *type* you are adding (light, switch, thermostat,
+  controlled thermostat, range thermostat, sensor, …) and the form asks exactly
+  for what that type needs. For sensors and binary sensors you pick the device
+  and then which of its values to expose — each value becomes its own entry, so
+  it can be removed individually later.
 - **Edit a device** — open the device (from the Core's device list, or _Settings
-  → Devices & services → Devices_) and use its **⋮ → Edit** to change the
-  per-device options (device class, effects, climate controller links, …).
+  → Devices & services → Devices_) and use its **⋮ → Edit**. Every option is
+  offered; the advanced ones are collapsed.
 - **Remove a device** — the device's **⋮ → Delete** removes the device **and**
   its entities from Home Assistant. No manual registry cleanup is needed.
-- **Add a single device** — the Core entry page also has **+ Add device** to
-  expose one more device without going through the Configure dialog.
 
 Changes are applied by reloading the integration entry automatically.
 

@@ -71,103 +71,228 @@ async def test_options_core_settings_updates_webhook(
     assert entry.options[CONF_WEBHOOK_ID] == "taphome-hook"
 
 
-async def test_options_add_device(hass: HomeAssistant, mock_hub) -> None:
-    """The bulk Add devices step stores each picked device as a subentry."""
-    entry = make_config_entry({"switches": []})
-    await setup_integration(hass, entry)
-
-    result = await _start_options_flow(hass, entry)
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"], {"next_step_id": "add_devices"}
-    )
-    assert result["step_id"] == "add_devices"
-
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"], {"devices": ["2"]}
-    )
-    assert result["step_id"] == "add_devices_platform"
-
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"], {"Garden Socket (2)": {"domains": ["switches"]}}
-    )
-    assert result["step_id"] == "add_devices_options"
-
-    result = await hass.config_entries.options.async_configure(result["flow_id"], {})
-    await hass.async_block_till_done()
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert device_subentry(entry, "switches", 2) is not None
-    assert hass.states.get("switch.garden_socket") is not None
-
-
-def _devices_field(data_schema):
-    """Return the (default, selector) of the add-devices ``devices`` field."""
-    for marker, selector in data_schema.schema.items():
-        if getattr(marker, "schema", marker) == "devices":
-            return marker.default(), selector
-    raise AssertionError("no 'devices' field in the add_devices schema")
-
-
-async def test_add_devices_skips_helper_referenced_device(
+async def test_options_menu_device_management(
     hass: HomeAssistant, mock_hub
 ) -> None:
-    """A device used only as another device's helper is not preselected."""
-    # Garden Socket (2) is not exposed on its own; it is only used as the
-    # thermostat's hvac switch. It is in use, so it must not be preselected,
-    # while a genuinely unused device (Bedroom Blinds, 4) still is.
-    entry = make_config_entry(
-        {
-            "switches": [],
-            "climates": [{"id": 3, "hvac_switch_id": 2, "hvac_mode": "heat"}],
-        }
-    )
-    await setup_integration(hass, entry)
-
-    result = await _start_options_flow(hass, entry)
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"], {"next_step_id": "add_devices"}
-    )
-    assert result["step_id"] == "add_devices"
-
-    default, selector = _devices_field(result["data_schema"])
-    # Configured (1, 3, 5) and helper-referenced (2) devices are excluded; a
-    # genuinely unused device (4) is still preselected.
-    assert "2" not in default
-    assert "4" in default
-    assert {"1", "3", "5"}.isdisjoint(default)
-    # Device 2 remains a selectable option so it can still be added manually.
-    options = {option["value"] for option in selector.config["options"]}
-    assert "2" in options
-
-
-async def test_subentry_add_single_device(hass: HomeAssistant, mock_hub) -> None:
-    """The device subentry flow adds one device via device → platform → options."""
+    """The menu offers add/edit/remove; the old bulk picker is gone."""
     entry = make_config_entry()
     await setup_integration(hass, entry)
 
+    result = await _start_options_flow(hass, entry)
+    assert "add_devices" not in result["menu_options"]
+    assert "add_device" in result["menu_options"]
+    assert "edit_device" in result["menu_options"]
+    assert "remove_device" in result["menu_options"]
+
+
+async def test_options_add_device_archetype_flow(
+    hass: HomeAssistant, mock_hub
+) -> None:
+    """Configure → Add device opens the same archetype flow as Add device."""
+    entry = make_config_entry()
+    await setup_integration(hass, entry)
+
+    result = await _start_options_flow(hass, entry)
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], {"next_step_id": "add_device"}
+    )
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "add_device"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], {"next_step_id": "cover"}
+    )
+    assert result["step_id"] == "cover"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], {"device": "4"}
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "device_added"
+    assert device_subentry(entry, "covers", 4) is not None
+    assert hass.states.get("cover.bedroom_blinds") is not None
+
+
+async def _start_subentry_menu(hass: HomeAssistant, entry, archetype: str):
+    """Open the add-device menu and pick one archetype."""
     result = await hass.config_entries.subentries.async_init(
         (entry.entry_id, "device"), context={"source": SOURCE_USER}
     )
+    assert result["type"] is FlowResultType.MENU
     assert result["step_id"] == "user"
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {"next_step_id": archetype}
+    )
+    assert result["step_id"] == archetype
+    return result
 
-    # Bedroom Blinds (4) is not configured yet; it qualifies for covers plus the
-    # generic sensor/binary-sensor platforms, so the platform step is shown.
+
+async def test_subentry_add_single_device(hass: HomeAssistant, mock_hub) -> None:
+    """The archetype flow adds one device: menu → type form → subentry."""
+    entry = make_config_entry()
+    await setup_integration(hass, entry)
+
+    # Bedroom Blinds (4) is not configured yet and qualifies as a cover.
+    result = await _start_subentry_menu(hass, entry, "cover")
     result = await hass.config_entries.subentries.async_configure(
         result["flow_id"], {"device": "4"}
     )
-    assert result["step_id"] == "platform"
-
-    result = await hass.config_entries.subentries.async_configure(
-        result["flow_id"], {"platform": "covers"}
-    )
-    assert result["step_id"] == "configure"
-
-    result = await hass.config_entries.subentries.async_configure(result["flow_id"], {})
     await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert device_subentry(entry, "covers", 4) is not None
     assert hass.states.get("cover.bedroom_blinds") is not None
+
+
+async def test_subentry_add_thermostat_variants(
+    hass: HomeAssistant, mock_hub
+) -> None:
+    """Each thermostat archetype stores exactly its fields."""
+    entry = make_config_entry()
+    await setup_integration(hass, entry)
+
+    # Controlled thermostat: mode without a switch is rejected, then a valid
+    # switch + fixed mode combination is stored.
+    result = await _start_subentry_menu(hass, entry, "thermostat_controlled")
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {"device": "3", "hvac_mode": "heat"}
+    )
+    assert result["errors"] == {"base": "invalid_hvac_config"}
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {"device": "3", "hvac_switch_id": "2", "hvac_mode": "heat"},
+    )
+    await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert device_subentry_configs(entry, "climates") == [
+        {"id": 3, "hvac_switch_id": 2, "hvac_mode": "heat"}
+    ]
+
+
+async def test_subentry_add_range_thermostat(hass: HomeAssistant, mock_hub) -> None:
+    """The range thermostat requires both thermostats; high becomes the id."""
+    from taphome_sdk import ValueType
+
+    from tests_common import make_device
+
+    make_device(
+        mock_hub,
+        {
+            "deviceId": 7,
+            "type": "Thermostat",
+            "name": "Low Thermostat",
+            "description": "Cooling thermostat",
+            "supportedValues": [
+                {"valueTypeId": ValueType.REAL_TEMPERATURE.value, "readOnly": True},
+                {
+                    "valueTypeId": ValueType.TEMPERATURE_SET_POINT.value,
+                    "readOnly": False,
+                },
+            ],
+            "values": {
+                ValueType.REAL_TEMPERATURE: 21.0,
+                ValueType.TEMPERATURE_SET_POINT: 24.0,
+            },
+        },
+    )
+    entry = make_config_entry()
+    await setup_integration(hass, entry)
+
+    result = await _start_subentry_menu(hass, entry, "thermostat_range")
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {"range_high_thermostat_id": "3"}
+    )
+    assert result["errors"] == {"base": "range_thermostats_required"}
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {"range_high_thermostat_id": "3", "range_low_thermostat_id": "7"},
+    )
+    await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert device_subentry_configs(entry, "climates") == [
+        {"id": 3, "range_high_thermostat_id": 3, "range_low_thermostat_id": 7}
+    ]
+
+
+async def test_subentry_add_sensor_values(hass: HomeAssistant, mock_hub) -> None:
+    """The sensor flow creates one subentry and entity per selected value."""
+    from taphome_sdk import ValueType
+
+    from tests_common import make_device
+
+    make_device(
+        mock_hub,
+        {
+            "deviceId": 9,
+            "type": "THSensor",
+            "name": "Climate Sensor",
+            "description": "Temperature and humidity",
+            "supportedValues": [
+                {"valueTypeId": ValueType.REAL_TEMPERATURE.value, "readOnly": True},
+                {"valueTypeId": ValueType.HUMIDITY.value, "readOnly": True},
+            ],
+            "values": {
+                ValueType.REAL_TEMPERATURE: 21.5,
+                ValueType.HUMIDITY: 0.45,
+            },
+        },
+    )
+    entry = make_config_entry()
+    await setup_integration(hass, entry)
+
+    result = await _start_subentry_menu(hass, entry, "sensor")
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {"device": "9"}
+    )
+    assert result["step_id"] == "sensor_values"
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {
+            "values": [
+                str(ValueType.REAL_TEMPERATURE.value),
+                str(ValueType.HUMIDITY.value),
+            ]
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    configs = device_subentry_configs(entry, "sensors")
+    assert {"id": 9, "value": ValueType.REAL_TEMPERATURE.value} in configs
+    assert {"id": 9, "value": ValueType.HUMIDITY.value} in configs
+
+    # Each value became its own entity of the same device.
+    from homeassistant.helpers import entity_registry as er
+
+    from custom_components.taphome.const import DOMAIN
+
+    registry = er.async_get(hass)
+    temperature_entity = registry.async_get_entity_id(
+        "sensor", DOMAIN, "taphome.sensor.realtemperature.9"
+    )
+    humidity_entity = registry.async_get_entity_id(
+        "sensor", DOMAIN, "taphome.sensor.humidity.9"
+    )
+    assert temperature_entity is not None
+    assert humidity_entity is not None
+    assert hass.states.get(temperature_entity) is not None
+    assert hass.states.get(humidity_entity) is not None
+
+    # Removing one value's subentry keeps the other value's entity.
+    temperature = next(
+        subentry
+        for subentry in entry.subentries.values()
+        if subentry.data.get("value") == ValueType.REAL_TEMPERATURE.value
+    )
+    hass.config_entries.async_remove_subentry(entry, temperature.subentry_id)
+    await hass.async_block_till_done()
+    assert hass.states.get(temperature_entity) is None
+    assert hass.states.get(humidity_entity) is not None
 
 
 async def test_subentry_remove_device(hass: HomeAssistant, mock_hub) -> None:
@@ -247,20 +372,24 @@ async def test_subentry_reconfigure_field_kinds(
 
     result = await _reconfigure(hass, entry, "climates", 3)
 
-    # An invalid device id shows an error and keeps the form open.
+    # An invalid device id (in the advanced section) keeps the form open.
     result = await hass.config_entries.subentries.async_configure(
-        result["flow_id"], {"hvac_switch_id": "abc"}
+        result["flow_id"], {"advanced_options": {"hvac_switch_id": "abc"}}
     )
     assert result["step_id"] == "reconfigure"
     assert result["errors"] == {"base": "invalid_device_id"}
 
+    # A simple thermostat is upgraded to a controlled one via the advanced
+    # section, together with a basic field.
     result = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
         {
-            "hvac_switch_id": "2",
-            "hvac_mode": "heat",
             "target_temperature_step": 0.5,
-            "min_humidity": 30,
+            "advanced_options": {
+                "hvac_switch_id": "2",
+                "hvac_mode": "heat",
+                "min_humidity": 30,
+            },
         },
     )
     await hass.async_block_till_done()
@@ -298,9 +427,11 @@ async def test_subentry_reconfigure_sensor_value_type(
     result = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
         {
-            "value_type": str(ValueType.VARIABLE_STATE.value),
             "unit_of_measurement": "°C",
             "device_class": "temperature",
+            "advanced_options": {
+                "value_type": str(ValueType.VARIABLE_STATE.value),
+            },
         },
     )
     await hass.async_block_till_done()
@@ -439,3 +570,217 @@ async def test_options_mapping_renders_legacy_values(
             result["flow_id"], {"next_step_id": step}
         )
         assert result["step_id"] == step
+
+
+async def test_options_edit_device_via_entity(hass: HomeAssistant, mock_hub) -> None:
+    """Edit device resolves an entity pick straight to its subentry form."""
+    entry = make_config_entry()
+    await setup_integration(hass, entry)
+
+    result = await _start_options_flow(hass, entry)
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], {"next_step_id": "edit_device"}
+    )
+    assert result["step_id"] == "edit_device"
+
+    # Submitting an empty target is rejected.
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], {"target": {}}
+    )
+    assert result["errors"] == {"base": "select_target"}
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], {"target": {"entity_id": "switch.garden_socket"}}
+    )
+    assert result["step_id"] == "edit_device_form"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], {"device_class": "outlet"}
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert device_subentry_configs(entry, "switches") == [
+        {"id": 2, "device_class": "outlet"}
+    ]
+
+
+async def test_options_edit_device_via_device_pick(
+    hass: HomeAssistant, mock_hub
+) -> None:
+    """A device exposed twice offers a configuration pick before the form."""
+    from homeassistant.helpers import entity_registry as er
+
+    entry = make_config_entry({"lights": [{"id": 1}], "switches": [{"id": 1}]})
+    await setup_integration(hass, entry)
+
+    registry = er.async_get(hass)
+    light = registry.async_get("light.kitchen_light")
+    assert light is not None and light.device_id is not None
+
+    result = await _start_options_flow(hass, entry)
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], {"next_step_id": "edit_device"}
+    )
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], {"target": {"device_id": light.device_id}}
+    )
+    assert result["step_id"] == "edit_device_pick"
+
+    switches = device_subentry(entry, "switches", 1)
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], {"config": switches.subentry_id}
+    )
+    assert result["step_id"] == "edit_device_form"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], {"device_class": "outlet"}
+    )
+    await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.ABORT
+    assert device_subentry_configs(entry, "switches") == [
+        {"id": 1, "device_class": "outlet"}
+    ]
+
+
+async def test_options_remove_device_via_entity(
+    hass: HomeAssistant, mock_hub
+) -> None:
+    """Remove device shows a summary and removes the subentry and entity."""
+    entry = make_config_entry()
+    await setup_integration(hass, entry)
+    assert hass.states.get("switch.garden_socket") is not None
+
+    result = await _start_options_flow(hass, entry)
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], {"next_step_id": "remove_device"}
+    )
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], {"target": {"entity_id": "switch.garden_socket"}}
+    )
+    assert result["step_id"] == "remove_device_confirm"
+
+    # All resolved devices are pre-selected; submitting removes them.
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], {"devices": ["2"]}
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "device_removed"
+    assert device_subentry(entry, "switches", 2) is None
+    assert hass.states.get("switch.garden_socket") is None
+
+
+async def test_options_edit_device_rejects_hub_device(
+    hass: HomeAssistant, mock_hub
+) -> None:
+    """The Core hub device has no device configuration to edit."""
+    from homeassistant.helpers import device_registry as dr
+
+    from custom_components.taphome.const import DOMAIN
+    from tests_common import TEST_LOCATION_ID
+
+    entry = make_config_entry()
+    await setup_integration(hass, entry)
+
+    hub_device = dr.async_get(hass).async_get_device({(DOMAIN, TEST_LOCATION_ID)})
+    assert hub_device is not None
+
+    result = await _start_options_flow(hass, entry)
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], {"next_step_id": "edit_device"}
+    )
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], {"target": {"device_id": hub_device.id}}
+    )
+    assert result["errors"] == {"base": "no_device_config"}
+
+
+async def test_options_remove_device_via_area(hass: HomeAssistant, mock_hub) -> None:
+    """An area target fans out to this entry's devices in that area."""
+    from homeassistant.helpers import area_registry as ar, device_registry as dr
+
+    from custom_components.taphome.const import DOMAIN
+    from tests_common import TEST_LOCATION_ID
+
+    entry = make_config_entry()
+    await setup_integration(hass, entry)
+
+    area = ar.async_get(hass).async_create("Zahrada")
+    device_registry = dr.async_get(hass)
+    socket = device_registry.async_get_device({(DOMAIN, f"{TEST_LOCATION_ID}_2")})
+    device_registry.async_update_device(socket.id, area_id=area.id)
+
+    result = await _start_options_flow(hass, entry)
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], {"next_step_id": "remove_device"}
+    )
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], {"target": {"area_id": area.id}}
+    )
+    assert result["step_id"] == "remove_device_confirm"
+
+    # Submitting without input keeps the default: every resolved device.
+    result = await hass.config_entries.options.async_configure(result["flow_id"], {})
+    await hass.async_block_till_done()
+
+    assert result["reason"] == "device_removed"
+    assert device_subentry(entry, "switches", 2) is None
+    assert hass.states.get("switch.garden_socket") is None
+
+
+async def test_options_remove_device_via_suggested_area(
+    hass: HomeAssistant, mock_hub
+) -> None:
+    """An area from the TapHome zone resolves; unticked devices are kept."""
+    from homeassistant.helpers import area_registry as ar, device_registry as dr
+    from taphome_sdk import ValueType
+
+    from custom_components.taphome.const import DOMAIN
+    from tests_common import TEST_LOCATION_ID, make_device
+
+    make_device(
+        mock_hub,
+        {
+            "deviceId": 9,
+            "type": "PowerOutlet",
+            "name": "Pool Pump",
+            "description": "Pump by the pool",
+            "zone": "Pracovna",
+            "supportedValues": [
+                {"valueTypeId": ValueType.SWITCH_STATE.value, "readOnly": False}
+            ],
+            "values": {ValueType.SWITCH_STATE: 0.0},
+        },
+    )
+    entry = make_config_entry({"switches": [{"id": 2}, {"id": 9}]})
+    await setup_integration(hass, entry)
+
+    # The zone became an area via suggested_area during device creation; move
+    # the Garden Socket into the same area to get a two-device review list.
+    area = ar.async_get(hass).async_get_area_by_name("Pracovna")
+    assert area is not None
+    device_registry = dr.async_get(hass)
+    socket = device_registry.async_get_device({(DOMAIN, f"{TEST_LOCATION_ID}_2")})
+    device_registry.async_update_device(socket.id, area_id=area.id)
+
+    result = await _start_options_flow(hass, entry)
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], {"next_step_id": "remove_device"}
+    )
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], {"target": {"area_id": area.id}}
+    )
+    assert result["step_id"] == "remove_device_confirm"
+
+    # Unticking the Garden Socket keeps it; only the Pool Pump is removed.
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], {"devices": ["9"]}
+    )
+    await hass.async_block_till_done()
+    assert result["reason"] == "device_removed"
+    assert device_subentry(entry, "switches", 9) is None
+    assert device_subentry(entry, "switches", 2) is not None
+    assert hass.states.get("switch.garden_socket") is not None

@@ -429,23 +429,19 @@ def _migrate_devices_to_subentries(
 
 
 async def _async_update_listener(hass: HomeAssistant, entry: TapHomeConfigEntry) -> None:
-    """Reload the config entry when its options change."""
-    await hass.config_entries.async_reload(entry.entry_id)
+    """Reload the entry when its options or a device subentry change.
+
+    ``async_schedule_reload`` (over ``async_reload``) is the recommended call: it
+    cancels a pending setup retry first, avoiding a race with the reload.
+    """
+    hass.config_entries.async_schedule_reload(entry.entry_id)
 
 
 def _build_core_config(entry: TapHomeConfigEntry) -> TapHomeCoreConfig:
     """Build the immutable core configuration from a config entry."""
     options = entry.options
-    zone_mapping = (
-        NameMapping.from_dict(options.get(CONF_ZONES))
-        if CONF_ZONES in options
-        else None
-    )
-    label_mapping = (
-        NameMapping.from_dict(options.get(CONF_LABELS))
-        if CONF_LABELS in options
-        else None
-    )
+    zone_mapping = NameMapping.from_dict(options.get(CONF_ZONES))
+    label_mapping = NameMapping.from_dict(options.get(CONF_LABELS))
 
     return TapHomeCoreConfig(
         entry.data.get(CONF_ID),
