@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import datetime
 
 from taphome_sdk import Device, DeviceState, HubConnectionState, TapHomeHub, ValueType
@@ -132,6 +132,18 @@ VARIABLE_BINARY_SENSOR = TapHomeBinarySensorType(
     None,
 )
 
+# Every value interpretation the binary sensor platform can auto-detect; the
+# subentry add flow offers these per device so a single value can be exposed.
+KNOWN_BINARY_SENSOR_TYPES: tuple[TapHomeBinarySensorType, ...] = (
+    MOTION_BINARY_SENSOR,
+    REED_CONTACT_BINARY_SENSOR,
+    VARIABLE_BINARY_SENSOR,
+    SMOKE_BINARY_SENSOR,
+    FLOOD_BINARY_SENSOR,
+    RAINING_BINARY_SENSOR,
+    IS_WINDOW_OPEN_BINARY_SENSOR,
+)
+
 
 class BinarySensorEntityConfig(TapHomeEntityConfig):
     """Configuration for TapHome binary sensors."""
@@ -142,6 +154,9 @@ class BinarySensorEntityConfig(TapHomeEntityConfig):
         self.device_class: BinarySensorDeviceClass | None = self.get_optional(
             "device_class", None
         )
+        # Expose exactly this device value (per-value subentries); None keeps
+        # the legacy behavior of auto-detecting every known supported value.
+        self.value: int | None = self.get_optional("value", None)
         self.value_type: ValueType | None = self.get_optional("value_type", None)
 
 
@@ -188,29 +203,37 @@ class TapHomeBinarySensorFactory:
         binary_sensors: list[TapHomeBinarySensor] = []
         _device = self.config.hub.get_typed_device(self.config.entity.id, Device)
         if _device is not None:
-            supported_sensor_types: list[TapHomeBinarySensorType] = [
-                MOTION_BINARY_SENSOR,
-                REED_CONTACT_BINARY_SENSOR,
-                VARIABLE_BINARY_SENSOR,
-                SMOKE_BINARY_SENSOR,
-                FLOOD_BINARY_SENSOR,
-                RAINING_BINARY_SENSOR,
-                IS_WINDOW_OPEN_BINARY_SENSOR,
-            ]
-
-            if self.config.entity.value_type:
-                supported_sensor_types.append(
-                    TapHomeBinarySensorType(
-                        ValueType(self.config.entity.value_type),
-                        self.config.entity.device_class,
+            if self.config.entity.value is not None:
+                # A per-value subentry exposes exactly the selected value.
+                selected = ValueType(self.config.entity.value)
+                supported_sensor_types = [
+                    next(
+                        (
+                            known
+                            for known in KNOWN_BINARY_SENSOR_TYPES
+                            if known.value_type is selected
+                        ),
+                        TapHomeBinarySensorType(selected, None),
                     )
-                )
+                ]
+            else:
+                supported_sensor_types = list(KNOWN_BINARY_SENSOR_TYPES)
 
-            binary_sensors = []
+                if self.config.entity.value_type:
+                    supported_sensor_types.append(
+                        TapHomeBinarySensorType(
+                            ValueType(self.config.entity.value_type),
+                            self.config.entity.device_class,
+                        )
+                    )
+
             for sensor_type in supported_sensor_types:
                 if _device.supports_value(sensor_type.value_type):
                     if self.config.entity.device_class is not None:
-                        sensor_type.device_class = self.config.entity.device_class
+                        # Copy before overriding: the known types are shared.
+                        sensor_type = replace(
+                            sensor_type, device_class=self.config.entity.device_class
+                        )
 
                     binary_sensor = TapHomeBinarySensor(
                         self.config,

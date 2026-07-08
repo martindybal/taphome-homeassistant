@@ -70,6 +70,10 @@ class OptionField:
     min_value: float | None = None
     max_value: float | None = None
     step: float | None = None
+    # Advanced options are hidden in a collapsed section when reconfiguring a
+    # device, so upgrading e.g. a simple thermostat stays possible but out of
+    # the way of the common fields.
+    advanced: bool = False
 
 
 @dataclass(slots=True, frozen=True)
@@ -137,16 +141,6 @@ PLATFORM_DESCRIPTORS: tuple[PlatformDescriptor, ...] = (
         (ThermostatDevice,),
         (
             OptionField(
-                "range_high_thermostat_id",
-                FieldKind.DEVICE_ID,
-                device_types=(ThermostatDevice,),
-            ),
-            OptionField(
-                "range_low_thermostat_id",
-                FieldKind.DEVICE_ID,
-                device_types=(ThermostatDevice,),
-            ),
-            OptionField(
                 "target_temperature_step",
                 FieldKind.NUMBER_FLOAT,
                 min_value=0.1,
@@ -161,51 +155,84 @@ PLATFORM_DESCRIPTORS: tuple[PlatformDescriptor, ...] = (
                 step=0.1,
             ),
             OptionField(
+                "range_high_thermostat_id",
+                FieldKind.DEVICE_ID,
+                device_types=(ThermostatDevice,),
+                advanced=True,
+            ),
+            OptionField(
+                "range_low_thermostat_id",
+                FieldKind.DEVICE_ID,
+                device_types=(ThermostatDevice,),
+                advanced=True,
+            ),
+            OptionField(
                 "hvac_switch_id",
                 FieldKind.DEVICE_ID,
                 device_types=(DigitalOutputDevice,),
+                advanced=True,
             ),
-            OptionField("hvac_mode", FieldKind.ENUM, options=_enum_values(HVACMode)),
+            OptionField(
+                "hvac_mode",
+                FieldKind.ENUM,
+                options=_enum_values(HVACMode),
+                advanced=True,
+            ),
             OptionField(
                 "hvac_mode_id",
                 FieldKind.DEVICE_ID,
                 device_types=(MultiValueSwitchDevice,),
+                advanced=True,
             ),
             OptionField(
                 "hvac_action_id",
                 FieldKind.DEVICE_ID,
                 device_types=(MultiValueSwitchDevice,),
+                advanced=True,
             ),
             OptionField(
                 "preset_mode_id",
                 FieldKind.DEVICE_ID,
                 device_types=(MultiValueSwitchDevice,),
+                advanced=True,
             ),
             OptionField(
                 "fan_mode_id",
                 FieldKind.DEVICE_ID,
                 device_types=(MultiValueSwitchDevice,),
+                advanced=True,
             ),
             OptionField(
                 "swing_mode_id",
                 FieldKind.DEVICE_ID,
                 device_types=(MultiValueSwitchDevice,),
+                advanced=True,
             ),
             OptionField(
                 "swing_horizontal_mode_id",
                 FieldKind.DEVICE_ID,
                 device_types=(MultiValueSwitchDevice,),
+                advanced=True,
             ),
             OptionField(
                 "target_humidity_id",
                 FieldKind.DEVICE_ID,
                 device_types=(AnalogOutputDevice,),
+                advanced=True,
             ),
             OptionField(
-                "min_humidity", FieldKind.NUMBER_INT, min_value=0, max_value=100
+                "min_humidity",
+                FieldKind.NUMBER_INT,
+                min_value=0,
+                max_value=100,
+                advanced=True,
             ),
             OptionField(
-                "max_humidity", FieldKind.NUMBER_INT, min_value=0, max_value=100
+                "max_humidity",
+                FieldKind.NUMBER_INT,
+                min_value=0,
+                max_value=100,
+                advanced=True,
             ),
         ),
     ),
@@ -225,17 +252,10 @@ PLATFORM_DESCRIPTORS: tuple[PlatformDescriptor, ...] = (
         _GENERIC_OUTPUT_TYPES,
         (
             OptionField(
-                "switch_id", FieldKind.DEVICE_ID, device_types=(DigitalOutputDevice,)
+                "device_class",
+                FieldKind.ENUM,
+                options=_enum_values(HumidifierDeviceClass),
             ),
-            OptionField(
-                "action_id",
-                FieldKind.DEVICE_ID,
-                device_types=(MultiValueSwitchDevice,),
-            ),
-            OptionField(
-                "mode_id", FieldKind.DEVICE_ID, device_types=(MultiValueSwitchDevice,)
-            ),
-            OptionField("humidity_sensor_id", FieldKind.DEVICE_ID),
             OptionField(
                 "min_humidity", FieldKind.NUMBER_INT, min_value=0, max_value=100
             ),
@@ -243,10 +263,24 @@ PLATFORM_DESCRIPTORS: tuple[PlatformDescriptor, ...] = (
                 "max_humidity", FieldKind.NUMBER_INT, min_value=0, max_value=100
             ),
             OptionField(
-                "device_class",
-                FieldKind.ENUM,
-                options=_enum_values(HumidifierDeviceClass),
+                "switch_id",
+                FieldKind.DEVICE_ID,
+                device_types=(DigitalOutputDevice,),
+                advanced=True,
             ),
+            OptionField(
+                "action_id",
+                FieldKind.DEVICE_ID,
+                device_types=(MultiValueSwitchDevice,),
+                advanced=True,
+            ),
+            OptionField(
+                "mode_id",
+                FieldKind.DEVICE_ID,
+                device_types=(MultiValueSwitchDevice,),
+                advanced=True,
+            ),
+            OptionField("humidity_sensor_id", FieldKind.DEVICE_ID, advanced=True),
         ),
     ),
     PlatformDescriptor(CONF_MULTIVALUE_SWITCHES, (MultiValueSwitchDevice,), ()),
@@ -266,11 +300,11 @@ PLATFORM_DESCRIPTORS: tuple[PlatformDescriptor, ...] = (
             OptionField(
                 "device_class", FieldKind.ENUM, options=_enum_values(SensorDeviceClass)
             ),
-            OptionField("value_type", FieldKind.VALUE_TYPE),
             OptionField("unit_of_measurement", FieldKind.TEXT),
             OptionField(
                 "state_class", FieldKind.ENUM, options=_enum_values(SensorStateClass)
             ),
+            OptionField("value_type", FieldKind.VALUE_TYPE, advanced=True),
         ),
         advanced=True,
     ),
@@ -283,7 +317,7 @@ PLATFORM_DESCRIPTORS: tuple[PlatformDescriptor, ...] = (
                 FieldKind.ENUM,
                 options=_enum_values(BinarySensorDeviceClass),
             ),
-            OptionField("value_type", FieldKind.VALUE_TYPE),
+            OptionField("value_type", FieldKind.VALUE_TYPE, advanced=True),
         ),
         advanced=True,
     ),

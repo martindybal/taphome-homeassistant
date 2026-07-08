@@ -12,26 +12,38 @@ from homeassistant.core import HomeAssistant
 
 @dataclass(slots=True, frozen=True)
 class NameMapping:
-    """Define the name-to-target mapping (immutable/hashable)."""
+    """Define the name-to-target mapping and ignored names (immutable).
+
+    A target is either an area/label id (stored by the options flow) or a
+    plain name (imported from YAML). Unmapped names fall back to themselves;
+    ignored names get no assignment at all.
+    """
 
     renames: frozenset[tuple[str, str]]
+    ignored: frozenset[str]
 
     @staticmethod
     def from_dict(data: dict | None) -> NameMapping:
         """Create a NameMapping from a dictionary."""
-        renames = {
-            source: target
-            for source, target in (data or {}).items()
-            if isinstance(target, str)
-        }
-        return NameMapping(frozenset(renames.items()))
+        renames: dict[str, str] = {}
+        ignored: set[str] = set()
+        for source, target in (data or {}).items():
+            if isinstance(target, dict) and target.get("ignore"):
+                ignored.add(source)
+            elif isinstance(target, str):
+                renames[source] = target
+        return NameMapping(frozenset(renames.items()), frozenset(ignored))
 
-    def get(self, original: str) -> str | None:
-        """Return the configured target for the original name, or None."""
+    def is_ignored(self, original: str) -> bool:
+        """Return True when the original name must not be assigned at all."""
+        return original in self.ignored
+
+    def map(self, original: str) -> str:
+        """Return the configured target, or the original name itself."""
         for source, target in self.renames:
             if source == original:
                 return target
-        return None
+        return original
 
 
 @dataclass(slots=True, frozen=True)
@@ -39,8 +51,8 @@ class TapHomeCoreConfig:
     """Holds configuration options for a TapHome core instance."""
 
     id: str | None
-    zone_mapping: NameMapping | None
-    label_mapping: NameMapping | None
+    zone_mapping: NameMapping
+    label_mapping: NameMapping
     enabled_attributes: tuple[str, ...]
 
     def is_attribute_enabled(self, attribute: str) -> bool:
