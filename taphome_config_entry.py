@@ -51,6 +51,10 @@ class TapHomeCoreConfig:
     """Holds configuration options for a TapHome core instance."""
 
     id: str | None
+    # The per-core segment embedded in entity unique ids (the location id for
+    # cores added after this was introduced, the YAML id for imported cores,
+    # None for older UI cores). ``id`` stays for display and hub identity.
+    unique_id_segment: str | None
     zone_mapping: NameMapping
     label_mapping: NameMapping
     enabled_attributes: tuple[str, ...]

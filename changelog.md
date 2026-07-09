@@ -6,6 +6,7 @@ Quality-scale improvements on the road to Home Assistant Core:
 
 - **Automatic discovery**: TapHome Cores on the local network are now discovered via mDNS/zeroconf and appear in _Settings → Devices & services_ on their own — click Add, enter the API token, done. When a configured Core changes its IP address, discovery updates the connection automatically (deliberate cloud connections are left untouched).
 - **The optional core `id` field was removed from the UI forms** (add, reconfigure, core settings). It was a YAML-era concept for telling cores apart; entries are now identified by their location. Existing entries that have an id keep it internally, so entity ids and history are unaffected.
+- **Cores added from now on embed their location id in entity unique ids**, so two cores can never produce colliding entities (previously UI-added cores had no discriminator). Existing entries are untouched — their unique ids, history and automations are preserved exactly.
 
 - **Translated error messages for failed actions**: when the Core rejects a change or cannot be reached while controlling an entity, the service call now fails with a translated, actionable error message instead of a raw SDK traceback. Setting an HVAC mode a thermostat does not support reports a proper validation error.
 - **Quieter, clearer connection logging**: losing the connection to the Core logs a single message and another one on recovery; the SDK logs the first poll failure as a warning and further ones only at debug level (no more one error per poll cycle).

@@ -130,7 +130,8 @@ class TapHomeEntity(TapHomeSubscriptionMixin, Entity):
         self._zone = taphome_device.zone
         self._category = taphome_device.category
 
-        unique_id_core = f".{config.core.id}" if config.core.id is not None else ""
+        segment = config.core.unique_id_segment
+        unique_id_core = f".{segment}" if segment is not None else ""
         unique_id_device = (
             f"{domain}.{unique_id_determination}" if unique_id_determination else domain
         )
