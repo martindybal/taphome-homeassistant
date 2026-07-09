@@ -1,6 +1,8 @@
 """Tests for the TapHome binary sensor platform."""
 
-from homeassistant.const import EntityCategory
+from taphome_sdk import HubConnectionState
+
+from homeassistant.const import STATE_OFF, STATE_ON, EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
@@ -11,6 +13,26 @@ from tests_common import (
     make_config_entry,
     setup_integration,
 )
+
+
+async def test_is_alive_sensor_reflects_connection_state(
+    hass: HomeAssistant, mock_hub
+) -> None:
+    """The connectivity sensor pushes state on connect/disconnect (no polling)."""
+    await setup_integration(hass, make_config_entry())
+
+    entity_id = er.async_get(hass).async_get_entity_id(
+        "binary_sensor", DOMAIN, "taphome.binary_sensor.isalive"
+    )
+    assert hass.states.get(entity_id).state == STATE_ON
+
+    mock_hub.connection_state.value = HubConnectionState.FAILED
+    await hass.async_block_till_done()
+    assert hass.states.get(entity_id).state == STATE_OFF
+
+    mock_hub.connection_state.value = HubConnectionState.CONNECTED
+    await hass.async_block_till_done()
+    assert hass.states.get(entity_id).state == STATE_ON
 
 
 async def test_binary_sensor_device_under_subentry_plus_is_alive(

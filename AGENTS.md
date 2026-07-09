@@ -121,7 +121,7 @@ Each exposed device is a **config subentry** (`subentry_type="device"`, constant
 - Value-scale converters live on `TapHomeEntity` as static methods (TapHome uses 0..1 floats; HA uses 0..255 bytes or 0..100 percent).
 - `binary_sensor.py:TapHomeIsAliveSensor` is the Core connectivity sensor: a **diagnostic** entity attached to the hub device, named by its device class (no custom name).
 - `taphome_config_entry.py` — frozen dataclasses for config (`TapHomeCoreConfig`, `AddEntryRequest`) and `TapHomeEntityConfig`, which platform-specific config classes subclass (e.g. `TapHomeLightConfig` adds `effect_id`).
-- `taphome_issue_registry.py` — creates/clears HA Repairs issues (core unavailable, device not exposed, device type mismatch, new device found); user-facing texts come from `translations/*.json`. `repairs.py` implements the fixable new-device flow; `diagnostics.py` provides entry- and device-level diagnostics (token redacted).
+- `taphome_issue_registry.py` — creates/clears HA Repairs issues (core unavailable, device not exposed, device type mismatch, new device found); issue ids are namespaced by `entry_id` so cores never collide, while `core_id` is only user-facing text; texts come from `translations/*.json`. `repairs.py` implements the fixable new-device flow; `diagnostics.py` provides entry- and device-level diagnostics (token redacted).
 
 ### Adding a new platform
 

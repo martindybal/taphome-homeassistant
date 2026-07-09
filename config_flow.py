@@ -1958,11 +1958,12 @@ class TapHomeConfigFlow(_TapHomeSetupFlow, ConfigFlow, domain=DOMAIN):
         self._abort_if_unique_id_configured(updates=updates)
 
         # YAML-imported entries keep a fallback unique id until their first
-        # reconfigure; match them by address so discovery does not offer a
-        # duplicate of an already configured Core.
+        # reconfigure; match them by exact API URL so discovery does not offer
+        # a duplicate of an already configured Core.
         for entry in self._async_current_entries(include_ignore=False):
-            if _is_yaml_fallback_unique_id(entry.unique_id) and host in (
-                entry.data.get(CONF_API_URL) or ""
+            if (
+                _is_yaml_fallback_unique_id(entry.unique_id)
+                and entry.data.get(CONF_API_URL) == self._discovered_api_url
             ):
                 return self.async_abort(reason="already_configured")
 

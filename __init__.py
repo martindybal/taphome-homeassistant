@@ -263,7 +263,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 async def async_setup_entry(hass: HomeAssistant, entry: TapHomeConfigEntry) -> bool:
     """Set up a TapHome core from a config entry."""
     core_config = _build_core_config(entry)
-    taphome_issue_registry = TapHomeIssueRegistry(hass, core_config.id)
+    taphome_issue_registry = TapHomeIssueRegistry(
+        hass, core_config.id, entry.entry_id
+    )
 
     try:
         hub = await TapHomeHubFactory.async_connect(
@@ -363,8 +365,10 @@ def _migrate_devices_to_subentries(
     """Move per-platform device option lists into one subentry per device.
 
     Each ``options[<config_key>]`` device becomes a ``device`` subentry; the
-    existing entities and their device are re-homed to it (keeping their unique
-    ids, so history is preserved) and the device lists are dropped from options.
+    existing entities and their device are re-homed to it (keeping their
+    generated unique ids, so history is preserved) and the device lists are
+    dropped from options. Idempotent: a re-run after an interrupted migration
+    (or a device listed twice) skips devices that already have a subentry.
     """
     from .config_flow import _normalize_device_config  # noqa: PLC0415
 
@@ -379,7 +383,6 @@ def _migrate_devices_to_subentries(
 
     entities = er.async_entries_for_config_entry(entity_registry, entry.entry_id)
     name_by_device: dict[tuple[str, int], str] = {}
-    name_by_unique_id: dict[str, str] = {}
     for registry_entry in entities:
         device = (
             device_registry.async_get(registry_entry.device_id)
@@ -392,35 +395,40 @@ def _migrate_devices_to_subentries(
         device_id = _parse_device_id_from_unique_id(registry_entry.unique_id)
         if config_key is not None and device_id is not None:
             name_by_device.setdefault((config_key, device_id), device.name)
-        name_by_unique_id.setdefault(registry_entry.unique_id, device.name)
+
+    # Seed from any subentries a previous (interrupted) migration already added
+    # so the re-run skips them instead of failing on their duplicate unique id.
+    subentry_by_device: dict[tuple[str, int], str] = {}
+    for subentry in iter_device_subentries(entry):
+        platform = subentry_platform(subentry.data)
+        if platform is not None and "id" in subentry.data:
+            subentry_by_device[(platform, device_config_id(subentry.data))] = (
+                subentry.subentry_id
+            )
 
     new_options = dict(entry.options)
-    subentry_by_device: dict[tuple[str, int], str] = {}
-    subentry_by_unique_id: dict[str, str] = {}
     for config_key in device_config_keys:
         for raw_config in new_options.pop(config_key, None) or []:
             device_config = _normalize_device_config(config_key, raw_config)
             device_id = device_config_id(device_config)
-            custom_unique_id = device_config.get("unique_id")
-            title = name_by_device.get((config_key, device_id))
-            if title is None and isinstance(custom_unique_id, str):
-                title = name_by_unique_id.get(custom_unique_id)
-            subentry = build_device_subentry(
-                config_key, device_config, title or f"TapHome device {device_id}"
+            if (config_key, device_id) in subentry_by_device:
+                continue
+            title = name_by_device.get(
+                (config_key, device_id), f"TapHome device {device_id}"
             )
+            subentry = build_device_subentry(config_key, device_config, title)
             hass.config_entries.async_add_subentry(entry, subentry)
             subentry_by_device[(config_key, device_id)] = subentry.subentry_id
-            if isinstance(custom_unique_id, str):
-                subentry_by_unique_id[custom_unique_id] = subentry.subentry_id
 
     subentries_by_ha_device: dict[str, set[str]] = {}
     for registry_entry in entities:
-        subentry_id = subentry_by_unique_id.get(registry_entry.unique_id)
-        if subentry_id is None:
-            config_key = domain_to_key.get(registry_entry.domain)
-            device_id = _parse_device_id_from_unique_id(registry_entry.unique_id)
-            if config_key is not None and device_id is not None:
-                subentry_id = subentry_by_device.get((config_key, device_id))
+        config_key = domain_to_key.get(registry_entry.domain)
+        device_id = _parse_device_id_from_unique_id(registry_entry.unique_id)
+        subentry_id = (
+            subentry_by_device.get((config_key, device_id))
+            if config_key is not None and device_id is not None
+            else None
+        )
         if subentry_id is None:
             continue
         entity_registry.async_update_entity(
@@ -472,6 +480,7 @@ def _build_core_config(entry: TapHomeConfigEntry) -> TapHomeCoreConfig:
     return TapHomeCoreConfig(
         entry.data.get(CONF_ID),
         unique_id_segment,
+        entry.entry_id,
         zone_mapping,
         label_mapping,
         tuple(options.get(CONF_ENABLED_ATTRIBUTES, AVAILABLE_ATTRIBUTES)),
@@ -503,28 +512,23 @@ def _async_remove_stale_entities(
     configured_ids: dict[str, set[int]] = {
         domain.name: set() for domain in DOMAIN_DEFINITIONS
     }
-    custom_unique_ids: set[str] = set()
     domains_by_key = _domains_by_config_key()
     for subentry in iter_device_subentries(entry):
         data = subentry.data
         platform = subentry_platform(data)
-        if platform not in domains_by_key:
+        if platform not in domains_by_key or "id" not in data:
             continue
         for name in domains_by_key[platform]:
             configured_ids[name].add(device_config_id(data))
-        if data.get("unique_id"):
-            custom_unique_ids.add(data["unique_id"])
 
     entity_registry = er.async_get(hass)
     for registry_entry in er.async_entries_for_config_entry(
         entity_registry, entry.entry_id
     ):
-        if registry_entry.unique_id in custom_unique_ids:
-            continue
         if registry_entry.domain not in configured_ids:
             continue
-        # Custom unique ids do not parse to a device id and are kept above;
-        # anything else unparseable is left alone to stay on the safe side.
+        # Unparseable unique ids (the is-alive sensor, legacy custom ids) do not
+        # map to a device id and are left alone to stay on the safe side.
         device_id = _parse_device_id_from_unique_id(registry_entry.unique_id)
         if device_id is None:
             continue
@@ -587,21 +591,25 @@ def _subscribe_new_device_detection(
     async def _async_detect() -> None:
         nonlocal detecting
         try:
-            exposed = await hub.async_discover_new_devices()
-        except TapHomeError as error:
-            _LOGGER.debug("Skipping new-device detection: %s", error)
-            return
+            # Ids seen while a run is in flight are skipped by the guard below;
+            # loop until the pending set stops changing so none are dropped.
+            while True:
+                pending = hub.new_device_ids.value
+                try:
+                    exposed = await hub.async_discover_new_devices()
+                except TapHomeError as error:
+                    _LOGGER.debug("Skipping new-device detection: %s", error)
+                    return
+                _async_detect_new_devices(hass, entry, hub, issue_registry, exposed)
+                if not hub.new_device_ids.value or hub.new_device_ids.value == pending:
+                    return
         finally:
             detecting = False
-        _async_detect_new_devices(hass, entry, hub, issue_registry, exposed)
 
     def _on_new_device_ids(
         _: frozenset[int], new_device_ids: frozenset[int]
     ) -> None:
         nonlocal detecting
-        # async_discover_new_devices resolves every exposed device at once and
-        # clears the resolved ids, re-firing if any remain unknown, so skipping
-        # a concurrent run never drops a device.
         if new_device_ids and not detecting:
             detecting = True
             entry.async_create_background_task(

@@ -43,7 +43,7 @@ def add_taphome_entities(
 
         except DeviceNotExposedError:
             taphome_issue_registry = TapHomeIssueRegistry(
-                configuration.hass, configuration.core.id
+                configuration.hass, configuration.core.id, configuration.core.entry_id
             )
             taphome_issue_registry.create_device_not_exposed_issue(
                 configuration.entity.id
@@ -51,7 +51,7 @@ def add_taphome_entities(
             continue
         except DeviceTypeError as err:
             taphome_issue_registry = TapHomeIssueRegistry(
-                configuration.hass, configuration.core.id
+                configuration.hass, configuration.core.id, configuration.core.entry_id
             )
             taphome_issue_registry.create_device_type_mismatch_issue(
                 configuration.entity.id,
