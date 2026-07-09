@@ -13,6 +13,7 @@ from aiohttp import ClientSession
 import voluptuous as vol
 
 from homeassistant.config_entries import (
+    SOURCE_IGNORE,
     SOURCE_IMPORT,
     ConfigEntry,
     ConfigEntryBaseFlow,
@@ -45,6 +46,7 @@ from homeassistant.helpers import (
     label_registry as lr,
 )
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 from homeassistant.helpers.selector import (
     AreaSelector,
     BooleanSelector,
@@ -138,7 +140,6 @@ CONNECTION_SCHEMA = vol.Schema(
 
 CORE_SCHEMA = CONNECTION_SCHEMA.extend(
     {
-        vol.Optional(CONF_ID): TextSelector(),
         vol.Optional(CONF_WEBHOOK_ID): TextSelector(),
         vol.Optional(
             CONF_ENABLED_ATTRIBUTES, default=AVAILABLE_ATTRIBUTES
@@ -152,7 +153,8 @@ CORE_SCHEMA = CONNECTION_SCHEMA.extend(
     }
 )
 
-REAUTH_SCHEMA = vol.Schema(
+# Token-only form, shared by the reauth and the discovery confirm steps.
+TOKEN_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_TOKEN): TextSelector(
             TextSelectorConfig(type=TextSelectorType.PASSWORD)
@@ -277,11 +279,6 @@ def _apply_core_settings(options: dict[str, Any], user_input: dict[str, Any]) ->
     options[CONF_ENABLED_ATTRIBUTES] = user_input.get(
         CONF_ENABLED_ATTRIBUTES, AVAILABLE_ATTRIBUTES
     )
-
-
-def _core_id_from_input(user_input: dict[str, Any]) -> str | None:
-    """Return the optional user-defined core id from the form input."""
-    return (user_input.get(CONF_ID) or "").strip() or None
 
 
 def _is_yaml_fallback_unique_id(unique_id: str | None) -> bool:
@@ -1079,7 +1076,6 @@ class _TapHomeSetupFlow(ConfigEntryBaseFlow):
                             **self.config_entry.data,
                             CONF_TOKEN: user_input[CONF_TOKEN],
                             CONF_API_URL: api_url,
-                            CONF_ID: _core_id_from_input(user_input),
                         },
                     )
                     _apply_core_settings(self._options, user_input)
@@ -1087,7 +1083,6 @@ class _TapHomeSetupFlow(ConfigEntryBaseFlow):
 
         suggested_values = user_input or {
             CONF_TOKEN: self.config_entry.data.get(CONF_TOKEN),
-            CONF_ID: self.config_entry.data.get(CONF_ID),
             **_connection_values_from_api_url(
                 self.config_entry.data.get(CONF_API_URL) or ""
             ),
@@ -1819,6 +1814,9 @@ class TapHomeConfigFlow(_TapHomeSetupFlow, ConfigFlow, domain=DOMAIN):
         self._wizard_devices: dict[int, Device] = {}
         self._wizard_data: dict[str, Any] = {}
         self._wizard_title = ""
+        self._discovered_api_url: str | None = None
+        self._discovered_name = ""
+        self._discovered_host = ""
 
     @staticmethod
     @callback
@@ -1875,7 +1873,7 @@ class TapHomeConfigFlow(_TapHomeSetupFlow, ConfigFlow, domain=DOMAIN):
                     self._wizard_data = {
                         CONF_TOKEN: user_input[CONF_TOKEN],
                         CONF_API_URL: api_url,
-                        CONF_ID: _core_id_from_input(user_input),
+                        CONF_ID: None,
                     }
                     self._wizard_title = location.location_name
                     self._options = {}
@@ -1890,6 +1888,107 @@ class TapHomeConfigFlow(_TapHomeSetupFlow, ConfigFlow, domain=DOMAIN):
             data_schema=self.add_suggested_values_to_schema(
                 CORE_SCHEMA, suggested_values
             ),
+            errors=errors,
+        )
+
+    async def async_step_zeroconf(
+        self, discovery_info: ZeroconfServiceInfo
+    ) -> ConfigFlowResult:
+        """Handle a TapHome Core discovered on the network.
+
+        The Core announces ``_th-discovery._tcp.local.`` with TXT records
+        carrying the location id (this integration's unique id), the location
+        name and its IP address. The advertised port belongs to the TapHome
+        app protocol; the HTTP API stays on port 80. The ``AccessToken``
+        record is the app pairing token, unrelated to the API token, and is
+        deliberately not used.
+        """
+        location_id = discovery_info.properties.get("LocationId")
+        if not location_id:
+            return self.async_abort(reason="invalid_discovery_info")
+
+        host = discovery_info.properties.get("IpOnLocalNetwork") or str(
+            discovery_info.ip_address
+        )
+        self._discovered_host = host
+        self._discovered_api_url = f"http://{host}/api/TapHomeApi/v1"
+        self._discovered_name = discovery_info.properties.get("Name") or host
+
+        await self.async_set_unique_id(location_id)
+        # Refresh the address of an already configured Core when its IP
+        # changed; a deliberate cloud connection is left untouched.
+        existing = self.hass.config_entries.async_entry_for_domain_unique_id(
+            DOMAIN, location_id
+        )
+        updates: dict[str, Any] = {}
+        if (
+            existing is not None
+            and existing.source != SOURCE_IGNORE
+            and existing.data.get(CONF_API_URL) != DEFAULT_CLOUD_API_URL
+        ):
+            updates[CONF_API_URL] = self._discovered_api_url
+        self._abort_if_unique_id_configured(updates=updates)
+
+        # YAML-imported entries keep a fallback unique id until their first
+        # reconfigure; match them by address so discovery does not offer a
+        # duplicate of an already configured Core.
+        for entry in self._async_current_entries(include_ignore=False):
+            if _is_yaml_fallback_unique_id(entry.unique_id) and host in (
+                entry.data.get(CONF_API_URL) or ""
+            ):
+                return self.async_abort(reason="already_configured")
+
+        self.context["title_placeholders"] = {"name": self._discovered_name}
+        return await self.async_step_zeroconf_confirm()
+
+    async def async_step_zeroconf_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Ask for the API token of the discovered Core and connect."""
+        errors: dict[str, str] = {}
+        assert self._discovered_api_url is not None
+
+        if user_input is not None:
+            token = user_input[CONF_TOKEN]
+            session = async_get_clientsession(self.hass)
+            try:
+                location = await _async_get_location(
+                    session, self._discovered_api_url, token
+                )
+                self._wizard_devices = await _async_load_devices(
+                    session, self._discovered_api_url, token
+                )
+            except TapHomeAuthError:
+                errors["base"] = "invalid_auth"
+            except CannotConnectError:
+                errors["base"] = "cannot_connect"
+            else:
+                await self.async_set_unique_id(location.location_id)
+                self._abort_if_unique_id_configured()
+                self._wizard_data = {
+                    CONF_TOKEN: token,
+                    CONF_API_URL: self._discovered_api_url,
+                    CONF_ID: None,
+                }
+                self._wizard_title = location.location_name
+                self._options = {}
+                # Discovery skips the core-settings form; apply its defaults.
+                _apply_core_settings(
+                    self._options,
+                    {
+                        CONF_WEBHOOK_ID: DEFAULT_WEBHOOK_ID,
+                        CONF_ENABLED_ATTRIBUTES: AVAILABLE_ATTRIBUTES,
+                    },
+                )
+                return await self._async_start_wizard()
+
+        return self.async_show_form(
+            step_id="zeroconf_confirm",
+            data_schema=TOKEN_SCHEMA,
+            description_placeholders={
+                "name": self._discovered_name,
+                "host": self._discovered_host,
+            },
             errors=errors,
         )
 
@@ -1946,14 +2045,12 @@ class TapHomeConfigFlow(_TapHomeSetupFlow, ConfigFlow, domain=DOMAIN):
                     data_updates={
                         CONF_TOKEN: user_input[CONF_TOKEN],
                         CONF_API_URL: api_url,
-                        CONF_ID: _core_id_from_input(user_input),
                     },
                     options=new_options,
                 )
 
         suggested_values = user_input or {
             CONF_TOKEN: entry.data.get(CONF_TOKEN),
-            CONF_ID: entry.data.get(CONF_ID),
             **_connection_values_from_api_url(entry.data.get(CONF_API_URL) or ""),
             CONF_WEBHOOK_ID: entry.options.get(CONF_WEBHOOK_ID),
             CONF_ENABLED_ATTRIBUTES: entry.options.get(
@@ -2003,7 +2100,7 @@ class TapHomeConfigFlow(_TapHomeSetupFlow, ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="reauth_confirm",
-            data_schema=REAUTH_SCHEMA,
+            data_schema=TOKEN_SCHEMA,
             description_placeholders={"name": entry.title},
             errors=errors,
         )

@@ -20,6 +20,8 @@ from .taphome_data import TapHomeConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
+PARALLEL_UPDATES = 0
+
 
 class TapHomeButtonEvent(TapHomeEntity, EventEntity):
     """Representation of a TapHome button event entity."""

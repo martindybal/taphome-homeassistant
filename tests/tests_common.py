@@ -68,7 +68,9 @@ from taphome_sdk import (  # noqa: E402
 from taphome_sdk.device_factory import DeviceFactory  # noqa: E402
 from taphome_sdk.taphome_api import (  # noqa: E402
     DeviceMetadata,
+    DevicesValuesResponse,
     DeviceValues,
+    DiscoveryResponse,
     SetDeviceValueResponse,
     ValueChangeResult,
 )
@@ -204,11 +206,22 @@ class FakeTapHomeApi:
             for definition in DEVICE_DEFINITIONS
         }
         self.set_calls: list[tuple[int, dict[ValueType, float]]] = []
+        # Device ids whose set calls report FAILED, like a rejecting core.
+        self.fail_devices: set[int] = set()
+        # Raw metadata returned by the discovery endpoint; tests append here
+        # to simulate a device newly exposed in the TapHome app.
+        self.discovery_definitions: list[dict] = list(DEVICE_DEFINITIONS)
 
     async def async_set_device_values(
         self, device_id: int, values: dict[ValueType, float]
     ) -> SetDeviceValueResponse:
         self.set_calls.append((device_id, dict(values)))
+        if device_id in self.fail_devices:
+            return SetDeviceValueResponse(
+                device_id=device_id,
+                values_changed=dict.fromkeys(values, ValueChangeResult.FAILED),
+                timestamp=1,
+            )
         stored = self.values.setdefault(device_id, {})
         for value_type, value in values.items():
             stored[value_type] = value
@@ -227,6 +240,29 @@ class FakeTapHomeApi:
             values=dict(self.values.get(device_id, {})),
             error_code=None,
             message=None,
+        )
+
+    async def async_discovery_devices(self) -> DiscoveryResponse:
+        return DiscoveryResponse(
+            devices={
+                definition["deviceId"]: DeviceMetadata.from_dict(definition)
+                for definition in self.discovery_definitions
+            },
+            timestamp=1,
+        )
+
+    async def async_get_all_devices_values(self) -> DevicesValuesResponse:
+        return DevicesValuesResponse(
+            devices={
+                device_id: DeviceValues(
+                    device_id=device_id,
+                    values=dict(values),
+                    error_code=None,
+                    message=None,
+                )
+                for device_id, values in self.values.items()
+            },
+            timestamp=1,
         )
 
 

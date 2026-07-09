@@ -11,7 +11,6 @@
           "token": "Token",
           "use_cloud": "TapHome felhő használata",
           "ip": "IP-cím",
-          "id": "Core azonosító",
           "webhook_id": "Webhook azonosító",
           "use_description_as_entity_id": "TapHome leírások használata entitásazonosítóként",
           "use_description_as_name": "TapHome leírások használata entitásnévként",
@@ -21,7 +20,6 @@
           "token": "A TapHome API képernyő tetején megjelenő hitelesítési token.",
           "use_cloud": "Kapcsolódás a TapHome felhőn keresztül a helyi hálózat helyett. Csak akkor ajánlott, ha a Core helyileg nem érhető el — a felhő lassabb, és internetkapcsolatot igényel. Bekapcsolva az IP-cím figyelmen kívül marad.",
           "ip": "Megtalálja a TapHome alkalmazásban a Saját helyszín alatt.",
-          "id": "Ennek a Core-nak a választható azonosítója. Csak akkor szükséges, ha egynél több Core-t használ.",
           "webhook_id": "Ajánlott: a Core ekkor azonnal elküldi a változásokat ahelyett, hogy a Home Assistant 2 másodpercenként lekérdezné. Adjon meg egy tetszőleges nevet, pl. taphome_primary, majd ugyanezt állítsa be a TapHome alkalmazásban az Eszközök közzététele képernyőn — kapcsolja be a Webhookot, és a Webhook URL-t állítsa be pl. http://homeassistant.local:8123/api/webhook/taphome értékre — a homeassistant.local helyére írja be a saját Home Assistant címét, a taphome_primary helyére pedig a fent megadott nevet."
         },
         "submit": "Tovább"
@@ -33,7 +31,6 @@
           "token": "Token",
           "use_cloud": "TapHome felhő használata",
           "ip": "IP-cím",
-          "id": "Core azonosító",
           "webhook_id": "Webhook azonosító",
           "use_description_as_entity_id": "TapHome leírások használata entitásazonosítóként",
           "use_description_as_name": "TapHome leírások használata entitásnévként",
@@ -43,7 +40,6 @@
           "token": "A TapHome API képernyő tetején megjelenő hitelesítési token.",
           "use_cloud": "Kapcsolódás a TapHome felhőn keresztül a helyi hálózat helyett. Csak akkor ajánlott, ha a Core helyileg nem érhető el — a felhő lassabb, és internetkapcsolatot igényel. Bekapcsolva az IP-cím figyelmen kívül marad.",
           "ip": "Megtalálja a TapHome alkalmazásban a Saját helyszín alatt.",
-          "id": "Ennek a Core-nak a választható azonosítója. Csak akkor szükséges, ha egynél több Core-t használ.",
           "webhook_id": "Ajánlott: a Core ekkor azonnal elküldi a változásokat ahelyett, hogy a Home Assistant 2 másodpercenként lekérdezné. Adjon meg egy tetszőleges nevet, pl. taphome_primary, majd ugyanezt állítsa be a TapHome alkalmazásban az Eszközök közzététele képernyőn — kapcsolja be a Webhookot, és a Webhook URL-t állítsa be pl. http://homeassistant.local:8123/api/webhook/taphome értékre — a homeassistant.local helyére írja be a saját Home Assistant címét, a taphome_primary helyére pedig a fent megadott nevet."
         },
         "submit": "Mentés"
@@ -83,6 +79,16 @@
         "title": "Eszközbeállítások",
         "description": "Állítsa be a beállításokat minden kiválasztott eszközhöz és doménhez. Minden szakasz egy eszköz egy doménben. Az üres mezők automatikus alapértelmezett értékeket használnak.",
         "submit": "Hozzáadás"
+      },
+      "zeroconf_confirm": {
+        "title": "TapHome Core csatlakoztatása",
+        "description": "A hálózaton megtaláltuk a(z) {name} TapHome Core-t ({host}). Add meg az API tokenjét a Home Assistanthoz való hozzáadáshoz.",
+        "data": {
+          "token": "Token"
+        },
+        "data_description": {
+          "token": "A TapHome API képernyő tetején megjelenő hitelesítési token."
+        }
       }
     },
     "error": {
@@ -96,8 +102,10 @@
       "already_configured": "Ez a TapHome Core már konfigurálva van.",
       "reauth_successful": "Az újrahitelesítés sikeres volt.",
       "reconfigure_successful": "Az újrakonfigurálás sikeres volt.",
-      "unique_id_mismatch": "A csatlakoztatott Core nem egyezik azzal a Core-ral, amelyhez ez a bejegyzés készült."
-    }
+      "unique_id_mismatch": "A csatlakoztatott Core nem egyezik azzal a Core-ral, amelyhez ez a bejegyzés készült.",
+      "invalid_discovery_info": "A megtalált Core nem adta meg a szükséges adatokat."
+    },
+    "flow_title": "{name}"
   },
   "options": {
     "step": {
@@ -118,7 +126,6 @@
           "token": "Token",
           "use_cloud": "TapHome felhő használata",
           "ip": "IP-cím",
-          "id": "Core azonosító",
           "webhook_id": "Webhook azonosító",
           "use_description_as_entity_id": "TapHome leírások használata entitásazonosítóként",
           "use_description_as_name": "TapHome leírások használata entitásnévként",
@@ -128,7 +135,6 @@
           "token": "A TapHome API képernyő tetején megjelenő hitelesítési token.",
           "use_cloud": "Kapcsolódás a TapHome felhőn keresztül a helyi hálózat helyett. Csak akkor ajánlott, ha a Core helyileg nem érhető el — a felhő lassabb, és internetkapcsolatot igényel. Bekapcsolva az IP-cím figyelmen kívül marad.",
           "ip": "Megtalálja a TapHome alkalmazásban a Saját helyszín alatt.",
-          "id": "Ennek a Core-nak a választható azonosítója. Csak akkor szükséges, ha egynél több Core-t használ.",
           "webhook_id": "Ajánlott: a Core ekkor azonnal elküldi a változásokat ahelyett, hogy a Home Assistant 2 másodpercenként lekérdezné. Adjon meg egy tetszőleges nevet, pl. taphome_primary, majd ugyanezt állítsa be a TapHome alkalmazásban az Eszközök közzététele képernyőn — kapcsolja be a Webhookot, és a Webhook URL-t állítsa be pl. http://homeassistant.local:8123/api/webhook/taphome értékre — a homeassistant.local helyére írja be a saját Home Assistant címét, a taphome_primary helyére pedig a fent megadott nevet."
         },
         "description": "Frissítse a TapHome Core kapcsolati és Core beállításait. A helyi kapcsolat ajánlott: a „TapHome felhő használata” kapcsolót csak akkor kapcsolja be, ha a Core nem érhető el közvetlenül a hálózatában — a felhő ritkábban frissít (kb. 20 másodpercenként), és a TapHome szervereinek elérhetőségétől függ. A Core IP-címét a TapHome alkalmazásban a „Saját helyszín” alatt találja.",
@@ -791,6 +797,20 @@
         "already_configured": "Ez az eszköz már szerepel ezen a domainen.",
         "reconfigure_successful": "Az újrakonfigurálás sikeres volt."
       }
+    }
+  },
+  "exceptions": {
+    "change_rejected": {
+      "message": "A TapHome nem hajtotta végre a kért módosítást: {entity_id}"
+    },
+    "communication_error": {
+      "message": "Kommunikációs hiba a TapHome Core-ral a(z) {entity_id} vezérlése közben"
+    },
+    "invalid_hvac_mode": {
+      "message": "A(z) {hvac_mode} nem érvényes HVAC mód ehhez a termosztáthoz"
+    },
+    "hvac_mode_not_supported": {
+      "message": "Ez a termosztát nem támogatja a HVAC mód beállítását"
     }
   }
 }

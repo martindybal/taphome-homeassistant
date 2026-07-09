@@ -40,6 +40,8 @@ from .entity import TapHomeEntity
 from .taphome_config_entry import AddEntryRequest, TapHomeEntityConfig
 from .taphome_data import TapHomeConfigEntry
 
+PARALLEL_UPDATES = 0
+
 
 @dataclass(slots=True)
 class TapHomeSensorType:

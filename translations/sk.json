@@ -11,7 +11,6 @@
           "token": "Token",
           "use_cloud": "Použiť TapHome cloud",
           "ip": "IP adresa",
-          "id": "ID Core",
           "webhook_id": "Webhook ID",
           "use_description_as_entity_id": "Použiť popisy TapHome ako ID entít",
           "use_description_as_name": "Použiť popisy TapHome ako názvy entít",
@@ -21,7 +20,6 @@
           "token": "Autorizačný token zobrazený v hornej časti obrazovky TapHome API.",
           "use_cloud": "Pripojenie cez TapHome cloud namiesto lokálnej siete. Odporúčané len vtedy, keď Core nie je dostupný lokálne — cloud je pomalší a vyžaduje internetové pripojenie. Pri zapnutí sa IP adresa ignoruje.",
           "ip": "Nájdete ju v aplikácii TapHome v časti Moja lokalita.",
-          "id": "Voliteľný identifikátor tohto Core. Potrebné, len keď používate viac než jeden Core.",
           "webhook_id": "Odporúčané: Core potom posiela zmeny okamžite, namiesto toho, aby ich Home Assistant zisťoval dotazom každé 2 sekundy. Zadajte ľubovoľný názov, napr. taphome_primary, a rovnaký nastavte aj v aplikácii TapHome na obrazovke Zverejniť zariadenia → zapnite Povoliť Web Hook a do Web Hook URL vyplňte napr. http://homeassistant.local:8123/api/webhook/taphome — homeassistant.local nahraďte adresou vášho Home Assistant a taphome_primary názvom, ktorý ste zadali vyššie."
         },
         "submit": "Ďalej"
@@ -33,7 +31,6 @@
           "token": "Token",
           "use_cloud": "Použiť TapHome cloud",
           "ip": "IP adresa",
-          "id": "ID Core",
           "webhook_id": "Webhook ID",
           "use_description_as_entity_id": "Použiť popisy TapHome ako ID entít",
           "use_description_as_name": "Použiť popisy TapHome ako názvy entít",
@@ -43,7 +40,6 @@
           "token": "Autorizačný token zobrazený v hornej časti obrazovky TapHome API.",
           "use_cloud": "Pripojenie cez TapHome cloud namiesto lokálnej siete. Odporúčané len vtedy, keď Core nie je dostupný lokálne — cloud je pomalší a vyžaduje internetové pripojenie. Pri zapnutí sa IP adresa ignoruje.",
           "ip": "Nájdete ju v aplikácii TapHome v časti Moja lokalita.",
-          "id": "Voliteľný identifikátor tohto Core. Potrebné, len keď používate viac než jeden Core.",
           "webhook_id": "Odporúčané: Core potom posiela zmeny okamžite, namiesto toho, aby ich Home Assistant zisťoval dotazom každé 2 sekundy. Zadajte ľubovoľný názov, napr. taphome_primary, a rovnaký nastavte aj v aplikácii TapHome na obrazovke Zverejniť zariadenia → zapnite Povoliť Web Hook a do Web Hook URL vyplňte napr. http://homeassistant.local:8123/api/webhook/taphome — homeassistant.local nahraďte adresou vášho Home Assistant a taphome_primary názvom, ktorý ste zadali vyššie."
         },
         "submit": "Uložiť"
@@ -83,6 +79,16 @@
         "title": "Možnosti zariadenia",
         "description": "Nastavte možnosti pre každé vybrané zariadenie a doménu. Každá sekcia je jedno zariadenie v jednej doméne. Prázdne polia použijú automatické predvolené hodnoty.",
         "submit": "Pridať"
+      },
+      "zeroconf_confirm": {
+        "title": "Pripojiť TapHome Core",
+        "description": "V sieti bol nájdený TapHome Core {name} na adrese {host}. Pre pridanie do Home Assistanta zadajte jeho API token.",
+        "data": {
+          "token": "Token"
+        },
+        "data_description": {
+          "token": "Autorizačný token zobrazený v hornej časti obrazovky TapHome API."
+        }
       }
     },
     "error": {
@@ -96,8 +102,10 @@
       "already_configured": "Tento TapHome Core je už nakonfigurovaný.",
       "reauth_successful": "Opätovné overenie prebehlo úspešne.",
       "reconfigure_successful": "Zmena nastavenia prebehla úspešne.",
-      "unique_id_mismatch": "Pripojený Core nezodpovedá Core, pre ktorý bol tento záznam vytvorený."
-    }
+      "unique_id_mismatch": "Pripojený Core nezodpovedá Core, pre ktorý bol tento záznam vytvorený.",
+      "invalid_discovery_info": "Nájdený Core neohlásil potrebné údaje."
+    },
+    "flow_title": "{name}"
   },
   "options": {
     "step": {
@@ -118,7 +126,6 @@
           "token": "Token",
           "use_cloud": "Použiť TapHome cloud",
           "ip": "IP adresa",
-          "id": "ID Core",
           "webhook_id": "Webhook ID",
           "use_description_as_entity_id": "Použiť popisy TapHome ako ID entít",
           "use_description_as_name": "Použiť popisy TapHome ako názvy entít",
@@ -128,7 +135,6 @@
           "token": "Autorizačný token zobrazený v hornej časti obrazovky TapHome API.",
           "use_cloud": "Pripojenie cez TapHome cloud namiesto lokálnej siete. Odporúčané len vtedy, keď Core nie je dostupný lokálne — cloud je pomalší a vyžaduje internetové pripojenie. Pri zapnutí sa IP adresa ignoruje.",
           "ip": "Nájdete ju v aplikácii TapHome v časti Moja lokalita.",
-          "id": "Voliteľný identifikátor tohto Core. Potrebné, len keď používate viac než jeden Core.",
           "webhook_id": "Odporúčané: Core potom posiela zmeny okamžite, namiesto toho, aby ich Home Assistant zisťoval dotazom každé 2 sekundy. Zadajte ľubovoľný názov, napr. taphome_primary, a rovnaký nastavte aj v aplikácii TapHome na obrazovke Zverejniť zariadenia → zapnite Povoliť Web Hook a do Web Hook URL vyplňte napr. http://homeassistant.local:8123/api/webhook/taphome — homeassistant.local nahraďte adresou vášho Home Assistant a taphome_primary názvom, ktorý ste zadali vyššie."
         },
         "description": "Upravte nastavenie pripojenia a Core tohto TapHome Core. Odporúčame lokálne pripojenie: „Použiť TapHome cloud“ zapnite len vtedy, keď sa ku Core nedá pripojiť priamo vo vašej sieti — cloud aktualizuje stav menej často (približne raz za 20 sekúnd) a vyžaduje dostupnosť serverov TapHome. IP adresu vášho Core nájdete v aplikácii TapHome v časti „Moja lokalita“.",
@@ -791,6 +797,20 @@
         "already_configured": "Toto zariadenie je už v tejto doméne pridané.",
         "reconfigure_successful": "Rekonfigurácia bola úspešná."
       }
+    }
+  },
+  "exceptions": {
+    "change_rejected": {
+      "message": "TapHome nevykonal požadovanú zmenu pre {entity_id}"
+    },
+    "communication_error": {
+      "message": "Chyba komunikácie s TapHome Core pri ovládaní {entity_id}"
+    },
+    "invalid_hvac_mode": {
+      "message": "{hvac_mode} nie je platný režim vykurovania/chladenia pre tento termostat"
+    },
+    "hvac_mode_not_supported": {
+      "message": "Tento termostat nepodporuje nastavenie režimu vykurovania/chladenia"
     }
   }
 }

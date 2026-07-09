@@ -1,9 +1,15 @@
 """Tests for the TapHome config entry setup and unload."""
 
+from datetime import timedelta
+import logging
 from unittest.mock import AsyncMock, patch
 
-from pytest_homeassistant_custom_component.common import MockConfigEntry
+from pytest_homeassistant_custom_component.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+)
 from taphome_sdk import (
+    HubConnectionState,
     TapHomeAuthError,
     TapHomeConnectionError,
     TapHomeHubFactory,
@@ -12,8 +18,14 @@ from taphome_sdk import (
 
 from custom_components.taphome.const import CONF_KNOWN_DEVICE_IDS, DOMAIN
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_WEBHOOK_ID, STATE_OFF, STATE_ON
+from homeassistant.const import (
+    CONF_WEBHOOK_ID,
+    STATE_OFF,
+    STATE_ON,
+    STATE_UNAVAILABLE,
+)
 from homeassistant.core import HomeAssistant
+from homeassistant.util import dt as dt_util
 
 from tests_common import make_config_entry, setup_integration
 
@@ -102,6 +114,12 @@ async def test_webhook_updates_device_state(
     assert response.status == 200
     assert hass.states.get("switch.garden_socket").state == STATE_ON
 
+    # A malformed body is ignored without breaking the webhook.
+    response = await client.post("/api/webhook/taphome-test", data=b"not json")
+    await hass.async_block_till_done()
+    assert response.status == 200
+    assert hass.states.get("switch.garden_socket").state == STATE_ON
+
 
 async def test_first_setup_records_known_devices(
     hass: HomeAssistant, mock_hub, mock_config_entry: MockConfigEntry
@@ -150,6 +168,123 @@ async def test_new_device_creates_repair_issue(
         issue.domain == DOMAIN and "new_device" in issue.issue_id
         for issue in issue_registry.issues.values()
     )
+
+
+async def test_connection_loss_logs_once_and_recovers(
+    hass: HomeAssistant, mock_hub, mock_config_entry: MockConfigEntry, caplog
+) -> None:
+    """Losing the Core logs once, marks entities unavailable and recovers."""
+    await setup_integration(hass, mock_config_entry)
+    caplog.set_level(logging.INFO)
+    caplog.clear()
+
+    mock_hub.connection_state.value = HubConnectionState.FAILED
+    await hass.async_block_till_done()
+
+    assert hass.states.get("switch.garden_socket").state == STATE_UNAVAILABLE
+    lost_logs = [record for record in caplog.records if "lost" in record.message]
+    assert len(lost_logs) == 1
+    assert lost_logs[0].levelno == logging.INFO
+
+    mock_hub.connection_state.value = HubConnectionState.CONNECTED
+    await hass.async_block_till_done()
+
+    assert hass.states.get("switch.garden_socket").state != STATE_UNAVAILABLE
+    recovered = [
+        record for record in caplog.records if "re-established" in record.message
+    ]
+    assert len(recovered) == 1
+
+
+async def test_runtime_auth_error_starts_reauth(
+    hass: HomeAssistant, mock_hub, mock_config_entry: MockConfigEntry
+) -> None:
+    """A token rejected while running starts the reauth flow."""
+    await setup_integration(hass, mock_config_entry)
+
+    mock_hub.connection_state.value = HubConnectionState.AUTH_FAILED
+    await hass.async_block_till_done()
+
+    assert any(
+        flow["context"]["source"] == "reauth"
+        for flow in hass.config_entries.flow.async_progress()
+    )
+
+
+async def test_periodic_scan_reports_new_device(
+    hass: HomeAssistant, mock_hub, mock_config_entry: MockConfigEntry
+) -> None:
+    """A device exposed after setup raises a repair issue on the next scan."""
+    from homeassistant.helpers import issue_registry as ir
+
+    await setup_integration(hass, mock_config_entry)
+
+    mock_hub.api.discovery_definitions.append(
+        {
+            "deviceId": 42,
+            "type": "PowerOutlet",
+            "name": "New Socket",
+            "description": "Exposed while running",
+            "supportedValues": [
+                {"valueTypeId": ValueType.SWITCH_STATE.value, "readOnly": False}
+            ],
+        }
+    )
+
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=16))
+    await hass.async_block_till_done()
+
+    # The scan registered the device on the hub and raised a repair issue.
+    assert 42 in mock_hub.devices
+    issue_registry = ir.async_get(hass)
+    assert any(
+        issue.domain == DOMAIN and issue.issue_id.endswith("_42")
+        for issue in issue_registry.issues.values()
+    )
+
+    # A further scan with the device still pending keeps the single issue.
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=32))
+    await hass.async_block_till_done()
+    assert (
+        len(
+            [
+                issue
+                for issue in issue_registry.issues.values()
+                if issue.domain == DOMAIN and issue.issue_id.endswith("_42")
+            ]
+        )
+        == 1
+    )
+
+    # A device that disappears again has its issue withdrawn on the next scan.
+    mock_hub.api.discovery_definitions.pop()
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=48))
+    await hass.async_block_till_done()
+    assert not any(
+        issue.domain == DOMAIN and issue.issue_id.endswith("_42")
+        for issue in issue_registry.issues.values()
+    )
+
+
+async def test_unconfigurable_devices_raise_issues(
+    hass: HomeAssistant, mock_hub
+) -> None:
+    """Missing and mistyped devices raise issues instead of breaking setup."""
+    from homeassistant.helpers import issue_registry as ir
+
+    # Device 99 is not exposed at all; device 2 is a socket, not a thermostat.
+    entry = make_config_entry({"climates": [{"id": 2}], "switches": [{"id": 99}]})
+    await setup_integration(hass, entry)
+
+    assert entry.state is ConfigEntryState.LOADED
+    issue_registry = ir.async_get(hass)
+    issue_ids = {
+        issue.issue_id
+        for issue in issue_registry.issues.values()
+        if issue.domain == DOMAIN
+    }
+    assert any("device_not_exposed" in issue_id for issue_id in issue_ids)
+    assert any("device_type_mismatch" in issue_id for issue_id in issue_ids)
 
 
 async def test_devices_are_registered(

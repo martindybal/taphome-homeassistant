@@ -12,12 +12,13 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .add_entry_request import add_taphome_entities
-from .const import CONF_NUMBERS
-from .entity import TapHomeEntity
+from .entity import TapHomeEntity, handle_taphome_errors
 from .taphome_config_entry import AddEntryRequest, TapHomeEntityConfig
 from .taphome_data import TapHomeConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
+
+PARALLEL_UPDATES = 0
 
 
 class TapHomeNumber(TapHomeEntity, NumberEntity):
@@ -51,6 +52,7 @@ class TapHomeNumber(TapHomeEntity, NumberEntity):
         super()._state_changed(_, current_state)
 
     @override
+    @handle_taphome_errors
     async def async_set_native_value(self, value: float) -> None:
         """Set new value."""
         if self._read_only:
@@ -68,4 +70,4 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up TapHome numbers from a config entry."""
-    add_taphome_entities(entry, async_add_entities, CONF_NUMBERS, TapHomeNumber)
+    add_taphome_entities(entry, async_add_entities, NUMBER_DOMAIN, TapHomeNumber)

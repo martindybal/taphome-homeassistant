@@ -1,11 +1,21 @@
 """Common entity abstractions for the TapHome integration."""
 
-from collections.abc import Callable
-from typing import Any, override
+from collections.abc import Awaitable, Callable
+from functools import wraps
+from typing import Any, Concatenate, override
 
-from taphome_sdk import Device, DeviceState, Event, HubConnectionState, Location
+from taphome_sdk import (
+    Device,
+    DeviceState,
+    Event,
+    HubConnectionState,
+    Location,
+    TapHomeError,
+    ValueChangeFailedException,
+)
 
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import (
     area_registry as ar,
     device_registry as dr,
@@ -17,6 +27,31 @@ from homeassistant.helpers.entity import Entity
 
 from .const import DOMAIN
 from .taphome_config_entry import AddEntryRequest, NameMapping, TapHomeEntityConfigT
+
+
+def handle_taphome_errors[_EntityT: Entity, **_P](
+    func: Callable[Concatenate[_EntityT, _P], Awaitable[None]],
+) -> Callable[Concatenate[_EntityT, _P], Awaitable[None]]:
+    """Translate SDK errors raised by an entity action into HomeAssistantError."""
+
+    @wraps(func)
+    async def wrapper(self: _EntityT, *args: _P.args, **kwargs: _P.kwargs) -> None:
+        try:
+            await func(self, *args, **kwargs)
+        except ValueChangeFailedException as error:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="change_rejected",
+                translation_placeholders={"entity_id": self.entity_id},
+            ) from error
+        except TapHomeError as error:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="communication_error",
+                translation_placeholders={"entity_id": self.entity_id},
+            ) from error
+
+    return wrapper
 
 
 def hub_device_id(location: Location | None, core_id: str | None) -> str:

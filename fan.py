@@ -20,9 +20,11 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .add_entry_request import add_taphome_entities
-from .entity import TapHomeEntity
+from .entity import TapHomeEntity, handle_taphome_errors
 from .taphome_config_entry import AddEntryRequest, TapHomeEntityConfig
 from .taphome_data import TapHomeConfigEntry
+
+PARALLEL_UPDATES = 0
 
 
 class TapHomeFanConfig(TapHomeEntityConfig):
@@ -93,6 +95,7 @@ class TapHomeFan(TapHomeEntity, FanEntity):
         self._attr_preset_mode = self._preset_mode_device.selected_option
 
     @override
+    @handle_taphome_errors
     async def async_turn_on(
         self,
         percentage: int | None = None,
@@ -109,6 +112,7 @@ class TapHomeFan(TapHomeEntity, FanEntity):
             await self.async_set_preset_mode(preset_mode)
 
     @override
+    @handle_taphome_errors
     async def async_set_percentage(self, percentage: int) -> None:
         """Set the speed percentage of the fan."""
         await self._fan_generic_output.async_set_output_value(
@@ -116,12 +120,14 @@ class TapHomeFan(TapHomeEntity, FanEntity):
         )
 
     @override
+    @handle_taphome_errors
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set the preset mode of the fan."""
         if self._preset_mode_device:
             await self._preset_mode_device.async_select_option(preset_mode)
 
     @override
+    @handle_taphome_errors
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the fan."""
         await self._fan_generic_output.async_turn_off()

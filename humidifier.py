@@ -28,9 +28,11 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .add_entry_request import add_taphome_entities
-from .entity import TapHomeEntity
+from .entity import TapHomeEntity, handle_taphome_errors
 from .taphome_config_entry import AddEntryRequest, TapHomeEntityConfig
 from .taphome_data import TapHomeConfigEntry
+
+PARALLEL_UPDATES = 0
 
 
 class TapHomeHumidifierConfig(TapHomeEntityConfig):
@@ -154,6 +156,7 @@ class TapHomeHumidifier(TapHomeEntity, HumidifierEntity):
         self._attr_mode = self._mode_device.selected_option
 
     @override
+    @handle_taphome_errors
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         if self._switch_device is not None:
@@ -162,6 +165,7 @@ class TapHomeHumidifier(TapHomeEntity, HumidifierEntity):
             await self._humidifier_generic_output.async_turn_on()
 
     @override
+    @handle_taphome_errors
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         if self._switch_device is None:
@@ -170,6 +174,7 @@ class TapHomeHumidifier(TapHomeEntity, HumidifierEntity):
             await self._switch_device.async_turn_off()
 
     @override
+    @handle_taphome_errors
     async def async_set_humidity(self, humidity: int) -> None:
         """Set new humidity level."""
         if self._switch_device is not None:
@@ -179,6 +184,7 @@ class TapHomeHumidifier(TapHomeEntity, HumidifierEntity):
         )
 
     @override
+    @handle_taphome_errors
     async def async_set_mode(self, mode):
         """Set new target preset mode."""
         if self._mode_device is not None:
