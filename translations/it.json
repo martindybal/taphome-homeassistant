@@ -484,55 +484,193 @@
       "title": "Nuovo dispositivo TapHome trovato: {device}",
       "fix_flow": {
         "step": {
-          "confirm": {
-            "title": "Aggiungi dispositivo TapHome",
-            "description": "Il dispositivo {device} è esposto nell'API TapHome ma non è ancora usato in Home Assistant. Scegli il dominio come cui aggiungerlo, oppure attiva Ignora per non ricevere più notifiche su questo dispositivo.",
-            "data": {
-              "platform": "Aggiungi come",
+          "menu": {
+            "title": "Nuovo dispositivo TapHome",
+            "description": "Il dispositivo TapHome {device} è stato trovato ma non è ancora usato in Home Assistant. Scegli il tipo con cui aggiungerlo oppure ignoralo.",
+            "menu_options": {
+              "light": "Luce",
+              "switch": "Interruttore / presa",
+              "cover": "Oscuranti (tapparelle, veneziane)",
+              "thermostat": "Termostato",
+              "thermostat_controlled": "Termostato controllato",
+              "thermostat_range": "Termostato range",
+              "sensor": "Sensore",
+              "binary_sensor": "Sensore binario",
+              "fan": "Ventilatore",
+              "humidifier": "Umidificatore / deumidificatore",
+              "valve": "Valvola",
+              "button": "Pulsante / evento",
+              "select": "Selezione (commutatore multivalore)",
+              "number": "Numero",
+              "time": "Ora",
               "ignore": "Ignora questo dispositivo"
             }
           },
-          "options": {
-            "title": "Opzioni dispositivo",
-            "description": "Imposta le opzioni per {device}. I campi vuoti usano i valori predefiniti automatici.",
-            "submit": "Aggiungi",
+          "light": {
+            "title": "Luce",
+            "description": "Seleziona il dispositivo TapHome e imposta le sue opzioni. I campi vuoti usano valori predefiniti automatici.",
             "data": {
-              "effect_id": "Selettore multivalore effetti",
+              "device": "Dispositivo",
+              "effect_id": "Selettore multivalore effetti"
+            },
+            "submit": "Aggiungi"
+          },
+          "switch": {
+            "title": "Interruttore / presa",
+            "description": "Seleziona il dispositivo TapHome e imposta le sue opzioni. I campi vuoti usano valori predefiniti automatici.",
+            "data": {
+              "device": "Dispositivo",
+              "device_class": "Classe dispositivo"
+            },
+            "submit": "Aggiungi"
+          },
+          "cover": {
+            "title": "Oscuranti (tapparelle, veneziane)",
+            "description": "Seleziona il dispositivo TapHome e imposta le sue opzioni. I campi vuoti usano valori predefiniti automatici.",
+            "data": {
+              "device": "Dispositivo",
               "device_class": "Classe dispositivo",
-              "actions": "Azioni",
-              "close_threshold": "Soglia di chiusura (%)",
-              "range_high_thermostat_id": "Termostato alto dell'intervallo",
-              "range_low_thermostat_id": "Termostato basso dell'intervallo",
-              "target_temperature_step": "Passo temperatura target",
-              "precision": "Precisione temperatura",
+              "close_threshold": "Soglia di chiusura (%)"
+            },
+            "submit": "Aggiungi"
+          },
+          "thermostat": {
+            "title": "Termostato",
+            "description": "Un termostato con temperatura e setpoint. Il controllo di riscaldamento o raffrescamento può essere aggiunto in seguito nelle opzioni avanzate.",
+            "data": {
+              "device": "Dispositivo"
+            },
+            "submit": "Aggiungi"
+          },
+          "thermostat_controlled": {
+            "title": "Termostato controllato",
+            "description": "Un termostato che controlla anche il riscaldamento o il raffrescamento. Combinazioni valide: interruttore + modalità fissa, interruttore + selettore di modalità, o solo selettore di modalità.",
+            "data": {
+              "device": "Dispositivo",
               "hvac_switch_id": "Interruttore HVAC",
               "hvac_mode": "Modalità HVAC fissa",
               "hvac_mode_id": "Selettore multivalore modalità HVAC",
-              "hvac_action_id": "Selettore multivalore azione HVAC",
-              "preset_mode_id": "Selettore multivalore preimpostazioni",
-              "fan_mode_id": "Selettore multivalore modalità ventola",
-              "swing_mode_id": "Selettore multivalore oscillazione",
-              "swing_horizontal_mode_id": "Selettore multivalore oscillazione orizzontale",
-              "target_humidity_id": "Uscita analogica umidità target",
-              "min_humidity": "Umidità minima (%)",
-              "max_humidity": "Umidità massima (%)",
-              "switch_id": "Interruttore on/off",
-              "action_id": "Selettore multivalore azione",
-              "mode_id": "Selettore multivalore modalità",
-              "humidity_sensor_id": "Sensore di umidità",
-              "value_type": "Tipo di valore",
-              "unit_of_measurement": "Unità di misura",
-              "state_class": "Classe di stato"
-            }
+              "hvac_action_id": "Selettore multivalore azione HVAC"
+            },
+            "submit": "Aggiungi"
+          },
+          "thermostat_range": {
+            "title": "Termostato range",
+            "description": "Un climatizzatore con setpoint inferiore e superiore separati, controllato da due termostati TapHome.",
+            "data": {
+              "range_high_thermostat_id": "Termostato alto dell'intervallo",
+              "range_low_thermostat_id": "Termostato basso dell'intervallo"
+            },
+            "submit": "Aggiungi"
+          },
+          "sensor": {
+            "title": "Sensore",
+            "description": "Seleziona il dispositivo i cui valori vuoi esporre come sensori.",
+            "data": {
+              "device": "Dispositivo"
+            },
+            "submit": "Avanti"
+          },
+          "binary_sensor": {
+            "title": "Sensore binario",
+            "description": "Seleziona il dispositivo i cui valori vuoi esporre come sensori binari.",
+            "data": {
+              "device": "Dispositivo"
+            },
+            "submit": "Avanti"
+          },
+          "fan": {
+            "title": "Ventilatore",
+            "description": "Seleziona il dispositivo TapHome e imposta le sue opzioni. I campi vuoti usano valori predefiniti automatici.",
+            "data": {
+              "device": "Dispositivo",
+              "preset_mode_id": "Selettore multivalore preimpostazioni"
+            },
+            "submit": "Aggiungi"
+          },
+          "humidifier": {
+            "title": "Umidificatore / deumidificatore",
+            "description": "Seleziona il dispositivo TapHome e imposta le sue opzioni. I campi vuoti usano valori predefiniti automatici.",
+            "data": {
+              "device": "Dispositivo",
+              "device_class": "Classe dispositivo"
+            },
+            "submit": "Aggiungi"
+          },
+          "valve": {
+            "title": "Valvola",
+            "description": "Seleziona il dispositivo TapHome e imposta le sue opzioni. I campi vuoti usano valori predefiniti automatici.",
+            "data": {
+              "device": "Dispositivo",
+              "device_class": "Classe dispositivo"
+            },
+            "submit": "Aggiungi"
+          },
+          "button": {
+            "title": "Pulsante / evento",
+            "description": "Seleziona il dispositivo TapHome e imposta le sue opzioni. I campi vuoti usano valori predefiniti automatici.",
+            "data": {
+              "device": "Dispositivo",
+              "actions": "Azioni",
+              "device_class": "Classe dispositivo"
+            },
+            "submit": "Aggiungi"
+          },
+          "select": {
+            "title": "Selezione (commutatore multivalore)",
+            "description": "Seleziona il dispositivo TapHome e imposta le sue opzioni. I campi vuoti usano valori predefiniti automatici.",
+            "data": {
+              "device": "Dispositivo"
+            },
+            "submit": "Aggiungi"
+          },
+          "number": {
+            "title": "Numero",
+            "description": "Seleziona il dispositivo TapHome e imposta le sue opzioni. I campi vuoti usano valori predefiniti automatici.",
+            "data": {
+              "device": "Dispositivo"
+            },
+            "submit": "Aggiungi"
+          },
+          "time": {
+            "title": "Ora",
+            "description": "Seleziona il dispositivo TapHome e imposta le sue opzioni. I campi vuoti usano valori predefiniti automatici.",
+            "data": {
+              "device": "Dispositivo"
+            },
+            "submit": "Aggiungi"
+          },
+          "sensor_values": {
+            "title": "Valori del sensore",
+            "description": "Scegli quali valori di {device} aggiungere. Ogni valore selezionato diventa un sensore autonomo.",
+            "data": {
+              "values": "Valori"
+            },
+            "submit": "Aggiungi"
+          },
+          "binary_sensor_values": {
+            "title": "Valori del sensore binario",
+            "description": "Scegli quali valori di {device} aggiungere. Ogni valore selezionato diventa un sensore binario autonomo.",
+            "data": {
+              "values": "Valori"
+            },
+            "submit": "Aggiungi"
           }
         },
         "error": {
-          "select_platform_or_ignore": "Scegli un dominio come cui aggiungere il dispositivo, oppure attiva Ignora.",
-          "invalid_device_id": "ID dispositivo non valido."
+          "invalid_device_id": "ID dispositivo non valido.",
+          "invalid_hvac_config": "Combinazione non valida: interruttore + modalità fissa, interruttore + selettore di modalità, o solo selettore di modalità.",
+          "range_thermostats_required": "Seleziona sia il termostato inferiore sia quello superiore.",
+          "no_values_selected": "Seleziona almeno un valore.",
+          "already_configured": "Questo dispositivo è già esposto in questo dominio."
         },
         "abort": {
           "entry_not_loaded": "Il TapHome Core non è caricato. Correggi prima la connessione.",
-          "device_gone": "Il dispositivo non è più esposto nell'API TapHome."
+          "no_devices_available": "Tutti i dispositivi TapHome sono già esposti in tutti i domini compatibili.",
+          "unknown_subentry": "Questa configurazione del dispositivo non è più valida.",
+          "already_configured": "Questo dispositivo è già esposto in questo dominio.",
+          "reconfigure_successful": "Riconfigurazione completata con successo.",
+          "device_gone": "Questo dispositivo TapHome non è più esposto dal Core."
         }
       }
     }

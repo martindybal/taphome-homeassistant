@@ -484,55 +484,193 @@
       "title": "New TapHome device found: {device}",
       "fix_flow": {
         "step": {
-          "confirm": {
-            "title": "Add TapHome device",
-            "description": "Device {device} is exposed in the TapHome API but not used in Home Assistant yet. Choose the domain to add it as, or turn on Ignore to stop being notified about this device.",
-            "data": {
-              "platform": "Add as",
+          "menu": {
+            "title": "New TapHome device",
+            "description": "TapHome device {device} was found but is not used in Home Assistant yet. Choose the type of entity to add it as, or ignore it to stop being notified.",
+            "menu_options": {
+              "light": "Light",
+              "switch": "Switch / outlet",
+              "cover": "Cover (blinds, shutters)",
+              "thermostat": "Thermostat",
+              "thermostat_controlled": "Controlled thermostat",
+              "thermostat_range": "Range thermostat",
+              "sensor": "Sensor",
+              "binary_sensor": "Binary sensor",
+              "fan": "Fan",
+              "humidifier": "Humidifier / dehumidifier",
+              "valve": "Valve",
+              "button": "Button / event",
+              "select": "Select (multi-value switch)",
+              "number": "Number",
+              "time": "Time",
               "ignore": "Ignore this device"
             }
           },
-          "options": {
-            "title": "Device options",
-            "description": "Set the options for {device}. Empty fields use automatic defaults.",
-            "submit": "Add",
+          "light": {
+            "title": "Light",
+            "description": "Pick the TapHome device and set its options. Empty fields use automatic defaults.",
             "data": {
-              "effect_id": "Effects multi value switch",
+              "device": "Device",
+              "effect_id": "Effects multi value switch"
+            },
+            "submit": "Add"
+          },
+          "switch": {
+            "title": "Switch / outlet",
+            "description": "Pick the TapHome device and set its options. Empty fields use automatic defaults.",
+            "data": {
+              "device": "Device",
+              "device_class": "Device class"
+            },
+            "submit": "Add"
+          },
+          "cover": {
+            "title": "Cover (blinds, shutters)",
+            "description": "Pick the TapHome device and set its options. Empty fields use automatic defaults.",
+            "data": {
+              "device": "Device",
               "device_class": "Device class",
-              "actions": "Actions",
-              "close_threshold": "Close threshold (%)",
-              "range_high_thermostat_id": "Range high thermostat",
-              "range_low_thermostat_id": "Range low thermostat",
-              "target_temperature_step": "Target temperature step",
-              "precision": "Temperature precision",
+              "close_threshold": "Close threshold (%)"
+            },
+            "submit": "Add"
+          },
+          "thermostat": {
+            "title": "Thermostat",
+            "description": "A thermostat with a temperature and a setpoint. Heating or cooling control can be added later in the advanced options.",
+            "data": {
+              "device": "Device"
+            },
+            "submit": "Add"
+          },
+          "thermostat_controlled": {
+            "title": "Controlled thermostat",
+            "description": "A thermostat that also drives your heating or cooling. Valid combinations: switch + fixed mode, switch + mode multi-value switch, or mode multi-value switch alone.",
+            "data": {
+              "device": "Device",
               "hvac_switch_id": "HVAC switch",
               "hvac_mode": "Fixed HVAC mode",
               "hvac_mode_id": "HVAC mode multi value switch",
-              "hvac_action_id": "HVAC action multi value switch",
-              "preset_mode_id": "Preset modes multi value switch",
-              "fan_mode_id": "Fan modes multi value switch",
-              "swing_mode_id": "Swing modes multi value switch",
-              "swing_horizontal_mode_id": "Horizontal swing modes multi value switch",
-              "target_humidity_id": "Target humidity analog output",
-              "min_humidity": "Minimum humidity (%)",
-              "max_humidity": "Maximum humidity (%)",
-              "switch_id": "On/off switch",
-              "action_id": "Action multi value switch",
-              "mode_id": "Modes multi value switch",
-              "humidity_sensor_id": "Humidity sensor",
-              "value_type": "Value type",
-              "unit_of_measurement": "Unit of measurement",
-              "state_class": "State class"
-            }
+              "hvac_action_id": "HVAC action multi value switch"
+            },
+            "submit": "Add"
+          },
+          "thermostat_range": {
+            "title": "Range thermostat",
+            "description": "A climate with separate low and high setpoints driven by two TapHome thermostats.",
+            "data": {
+              "range_high_thermostat_id": "Range high thermostat",
+              "range_low_thermostat_id": "Range low thermostat"
+            },
+            "submit": "Add"
+          },
+          "sensor": {
+            "title": "Sensor",
+            "description": "Pick the device whose values you want to expose as sensors.",
+            "data": {
+              "device": "Device"
+            },
+            "submit": "Next"
+          },
+          "binary_sensor": {
+            "title": "Binary sensor",
+            "description": "Pick the device whose values you want to expose as binary sensors.",
+            "data": {
+              "device": "Device"
+            },
+            "submit": "Next"
+          },
+          "fan": {
+            "title": "Fan",
+            "description": "Pick the TapHome device and set its options. Empty fields use automatic defaults.",
+            "data": {
+              "device": "Device",
+              "preset_mode_id": "Preset modes multi value switch"
+            },
+            "submit": "Add"
+          },
+          "humidifier": {
+            "title": "Humidifier / dehumidifier",
+            "description": "Pick the TapHome device and set its options. Empty fields use automatic defaults.",
+            "data": {
+              "device": "Device",
+              "device_class": "Device class"
+            },
+            "submit": "Add"
+          },
+          "valve": {
+            "title": "Valve",
+            "description": "Pick the TapHome device and set its options. Empty fields use automatic defaults.",
+            "data": {
+              "device": "Device",
+              "device_class": "Device class"
+            },
+            "submit": "Add"
+          },
+          "button": {
+            "title": "Button / event",
+            "description": "Pick the TapHome device and set its options. Empty fields use automatic defaults.",
+            "data": {
+              "device": "Device",
+              "actions": "Actions",
+              "device_class": "Device class"
+            },
+            "submit": "Add"
+          },
+          "select": {
+            "title": "Select (multi-value switch)",
+            "description": "Pick the TapHome device and set its options. Empty fields use automatic defaults.",
+            "data": {
+              "device": "Device"
+            },
+            "submit": "Add"
+          },
+          "number": {
+            "title": "Number",
+            "description": "Pick the TapHome device and set its options. Empty fields use automatic defaults.",
+            "data": {
+              "device": "Device"
+            },
+            "submit": "Add"
+          },
+          "time": {
+            "title": "Time",
+            "description": "Pick the TapHome device and set its options. Empty fields use automatic defaults.",
+            "data": {
+              "device": "Device"
+            },
+            "submit": "Add"
+          },
+          "sensor_values": {
+            "title": "Sensor values",
+            "description": "Choose which values of {device} to add. Each selected value becomes its own sensor.",
+            "data": {
+              "values": "Values"
+            },
+            "submit": "Add"
+          },
+          "binary_sensor_values": {
+            "title": "Binary sensor values",
+            "description": "Choose which values of {device} to add. Each selected value becomes its own binary sensor.",
+            "data": {
+              "values": "Values"
+            },
+            "submit": "Add"
           }
         },
         "error": {
-          "select_platform_or_ignore": "Choose a domain to add the device as, or turn on Ignore.",
-          "invalid_device_id": "Invalid device ID."
+          "invalid_device_id": "Invalid device ID.",
+          "invalid_hvac_config": "Invalid combination: use switch + fixed mode, switch + mode multi-value switch, or mode multi-value switch alone.",
+          "range_thermostats_required": "Pick both the low and the high thermostat.",
+          "no_values_selected": "Select at least one value.",
+          "already_configured": "This device is already exposed on this domain."
         },
         "abort": {
           "entry_not_loaded": "The TapHome Core is not loaded. Fix the connection first.",
-          "device_gone": "The device is no longer exposed in the TapHome API."
+          "no_devices_available": "Every TapHome device is already exposed on every compatible domain.",
+          "unknown_subentry": "This device configuration is no longer valid.",
+          "already_configured": "This device is already exposed on this domain.",
+          "reconfigure_successful": "Reconfiguration was successful.",
+          "device_gone": "This TapHome device is no longer exposed by the Core."
         }
       }
     }

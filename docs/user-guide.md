@@ -139,12 +139,15 @@ drops to a once-a-minute safety net.
 ## New devices
 
 When you expose a new device in the TapHome API later, the integration
-notices it within about 15 minutes (it re-checks the API periodically, plus
-on every restart or reload) and raises a **repair issue**
-(_Settings → Repairs_). The repair lets you add the device directly — pick
-the platform, done — or ignore it so it is not offered again. Devices are
-never added on their own: which platform a TapHome device should be exposed
-as is your decision.
+notices it as soon as the device first reports a value (through the webhook
+or the regular poll — usually within seconds, and on every restart or reload)
+and raises a **repair issue** (_Settings → Repairs_). Opening it starts the
+same guided flow as **Add device**: pick the device type you want (only the
+types that device supports are offered — e.g. a thermostat can become a
+thermostat, controlled thermostat, range thermostat, sensor or binary
+sensor), fill in any options, done. Or choose **Ignore this device** so it is
+not offered again. Devices are never added on their own: which type a TapHome
+device should be exposed as is your decision.
 
 ## Migrating from YAML
 

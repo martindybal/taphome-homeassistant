@@ -4,133 +4,94 @@ from __future__ import annotations
 
 from typing import Any
 
-import voluptuous as vol
-
 from homeassistant import data_entry_flow
 from homeassistant.components.repairs import RepairsFlow
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.selector import (
-    BooleanSelector,
-    SelectSelector,
-    SelectSelectorConfig,
-    SelectSelectorMode,
-)
+from homeassistant.data_entry_flow import AbortFlow
 
-from .config_flow import apply_device_options, build_device_options_schema
+from .config_flow import DEVICE_ARCHETYPES, _TapHomeDeviceArchetypeFlow
 from .const import CONF_KNOWN_DEVICE_IDS
-from .platform_descriptors import (
-    PLATFORM_DESCRIPTORS_BY_KEY,
-    device_config_id,
-    platforms_for_device,
-)
 from .subentry import (
-    build_device_subentry,
-    device_subentry_unique_id,
+    config_subentry_from_data,
     iter_device_subentries,
 )
 
 
-class NewDeviceRepairFlow(RepairsFlow):
-    """Guide the user through adding a newly discovered TapHome device."""
+class NewDeviceRepairFlow(_TapHomeDeviceArchetypeFlow, RepairsFlow):
+    """Guide the user through adding a newly discovered TapHome device.
+
+    The device is fixed (the one the issue was raised for); the flow offers the
+    same device-type menu as "Add device", filtered to the types this device
+    can be exposed as, then reuses the shared archetype steps to build the
+    subentry. Picking nothing and confirming "ignore" silences the issue.
+    """
 
     def __init__(self, config_entry_id: str, device_id: int) -> None:
         """Store the config entry and device the issue was raised for."""
         self._config_entry_id = config_entry_id
         self._device_id = device_id
-        self._platform: str | None = None
+        self._archetype_fixed_device_id = device_id
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
     ) -> data_entry_flow.FlowResult:
         """Handle the first step of the fix flow."""
-        return await self.async_step_confirm()
+        return await self.async_step_menu()
 
-    async def async_step_confirm(
+    async def async_step_menu(
         self, user_input: dict[str, Any] | None = None
     ) -> data_entry_flow.FlowResult:
-        """Pick the platform to add the device as, or ignore it for good."""
+        """Offer the device types this device can be exposed as, or ignore it."""
         entry = self._entry()
         if entry is None or entry.state is not ConfigEntryState.LOADED:
             return self.async_abort(reason="entry_not_loaded")
-
-        device = entry.runtime_data.hub.devices.get(self._device_id)
-        if device is None:
-            return self.async_abort(reason="device_gone")
-
-        platforms = platforms_for_device(device)
-        errors: dict[str, str] = {}
-
-        if user_input is not None:
-            if user_input.get("ignore"):
-                self._mark_known(entry)
-                return self.async_create_entry(title="", data={})
-            platform = user_input.get("platform")
-            if platform in platforms:
-                self._platform = platform
-                descriptor = PLATFORM_DESCRIPTORS_BY_KEY[platform]
-                # Sensors auto-detect their options; add them without a form.
-                if not descriptor.fields or descriptor.advanced:
-                    self._add_device(entry, platform, {"id": self._device_id})
-                    return self.async_create_entry(title="", data={})
-                return await self.async_step_options()
-            errors["base"] = "select_platform_or_ignore"
-
-        return self.async_show_form(
-            step_id="confirm",
-            data_schema=vol.Schema(
-                {
-                    vol.Optional("platform"): SelectSelector(
-                        SelectSelectorConfig(
-                            options=platforms,
-                            mode=SelectSelectorMode.DROPDOWN,
-                            translation_key="platform",
-                        )
-                    ),
-                    vol.Optional("ignore", default=False): BooleanSelector(),
-                }
-            ),
-            errors=errors,
-            description_placeholders={"device": self._device_label(self._device_id)},
-        )
-
-    async def async_step_options(
-        self, user_input: dict[str, Any] | None = None
-    ) -> data_entry_flow.FlowResult:
-        """Configure the per-device options before adding the device."""
-        entry = self._entry()
-        if entry is None or entry.state is not ConfigEntryState.LOADED:
-            return self.async_abort(reason="entry_not_loaded")
-        if self._platform is None:
-            return await self.async_step_confirm()
         if self._device_id not in entry.runtime_data.hub.devices:
             return self.async_abort(reason="device_gone")
 
-        descriptor = PLATFORM_DESCRIPTORS_BY_KEY[self._platform]
-        errors: dict[str, str] = {}
-
-        if user_input is not None:
-            new_config = apply_device_options(
-                descriptor, {"id": self._device_id}, user_input, errors
-            )
-            if not errors:
-                self._add_device(entry, self._platform, new_config)
-                return self.async_create_entry(title="", data={})
-
-        schema, suggested = build_device_options_schema(
-            descriptor,
-            {"id": self._device_id},
-            entry.runtime_data.hub.devices,
-            self._device_label,
-        )
-        return self.async_show_form(
-            step_id="options",
-            data_schema=self.add_suggested_values_to_schema(
-                schema, user_input or suggested
-            ),
-            errors=errors,
+        archetype_keys = [
+            archetype.key
+            for archetype in DEVICE_ARCHETYPES
+            if self._archetype_addable_devices(archetype)
+        ]
+        return self.async_show_menu(
+            step_id="menu",
+            menu_options=[*archetype_keys, "ignore"],
             description_placeholders={"device": self._device_label(self._device_id)},
         )
+
+    async def async_step_ignore(
+        self, user_input: dict[str, Any] | None = None
+    ) -> data_entry_flow.FlowResult:
+        """Mark the device known so it is never reported as new again."""
+        entry = self._entry()
+        if entry is None:
+            return self.async_abort(reason="entry_not_loaded")
+        self._mark_known(entry)
+        return self.async_create_entry(title="", data={})
+
+    @property
+    def _archetype_entry(self) -> ConfigEntry:
+        """Return the config entry the issue was raised for."""
+        entry = self._entry()
+        if entry is None:
+            raise AbortFlow("entry_not_loaded")
+        return entry
+
+    def _archetype_finish(self, payloads: list[Any]) -> data_entry_flow.FlowResult:
+        """Add the collected subentries and mark the device known."""
+        entry = self._archetype_entry
+        existing = {
+            subentry.unique_id for subentry in iter_device_subentries(entry)
+        }
+        for payload in payloads:
+            if payload["unique_id"] in existing:
+                continue
+            self.hass.config_entries.async_add_subentry(
+                entry, config_subentry_from_data(payload)
+            )
+        self._mark_known(entry)
+        return self.async_create_entry(title="", data={})
 
     def _entry(self) -> ConfigEntry | None:
         """Return the config entry the issue was raised for."""
@@ -150,35 +111,11 @@ class NewDeviceRepairFlow(RepairsFlow):
 
     def _mark_known(self, entry: ConfigEntry) -> None:
         """Persist the device as known so it is never reported as new again."""
-        self.hass.config_entries.async_update_entry(
-            entry, data=self._data_with_known(entry)
-        )
-
-    def _add_device(
-        self, entry: ConfigEntry, platform: str, device_config: dict
-    ) -> None:
-        """Add the device as a subentry and mark it as known."""
-        device_id = device_config_id(device_config)
-        unique_id = device_subentry_unique_id(platform, device_id)
-        if all(
-            subentry.unique_id != unique_id
-            for subentry in iter_device_subentries(entry)
-        ):
-            self.hass.config_entries.async_add_subentry(
-                entry,
-                build_device_subentry(
-                    platform, device_config, self._device_label(device_id)
-                ),
-            )
-        self.hass.config_entries.async_update_entry(
-            entry, data=self._data_with_known(entry)
-        )
-
-    def _data_with_known(self, entry: ConfigEntry) -> dict[str, Any]:
-        """Return the entry data with this device added to the known ids."""
         known = {int(value) for value in entry.data.get(CONF_KNOWN_DEVICE_IDS, [])}
         known.add(self._device_id)
-        return {**entry.data, CONF_KNOWN_DEVICE_IDS: sorted(known)}
+        self.hass.config_entries.async_update_entry(
+            entry, data={**entry.data, CONF_KNOWN_DEVICE_IDS: sorted(known)}
+        )
 
 
 async def async_create_fix_flow(
