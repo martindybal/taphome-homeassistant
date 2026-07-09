@@ -60,6 +60,7 @@ from .const import (
     CONF_API_URL,
     CONF_BUTTONS,
     CONF_CLIMATES,
+    CONF_CORE_UNIQUE_ID,
     CONF_CORES,
     CONF_ENABLED_ATTRIBUTES,
     CONF_FAN,
@@ -464,8 +465,13 @@ def _build_core_config(entry: TapHomeConfigEntry) -> TapHomeCoreConfig:
     zone_mapping = NameMapping.from_dict(options.get(CONF_ZONES))
     label_mapping = NameMapping.from_dict(options.get(CONF_LABELS))
 
+    # New cores store their location id here; older entries fall back to the
+    # legacy CONF_ID (a YAML id or None) so their unique ids stay unchanged.
+    unique_id_segment = entry.data.get(CONF_CORE_UNIQUE_ID) or entry.data.get(CONF_ID)
+
     return TapHomeCoreConfig(
         entry.data.get(CONF_ID),
+        unique_id_segment,
         zone_mapping,
         label_mapping,
         tuple(options.get(CONF_ENABLED_ATTRIBUTES, AVAILABLE_ATTRIBUTES)),

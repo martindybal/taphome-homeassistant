@@ -116,6 +116,50 @@ async def test_webhook_updates_device_state(
     assert hass.states.get("switch.garden_socket").state == STATE_ON
 
 
+async def test_new_core_embeds_location_id_in_unique_ids(
+    hass: HomeAssistant, mock_hub
+) -> None:
+    """A core added now discriminates its entity unique ids by location id."""
+    from custom_components.taphome.const import CONF_CORE_UNIQUE_ID
+    from homeassistant.helpers import entity_registry as er
+
+    from tests_common import TEST_LOCATION_ID
+
+    entry = make_config_entry()
+    entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        entry, data={**entry.data, CONF_CORE_UNIQUE_ID: TEST_LOCATION_ID}
+    )
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    registry = er.async_get(hass)
+    switch = registry.async_get("switch.garden_socket")
+    assert switch.unique_id == f"taphome.{TEST_LOCATION_ID}.switch.2".lower()
+    # The core connectivity sensor is per-core too.
+    assert registry.async_get_entity_id(
+        "binary_sensor",
+        DOMAIN,
+        f"taphome.{TEST_LOCATION_ID}.binary_sensor.isalive".lower(),
+    ) is not None
+
+
+async def test_existing_core_keeps_undiscriminated_unique_ids(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_hub
+) -> None:
+    """An entry without the location marker keeps its original unique ids."""
+    from homeassistant.helpers import entity_registry as er
+
+    await setup_integration(hass, mock_config_entry)
+
+    registry = er.async_get(hass)
+    switch = registry.async_get("switch.garden_socket")
+    assert switch.unique_id == "taphome.switch.2"
+    assert registry.async_get_entity_id(
+        "binary_sensor", DOMAIN, "taphome.binary_sensor.isalive"
+    ) is not None
+
+
 async def test_first_setup_records_known_devices(
     hass: HomeAssistant, mock_hub, mock_config_entry: MockConfigEntry
 ) -> None:

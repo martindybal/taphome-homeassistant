@@ -84,6 +84,7 @@ from .const import (
     CONF_API_URL,
     CONF_BUTTONS,
     CONF_CLIMATES,
+    CONF_CORE_UNIQUE_ID,
     CONF_ENABLED_ATTRIBUTES,
     CONF_FAN,
     CONF_HUMIDIFIER,
@@ -1900,6 +1901,7 @@ class TapHomeConfigFlow(_TapHomeSetupFlow, ConfigFlow, domain=DOMAIN):
                         CONF_TOKEN: user_input[CONF_TOKEN],
                         CONF_API_URL: api_url,
                         CONF_ID: None,
+                        CONF_CORE_UNIQUE_ID: location.location_id,
                     }
                     self._wizard_title = location.location_name
                     self._options = {}
@@ -1995,6 +1997,7 @@ class TapHomeConfigFlow(_TapHomeSetupFlow, ConfigFlow, domain=DOMAIN):
                     CONF_TOKEN: token,
                     CONF_API_URL: self._discovered_api_url,
                     CONF_ID: None,
+                    CONF_CORE_UNIQUE_ID: location.location_id,
                 }
                 self._wizard_title = location.location_name
                 self._options = {}

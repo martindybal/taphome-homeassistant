@@ -49,9 +49,9 @@ class TapHomeIsAliveSensor(TapHomeSubscriptionMixin, BinarySensorEntity):
         """Initialize is-alive sensor for a given core."""
         self._core_config = core_config
 
-        core_id = f" {core_config.id}" if core_config.id else ""
+        segment = f".{core_config.unique_id_segment}" if core_config.unique_id_segment else ""
         self._attr_unique_id = (
-            f"taphome{core_id.replace(' ', '.')}.{BINARY_SENSOR_DOMAIN}.isalive".lower()
+            f"taphome{segment}.{BINARY_SENSOR_DOMAIN}.isalive".lower()
         )
 
         # The connectivity device class provides the entity name; the sensor

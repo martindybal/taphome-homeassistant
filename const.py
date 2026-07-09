@@ -56,6 +56,13 @@ CONF_ENABLED_ATTRIBUTES = "enabled_attributes"
 # data. Devices exposed later that are not in this set are reported as new.
 CONF_KNOWN_DEVICE_IDS = "known_device_ids"
 
+# The per-core discriminator embedded in entity unique ids. Set to the core's
+# location id when a core is added, so entities of different cores never
+# collide. Older entries do not have it (their unique ids must stay unchanged):
+# YAML-imported entries fall back to CONF_ID, other pre-existing entries to no
+# discriminator at all. Only ever set at core creation, never migrated.
+CONF_CORE_UNIQUE_ID = "core_unique_id"
+
 # Each exposed TapHome device is a config subentry of this type. Its ``data``
 # holds the device config dict plus SUBENTRY_DATA_PLATFORM, which names the
 # platform config bucket (a DEVICE_CONFIG_KEYS value) the device is exposed as.
