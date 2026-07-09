@@ -74,26 +74,38 @@ class TapHomeIsAliveSensor(TapHomeSubscriptionMixin, BinarySensorEntity):
             self._on_hub_last_update_success_time_change,
         )
 
+    def _write_state(self) -> None:
+        """Push the current attributes to the state machine.
+
+        The sensor does not poll, so every handler must write explicitly. The
+        seed call during subscription runs before the entity is added, hence
+        the ``hass`` guard.
+        """
+        if self.hass is not None:
+            self.schedule_update_ha_state()
+
     def _on_hub_connection_state_change(
         self, _: HubConnectionState | None, current_state: HubConnectionState
     ) -> None:
         """Handle hub connection state changes."""
-
         self._attr_is_on = current_state is HubConnectionState.CONNECTED
+        self._write_state()
 
     def _on_hub_connection_type_change(
         self, old_type: ApiConnectionType | None, current_type: ApiConnectionType
     ) -> None:
-        """Handle hub connection state changes."""
+        """Handle hub connection type changes."""
         self._attr_extra_state_attributes["connection_type"] = current_type.value
+        self._write_state()
 
     def _on_hub_last_update_success_time_change(
         self, old: datetime | None, last_update_success: datetime | None
     ) -> None:
-        """Handle hub connection state changes."""
+        """Handle hub last-update-time changes."""
         self._attr_extra_state_attributes["last_update_success_time"] = (
             last_update_success
         )
+        self._write_state()
 
 
 @dataclass(slots=True)

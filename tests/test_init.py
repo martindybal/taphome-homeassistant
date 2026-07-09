@@ -459,6 +459,42 @@ async def test_migration_moves_option_devices_to_subentries(
     }
 
 
+async def test_migration_is_idempotent(hass: HomeAssistant, mock_hub) -> None:
+    """A device listed twice (or a re-run) yields one subentry, no crash.
+
+    async_add_subentry raises on a duplicate unique id, so migration must skip
+    devices that already have a subentry.
+    """
+    from homeassistant.const import CONF_ID, CONF_TOKEN
+
+    from custom_components.taphome.const import CONF_API_URL, SUBENTRY_TYPE_DEVICE
+    from tests_common import TEST_API_URL, TEST_LOCATION_ID, TEST_TOKEN
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="TapHome",
+        unique_id=TEST_LOCATION_ID,
+        version=1,
+        minor_version=1,
+        data={CONF_TOKEN: TEST_TOKEN, CONF_API_URL: TEST_API_URL, CONF_ID: None},
+        options={"switches": [{"id": 2}, {"id": 2}]},
+    )
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert entry.minor_version == 2
+    subentries = [
+        subentry
+        for subentry in entry.subentries.values()
+        if subentry.subentry_type == SUBENTRY_TYPE_DEVICE
+    ]
+    assert len(subentries) == 1
+    assert subentries[0].data["id"] == 2
+
+
 async def test_zone_and_label_mapping_apply_to_device(
     hass: HomeAssistant, mock_hub
 ) -> None:

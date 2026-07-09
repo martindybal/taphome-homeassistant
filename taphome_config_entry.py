@@ -55,6 +55,8 @@ class TapHomeCoreConfig:
     # cores added after this was introduced, the YAML id for imported cores,
     # None for older UI cores). ``id`` stays for display and hub identity.
     unique_id_segment: str | None
+    # The config entry id, used to namespace repair issues per core.
+    entry_id: str
     zone_mapping: NameMapping
     label_mapping: NameMapping
     enabled_attributes: tuple[str, ...]

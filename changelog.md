@@ -17,6 +17,9 @@ Quality-scale improvements on the road to Home Assistant Core:
 - **The is-alive sensor is a proper diagnostic entity**: it belongs to the Core hub device, is categorized as diagnostic and takes the standard "Connectivity" name (its unique id is unchanged, so history is preserved; the displayed name regenerates unless you renamed it earlier).
 - **Fixed: number entities were never created** — the `number` platform was missing from the platform list after the config-entry conversion.
 - All platforms declare `PARALLEL_UPDATES`; new tests cover the button, event, fan, humidifier, number, time and valve platforms and the new-device repair flow.
+- **Migration is now idempotent**: a config entry whose subentry migration was interrupted (or a YAML core that listed the same device twice) no longer gets stuck — the migration skips devices that already have a subentry.
+- The rarely used per-device `unique_id` YAML option is no longer honored; a device exposed on a platform always gets the standard generated entity id. (If you set custom `unique_id`s in YAML, those entities regenerate once on upgrade and lose their prior history.)
+- Repair issues (core unavailable, device not exposed / type mismatch) are namespaced per config entry, so they no longer collide between two cores.
 - Requires [taphome-sdk 1.1.0](https://github.com/martindybal/taphome-sdk/blob/main/CHANGELOG.md).
 
 ## 2026.7

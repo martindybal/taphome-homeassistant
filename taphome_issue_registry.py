@@ -11,10 +11,17 @@ from .translations import Issues
 class TapHomeIssueRegistry:
     """TapHome Issue Registry."""
 
-    def __init__(self, hass: HomeAssistant, core_id: str | None) -> None:
-        """Initialize the TapHome Issue Registry."""
+    def __init__(
+        self, hass: HomeAssistant, core_id: str | None, entry_id: str
+    ) -> None:
+        """Initialize the TapHome Issue Registry.
+
+        ``core_id`` is only for user-facing text (empty for UI cores);
+        ``entry_id`` namespaces the issue ids so cores never collide.
+        """
         self.hass = hass
         self.core_id = f" {core_id}" if core_id else ""
+        self.entry_id = entry_id
 
     def create_core_unavailable_issue(self) -> None:
         """Create an issue in the issue registry."""
@@ -109,13 +116,13 @@ class TapHomeIssueRegistry:
             )
 
     def _create_device_not_exposed_issue_id(self, taphome_device_id):
-        return f"{Issues.DEVICE_NOT_EXPOSED}_{taphome_device_id}"
+        return f"{Issues.DEVICE_NOT_EXPOSED}_{self.entry_id}_{taphome_device_id}"
 
     def _create_device_type_mismatch_issue_id(self, taphome_device_id):
-        return f"{Issues.DEVICE_TYPE_MISMATCH}_{taphome_device_id}"
+        return f"{Issues.DEVICE_TYPE_MISMATCH}_{self.entry_id}_{taphome_device_id}"
 
     def _create_core_unavailable_issue_id(self):
-        return f"{Issues.CORE_UNAVAILABLE}_{self.core_id}"
+        return f"{Issues.CORE_UNAVAILABLE}_{self.entry_id}"
 
     def create_issue(
         self,
