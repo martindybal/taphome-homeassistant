@@ -624,6 +624,11 @@ class _TapHomeDeviceArchetypeFlow:
 
     _archetype: DeviceArchetype | None = None
     _archetype_device_id: int | None = None
+    # When set (repair flow), the device the archetype is added for is fixed:
+    # the type menu is filtered to that device and the device picker is skipped.
+    # Helper-device fields (effect id, range low thermostat, …) still resolve
+    # against every device, so ``_archetype_devices`` stays the full registry.
+    _archetype_fixed_device_id: int | None = None
 
     # Members provided by the hosting data-entry FlowHandler.
     async_show_form: Callable[..., Any]
@@ -717,6 +722,10 @@ class _TapHomeDeviceArchetypeFlow:
             device
             for device in self._archetype_devices.values()
             if _device_qualifies(device, descriptor)
+            and (
+                self._archetype_fixed_device_id is None
+                or device.id == self._archetype_fixed_device_id
+            )
         ]
         if archetype.values:
             return [
@@ -823,9 +832,15 @@ class _TapHomeDeviceArchetypeFlow:
         if not devices:
             return self.async_abort(reason="no_devices_available")
 
+        fixed = self._archetype_fixed_device_id
+        field_defs = tuple(
+            field for field in descriptor.fields if field.key in archetype.fields
+        )
         errors: dict[str, str] = {}
         if user_input is not None:
-            self._archetype_device_id = int(user_input["device"])
+            self._archetype_device_id = (
+                fixed if fixed is not None else int(user_input["device"])
+            )
             if archetype.values:
                 return await self._async_next_values_step()
             field_errors: dict[str, str] = {}
@@ -838,22 +853,26 @@ class _TapHomeDeviceArchetypeFlow:
                 errors["base"] = error
             else:
                 return self._create_archetype_subentry(device_config)
+        elif fixed is not None:
+            # The device is known from the menu context: no device picker.
+            self._archetype_device_id = fixed
+            if archetype.values:
+                return await self._async_next_values_step()
+            if not field_defs:
+                return self._create_archetype_subentry({"id": fixed})
 
-        options = [
-            SelectOptionDict(
-                value=str(device.id), label=self._archetype_device_label(device)
-            )
-            for device in devices
-        ]
-        options.sort(key=lambda option: option["label"].casefold())
-        schema_dict: dict[Any, Any] = {
-            vol.Required("device"): SelectSelector(
+        schema_dict: dict[Any, Any] = {}
+        if fixed is None:
+            options = [
+                SelectOptionDict(
+                    value=str(device.id), label=self._archetype_device_label(device)
+                )
+                for device in devices
+            ]
+            options.sort(key=lambda option: option["label"].casefold())
+            schema_dict[vol.Required("device")] = SelectSelector(
                 SelectSelectorConfig(options=options, mode=SelectSelectorMode.DROPDOWN)
             )
-        }
-        field_defs = tuple(
-            field for field in descriptor.fields if field.key in archetype.fields
-        )
         fields_schema, _ = _build_fields_schema(
             field_defs, {}, self._archetype_devices, self._archetype_helper_label
         )
@@ -915,8 +934,15 @@ class _TapHomeDeviceArchetypeFlow:
             field_defs, {}, self._archetype_devices, self._archetype_helper_label
         )
         schema = vol.Schema(fields_schema)
-        if user_input:
-            schema = self.add_suggested_values_to_schema(schema, user_input)
+        # In the repair flow the new thermostat is the fixed device; offer it
+        # as the high thermostat so only the low one is left to pick.
+        suggested = dict(user_input or {})
+        if self._archetype_fixed_device_id is not None:
+            suggested.setdefault(
+                "range_high_thermostat_id", str(self._archetype_fixed_device_id)
+            )
+        if suggested:
+            schema = self.add_suggested_values_to_schema(schema, suggested)
         return self.async_show_form(
             step_id="thermostat_range", data_schema=schema, errors=errors
         )

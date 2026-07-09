@@ -484,55 +484,193 @@
       "title": "Neues TapHome-Gerät gefunden: {device}",
       "fix_flow": {
         "step": {
-          "confirm": {
-            "title": "TapHome-Gerät hinzufügen",
-            "description": "Das Gerät {device} ist in der TapHome-API freigegeben, wird aber noch nicht in Home Assistant verwendet. Wählen Sie die Domäne, als die es hinzugefügt werden soll, oder aktivieren Sie Ignorieren, um nicht mehr über dieses Gerät benachrichtigt zu werden.",
-            "data": {
-              "platform": "Hinzufügen als",
+          "menu": {
+            "title": "Neues TapHome-Gerät",
+            "description": "Das TapHome-Gerät {device} wurde gefunden, wird aber noch nicht in Home Assistant verwendet. Wähle den Typ, als der es hinzugefügt werden soll, oder ignoriere es.",
+            "menu_options": {
+              "light": "Licht",
+              "switch": "Schalter / Steckdose",
+              "cover": "Beschattung (Rollläden, Jalousien)",
+              "thermostat": "Thermostat",
+              "thermostat_controlled": "Gesteuertes Thermostat",
+              "thermostat_range": "Range-Thermostat",
+              "sensor": "Sensor",
+              "binary_sensor": "Binärsensor",
+              "fan": "Ventilator",
+              "humidifier": "Luftbefeuchter / Entfeuchter",
+              "valve": "Ventil",
+              "button": "Taster / Ereignis",
+              "select": "Auswahl (Mehrwertschalter)",
+              "number": "Zahl",
+              "time": "Zeit",
               "ignore": "Dieses Gerät ignorieren"
             }
           },
-          "options": {
-            "title": "Geräteoptionen",
-            "description": "Legen Sie die Optionen für {device} fest. Leere Felder verwenden automatische Standardwerte.",
-            "submit": "Hinzufügen",
+          "light": {
+            "title": "Licht",
+            "description": "Wählen Sie das TapHome-Gerät und legen Sie seine Optionen fest. Leere Felder verwenden automatische Standardwerte.",
             "data": {
-              "effect_id": "Mehrwertschalter für Effekte",
+              "device": "Gerät",
+              "effect_id": "Mehrwertschalter für Effekte"
+            },
+            "submit": "Hinzufügen"
+          },
+          "switch": {
+            "title": "Schalter / Steckdose",
+            "description": "Wählen Sie das TapHome-Gerät und legen Sie seine Optionen fest. Leere Felder verwenden automatische Standardwerte.",
+            "data": {
+              "device": "Gerät",
+              "device_class": "Geräteklasse"
+            },
+            "submit": "Hinzufügen"
+          },
+          "cover": {
+            "title": "Beschattung (Rollläden, Jalousien)",
+            "description": "Wählen Sie das TapHome-Gerät und legen Sie seine Optionen fest. Leere Felder verwenden automatische Standardwerte.",
+            "data": {
+              "device": "Gerät",
               "device_class": "Geräteklasse",
-              "actions": "Aktionen",
-              "close_threshold": "Schließschwelle (%)",
-              "range_high_thermostat_id": "Oberer Bereichsthermostat",
-              "range_low_thermostat_id": "Unterer Bereichsthermostat",
-              "target_temperature_step": "Schrittweite der Zieltemperatur",
-              "precision": "Temperaturgenauigkeit",
+              "close_threshold": "Schließschwelle (%)"
+            },
+            "submit": "Hinzufügen"
+          },
+          "thermostat": {
+            "title": "Thermostat",
+            "description": "Ein Thermostat mit Temperatur und Sollwert. Heizungs- oder Kühlungssteuerung kann später in den erweiterten Optionen ergänzt werden.",
+            "data": {
+              "device": "Gerät"
+            },
+            "submit": "Hinzufügen"
+          },
+          "thermostat_controlled": {
+            "title": "Gesteuertes Thermostat",
+            "description": "Ein Thermostat, das zugleich Heizung oder Kühlung steuert. Gültige Kombinationen: Schalter + fester Modus, Schalter + Modus-Mehrwertschalter oder Modus-Mehrwertschalter allein.",
+            "data": {
+              "device": "Gerät",
               "hvac_switch_id": "HVAC-Schalter",
               "hvac_mode": "Fester HVAC-Modus",
               "hvac_mode_id": "Mehrwertschalter für HVAC-Modus",
-              "hvac_action_id": "Mehrwertschalter für HVAC-Aktion",
-              "preset_mode_id": "Mehrwertschalter für Voreinstellungen",
-              "fan_mode_id": "Mehrwertschalter für Lüftermodi",
-              "swing_mode_id": "Mehrwertschalter für Schwenkmodi",
-              "swing_horizontal_mode_id": "Mehrwertschalter für horizontale Schwenkmodi",
-              "target_humidity_id": "Analogausgang für Zielfeuchtigkeit",
-              "min_humidity": "Minimale Luftfeuchtigkeit (%)",
-              "max_humidity": "Maximale Luftfeuchtigkeit (%)",
-              "switch_id": "Ein/Aus-Schalter",
-              "action_id": "Mehrwertschalter für Aktion",
-              "mode_id": "Mehrwertschalter für Modi",
-              "humidity_sensor_id": "Feuchtigkeitssensor",
-              "value_type": "Werttyp",
-              "unit_of_measurement": "Maßeinheit",
-              "state_class": "Zustandsklasse"
-            }
+              "hvac_action_id": "Mehrwertschalter für HVAC-Aktion"
+            },
+            "submit": "Hinzufügen"
+          },
+          "thermostat_range": {
+            "title": "Range-Thermostat",
+            "description": "Eine Klimasteuerung mit getrenntem unteren und oberen Sollwert, gesteuert von zwei TapHome-Thermostaten.",
+            "data": {
+              "range_high_thermostat_id": "Oberer Bereichsthermostat",
+              "range_low_thermostat_id": "Unterer Bereichsthermostat"
+            },
+            "submit": "Hinzufügen"
+          },
+          "sensor": {
+            "title": "Sensor",
+            "description": "Wählen Sie das Gerät, dessen Werte Sie als Sensoren hinzufügen möchten.",
+            "data": {
+              "device": "Gerät"
+            },
+            "submit": "Weiter"
+          },
+          "binary_sensor": {
+            "title": "Binärsensor",
+            "description": "Wählen Sie das Gerät, dessen Werte Sie als Binärsensoren hinzufügen möchten.",
+            "data": {
+              "device": "Gerät"
+            },
+            "submit": "Weiter"
+          },
+          "fan": {
+            "title": "Ventilator",
+            "description": "Wählen Sie das TapHome-Gerät und legen Sie seine Optionen fest. Leere Felder verwenden automatische Standardwerte.",
+            "data": {
+              "device": "Gerät",
+              "preset_mode_id": "Mehrwertschalter für Voreinstellungen"
+            },
+            "submit": "Hinzufügen"
+          },
+          "humidifier": {
+            "title": "Luftbefeuchter / Entfeuchter",
+            "description": "Wählen Sie das TapHome-Gerät und legen Sie seine Optionen fest. Leere Felder verwenden automatische Standardwerte.",
+            "data": {
+              "device": "Gerät",
+              "device_class": "Geräteklasse"
+            },
+            "submit": "Hinzufügen"
+          },
+          "valve": {
+            "title": "Ventil",
+            "description": "Wählen Sie das TapHome-Gerät und legen Sie seine Optionen fest. Leere Felder verwenden automatische Standardwerte.",
+            "data": {
+              "device": "Gerät",
+              "device_class": "Geräteklasse"
+            },
+            "submit": "Hinzufügen"
+          },
+          "button": {
+            "title": "Taster / Ereignis",
+            "description": "Wählen Sie das TapHome-Gerät und legen Sie seine Optionen fest. Leere Felder verwenden automatische Standardwerte.",
+            "data": {
+              "device": "Gerät",
+              "actions": "Aktionen",
+              "device_class": "Geräteklasse"
+            },
+            "submit": "Hinzufügen"
+          },
+          "select": {
+            "title": "Auswahl (Mehrwertschalter)",
+            "description": "Wählen Sie das TapHome-Gerät und legen Sie seine Optionen fest. Leere Felder verwenden automatische Standardwerte.",
+            "data": {
+              "device": "Gerät"
+            },
+            "submit": "Hinzufügen"
+          },
+          "number": {
+            "title": "Zahl",
+            "description": "Wählen Sie das TapHome-Gerät und legen Sie seine Optionen fest. Leere Felder verwenden automatische Standardwerte.",
+            "data": {
+              "device": "Gerät"
+            },
+            "submit": "Hinzufügen"
+          },
+          "time": {
+            "title": "Zeit",
+            "description": "Wählen Sie das TapHome-Gerät und legen Sie seine Optionen fest. Leere Felder verwenden automatische Standardwerte.",
+            "data": {
+              "device": "Gerät"
+            },
+            "submit": "Hinzufügen"
+          },
+          "sensor_values": {
+            "title": "Sensorwerte",
+            "description": "Wählen Sie, welche Werte von {device} hinzugefügt werden. Jeder ausgewählte Wert wird ein eigener Sensor.",
+            "data": {
+              "values": "Werte"
+            },
+            "submit": "Hinzufügen"
+          },
+          "binary_sensor_values": {
+            "title": "Binärsensorwerte",
+            "description": "Wählen Sie, welche Werte von {device} hinzugefügt werden. Jeder ausgewählte Wert wird ein eigener Binärsensor.",
+            "data": {
+              "values": "Werte"
+            },
+            "submit": "Hinzufügen"
           }
         },
         "error": {
-          "select_platform_or_ignore": "Wählen Sie eine Domäne, als die das Gerät hinzugefügt wird, oder aktivieren Sie Ignorieren.",
-          "invalid_device_id": "Ungültige Geräte-ID."
+          "invalid_device_id": "Ungültige Geräte-ID.",
+          "invalid_hvac_config": "Ungültige Kombination: Schalter + fester Modus, Schalter + Modus-Mehrwertschalter oder Modus-Mehrwertschalter allein.",
+          "range_thermostats_required": "Wählen Sie sowohl das untere als auch das obere Thermostat.",
+          "no_values_selected": "Wählen Sie mindestens einen Wert aus.",
+          "already_configured": "Dieses Gerät ist in dieser Domäne bereits vorhanden."
         },
         "abort": {
           "entry_not_loaded": "Der TapHome Core ist nicht geladen. Beheben Sie zuerst die Verbindung.",
-          "device_gone": "Das Gerät ist in der TapHome-API nicht mehr freigegeben."
+          "no_devices_available": "Alle TapHome-Geräte sind bereits in allen kompatiblen Domänen vorhanden.",
+          "unknown_subentry": "Diese Gerätekonfiguration ist nicht mehr gültig.",
+          "already_configured": "Dieses Gerät ist in dieser Domäne bereits vorhanden.",
+          "reconfigure_successful": "Die Neukonfiguration war erfolgreich.",
+          "device_gone": "Dieses TapHome-Gerät wird vom Core nicht mehr bereitgestellt."
         }
       }
     }

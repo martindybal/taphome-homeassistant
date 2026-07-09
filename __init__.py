@@ -7,7 +7,6 @@
 from . import sdk_locator  # noqa: F401
 
 from dataclasses import dataclass
-from datetime import datetime, timedelta
 import logging
 
 from aiohttp.web import Request
@@ -51,7 +50,6 @@ from homeassistant.helpers import (
     issue_registry as ir,
 )
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
 
 from .binary_sensor import BinarySensorEntityConfig
@@ -115,10 +113,6 @@ from .translations import Issues
 from .valve import TapHomeValveConfig
 
 _LOGGER = logging.getLogger(__name__)
-
-# Discovery is a single cheap API call; scanning a few times an hour notices
-# newly exposed devices without adding measurable load on the Core.
-NEW_DEVICE_SCAN_INTERVAL = timedelta(minutes=15)
 
 
 @dataclass(slots=True, frozen=True)
@@ -323,7 +317,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TapHomeConfigEntry) -> b
     _async_detect_new_devices(
         hass, entry, hub, taphome_issue_registry, set(hub.devices)
     )
-    _schedule_new_device_detection(hass, entry, hub, taphome_issue_registry)
+    _subscribe_new_device_detection(hass, entry, hub, taphome_issue_registry)
 
     add_entry_requests = {
         domain.name: _map_subentry_requests(hass, core_config, entry, domain, hub)
@@ -569,30 +563,52 @@ def _async_detect_new_devices(
     issue_registry.sync_new_device_issues(entry.entry_id, hub, new_devices)
 
 
-def _schedule_new_device_detection(
+def _subscribe_new_device_detection(
     hass: HomeAssistant,
     entry: TapHomeConfigEntry,
     hub: TapHomeHub,
     issue_registry: TapHomeIssueRegistry,
 ) -> None:
-    """Periodically re-run discovery so devices exposed later are reported.
+    """Report new devices the moment their values arrive (webhook or poll).
 
-    Exposing a device is a decision made in the TapHome app while Home
-    Assistant keeps running, so the setup-time check alone would only notice
-    it after a restart or reload.
+    Exposing a device in the TapHome app makes its id show up in the incoming
+    values without a matching registered device; the hub surfaces that on
+    ``new_device_ids``. Reacting to it fetches the device metadata on demand
+    instead of polling discovery on a timer.
     """
+    detecting = False
 
-    async def _async_scan(_: datetime) -> None:
+    async def _async_detect() -> None:
+        nonlocal detecting
         try:
             exposed = await hub.async_discover_new_devices()
         except TapHomeError as error:
-            _LOGGER.debug("Skipping the new-device scan: %s", error)
+            _LOGGER.debug("Skipping new-device detection: %s", error)
             return
+        finally:
+            detecting = False
         _async_detect_new_devices(hass, entry, hub, issue_registry, exposed)
 
-    entry.async_on_unload(
-        async_track_time_interval(hass, _async_scan, NEW_DEVICE_SCAN_INTERVAL)
-    )
+    def _on_new_device_ids(
+        _: frozenset[int], new_device_ids: frozenset[int]
+    ) -> None:
+        nonlocal detecting
+        # async_discover_new_devices resolves every exposed device at once and
+        # clears the resolved ids, re-firing if any remain unknown, so skipping
+        # a concurrent run never drops a device.
+        if new_device_ids and not detecting:
+            detecting = True
+            entry.async_create_background_task(
+                hass, _async_detect(), "taphome_new_device_detection"
+            )
+
+    def _unsubscribe() -> None:
+        # Return None: unsubscribe returns the Event, which async_on_unload
+        # would otherwise mistake for a coroutine to await.
+        hub.new_device_ids.changed.unsubscribe(_on_new_device_ids)
+
+    hub.new_device_ids.changed += _on_new_device_ids
+    entry.async_on_unload(_unsubscribe)
 
 
 def _register_hub_device(

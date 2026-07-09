@@ -1,13 +1,9 @@
 """Tests for the TapHome config entry setup and unload."""
 
-from datetime import timedelta
 import logging
 from unittest.mock import AsyncMock, patch
 
-from pytest_homeassistant_custom_component.common import (
-    MockConfigEntry,
-    async_fire_time_changed,
-)
+from pytest_homeassistant_custom_component.common import MockConfigEntry
 from taphome_sdk import (
     HubConnectionState,
     TapHomeAuthError,
@@ -25,7 +21,6 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.util import dt as dt_util
 
 from tests_common import make_config_entry, setup_integration
 
@@ -211,17 +206,11 @@ async def test_runtime_auth_error_starts_reauth(
     )
 
 
-async def test_periodic_scan_reports_new_device(
-    hass: HomeAssistant, mock_hub, mock_config_entry: MockConfigEntry
-) -> None:
-    """A device exposed after setup raises a repair issue on the next scan."""
-    from homeassistant.helpers import issue_registry as ir
-
-    await setup_integration(hass, mock_config_entry)
-
+def _expose_device(mock_hub, device_id: int) -> None:
+    """Expose a new device in the fake API (discovery + values)."""
     mock_hub.api.discovery_definitions.append(
         {
-            "deviceId": 42,
+            "deviceId": device_id,
             "type": "PowerOutlet",
             "name": "New Socket",
             "description": "Exposed while running",
@@ -230,40 +219,67 @@ async def test_periodic_scan_reports_new_device(
             ],
         }
     )
+    mock_hub.api.values[device_id] = {ValueType.SWITCH_STATE: 0.0}
 
-    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=16))
+
+async def _push_webhook(mock_hub, device_id: int, value: int) -> None:
+    """Deliver a webhook payload carrying one device's value."""
+    await mock_hub.async_handle_webhook(
+        {
+            "devices": [
+                {
+                    "deviceId": device_id,
+                    "values": [
+                        {"valueTypeId": ValueType.SWITCH_STATE.value, "value": value}
+                    ],
+                }
+            ],
+            "timestamp": 2,
+        }
+    )
+
+
+async def test_new_device_reported_when_its_values_arrive(
+    hass: HomeAssistant, mock_hub, mock_config_entry: MockConfigEntry
+) -> None:
+    """A device exposed after setup is reported the moment its values arrive."""
+    from homeassistant.helpers import issue_registry as ir
+
+    await setup_integration(hass, mock_config_entry)
+    issue_registry = ir.async_get(hass)
+
+    _expose_device(mock_hub, 42)
+    # An incoming value (here a webhook) for an unregistered device is the
+    # signal: the hub resolves its metadata on demand and it is reported.
+    await _push_webhook(mock_hub, 42, 1)
     await hass.async_block_till_done()
 
-    # The scan registered the device on the hub and raised a repair issue.
     assert 42 in mock_hub.devices
-    issue_registry = ir.async_get(hass)
     assert any(
         issue.domain == DOMAIN and issue.issue_id.endswith("_42")
         for issue in issue_registry.issues.values()
     )
+    # The resolved device is dropped from the pending set, so no re-fire loop.
+    assert mock_hub.new_device_ids.value == frozenset()
 
-    # A further scan with the device still pending keeps the single issue.
-    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=32))
-    await hass.async_block_till_done()
-    assert (
-        len(
-            [
-                issue
-                for issue in issue_registry.issues.values()
-                if issue.domain == DOMAIN and issue.issue_id.endswith("_42")
-            ]
-        )
-        == 1
-    )
 
-    # A device that disappears again has its issue withdrawn on the next scan.
-    mock_hub.api.discovery_definitions.pop()
-    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=48))
+async def test_known_device_value_does_not_trigger_detection(
+    hass: HomeAssistant, mock_hub, mock_config_entry: MockConfigEntry
+) -> None:
+    """Values for already known devices raise no new-device issue."""
+    from homeassistant.helpers import issue_registry as ir
+
+    await setup_integration(hass, mock_config_entry)
+
+    await _push_webhook(mock_hub, 2, 1)
     await hass.async_block_till_done()
+
+    issue_registry = ir.async_get(hass)
     assert not any(
-        issue.domain == DOMAIN and issue.issue_id.endswith("_42")
+        issue.domain == DOMAIN and "new_device" in issue.issue_id
         for issue in issue_registry.issues.values()
     )
+    assert mock_hub.new_device_ids.value == frozenset()
 
 
 async def test_unconfigurable_devices_raise_issues(

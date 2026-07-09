@@ -11,13 +11,13 @@ from taphome_sdk import (
     BidirectionalDevice,
     ButtonAction,
     ButtonDevice,
-    Device,
     DigitalOutputDevice,
     DualWhiteLightDevice,
     MultiValueSwitchDevice,
     RGBLightDevice,
     SessionDurationVariableDevice,
     ThermostatDevice,
+    VariableDevice,
 )
 
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
@@ -42,6 +42,7 @@ from .const import (
     CONF_FAN,
     CONF_HUMIDIFIER,
     CONF_MULTIVALUE_SWITCHES,
+    CONF_NUMBERS,
     CONF_TIMES,
     CONF_VALVE,
 )
@@ -331,6 +332,7 @@ PLATFORM_DESCRIPTORS: tuple[PlatformDescriptor, ...] = (
         ),
     ),
     PlatformDescriptor(CONF_TIMES, (SessionDurationVariableDevice,), ()),
+    PlatformDescriptor(CONF_NUMBERS, (VariableDevice,), ()),
 )
 
 PLATFORM_DESCRIPTORS_BY_KEY: dict[str, PlatformDescriptor] = {
@@ -347,13 +349,3 @@ def device_config_id(device_config: Mapping | int) -> int:
     if isinstance(device_config, Mapping):
         return int(device_config["id"])
     return int(device_config)
-
-
-def platforms_for_device(device: Device) -> list[str]:
-    """Return the config keys of platforms the device qualifies for."""
-    return [
-        descriptor.config_key
-        for descriptor in PLATFORM_DESCRIPTORS
-        if not descriptor.candidate_types
-        or isinstance(device, descriptor.candidate_types)
-    ]
