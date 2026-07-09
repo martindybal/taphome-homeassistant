@@ -21,9 +21,11 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .add_entry_request import add_taphome_entities
-from .entity import TapHomeEntity
+from .entity import TapHomeEntity, handle_taphome_errors
 from .taphome_config_entry import AddEntryRequest, TapHomeEntityConfig
 from .taphome_data import TapHomeConfigEntry
+
+PARALLEL_UPDATES = 0
 
 
 class TapHomeValveConfig(TapHomeEntityConfig):
@@ -76,6 +78,7 @@ class TapHomeValve(TapHomeEntity, ValveEntity):
                 self._attr_is_closed = not current_state.is_on
 
     @override
+    @handle_taphome_errors
     async def async_open_valve(self) -> None:
         """Open the valve."""
         # After turning on, the last value is ignored and 100 % is used.
@@ -83,11 +86,13 @@ class TapHomeValve(TapHomeEntity, ValveEntity):
         await self._valve_generic_output.async_turn_on()
 
     @override
+    @handle_taphome_errors
     async def async_close_valve(self) -> None:
         """Close the valve."""
         await self._valve_generic_output.async_turn_off()
 
     @override
+    @handle_taphome_errors
     async def async_set_valve_position(self, position: int) -> None:
         """Move the valve to a specific position."""
         await self._valve_generic_output.async_set_output_value(

@@ -1,12 +1,20 @@
 """Tests for the TapHome config flow."""
 
+from ipaddress import ip_address
+
 from taphome_sdk import TapHomeAuthError, TapHomeConnectionError, ValueType
 
-from custom_components.taphome.const import CONF_API_URL, CONF_IP, DOMAIN
-from homeassistant.config_entries import SOURCE_USER
-from homeassistant.const import CONF_TOKEN
+from custom_components.taphome.const import (
+    CONF_API_URL,
+    CONF_IP,
+    DEFAULT_CLOUD_API_URL,
+    DOMAIN,
+)
+from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
+from homeassistant.const import CONF_TOKEN, CONF_WEBHOOK_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
@@ -25,6 +33,33 @@ USER_INPUT = {CONF_TOKEN: TEST_TOKEN, CONF_IP: "10.0.0.5"}
 async def _start_user_flow(hass: HomeAssistant):
     return await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
+    )
+
+
+def _zeroconf_info(
+    host: str = "10.0.0.5", location_id: str = TEST_LOCATION_ID
+) -> ZeroconfServiceInfo:
+    """Return discovery info shaped like a real Core announcement."""
+    return ZeroconfServiceInfo(
+        ip_address=ip_address(host),
+        ip_addresses=[ip_address(host)],
+        hostname="Test-Home.local.",
+        name="th-Test-Home._th-discovery._tcp.local.",
+        port=11764,
+        properties={
+            "Name": TEST_LOCATION_NAME,
+            "LocationId": location_id,
+            "IpOnLocalNetwork": host,
+            # The app pairing token; unrelated to the API token.
+            "AccessToken": "************ABCD",
+        },
+        type="_th-discovery._tcp.local.",
+    )
+
+
+async def _start_zeroconf_flow(hass: HomeAssistant, info: ZeroconfServiceInfo):
+    return await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_ZEROCONF}, data=info
     )
 
 
@@ -76,6 +111,108 @@ async def test_user_flow_creates_entry(hass: HomeAssistant, mock_hub) -> None:
     assert result["data"][CONF_API_URL] == TEST_API_URL
     assert _subentry_configs(result, "switches") == [{"id": 2}]
     assert result["result"].unique_id == TEST_LOCATION_ID
+
+
+async def test_zeroconf_flow_creates_entry(hass: HomeAssistant, mock_hub) -> None:
+    """A discovered Core asks only for the token and runs the wizard."""
+    result = await _start_zeroconf_flow(hass, _zeroconf_info())
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "zeroconf_confirm"
+    assert result["description_placeholders"] == {
+        "name": TEST_LOCATION_NAME,
+        "host": "10.0.0.5",
+    }
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_TOKEN: TEST_TOKEN}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "add_devices"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"devices": ["2"]}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"Garden Socket (2)": {"domains": ["switches"]}}
+    )
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == TEST_LOCATION_NAME
+    assert result["data"][CONF_TOKEN] == TEST_TOKEN
+    assert result["data"][CONF_API_URL] == TEST_API_URL
+    assert result["result"].unique_id == TEST_LOCATION_ID
+    # Discovery skips the core-settings form and applies its defaults.
+    assert result["result"].options[CONF_WEBHOOK_ID] == "taphome"
+
+
+async def test_zeroconf_recovers_from_bad_token(
+    hass: HomeAssistant, mock_hub
+) -> None:
+    """A rejected token shows on the confirm form and the flow continues."""
+    result = await _start_zeroconf_flow(hass, _zeroconf_info())
+
+    mock_hub.mock_get_location.side_effect = TapHomeAuthError(401)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_TOKEN: "wrong"}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "zeroconf_confirm"
+    assert result["errors"] == {"base": "invalid_auth"}
+
+    mock_hub.mock_get_location.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_TOKEN: TEST_TOKEN}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "add_devices"
+
+
+async def test_zeroconf_updates_ip_of_configured_entry(
+    hass: HomeAssistant, mock_hub
+) -> None:
+    """Rediscovery of a configured Core refreshes its local API address."""
+    entry = make_config_entry()
+    entry.add_to_hass(hass)
+
+    result = await _start_zeroconf_flow(hass, _zeroconf_info(host="10.0.0.99"))
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert entry.data[CONF_API_URL] == "http://10.0.0.99/api/TapHomeApi/v1"
+
+
+async def test_zeroconf_keeps_cloud_connection(
+    hass: HomeAssistant, mock_hub
+) -> None:
+    """A deliberate cloud connection is not switched to the local address."""
+    entry = make_config_entry()
+    entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        entry, data={**entry.data, CONF_API_URL: DEFAULT_CLOUD_API_URL}
+    )
+
+    result = await _start_zeroconf_flow(hass, _zeroconf_info(host="10.0.0.99"))
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert entry.data[CONF_API_URL] == DEFAULT_CLOUD_API_URL
+
+
+async def test_zeroconf_without_location_id_aborts(
+    hass: HomeAssistant, mock_hub
+) -> None:
+    """An announcement without the location id cannot be used."""
+    info = _zeroconf_info()
+    info.properties.pop("LocationId")
+
+    result = await _start_zeroconf_flow(hass, info)
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "invalid_discovery_info"
 
 
 async def test_user_flow_recovers_from_errors(hass: HomeAssistant, mock_hub) -> None:

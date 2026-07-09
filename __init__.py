@@ -7,6 +7,7 @@
 from . import sdk_locator  # noqa: F401
 
 from dataclasses import dataclass
+from datetime import datetime, timedelta
 import logging
 
 from aiohttp.web import Request
@@ -50,6 +51,7 @@ from homeassistant.helpers import (
     issue_registry as ir,
 )
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
 
 from .binary_sensor import BinarySensorEntityConfig
@@ -105,6 +107,7 @@ from .taphome_issue_registry import TapHomeIssueRegistry
 from taphome_sdk import (
     HubConnectionState,
     TapHomeAuthError,
+    TapHomeError,
     TapHomeHub,
     TapHomeHubFactory,
 )
@@ -112,6 +115,10 @@ from .translations import Issues
 from .valve import TapHomeValveConfig
 
 _LOGGER = logging.getLogger(__name__)
+
+# Discovery is a single cheap API call; scanning a few times an hour notices
+# newly exposed devices without adding measurable load on the Core.
+NEW_DEVICE_SCAN_INTERVAL = timedelta(minutes=15)
 
 
 @dataclass(slots=True, frozen=True)
@@ -282,21 +289,41 @@ async def async_setup_entry(hass: HomeAssistant, entry: TapHomeConfigEntry) -> b
         hub.disconnect()
         raise ConfigEntryNotReady("TapHome hub is not connected")
 
+    unavailable_logged = False
+
     def hub_connection_state_changed(
         _: HubConnectionState, state: HubConnectionState
     ) -> None:
         """Handle changes in hub connection state."""
+        nonlocal unavailable_logged
         if state == HubConnectionState.CONNECTED:
+            if unavailable_logged:
+                _LOGGER.info("Connection to the TapHome Core re-established")
+                unavailable_logged = False
             taphome_issue_registry.try_delete_core_unavailable_issue()
         else:
-            taphome_issue_registry.create_core_unavailable_issue()
+            if not unavailable_logged:
+                _LOGGER.info(
+                    "Connection to the TapHome Core lost;"
+                    " entities are unavailable until it recovers"
+                )
+                unavailable_logged = True
+            if state == HubConnectionState.AUTH_FAILED:
+                # The token stopped working at runtime; reauth prompts for a
+                # new one instead of reporting the Core as unreachable.
+                entry.async_start_reauth(hass)
+            else:
+                taphome_issue_registry.create_core_unavailable_issue()
 
     hub.connection_state.changed += hub_connection_state_changed
 
     _register_hub_device(hass, entry, hub)
     _register_webhook(hass, entry, hub, core_config)
     _async_remove_stale_entities(hass, entry)
-    _async_detect_new_devices(hass, entry, hub, taphome_issue_registry)
+    _async_detect_new_devices(
+        hass, entry, hub, taphome_issue_registry, set(hub.devices)
+    )
+    _schedule_new_device_detection(hass, entry, hub, taphome_issue_registry)
 
     add_entry_requests = {
         domain.name: _map_subentry_requests(hass, core_config, entry, domain, hub)
@@ -519,6 +546,7 @@ def _async_detect_new_devices(
     entry: TapHomeConfigEntry,
     hub: TapHomeHub,
     issue_registry: TapHomeIssueRegistry,
+    exposed: set[int],
 ) -> None:
     """Report devices exposed since the entry was last known about.
 
@@ -526,7 +554,6 @@ def _async_detect_new_devices(
     nothing is reported. Afterwards any device exposed in the API that is not in
     the baseline and not already configured raises a fixable repair issue.
     """
-    exposed = set(hub.devices)
     configured = _all_configured_device_ids(entry)
     known_raw = entry.data.get(CONF_KNOWN_DEVICE_IDS)
 
@@ -540,6 +567,32 @@ def _async_detect_new_devices(
     known = {int(value) for value in known_raw}
     new_devices = exposed - known - configured
     issue_registry.sync_new_device_issues(entry.entry_id, hub, new_devices)
+
+
+def _schedule_new_device_detection(
+    hass: HomeAssistant,
+    entry: TapHomeConfigEntry,
+    hub: TapHomeHub,
+    issue_registry: TapHomeIssueRegistry,
+) -> None:
+    """Periodically re-run discovery so devices exposed later are reported.
+
+    Exposing a device is a decision made in the TapHome app while Home
+    Assistant keeps running, so the setup-time check alone would only notice
+    it after a restart or reload.
+    """
+
+    async def _async_scan(_: datetime) -> None:
+        try:
+            exposed = await hub.async_discover_new_devices()
+        except TapHomeError as error:
+            _LOGGER.debug("Skipping the new-device scan: %s", error)
+            return
+        _async_detect_new_devices(hass, entry, hub, issue_registry, exposed)
+
+    entry.async_on_unload(
+        async_track_time_interval(hass, _async_scan, NEW_DEVICE_SCAN_INTERVAL)
+    )
 
 
 def _register_hub_device(

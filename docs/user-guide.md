@@ -19,7 +19,14 @@ Before adding the integration, prepare your TapHome core in the TapHome app:
 
 ## Adding a core
 
-_Settings → Devices & services → Add integration → **TapHome**_
+**Automatic discovery**: a TapHome core with the API enabled announces itself
+on the local network, so it normally appears in _Settings → Devices &
+services_ as a discovered device on its own. Click **Add**, enter the API
+token, and continue with step 3 below. When the core's IP address changes
+later, discovery updates the integration automatically.
+
+To add a core manually (e.g. a cloud connection, or a core on another
+network): _Settings → Devices & services → Add integration → **TapHome**_
 
 1. **Connection** — fill in the token, and either the local IP address of the
    core or check *Use TapHome cloud*. A local connection is recommended: it is
@@ -65,8 +72,8 @@ override the detected device class, unit or value type when needed.
 Open _Settings → Devices & services → TapHome → **Configure**_. The menu
 offers:
 
-- **Core settings** — connection (IP/cloud, token), optional core id, webhook
-  id, naming flags and exposed attributes:
+- **Core settings** — connection (IP/cloud, token), webhook id, naming flags
+  and exposed attributes:
   - *Use description as entity id / as name*: TapHome devices have a name
     (often a technical one) and a description. These flags choose which one
     seeds the entity ids and names of newly added entities. Renaming
@@ -132,11 +139,12 @@ drops to a once-a-minute safety net.
 ## New devices
 
 When you expose a new device in the TapHome API later, the integration
-notices it on the next restart or reload and raises a **repair issue**
+notices it within about 15 minutes (it re-checks the API periodically, plus
+on every restart or reload) and raises a **repair issue**
 (_Settings → Repairs_). The repair lets you add the device directly — pick
-the platform, done — or ignore it so it is not offered again. This is the
-supported way to grow the setup; there is no network auto-discovery, because
-the TapHome core cannot be found or queried without its token.
+the platform, done — or ignore it so it is not offered again. Devices are
+never added on their own: which platform a TapHome device should be exposed
+as is your decision.
 
 ## Migrating from YAML
 
@@ -178,3 +186,84 @@ YAML configuration (`taphome:` in `configuration.yaml`) is deprecated:
 **Wrong sensor type or unit**
 - Override the detected device class / unit / value type in
   _Configure → Edit devices_.
+
+**An action fails with "TapHome did not apply the requested change"**
+- The core accepted the request but reported the change as failed — usually
+  the device is blocked in TapHome (e.g. a rule or manual override). Check
+  the device in the TapHome app; the entity state reloads automatically so
+  Home Assistant shows what the core really did.
+
+## Automation examples
+
+TapHome entities are regular Home Assistant entities, so anything in the
+automation editor works. Two patterns worth copying:
+
+React to a physical TapHome wall button (the `event` entity fires for every
+press type — `press`, `long_press`, `double_press`, `triple_press`):
+
+```yaml
+automation:
+  - alias: "Hallway button toggles the lights"
+    triggers:
+      - trigger: state
+        entity_id: event.hallway_button
+    conditions:
+      - condition: template
+        value_template: >-
+          {{ trigger.to_state.attributes.event_type == 'press' }}
+    actions:
+      - action: light.toggle
+        target:
+          entity_id: light.hallway
+```
+
+Get notified when the connection to the core drops (the diagnostic
+connectivity sensor lives on the Core hub device):
+
+```yaml
+automation:
+  - alias: "TapHome core offline"
+    triggers:
+      - trigger: state
+        entity_id: binary_sensor.my_home_connectivity
+        to: "off"
+        for: "00:05:00"
+    actions:
+      - action: notify.notify
+        data:
+          message: "TapHome core has been unreachable for 5 minutes."
+```
+
+## Known limitations
+
+- **Discovery needs the same network.** Cores are discovered via mDNS, which
+  does not cross most subnet/VLAN boundaries — a core on another network or
+  connected through the TapHome cloud is added manually. The API token must
+  always be entered by hand; it cannot be read from the network.
+- **Only devices exposed in the TapHome API are available.** Expose them in
+  the TapHome app under _Exposed devices → TapHome API_ first.
+- **One value direction per poll.** Without a webhook, state changes are
+  polled (2 s locally, 20 s via cloud), so very short pulses between two
+  polls can be missed — set up the [webhook](#state-updates-webhook) for
+  instant pushes.
+- **Cloud connections are slower** and meant as a fallback; a local
+  connection to the core is recommended.
+- **Scenes/rules stay in TapHome.** The integration exposes devices and
+  values; TapHome scenes and rules are not imported (multi-value switches
+  used for scenes can be exposed as `select` entities).
+
+## Removing the integration
+
+To remove a single device, open its device page and use **⋮ → Delete** on
+its config subentry. To remove the whole integration:
+
+1. Open _Settings → Devices & services → TapHome_.
+2. On each TapHome Core entry, choose **⋮ → Delete**. This disconnects from
+   the core, unregisters the webhook and removes the entry's devices and
+   entities.
+3. If you use HACS, you can then remove the repository download under
+   _HACS → TapHome → Remove_ and restart Home Assistant.
+
+Nothing is changed on the TapHome core itself — the API token and the
+exposed devices stay as they are, so re-adding the integration later
+restores the same devices.

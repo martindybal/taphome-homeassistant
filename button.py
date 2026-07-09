@@ -14,9 +14,11 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .add_entry_request import add_taphome_entities
-from .entity import TapHomeEntity
+from .entity import TapHomeEntity, handle_taphome_errors
 from .taphome_config_entry import AddEntryRequest, TapHomeEntityConfig
 from .taphome_data import TapHomeConfigEntry
+
+PARALLEL_UPDATES = 0
 
 
 class TapHomeButtonConfig(TapHomeEntityConfig):
@@ -64,6 +66,7 @@ class TapHomeButton(TapHomeEntity, ButtonEntity):
         )
 
     @override
+    @handle_taphome_errors
     async def async_press(self) -> None:
         """Send press command to the TapHome device."""
         await self._button.async_press(self._action)

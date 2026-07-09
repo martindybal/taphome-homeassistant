@@ -1,5 +1,6 @@
 """Tests for the TapHome binary sensor platform."""
 
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
@@ -37,7 +38,14 @@ async def test_binary_sensor_device_under_subentry_plus_is_alive(
     subentry = device_subentry(entry, "binary_sensors", 5)
     assert binary_sensors[0].config_subentry_id == subentry.subentry_id
 
-    # The core-level "is alive" sensor exists and belongs to the entry, not a subentry.
-    is_alive = entity_registry.async_get("binary_sensor.taphome_is_alive_sensor")
-    assert is_alive is not None
+    # The core-level "is alive" sensor exists and belongs to the entry, not a
+    # subentry. It is a diagnostic entity attached to the Core hub device.
+    is_alive_id = entity_registry.async_get_entity_id(
+        "binary_sensor", DOMAIN, "taphome.binary_sensor.isalive"
+    )
+    assert is_alive_id is not None
+    is_alive = entity_registry.async_get(is_alive_id)
     assert is_alive.config_subentry_id is None
+    assert is_alive.entity_category is EntityCategory.DIAGNOSTIC
+    hub_device = dr.async_get(hass).async_get_device({(DOMAIN, TEST_LOCATION_ID)})
+    assert is_alive.device_id == hub_device.id

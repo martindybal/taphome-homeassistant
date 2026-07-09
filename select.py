@@ -9,9 +9,11 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .add_entry_request import add_taphome_entities
-from .entity import TapHomeEntity
+from .entity import TapHomeEntity, handle_taphome_errors
 from .taphome_config_entry import AddEntryRequest, TapHomeEntityConfig
 from .taphome_data import TapHomeConfigEntry
+
+PARALLEL_UPDATES = 0
 
 
 class TapHomeSelect(TapHomeEntity, SelectEntity):
@@ -43,6 +45,7 @@ class TapHomeSelect(TapHomeEntity, SelectEntity):
         self._attr_current_option = self._multi_value_switch.selected_option
 
     @override
+    @handle_taphome_errors
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
         await self._multi_value_switch.async_select_option(option)

@@ -18,9 +18,11 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .add_entry_request import add_taphome_entities
-from .entity import TapHomeEntity
+from .entity import TapHomeEntity, handle_taphome_errors
 from .taphome_config_entry import AddEntryRequest, TapHomeEntityConfig
 from .taphome_data import TapHomeConfigEntry
+
+PARALLEL_UPDATES = 0
 
 
 class TapHomeCoverConfig(TapHomeEntityConfig):
@@ -101,6 +103,7 @@ class TapHomeCover(TapHomeEntity, CoverEntity):
         await self.async_set_cover_position(position=0)
 
     @override
+    @handle_taphome_errors
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
         position: int = kwargs[ATTR_POSITION]
@@ -127,6 +130,7 @@ class TapHomeCover(TapHomeEntity, CoverEntity):
         await self.async_set_cover_tilt_position(tilt_position=0)
 
     @override
+    @handle_taphome_errors
     async def async_set_cover_tilt_position(self, **kwargs: Any) -> None:
         """Move the cover tilt to a specific position."""
         tilt_position: int | None = kwargs.get(ATTR_TILT_POSITION)

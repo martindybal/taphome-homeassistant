@@ -1,5 +1,6 @@
 """Tests for the TapHome switch platform."""
 
+import pytest
 from taphome_sdk import ValueType
 
 from homeassistant.components.switch import (
@@ -9,6 +10,7 @@ from homeassistant.components.switch import (
 )
 from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 
 from tests_common import make_config_entry, setup_integration
 
@@ -38,6 +40,26 @@ async def test_switch_turn_on_off(hass: HomeAssistant, mock_hub) -> None:
     )
     await hass.async_block_till_done()
     assert (2, {ValueType.SWITCH_STATE: 0}) in mock_hub.api.set_calls
+    assert hass.states.get(ENTITY_ID).state == STATE_OFF
+
+
+async def test_switch_rejected_change_raises(
+    hass: HomeAssistant, mock_hub
+) -> None:
+    """A change the core rejects surfaces as a translated HomeAssistantError."""
+    await setup_integration(hass, make_config_entry())
+    mock_hub.api.fail_devices.add(2)
+
+    with pytest.raises(HomeAssistantError) as excinfo:
+        await hass.services.async_call(
+            SWITCH_DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: ENTITY_ID},
+            blocking=True,
+        )
+
+    assert excinfo.value.translation_domain == "taphome"
+    assert excinfo.value.translation_key == "change_rejected"
     assert hass.states.get(ENTITY_ID).state == STATE_OFF
 
 

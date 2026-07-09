@@ -11,7 +11,6 @@
           "token": "Token",
           "use_cloud": "Usa il cloud TapHome",
           "ip": "Indirizzo IP",
-          "id": "ID Core",
           "webhook_id": "ID webhook",
           "use_description_as_entity_id": "Usa le descrizioni TapHome come ID entità",
           "use_description_as_name": "Usa le descrizioni TapHome come nomi entità",
@@ -21,7 +20,6 @@
           "token": "Token di autorizzazione mostrato in alto nella schermata TapHome API.",
           "use_cloud": "Connessione tramite il cloud TapHome invece della rete locale. Consigliato solo se il Core non è raggiungibile localmente — il cloud è più lento e richiede una connessione a internet. Quando è attivo, l'indirizzo IP viene ignorato.",
           "ip": "Lo trovi nell'app TapHome in La mia posizione.",
-          "id": "Identificatore opzionale di questo Core. Necessario solo se usi più di un Core.",
           "webhook_id": "Consigliato: il Core invia gli aggiornamenti immediatamente invece di farli interrogare da Home Assistant ogni 2 secondi. Inserisci un nome qualsiasi, ad es. taphome_primary, e imposta lo stesso nome nell'app TapHome nella schermata Esponi dispositivi — attiva il Webhook e imposta l'URL Webhook, ad es. su http://homeassistant.local:8123/api/webhook/taphome — sostituisci homeassistant.local con l'indirizzo del tuo Home Assistant e taphome_primary con il nome inserito sopra."
         },
         "submit": "Avanti"
@@ -33,7 +31,6 @@
           "token": "Token",
           "use_cloud": "Usa il cloud TapHome",
           "ip": "Indirizzo IP",
-          "id": "ID Core",
           "webhook_id": "ID webhook",
           "use_description_as_entity_id": "Usa le descrizioni TapHome come ID entità",
           "use_description_as_name": "Usa le descrizioni TapHome come nomi entità",
@@ -43,7 +40,6 @@
           "token": "Token di autorizzazione mostrato in alto nella schermata TapHome API.",
           "use_cloud": "Connessione tramite il cloud TapHome invece della rete locale. Consigliato solo se il Core non è raggiungibile localmente — il cloud è più lento e richiede una connessione a internet. Quando è attivo, l'indirizzo IP viene ignorato.",
           "ip": "Lo trovi nell'app TapHome in La mia posizione.",
-          "id": "Identificatore opzionale di questo Core. Necessario solo se usi più di un Core.",
           "webhook_id": "Consigliato: il Core invia gli aggiornamenti immediatamente invece di farli interrogare da Home Assistant ogni 2 secondi. Inserisci un nome qualsiasi, ad es. taphome_primary, e imposta lo stesso nome nell'app TapHome nella schermata Esponi dispositivi — attiva il Webhook e imposta l'URL Webhook, ad es. su http://homeassistant.local:8123/api/webhook/taphome — sostituisci homeassistant.local con l'indirizzo del tuo Home Assistant e taphome_primary con il nome inserito sopra."
         },
         "submit": "Salva"
@@ -83,6 +79,16 @@
         "title": "Opzioni dispositivo",
         "description": "Imposta le opzioni per ogni dispositivo e dominio selezionati. Ogni sezione è un dispositivo in un dominio. I campi vuoti usano i valori predefiniti automatici.",
         "submit": "Aggiungi"
+      },
+      "zeroconf_confirm": {
+        "title": "Collega TapHome Core",
+        "description": "È stato trovato il TapHome Core {name} all'indirizzo {host}. Inserisci il suo token API per aggiungerlo a Home Assistant.",
+        "data": {
+          "token": "Token"
+        },
+        "data_description": {
+          "token": "Token di autorizzazione mostrato in alto nella schermata TapHome API."
+        }
       }
     },
     "error": {
@@ -96,8 +102,10 @@
       "already_configured": "Questo TapHome Core è già configurato.",
       "reauth_successful": "La riautenticazione è avvenuta con successo.",
       "reconfigure_successful": "La riconfigurazione è avvenuta con successo.",
-      "unique_id_mismatch": "Il Core connesso non corrisponde al Core per cui è stata creata questa voce."
-    }
+      "unique_id_mismatch": "Il Core connesso non corrisponde al Core per cui è stata creata questa voce.",
+      "invalid_discovery_info": "Il Core trovato non ha annunciato le informazioni necessarie."
+    },
+    "flow_title": "{name}"
   },
   "options": {
     "step": {
@@ -118,7 +126,6 @@
           "token": "Token",
           "use_cloud": "Usa il cloud TapHome",
           "ip": "Indirizzo IP",
-          "id": "ID Core",
           "webhook_id": "ID webhook",
           "use_description_as_entity_id": "Usa le descrizioni TapHome come ID entità",
           "use_description_as_name": "Usa le descrizioni TapHome come nomi entità",
@@ -128,7 +135,6 @@
           "token": "Token di autorizzazione mostrato in alto nella schermata TapHome API.",
           "use_cloud": "Connessione tramite il cloud TapHome invece della rete locale. Consigliato solo se il Core non è raggiungibile localmente — il cloud è più lento e richiede una connessione a internet. Quando è attivo, l'indirizzo IP viene ignorato.",
           "ip": "Lo trovi nell'app TapHome in La mia posizione.",
-          "id": "Identificatore opzionale di questo Core. Necessario solo se usi più di un Core.",
           "webhook_id": "Consigliato: il Core invia gli aggiornamenti immediatamente invece di farli interrogare da Home Assistant ogni 2 secondi. Inserisci un nome qualsiasi, ad es. taphome_primary, e imposta lo stesso nome nell'app TapHome nella schermata Esponi dispositivi — attiva il Webhook e imposta l'URL Webhook, ad es. su http://homeassistant.local:8123/api/webhook/taphome — sostituisci homeassistant.local con l'indirizzo del tuo Home Assistant e taphome_primary con il nome inserito sopra."
         },
         "description": "Aggiorna le impostazioni di connessione e Core del tuo TapHome Core. Si consiglia una connessione locale: attiva „Usa il cloud TapHome“ solo se il Core non è raggiungibile direttamente sulla tua rete — il cloud aggiorna meno spesso (circa ogni 20 secondi) e richiede che i server TapHome siano raggiungibili. Trovi l'indirizzo IP del tuo Core nell'app TapHome in „La mia posizione“.",
@@ -791,6 +797,20 @@
         "already_configured": "Questo dispositivo è già esposto in questo dominio.",
         "reconfigure_successful": "Riconfigurazione completata con successo."
       }
+    }
+  },
+  "exceptions": {
+    "change_rejected": {
+      "message": "TapHome non ha applicato la modifica richiesta per {entity_id}"
+    },
+    "communication_error": {
+      "message": "Errore di comunicazione con il TapHome Core durante il controllo di {entity_id}"
+    },
+    "invalid_hvac_mode": {
+      "message": "{hvac_mode} non è una modalità HVAC valida per questo termostato"
+    },
+    "hvac_mode_not_supported": {
+      "message": "Questo termostato non supporta l'impostazione della modalità HVAC"
     }
   }
 }

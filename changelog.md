@@ -1,5 +1,21 @@
 # Changelog
 
+## 2026.7.1
+
+Quality-scale improvements on the road to Home Assistant Core:
+
+- **Automatic discovery**: TapHome Cores on the local network are now discovered via mDNS/zeroconf and appear in _Settings → Devices & services_ on their own — click Add, enter the API token, done. When a configured Core changes its IP address, discovery updates the connection automatically (deliberate cloud connections are left untouched).
+- **The optional core `id` field was removed from the UI forms** (add, reconfigure, core settings). It was a YAML-era concept for telling cores apart; entries are now identified by their location. Existing entries that have an id keep it internally, so entity ids and history are unaffected.
+
+- **Translated error messages for failed actions**: when the Core rejects a change or cannot be reached while controlling an entity, the service call now fails with a translated, actionable error message instead of a raw SDK traceback. Setting an HVAC mode a thermostat does not support reports a proper validation error.
+- **Quieter, clearer connection logging**: losing the connection to the Core logs a single message and another one on recovery; the SDK logs the first poll failure as a warning and further ones only at debug level (no more one error per poll cycle).
+- **Runtime re-authentication**: if the Core starts rejecting the token while Home Assistant is running, the re-authentication flow starts automatically (previously this only happened at startup).
+- **Periodic new-device detection**: devices exposed in the TapHome app are now noticed every 15 minutes while running, not only after a restart or reload; each still raises the fixable repair issue.
+- **The is-alive sensor is a proper diagnostic entity**: it belongs to the Core hub device, is categorized as diagnostic and takes the standard "Connectivity" name (its unique id is unchanged, so history is preserved; the displayed name regenerates unless you renamed it earlier).
+- **Fixed: number entities were never created** — the `number` platform was missing from the platform list after the config-entry conversion.
+- All platforms declare `PARALLEL_UPDATES`; new tests cover the button, event, fan, humidifier, number, time and valve platforms and the new-device repair flow.
+- Requires [taphome-sdk 1.1.0](https://github.com/martindybal/taphome-sdk/blob/main/CHANGELOG.md).
+
 ## 2026.7
 
 - **Devices and Home Assistant naming**: every TapHome device is now a device in the Home Assistant device registry (with the Core as its hub); entities take the device name and the TapHome zone pre-fills the suggested area. Configured zone → area and category → label mappings are applied to the device itself (the category label is added to the entity as well). The `use description as entity id/name` options were removed — rename entities and devices in the Home Assistant UI. Entity unique ids (and therefore history and automations) are unchanged; displayed names may regenerate unless you renamed them earlier.

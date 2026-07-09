@@ -28,9 +28,11 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .add_entry_request import add_taphome_entities
-from .entity import TapHomeEntity
+from .entity import TapHomeEntity, handle_taphome_errors
 from .taphome_config_entry import AddEntryRequest, TapHomeEntityConfig
 from .taphome_data import TapHomeConfigEntry
+
+PARALLEL_UPDATES = 0
 
 
 class TapHomeLightConfig(TapHomeEntityConfig):
@@ -82,6 +84,7 @@ class TapHomeLight(TapHomeEntity, LightEntity, ABC):
         self._attr_effect = self._effect_device.selected_option
 
     @override
+    @handle_taphome_errors
     async def async_turn_off(self, **kwargs):
         """Turn device off."""
         await self._light.async_turn_off()
@@ -125,6 +128,7 @@ class TapHomeGenericOutputLight(TapHomeLight):
         )
 
     @override
+    @handle_taphome_errors
     async def async_turn_on(
         self,
         *,
@@ -199,6 +203,7 @@ class TapHomeColorLight(TapHomeLight):
         )
 
     @override
+    @handle_taphome_errors
     async def async_turn_on(
         self,
         *,

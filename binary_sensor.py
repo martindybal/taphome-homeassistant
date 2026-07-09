@@ -13,11 +13,14 @@ from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .add_entry_request import add_taphome_entities
-from .entity import TapHomeEntity, TapHomeSubscriptionMixin
+from .const import DOMAIN
+from .entity import TapHomeEntity, TapHomeSubscriptionMixin, hub_device_id
 from .taphome_config_entry import (
     AddEntryRequest,
     TapHomeCoreConfig,
@@ -25,11 +28,18 @@ from .taphome_config_entry import (
 )
 from .taphome_data import TapHomeConfigEntry
 
+PARALLEL_UPDATES = 0
+
 
 class TapHomeIsAliveSensor(TapHomeSubscriptionMixin, BinarySensorEntity):
     """Binary sensor reporting availability of the TapHome core."""
 
     sensor_value_type = ValueType.MOTION
+
+    _attr_has_entity_name = True
+    _attr_should_poll = False
+    _attr_device_class = BinarySensorDeviceClass.CONNECTIVITY
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
 
     def __init__(
         self,
@@ -44,8 +54,11 @@ class TapHomeIsAliveSensor(TapHomeSubscriptionMixin, BinarySensorEntity):
             f"taphome{core_id.replace(' ', '.')}.{BINARY_SENSOR_DOMAIN}.isalive".lower()
         )
 
-        self._attr_name = f"TapHome{core_id} is alive sensor"
-        self._attr_device_class = BinarySensorDeviceClass.CONNECTIVITY
+        # The connectivity device class provides the entity name; the sensor
+        # belongs to the Core hub device registered in async_setup_entry.
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, hub_device_id(hub.location, core_config.id))}
+        )
 
         if not hasattr(self, "_attr_extra_state_attributes"):
             self._attr_extra_state_attributes = {}

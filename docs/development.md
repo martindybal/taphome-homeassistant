@@ -28,6 +28,19 @@ order:
 Symlinking this repository into `config/custom_components/taphome` keeps the
 side-by-side detection working — the locator resolves symlinks.
 
+`sdk_locator.py` only affects **imports**. Home Assistant still checks the
+`manifest.json` requirement (`taphome-sdk==<version>`) against the installed
+package metadata before it loads the integration or opens any of its flows.
+When the manifest pins a version that is not on PyPI yet (SDK changes not
+released), install the local checkout into the Home Assistant environment so
+the check passes without contacting PyPI:
+
+```bash
+pip install -e ../taphome-sdk   # inside the HA venv/container
+```
+
+or start Home Assistant with `hass --skip-pip-packages taphome-sdk`.
+
 ## Running checks
 
 Same checks as CI (`.github/workflows/ci.yaml`):
@@ -53,6 +66,31 @@ SDK tests, lint and typing run in the taphome-sdk repository (`pytest`,
 
 `docs/mock_core/` contains a small mock TapHome API server useful for manual
 testing against a running Home Assistant.
+
+## Testing zeroconf discovery
+
+Real cores announce `_th-discovery._tcp.local.` on the LAN, but multicast
+does not reach a Home Assistant instance running behind Docker Desktop/WSL2
+NAT (typical for a dev instance on Windows), so the discovery card never
+appears there no matter what the integration does.
+
+`docs/mock_core/announce_discovery.py` replays the announcement from inside
+the same environment as Home Assistant, where multicast loops back:
+
+```bash
+# inside the HA container/venv — announce a real core:
+python docs/mock_core/announce_discovery.py --ip 192.168.1.3 \
+    --name "My Home" --location-id <location guid>
+
+# or announce the mock API server (defaults match its fixtures):
+python docs/mock_core/announce_discovery.py --ip 127.0.0.1
+```
+
+The discovery card appears within seconds; confirming it talks to the
+announced IP over plain HTTP, which passes through NAT fine. A fully real
+end-to-end test (core announcement → card) needs Home Assistant with a real
+presence on the LAN — e.g. a Linux host/VM with host networking or a bridged
+adapter.
 
 ## Releasing the SDK
 

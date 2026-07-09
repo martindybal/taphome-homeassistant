@@ -29,12 +29,16 @@ from homeassistant.components.climate import (
 )
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .add_entry_request import add_taphome_entities
-from .entity import TapHomeEntity
+from .const import DOMAIN
+from .entity import TapHomeEntity, handle_taphome_errors
 from .taphome_config_entry import AddEntryRequest, TapHomeEntityConfig
 from .taphome_data import TapHomeConfigEntry
+
+PARALLEL_UPDATES = 0
 
 
 class TapHomeClimateConfig(TapHomeEntityConfig):
@@ -222,7 +226,11 @@ class SwitchHvacControllerBase(HvacController, ABC):
         elif hvac_mode == self._hvac_mode_when_on():
             await self._hvac_switch_device.async_turn_on()
         else:
-            raise ValueError("Invalid HVAC mode")
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_hvac_mode",
+                translation_placeholders={"hvac_mode": str(hvac_mode)},
+            )
 
     def _set_hvac_modes(self):
         mode = self._hvac_mode_when_on()
@@ -328,7 +336,10 @@ class EmptyHvacController(HvacController):
     @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode):
         """Set new target hvac mode."""
-        raise NotImplementedError("HVAC mode control is not supported for this device")
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="hvac_mode_not_supported",
+        )
 
 
 class ModeHvacController(EmptyHvacController):
@@ -537,6 +548,7 @@ class TapHomeClimateBase(TapHomeEntity, ClimateEntity, ABC):
         self._attr_preset_mode = self._preset_mode_device.selected_option
 
     @override
+    @handle_taphome_errors
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
         await self._preset_mode_device.async_select_option(preset_mode)
@@ -547,6 +559,7 @@ class TapHomeClimateBase(TapHomeEntity, ClimateEntity, ABC):
         self._attr_fan_mode = self._fan_mode_device.selected_option
 
     @override
+    @handle_taphome_errors
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new target fan mode."""
         await self._fan_mode_device.async_select_option(fan_mode)
@@ -557,6 +570,7 @@ class TapHomeClimateBase(TapHomeEntity, ClimateEntity, ABC):
         self._attr_swing_mode = self._swing_mode_device.selected_option
 
     @override
+    @handle_taphome_errors
     async def async_set_swing_mode(self, swing_mode: str) -> None:
         """Set new target swing mode."""
         await self._swing_mode_device.async_select_option(swing_mode)
@@ -569,6 +583,7 @@ class TapHomeClimateBase(TapHomeEntity, ClimateEntity, ABC):
         )
 
     @override
+    @handle_taphome_errors
     async def async_set_swing_horizontal_mode(self, swing_horizontal_mode: str) -> None:
         """Set new target horizontal swing mode."""
         await self._swing_horizontal_mode_device.async_select_option(
@@ -583,6 +598,7 @@ class TapHomeClimateBase(TapHomeEntity, ClimateEntity, ABC):
         )
 
     @override
+    @handle_taphome_errors
     async def async_set_humidity(self, humidity: int) -> None:
         """Set new target humidity."""
         await self._target_humidity_device.async_set_output_value(
@@ -599,6 +615,7 @@ class TapHomeClimateBase(TapHomeEntity, ClimateEntity, ABC):
         )
 
     @override
+    @handle_taphome_errors
     async def async_set_hvac_mode(self, hvac_mode: HVACMode):
         """Set new target hvac mode."""
         await self.hvac_controller.async_set_hvac_mode(hvac_mode)
@@ -627,6 +644,7 @@ class TapHomeClimate(TapHomeClimateBase):
         self._attr_target_temperature = current_state.desired_temperature
 
     @override
+    @handle_taphome_errors
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         await self.thermostat.async_set_desired_temperature(kwargs[ATTR_TEMPERATURE])
@@ -676,6 +694,7 @@ class TapHomeRangeClimate(TapHomeClimateBase):
         self._attr_target_temperature_low = current_state.desired_temperature
 
     @override
+    @handle_taphome_errors
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         await self.low_thermostat.async_set_desired_temperature(

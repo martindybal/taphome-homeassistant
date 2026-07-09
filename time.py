@@ -11,11 +11,13 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .add_entry_request import add_taphome_entities
-from .entity import TapHomeEntity
+from .entity import TapHomeEntity, handle_taphome_errors
 from .taphome_config_entry import AddEntryRequest, TapHomeEntityConfig
 from .taphome_data import TapHomeConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
+
+PARALLEL_UPDATES = 0
 
 
 class TapHomeTime(TapHomeEntity, TimeEntity):
@@ -39,6 +41,7 @@ class TapHomeTime(TapHomeEntity, TimeEntity):
         self._attr_native_value = current_state.to_time()
 
     @override
+    @handle_taphome_errors
     async def async_set_value(self, value: time) -> None:
         """Persist new time value on the device."""
         await self._variable.async_set_time(value)
