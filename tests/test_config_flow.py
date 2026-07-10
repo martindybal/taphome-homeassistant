@@ -65,11 +65,15 @@ async def _start_zeroconf_flow(hass: HomeAssistant, info: ZeroconfServiceInfo):
 
 def _subentry_configs(result, platform: str) -> list[dict]:
     """Return the device configs of one platform from a flow result."""
-    from custom_components.taphome.const import SUBENTRY_DATA_PLATFORM
+    from custom_components.taphome.const import (
+        SUBENTRY_DATA_AUTO_TITLE,
+        SUBENTRY_DATA_PLATFORM,
+    )
 
     configs: list[dict] = []
     for subentry in result.get("subentries") or ():
         data = dict(subentry["data"])
+        data.pop(SUBENTRY_DATA_AUTO_TITLE, None)
         if data.pop(SUBENTRY_DATA_PLATFORM, None) == platform:
             configs.append(data)
     return configs

@@ -40,11 +40,11 @@ async def test_yaml_import_creates_entry_and_repair_issue(
         {"id": 2, "device_class": "outlet"}
     ]
 
-    # Imported subentries are titled with the device metadata and its API id.
+    # Subentries are titled after the TapHome device (name and API id).
     from tests_common import device_subentry
 
     socket = device_subentry(entry, "switches", 2)
-    assert socket.title == "Socket by the terrace (2)"
+    assert socket.title == "Garden Socket (2)"
 
     issue_registry = ir.async_get(hass)
     assert any(

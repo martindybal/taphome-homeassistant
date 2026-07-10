@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from copy import deepcopy
 from dataclasses import dataclass
 import logging
@@ -98,6 +98,7 @@ from .const import (
     DEFAULT_CLOUD_API_URL,
     DEVICE_CONFIG_KEYS,
     DOMAIN,
+    SUBENTRY_DATA_AUTO_TITLE,
     SUBENTRY_TYPE_DEVICE,
     USE_DESCRIPTION_AS_ENTITY_ID,
     USE_DESCRIPTION_AS_NAME,
@@ -257,6 +258,30 @@ _KNOWN_VALUE_TYPES_BY_KEY: dict[str, tuple[ValueType, ...]] = {
 def _value_type_label(value_type: ValueType) -> str:
     """Return the human readable label of a device value type."""
     return value_type.name.replace("_", " ").lower()
+
+
+def _device_display_label(device: Device) -> str:
+    """Return a human readable label of a TapHome device."""
+    location = " · ".join(part for part in (device.zone, device.category) if part)
+    label = f"{device.name} ({device.id})"
+    return f"{label} — {location}" if location else label
+
+
+def _device_value_title(device: Device, value: int) -> str:
+    """Return the subentry title of one exposed device value."""
+    return f"{device.name} — {_value_type_label(ValueType(value))}"
+
+
+def device_subentry_title(data: Mapping[str, Any], device: Device) -> str:
+    """Return the title a subentry should have for its current TapHome device.
+
+    Used at creation and re-applied on every setup so the title follows the
+    device name, zone, category and exposed value as they change in TapHome.
+    """
+    value = data.get("value")
+    if value is not None:
+        return _device_value_title(device, int(value))
+    return _device_display_label(device)
 
 
 def _target_ids(target: dict[str, Any], key: str) -> list[str]:
@@ -437,15 +462,10 @@ def _yaml_device_subentries(
 
 
 def _yaml_subentry_title(device_id: int, device: Device | None) -> str:
-    """Title an imported subentry with its description, zone, category and id."""
+    """Title an imported subentry the same way every other path does."""
     if device is None:
         return f"Device {device_id}"
-    details = ", ".join(
-        part
-        for part in (device.description or device.name, device.zone, device.category)
-        if part
-    )
-    return f"{details} ({device_id})" if details else f"Device {device_id}"
+    return _device_display_label(device)
 
 
 def _device_qualifies(device: Device, descriptor: PlatformDescriptor) -> bool:
@@ -673,9 +693,7 @@ class _TapHomeDeviceArchetypeFlow:
 
     def _archetype_device_label(self, device: Device) -> str:
         """Return a human readable label of a TapHome device."""
-        location = " · ".join(part for part in (device.zone, device.category) if part)
-        label = f"{device.name} ({device.id})"
-        return f"{label} — {location}" if location else label
+        return _device_display_label(device)
 
     def _archetype_helper_label(self, device_id: int) -> str:
         """Label a device referenced from another device's option field."""
@@ -686,7 +704,7 @@ class _TapHomeDeviceArchetypeFlow:
 
     def _archetype_value_title(self, device: Device, value: int) -> str:
         """Return the subentry title of one exposed device value."""
-        return f"{device.name} — {_value_type_label(ValueType(value))}"
+        return _device_value_title(device, value)
 
     def _archetype_unique_ids(self) -> set[str]:
         """Return the unique ids of the configured device subentries."""
@@ -1781,7 +1799,11 @@ class TapHomeOptionsFlow(_TapHomeDeviceArchetypeFlow, _TapHomeSetupFlow, Options
                 self.hass.config_entries.async_update_subentry(
                     self.config_entry,
                     subentry,
-                    data=device_subentry_payload(config_key, new_config),
+                    data=device_subentry_payload(
+                        config_key,
+                        new_config,
+                        auto_title=subentry.data.get(SUBENTRY_DATA_AUTO_TITLE),
+                    ),
                 )
                 return self.async_abort(reason="reconfigure_successful")
 
@@ -2270,7 +2292,11 @@ class TapHomeDeviceSubentryFlowHandler(_TapHomeDeviceArchetypeFlow, ConfigSubent
                 return self.async_update_and_abort(
                     self._archetype_entry,
                     subentry,
-                    data=device_subentry_payload(config_key, new_config),
+                    data=device_subentry_payload(
+                        config_key,
+                        new_config,
+                        auto_title=subentry.data.get(SUBENTRY_DATA_AUTO_TITLE),
+                    ),
                 )
 
         schema, suggested = build_device_options_schema_split(

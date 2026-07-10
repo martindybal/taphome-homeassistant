@@ -19,8 +19,15 @@ from homeassistant.config_entries import (
     ConfigSubentryData,
 )
 
-from .const import SUBENTRY_DATA_PLATFORM, SUBENTRY_TYPE_DEVICE
+from .const import (
+    SUBENTRY_DATA_AUTO_TITLE,
+    SUBENTRY_DATA_PLATFORM,
+    SUBENTRY_TYPE_DEVICE,
+)
 from .platform_descriptors import device_config_id
+
+# Keys stored in a subentry's ``data`` that are metadata, not device config.
+_SUBENTRY_META_KEYS = frozenset({SUBENTRY_DATA_PLATFORM, SUBENTRY_DATA_AUTO_TITLE})
 
 
 def device_subentry_unique_id(
@@ -37,9 +44,19 @@ def device_subentry_unique_id(
     return f"{platform}:{device_id}:{value}"
 
 
-def device_subentry_payload(platform: str, device_config: Mapping[str, Any]) -> dict:
-    """Return the subentry ``data`` for one device/platform pair."""
-    return {SUBENTRY_DATA_PLATFORM: platform, **device_config}
+def device_subentry_payload(
+    platform: str, device_config: Mapping[str, Any], auto_title: str | None = None
+) -> dict:
+    """Return the subentry ``data`` for one device/platform pair.
+
+    ``auto_title`` records the title as last derived from TapHome so setup can
+    tell an auto title apart from one the user changed; it is carried across
+    edits by ``device_config_from_subentry`` dropping it and callers re-adding.
+    """
+    data = {SUBENTRY_DATA_PLATFORM: platform, **device_config}
+    if auto_title is not None:
+        data[SUBENTRY_DATA_AUTO_TITLE] = auto_title
+    return data
 
 
 def build_device_subentry_data(
@@ -47,7 +64,7 @@ def build_device_subentry_data(
 ) -> ConfigSubentryData:
     """Build the subentry payload for one device exposed on one platform."""
     return ConfigSubentryData(
-        data=device_subentry_payload(platform, device_config),
+        data=device_subentry_payload(platform, device_config, auto_title=title),
         subentry_type=SUBENTRY_TYPE_DEVICE,
         title=title,
         unique_id=device_subentry_unique_id(
@@ -90,7 +107,7 @@ def subentry_platform(data: Mapping[str, Any]) -> str | None:
 
 
 def device_config_from_subentry(data: Mapping[str, Any]) -> dict[str, Any]:
-    """Return the device config of a subentry, without the platform key."""
+    """Return the device config of a subentry, without the metadata keys."""
     return {
-        key: value for key, value in data.items() if key != SUBENTRY_DATA_PLATFORM
+        key: value for key, value in data.items() if key not in _SUBENTRY_META_KEYS
     }
