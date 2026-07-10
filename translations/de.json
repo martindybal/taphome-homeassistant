@@ -20,7 +20,7 @@
           "token": "Autorisierungstoken, der oben auf dem TapHome-API-Bildschirm angezeigt wird.",
           "use_cloud": "Verbindung über die TapHome-Cloud statt über das lokale Netzwerk. Nur empfohlen, wenn der Core lokal nicht erreichbar ist — die Cloud ist langsamer und benötigt eine Internetverbindung. Bei Aktivierung wird die IP-Adresse ignoriert.",
           "ip": "In der TapHome-App unter Mein Standort zu finden.",
-          "webhook_id": "Empfohlen: Der Core sendet Änderungen dann sofort, statt dass Home Assistant alle 2 Sekunden nachfragt. Geben Sie einen beliebigen Namen ein, z. B. taphome_primary, und tragen Sie denselben in der TapHome-App auf dem Bildschirm „Geräte freigeben“ ein — aktivieren Sie dort Webhook und setzen Sie die Webhook-URL z. B. auf http://homeassistant.local:8123/api/webhook/taphome — ersetzen Sie homeassistant.local durch die Adresse Ihres Home Assistant und taphome_primary durch den oben eingegebenen Namen."
+          "webhook_id": "Empfohlen: Der Core sendet Änderungen dann sofort, statt dass Home Assistant alle 2 Sekunden nachfragt. Geben Sie einen beliebigen Namen ein, z. B. taphome, und tragen Sie denselben in der TapHome-App auf dem Bildschirm „Geräte freigeben“ ein — aktivieren Sie dort Webhook und setzen Sie die Webhook-URL z. B. auf http://homeassistant.local:8123/api/webhook/taphome — ersetzen Sie homeassistant.local durch die Adresse Ihres Home Assistant und taphome durch den oben eingegebenen Namen."
         },
         "submit": "Weiter"
       },
@@ -40,7 +40,7 @@
           "token": "Autorisierungstoken, der oben auf dem TapHome-API-Bildschirm angezeigt wird.",
           "use_cloud": "Verbindung über die TapHome-Cloud statt über das lokale Netzwerk. Nur empfohlen, wenn der Core lokal nicht erreichbar ist — die Cloud ist langsamer und benötigt eine Internetverbindung. Bei Aktivierung wird die IP-Adresse ignoriert.",
           "ip": "In der TapHome-App unter Mein Standort zu finden.",
-          "webhook_id": "Empfohlen: Der Core sendet Änderungen dann sofort, statt dass Home Assistant alle 2 Sekunden nachfragt. Geben Sie einen beliebigen Namen ein, z. B. taphome_primary, und tragen Sie denselben in der TapHome-App auf dem Bildschirm „Geräte freigeben“ ein — aktivieren Sie dort Webhook und setzen Sie die Webhook-URL z. B. auf http://homeassistant.local:8123/api/webhook/taphome — ersetzen Sie homeassistant.local durch die Adresse Ihres Home Assistant und taphome_primary durch den oben eingegebenen Namen."
+          "webhook_id": "Empfohlen: Der Core sendet Änderungen dann sofort, statt dass Home Assistant alle 2 Sekunden nachfragt. Geben Sie einen beliebigen Namen ein, z. B. taphome, und tragen Sie denselben in der TapHome-App auf dem Bildschirm „Geräte freigeben“ ein — aktivieren Sie dort Webhook und setzen Sie die Webhook-URL z. B. auf http://homeassistant.local:8123/api/webhook/taphome — ersetzen Sie homeassistant.local durch die Adresse Ihres Home Assistant und taphome durch den oben eingegebenen Namen."
         },
         "submit": "Speichern"
       },
@@ -84,10 +84,13 @@
         "title": "TapHome Core verbinden",
         "description": "TapHome Core {name} wurde unter {host} gefunden. Gib seinen API-Token ein, um ihn zu Home Assistant hinzuzufügen.",
         "data": {
-          "token": "Token"
+          "token": "Token",
+          "webhook_id": "Webhook-ID",
+          "enabled_attributes": "Bereitgestellte Attribute"
         },
         "data_description": {
-          "token": "Autorisierungstoken, der oben auf dem TapHome-API-Bildschirm angezeigt wird."
+          "token": "Autorisierungstoken, der oben auf dem TapHome-API-Bildschirm angezeigt wird.",
+          "webhook_id": "Empfohlen: Der Core sendet Änderungen dann sofort, statt dass Home Assistant alle 2 Sekunden nachfragt. Geben Sie einen beliebigen Namen ein, z. B. taphome, und tragen Sie denselben in der TapHome-App auf dem Bildschirm „Geräte freigeben“ ein — aktivieren Sie dort Webhook und setzen Sie die Webhook-URL z. B. auf http://homeassistant.local:8123/api/webhook/taphome — ersetzen Sie homeassistant.local durch die Adresse Ihres Home Assistant und taphome durch den oben eingegebenen Namen."
         }
       }
     },
@@ -135,7 +138,7 @@
           "token": "Autorisierungstoken, der oben auf dem TapHome-API-Bildschirm angezeigt wird.",
           "use_cloud": "Verbindung über die TapHome-Cloud statt über das lokale Netzwerk. Nur empfohlen, wenn der Core lokal nicht erreichbar ist — die Cloud ist langsamer und benötigt eine Internetverbindung. Bei Aktivierung wird die IP-Adresse ignoriert.",
           "ip": "In der TapHome-App unter Mein Standort zu finden.",
-          "webhook_id": "Empfohlen: Der Core sendet Änderungen dann sofort, statt dass Home Assistant alle 2 Sekunden nachfragt. Geben Sie einen beliebigen Namen ein, z. B. taphome_primary, und tragen Sie denselben in der TapHome-App auf dem Bildschirm „Geräte freigeben“ ein — aktivieren Sie dort Webhook und setzen Sie die Webhook-URL z. B. auf http://homeassistant.local:8123/api/webhook/taphome — ersetzen Sie homeassistant.local durch die Adresse Ihres Home Assistant und taphome_primary durch den oben eingegebenen Namen."
+          "webhook_id": "Empfohlen: Der Core sendet Änderungen dann sofort, statt dass Home Assistant alle 2 Sekunden nachfragt. Geben Sie einen beliebigen Namen ein, z. B. taphome, und tragen Sie denselben in der TapHome-App auf dem Bildschirm „Geräte freigeben“ ein — aktivieren Sie dort Webhook und setzen Sie die Webhook-URL z. B. auf http://homeassistant.local:8123/api/webhook/taphome — ersetzen Sie homeassistant.local durch die Adresse Ihres Home Assistant und taphome durch den oben eingegebenen Namen."
         },
         "description": "Aktualisieren Sie die Verbindungs- und Core-Einstellungen Ihres TapHome Cores. Eine lokale Verbindung wird empfohlen: Aktivieren Sie „TapHome-Cloud verwenden“ nur, wenn der Core in Ihrem Netzwerk nicht direkt erreichbar ist — die Cloud aktualisiert seltener (etwa alle 20 Sekunden) und benötigt erreichbare TapHome-Server. Die IP-Adresse Ihres Cores finden Sie in der TapHome-App unter „Mein Standort“.",
         "submit": "Speichern"

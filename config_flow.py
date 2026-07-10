@@ -154,11 +154,32 @@ CORE_SCHEMA = CONNECTION_SCHEMA.extend(
     }
 )
 
-# Token-only form, shared by the reauth and the discovery confirm steps.
+# Token-only form, used by the reauth step.
 TOKEN_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_TOKEN): TextSelector(
             TextSelectorConfig(type=TextSelectorType.PASSWORD)
+        ),
+    }
+)
+
+# Discovery already knows the local address, so its confirm step asks for the
+# token plus the same core-level settings as CORE_SCHEMA, minus the connection
+# (cloud/ip) fields that discovery has determined to be a local connection.
+DISCOVERY_CONFIRM_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_TOKEN): TextSelector(
+            TextSelectorConfig(type=TextSelectorType.PASSWORD)
+        ),
+        vol.Optional(CONF_WEBHOOK_ID): TextSelector(),
+        vol.Optional(
+            CONF_ENABLED_ATTRIBUTES, default=AVAILABLE_ATTRIBUTES
+        ): SelectSelector(
+            SelectSelectorConfig(
+                options=AVAILABLE_ATTRIBUTES,
+                multiple=True,
+                mode=SelectSelectorMode.DROPDOWN,
+            )
         ),
     }
 )
@@ -416,16 +437,15 @@ def _yaml_device_subentries(
 
 
 def _yaml_subentry_title(device_id: int, device: Device | None) -> str:
-    """Title an imported subentry with the API id, description, zone, category."""
-    title = f"TapHome api device {device_id}"
+    """Title an imported subentry with its description, zone, category and id."""
     if device is None:
-        return title
+        return f"Device {device_id}"
     details = ", ".join(
         part
         for part in (device.description or device.name, device.zone, device.category)
         if part
     )
-    return f"{title} - {details}" if details else title
+    return f"{details} ({device_id})" if details else f"Device {device_id}"
 
 
 def _device_qualifies(device: Device, descriptor: PlatformDescriptor) -> bool:
@@ -2002,19 +2022,15 @@ class TapHomeConfigFlow(_TapHomeSetupFlow, ConfigFlow, domain=DOMAIN):
                 }
                 self._wizard_title = location.location_name
                 self._options = {}
-                # Discovery skips the core-settings form; apply its defaults.
-                _apply_core_settings(
-                    self._options,
-                    {
-                        CONF_WEBHOOK_ID: DEFAULT_WEBHOOK_ID,
-                        CONF_ENABLED_ATTRIBUTES: AVAILABLE_ATTRIBUTES,
-                    },
-                )
+                _apply_core_settings(self._options, user_input)
                 return await self._async_start_wizard()
 
+        suggested_values = user_input or {CONF_WEBHOOK_ID: DEFAULT_WEBHOOK_ID}
         return self.async_show_form(
             step_id="zeroconf_confirm",
-            data_schema=TOKEN_SCHEMA,
+            data_schema=self.add_suggested_values_to_schema(
+                DISCOVERY_CONFIRM_SCHEMA, suggested_values
+            ),
             description_placeholders={
                 "name": self._discovered_name,
                 "host": self._discovered_host,
