@@ -206,7 +206,10 @@
           "humidity_sensor_id": "Páratartalom-érzékelő",
           "value_type": "Értéktípus",
           "unit_of_measurement": "Mértékegység",
-          "state_class": "Állapotosztály"
+          "state_class": "Állapotosztály",
+          "min_value": "Minimális érték",
+          "max_value": "Maximális érték",
+          "step": "Lépésköz"
         },
         "sections": {
           "advanced_options": {
@@ -238,7 +241,10 @@
               "humidity_sensor_id": "Páratartalom-érzékelő",
               "value_type": "Értéktípus",
               "unit_of_measurement": "Mértékegység",
-              "state_class": "Állapotosztály"
+              "state_class": "Állapotosztály",
+              "min_value": "Minimális érték",
+              "max_value": "Maximális érték",
+              "step": "Lépésköz"
             }
           }
         },
@@ -395,7 +401,10 @@
         "title": "Szám",
         "description": "Válassza ki a TapHome eszközt és állítsa be a beállításait. Az üres mezők automatikus alapértelmezéseket használnak.",
         "data": {
-          "device": "Eszköz"
+          "device": "Eszköz",
+          "min_value": "Minimális érték",
+          "max_value": "Maximális érték",
+          "step": "Lépésköz"
         },
         "submit": "Hozzáadás"
       },
@@ -828,7 +837,10 @@
           "title": "Szám",
           "description": "Válassza ki a TapHome eszközt és állítsa be a beállításait. Az üres mezők automatikus alapértelmezéseket használnak.",
           "data": {
-            "device": "Eszköz"
+            "device": "Eszköz",
+            "min_value": "Minimális érték",
+            "max_value": "Maximális érték",
+            "step": "Lépésköz"
           },
           "submit": "Hozzáadás"
         },
@@ -885,7 +897,10 @@
             "humidity_sensor_id": "Páratartalom-érzékelő",
             "value_type": "Értéktípus",
             "unit_of_measurement": "Mértékegység",
-            "state_class": "Állapotosztály"
+            "state_class": "Állapotosztály",
+            "min_value": "Minimális érték",
+            "max_value": "Maximális érték",
+            "step": "Lépésköz"
           },
           "sections": {
             "advanced_options": {
@@ -917,7 +932,10 @@
                 "humidity_sensor_id": "Páratartalom-érzékelő",
                 "value_type": "Értéktípus",
                 "unit_of_measurement": "Mértékegység",
-                "state_class": "Állapotosztály"
+                "state_class": "Állapotosztály",
+                "min_value": "Minimális érték",
+                "max_value": "Maximális érték",
+                "step": "Lépésköz"
               }
             }
           },

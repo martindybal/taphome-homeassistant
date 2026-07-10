@@ -206,7 +206,10 @@
           "humidity_sensor_id": "Sensore di umidità",
           "value_type": "Tipo di valore",
           "unit_of_measurement": "Unità di misura",
-          "state_class": "Classe di stato"
+          "state_class": "Classe di stato",
+          "min_value": "Valore minimo",
+          "max_value": "Valore massimo",
+          "step": "Passo"
         },
         "sections": {
           "advanced_options": {
@@ -238,7 +241,10 @@
               "humidity_sensor_id": "Sensore di umidità",
               "value_type": "Tipo di valore",
               "unit_of_measurement": "Unità di misura",
-              "state_class": "Classe di stato"
+              "state_class": "Classe di stato",
+              "min_value": "Valore minimo",
+              "max_value": "Valore massimo",
+              "step": "Passo"
             }
           }
         },
@@ -395,7 +401,10 @@
         "title": "Numero",
         "description": "Seleziona il dispositivo TapHome e imposta le sue opzioni. I campi vuoti usano valori predefiniti automatici.",
         "data": {
-          "device": "Dispositivo"
+          "device": "Dispositivo",
+          "min_value": "Valore minimo",
+          "max_value": "Valore massimo",
+          "step": "Passo"
         },
         "submit": "Aggiungi"
       },
@@ -828,7 +837,10 @@
           "title": "Numero",
           "description": "Seleziona il dispositivo TapHome e imposta le sue opzioni. I campi vuoti usano valori predefiniti automatici.",
           "data": {
-            "device": "Dispositivo"
+            "device": "Dispositivo",
+            "min_value": "Valore minimo",
+            "max_value": "Valore massimo",
+            "step": "Passo"
           },
           "submit": "Aggiungi"
         },
@@ -885,7 +897,10 @@
             "humidity_sensor_id": "Sensore di umidità",
             "value_type": "Tipo di valore",
             "unit_of_measurement": "Unità di misura",
-            "state_class": "Classe di stato"
+            "state_class": "Classe di stato",
+            "min_value": "Valore minimo",
+            "max_value": "Valore massimo",
+            "step": "Passo"
           },
           "sections": {
             "advanced_options": {
@@ -917,7 +932,10 @@
                 "humidity_sensor_id": "Sensore di umidità",
                 "value_type": "Tipo di valore",
                 "unit_of_measurement": "Unità di misura",
-                "state_class": "Classe di stato"
+                "state_class": "Classe di stato",
+                "min_value": "Valore minimo",
+                "max_value": "Valore massimo",
+                "step": "Passo"
               }
             }
           },
