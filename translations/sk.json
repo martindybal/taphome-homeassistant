@@ -206,7 +206,10 @@
           "humidity_sensor_id": "Senzor vlhkosti",
           "value_type": "Typ hodnoty",
           "unit_of_measurement": "Jednotka merania",
-          "state_class": "Trieda stavu"
+          "state_class": "Trieda stavu",
+          "min_value": "Minimálna hodnota",
+          "max_value": "Maximálna hodnota",
+          "step": "Krok"
         },
         "sections": {
           "advanced_options": {
@@ -238,7 +241,10 @@
               "humidity_sensor_id": "Senzor vlhkosti",
               "value_type": "Typ hodnoty",
               "unit_of_measurement": "Jednotka merania",
-              "state_class": "Trieda stavu"
+              "state_class": "Trieda stavu",
+              "min_value": "Minimálna hodnota",
+              "max_value": "Maximálna hodnota",
+              "step": "Krok"
             }
           }
         },
@@ -395,7 +401,10 @@
         "title": "Číslo",
         "description": "Vyberte zariadenie TapHome a nastavte jeho možnosti. Prázdne polia použijú automatické predvolené hodnoty.",
         "data": {
-          "device": "Zariadenie"
+          "device": "Zariadenie",
+          "min_value": "Minimálna hodnota",
+          "max_value": "Maximálna hodnota",
+          "step": "Krok"
         },
         "submit": "Pridať"
       },
@@ -828,7 +837,10 @@
           "title": "Číslo",
           "description": "Vyberte zariadenie TapHome a nastavte jeho možnosti. Prázdne polia použijú automatické predvolené hodnoty.",
           "data": {
-            "device": "Zariadenie"
+            "device": "Zariadenie",
+            "min_value": "Minimálna hodnota",
+            "max_value": "Maximálna hodnota",
+            "step": "Krok"
           },
           "submit": "Pridať"
         },
@@ -885,7 +897,10 @@
             "humidity_sensor_id": "Senzor vlhkosti",
             "value_type": "Typ hodnoty",
             "unit_of_measurement": "Jednotka merania",
-            "state_class": "Trieda stavu"
+            "state_class": "Trieda stavu",
+            "min_value": "Minimálna hodnota",
+            "max_value": "Maximálna hodnota",
+            "step": "Krok"
           },
           "sections": {
             "advanced_options": {
@@ -917,7 +932,10 @@
                 "humidity_sensor_id": "Senzor vlhkosti",
                 "value_type": "Typ hodnoty",
                 "unit_of_measurement": "Jednotka merania",
-                "state_class": "Trieda stavu"
+                "state_class": "Trieda stavu",
+                "min_value": "Minimálna hodnota",
+                "max_value": "Maximálna hodnota",
+                "step": "Krok"
               }
             }
           },

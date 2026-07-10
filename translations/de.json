@@ -206,7 +206,10 @@
           "humidity_sensor_id": "Feuchtigkeitssensor",
           "value_type": "Werttyp",
           "unit_of_measurement": "Maßeinheit",
-          "state_class": "Zustandsklasse"
+          "state_class": "Zustandsklasse",
+          "min_value": "Minimalwert",
+          "max_value": "Maximalwert",
+          "step": "Schrittweite"
         },
         "sections": {
           "advanced_options": {
@@ -238,7 +241,10 @@
               "humidity_sensor_id": "Feuchtigkeitssensor",
               "value_type": "Werttyp",
               "unit_of_measurement": "Maßeinheit",
-              "state_class": "Zustandsklasse"
+              "state_class": "Zustandsklasse",
+              "min_value": "Minimalwert",
+              "max_value": "Maximalwert",
+              "step": "Schrittweite"
             }
           }
         },
@@ -395,7 +401,10 @@
         "title": "Zahl",
         "description": "Wählen Sie das TapHome-Gerät und legen Sie seine Optionen fest. Leere Felder verwenden automatische Standardwerte.",
         "data": {
-          "device": "Gerät"
+          "device": "Gerät",
+          "min_value": "Minimalwert",
+          "max_value": "Maximalwert",
+          "step": "Schrittweite"
         },
         "submit": "Hinzufügen"
       },
@@ -828,7 +837,10 @@
           "title": "Zahl",
           "description": "Wählen Sie das TapHome-Gerät und legen Sie seine Optionen fest. Leere Felder verwenden automatische Standardwerte.",
           "data": {
-            "device": "Gerät"
+            "device": "Gerät",
+            "min_value": "Minimalwert",
+            "max_value": "Maximalwert",
+            "step": "Schrittweite"
           },
           "submit": "Hinzufügen"
         },
@@ -885,7 +897,10 @@
             "humidity_sensor_id": "Feuchtigkeitssensor",
             "value_type": "Werttyp",
             "unit_of_measurement": "Maßeinheit",
-            "state_class": "Zustandsklasse"
+            "state_class": "Zustandsklasse",
+            "min_value": "Minimalwert",
+            "max_value": "Maximalwert",
+            "step": "Schrittweite"
           },
           "sections": {
             "advanced_options": {
@@ -917,7 +932,10 @@
                 "humidity_sensor_id": "Feuchtigkeitssensor",
                 "value_type": "Werttyp",
                 "unit_of_measurement": "Maßeinheit",
-                "state_class": "Zustandsklasse"
+                "state_class": "Zustandsklasse",
+                "min_value": "Minimalwert",
+                "max_value": "Maximalwert",
+                "step": "Schrittweite"
               }
             }
           },

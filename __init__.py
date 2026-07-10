@@ -87,6 +87,7 @@ from .fan import TapHomeFanConfig
 from .entity import hub_device_id
 from .humidifier import TapHomeHumidifierConfig
 from .light import TapHomeLightConfig
+from .number import TapHomeNumberConfig
 from .platform_descriptors import device_config_id
 from .sensor import TapHomeSensorConfig
 from .switch import TapHomeSwitchConfig
@@ -140,7 +141,7 @@ DOMAIN_DEFINITIONS: tuple[DomainDefinition, ...] = (
     DomainDefinition(SENSOR_DOMAIN, CONF_SENSORS, TapHomeSensorConfig),
     DomainDefinition(SWITCH_DOMAIN, CONF_SWITCHES, TapHomeSwitchConfig),
     DomainDefinition(TIME_DOMAIN, CONF_TIMES, TapHomeEntityConfig),
-    DomainDefinition(NUMBER_DOMAIN, CONF_NUMBERS, TapHomeEntityConfig),
+    DomainDefinition(NUMBER_DOMAIN, CONF_NUMBERS, TapHomeNumberConfig),
 )
 
 

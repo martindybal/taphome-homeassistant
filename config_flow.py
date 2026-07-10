@@ -239,7 +239,7 @@ DEVICE_ARCHETYPES: tuple[DeviceArchetype, ...] = (
     DeviceArchetype("valve", CONF_VALVE, ("device_class",)),
     DeviceArchetype("button", CONF_BUTTONS, ("actions", "device_class")),
     DeviceArchetype("select", CONF_MULTIVALUE_SWITCHES),
-    DeviceArchetype("number", CONF_NUMBERS),
+    DeviceArchetype("number", CONF_NUMBERS, ("min_value", "max_value", "step")),
     DeviceArchetype("time", CONF_TIMES),
 )
 

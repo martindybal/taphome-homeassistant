@@ -121,6 +121,12 @@ Changes are applied by reloading the integration entry automatically.
   closed.
 - **Button — Actions**: which press actions (press, double press, long press)
   the event entity announces.
+- **Number — Minimum value / Maximum value / Step**: override the range and
+  resolution of the number entity. Left empty, the integration uses the range
+  TapHome reports for the variable; if TapHome reports none, Home Assistant
+  applies its own defaults (0–100, step 1). Set these when your variable
+  accepts values outside 0–100 (e.g. a setpoint up to 250) or needs a finer
+  step.
 
 ## State updates (webhook)
 

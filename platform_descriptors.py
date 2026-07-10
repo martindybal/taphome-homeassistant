@@ -332,7 +332,18 @@ PLATFORM_DESCRIPTORS: tuple[PlatformDescriptor, ...] = (
         ),
     ),
     PlatformDescriptor(CONF_TIMES, (SessionDurationVariableDevice,), ()),
-    PlatformDescriptor(CONF_NUMBERS, (VariableDevice,), ()),
+    PlatformDescriptor(
+        CONF_NUMBERS,
+        (VariableDevice,),
+        (
+            # Override the value range TapHome reports (or supply one when it
+            # reports none). Left empty, Home Assistant falls back to its own
+            # number defaults.
+            OptionField("min_value", FieldKind.NUMBER_FLOAT),
+            OptionField("max_value", FieldKind.NUMBER_FLOAT),
+            OptionField("step", FieldKind.NUMBER_FLOAT, min_value=0),
+        ),
+    ),
 )
 
 PLATFORM_DESCRIPTORS_BY_KEY: dict[str, PlatformDescriptor] = {
