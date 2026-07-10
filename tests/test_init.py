@@ -33,14 +33,14 @@ async def test_subentry_title_follows_taphome(
 
     entry = make_config_entry()
     await setup_integration(hass, entry)
-    # Title format: id, description, zone, category.
-    assert device_subentry(entry, "switches", 2).title == "2, Socket by the terrace"
+    # Title format: id - description, zone, category.
+    assert device_subentry(entry, "switches", 2).title == "2 - Socket by the terrace"
 
     # Changing the device in TapHome updates the title on the next reload.
     mock_hub.devices[2].description = "Terrace socket"
     await hass.config_entries.async_reload(entry.entry_id)
     await hass.async_block_till_done()
-    assert device_subentry(entry, "switches", 2).title == "2, Terrace socket"
+    assert device_subentry(entry, "switches", 2).title == "2 - Terrace socket"
 
     # Once the user renames the subentry, TapHome changes no longer override it.
     hass.config_entries.async_update_subentry(

@@ -274,16 +274,12 @@ def device_subentry_title(data: Mapping[str, Any], device: Device) -> str:
     per-value sensors, the exposed value. Applied at creation and re-applied on
     every setup so the title follows those as they change in TapHome.
     """
-    parts = [
-        str(device.id),
-        device.description or device.name,
-        device.zone,
-        device.category,
-    ]
+    details = [device.description or device.name, device.zone, device.category]
     value = data.get("value")
     if value is not None:
-        parts.append(_value_type_label(ValueType(int(value))))
-    return ", ".join(part for part in parts if part)
+        details.append(_value_type_label(ValueType(int(value))))
+    joined = ", ".join(part for part in details if part)
+    return f"{device.id} - {joined}" if joined else str(device.id)
 
 
 def _target_ids(target: dict[str, Any], key: str) -> list[str]:
