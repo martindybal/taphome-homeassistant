@@ -261,27 +261,29 @@ def _value_type_label(value_type: ValueType) -> str:
 
 
 def _device_display_label(device: Device) -> str:
-    """Return a human readable label of a TapHome device."""
+    """Return a human readable label of a TapHome device (device picker)."""
     location = " · ".join(part for part in (device.zone, device.category) if part)
     label = f"{device.name} ({device.id})"
     return f"{label} — {location}" if location else label
 
 
-def _device_value_title(device: Device, value: int) -> str:
-    """Return the subentry title of one exposed device value."""
-    return f"{device.name} — {_value_type_label(ValueType(value))}"
-
-
 def device_subentry_title(data: Mapping[str, Any], device: Device) -> str:
     """Return the title a subentry should have for its current TapHome device.
 
-    Used at creation and re-applied on every setup so the title follows the
-    device name, zone, category and exposed value as they change in TapHome.
+    Reads id, description (falling back to the name), zone, category and, for
+    per-value sensors, the exposed value. Applied at creation and re-applied on
+    every setup so the title follows those as they change in TapHome.
     """
+    parts = [
+        str(device.id),
+        device.description or device.name,
+        device.zone,
+        device.category,
+    ]
     value = data.get("value")
     if value is not None:
-        return _device_value_title(device, int(value))
-    return _device_display_label(device)
+        parts.append(_value_type_label(ValueType(int(value))))
+    return ", ".join(part for part in parts if part)
 
 
 def _target_ids(target: dict[str, Any], key: str) -> list[str]:
@@ -465,7 +467,7 @@ def _yaml_subentry_title(device_id: int, device: Device | None) -> str:
     """Title an imported subentry the same way every other path does."""
     if device is None:
         return f"Device {device_id}"
-    return _device_display_label(device)
+    return device_subentry_title({}, device)
 
 
 def _device_qualifies(device: Device, descriptor: PlatformDescriptor) -> bool:
@@ -701,10 +703,6 @@ class _TapHomeDeviceArchetypeFlow:
         if device is None:
             return f"Unknown device ({device_id})"
         return self._archetype_device_label(device)
-
-    def _archetype_value_title(self, device: Device, value: int) -> str:
-        """Return the subentry title of one exposed device value."""
-        return _device_value_title(device, value)
 
     def _archetype_unique_ids(self) -> set[str]:
         """Return the unique ids of the configured device subentries."""
@@ -1015,7 +1013,9 @@ class _TapHomeDeviceArchetypeFlow:
                         build_device_subentry_data(
                             archetype.config_key,
                             {"id": device.id, "value": value},
-                            self._archetype_value_title(device, value),
+                            device_subentry_title(
+                                {"id": device.id, "value": value}, device
+                            ),
                         )
                         for value in selected
                     ]
@@ -1053,12 +1053,11 @@ class _TapHomeDeviceArchetypeFlow:
         archetype = self._archetype
         assert archetype is not None
         device = self._archetype_devices.get(device_config["id"])
-        if device is not None and "value" in device_config:
-            title = self._archetype_value_title(device, device_config["value"])
-        elif device is not None:
-            title = self._archetype_device_label(device)
-        else:
-            title = f"TapHome device {device_config['id']}"
+        title = (
+            device_subentry_title(device_config, device)
+            if device is not None
+            else f"Device {device_config['id']}"
+        )
         return self._archetype_finish(
             [build_device_subentry_data(archetype.config_key, device_config, title)]
         )
