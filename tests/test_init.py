@@ -25,6 +25,33 @@ from homeassistant.core import HomeAssistant
 from tests_common import make_config_entry, setup_integration
 
 
+async def test_subentry_title_follows_taphome(
+    hass: HomeAssistant, mock_hub
+) -> None:
+    """The subentry title follows the TapHome device, unless the user renames."""
+    from tests_common import device_subentry
+
+    entry = make_config_entry()
+    await setup_integration(hass, entry)
+    assert device_subentry(entry, "switches", 2).title == "Garden Socket (2)"
+
+    # Renaming the device in TapHome updates the title on the next reload.
+    mock_hub.devices[2].name = "Terrace Socket"
+    await hass.config_entries.async_reload(entry.entry_id)
+    await hass.async_block_till_done()
+    assert device_subentry(entry, "switches", 2).title == "Terrace Socket (2)"
+
+    # Once the user renames the subentry, TapHome changes no longer override it.
+    hass.config_entries.async_update_subentry(
+        entry, device_subentry(entry, "switches", 2), title="My Socket"
+    )
+    await hass.async_block_till_done()
+    mock_hub.devices[2].name = "Something Else"
+    await hass.config_entries.async_reload(entry.entry_id)
+    await hass.async_block_till_done()
+    assert device_subentry(entry, "switches", 2).title == "My Socket"
+
+
 async def test_setup_and_unload_entry(
     hass: HomeAssistant, mock_hub, mock_config_entry: MockConfigEntry
 ) -> None:

@@ -77,6 +77,7 @@ from .const import (
     CONF_ZONES,
     DOMAIN,
     PLATFORMS,
+    SUBENTRY_DATA_AUTO_TITLE,
     TAPHOME_PLATFORM,
     USE_DESCRIPTION_AS_ENTITY_ID,
     USE_DESCRIPTION_AS_NAME,
@@ -321,6 +322,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TapHomeConfigEntry) -> b
         hass, entry, hub, taphome_issue_registry, set(hub.devices)
     )
     _subscribe_new_device_detection(hass, entry, hub, taphome_issue_registry)
+    _async_sync_subentry_titles(hass, entry, hub)
 
     add_entry_requests = {
         domain.name: _map_subentry_requests(hass, core_config, entry, domain, hub)
@@ -623,6 +625,39 @@ def _subscribe_new_device_detection(
 
     hub.new_device_ids.changed += _on_new_device_ids
     entry.async_on_unload(_unsubscribe)
+
+
+def _async_sync_subentry_titles(
+    hass: HomeAssistant, entry: TapHomeConfigEntry, hub: TapHomeHub
+) -> None:
+    """Refresh device subentry titles from their TapHome device.
+
+    Titles follow the device name, zone, category and exposed value as they
+    change in TapHome, but only while the stored title still equals the last
+    auto-generated one — a title the user renamed in Home Assistant is left
+    untouched. Runs before the update listener is registered, so the writes do
+    not trigger a reload.
+    """
+    from .config_flow import device_subentry_title  # noqa: PLC0415
+
+    for subentry in iter_device_subentries(entry):
+        data = subentry.data
+        auto_title = data.get(SUBENTRY_DATA_AUTO_TITLE)
+        device_id = data.get("id")
+        if auto_title is None or not isinstance(device_id, int):
+            continue
+        device = hub.devices.get(device_id)
+        if device is None:
+            continue
+        title = device_subentry_title(data, device)
+        if title == subentry.title or subentry.title != auto_title:
+            continue
+        hass.config_entries.async_update_subentry(
+            entry,
+            subentry,
+            title=title,
+            data={**data, SUBENTRY_DATA_AUTO_TITLE: title},
+        )
 
 
 def _register_hub_device(

@@ -68,6 +68,10 @@ CONF_CORE_UNIQUE_ID = "core_unique_id"
 # platform config bucket (a DEVICE_CONFIG_KEYS value) the device is exposed as.
 SUBENTRY_TYPE_DEVICE = "device"
 SUBENTRY_DATA_PLATFORM = "platform"
+# The auto-generated title at the time it was last derived from the TapHome
+# device. Setup re-syncs the subentry title from TapHome while it still equals
+# this, so a title the user changed in Home Assistant is never overwritten.
+SUBENTRY_DATA_AUTO_TITLE = "auto_title"
 
 # Configuration keys holding per-platform device lists
 DEVICE_CONFIG_KEYS = [
