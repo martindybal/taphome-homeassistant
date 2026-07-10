@@ -155,6 +155,47 @@ async def test_zeroconf_flow_creates_entry(hass: HomeAssistant, mock_hub) -> Non
     assert result["result"].options[CONF_WEBHOOK_ID] == "th_webhook"
 
 
+async def test_zeroconf_flow_runs_the_full_wizard(
+    hass: HomeAssistant, mock_hub
+) -> None:
+    """Discovery runs the same zones -> labels -> add-devices wizard as manual add.
+
+    The confirm step hands off to _async_start_wizard, exactly like async_step_user,
+    so a device with a zone/category takes the flow through both mapping steps to
+    the device picker (no separate discovery code path).
+    """
+    from tests_common import make_device
+
+    make_device(
+        mock_hub,
+        {
+            "deviceId": 2,
+            "type": "PowerOutlet",
+            "name": "Garden Socket",
+            "description": "Socket by the terrace",
+            "zone": "Garden",
+            "category": "Sockets",
+            "supportedValues": [
+                {"valueTypeId": ValueType.SWITCH_STATE.value, "readOnly": False}
+            ],
+            "values": {ValueType.SWITCH_STATE: 0.0},
+        },
+    )
+    result = await _start_zeroconf_flow(hass, _zeroconf_info())
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_TOKEN: TEST_TOKEN, CONF_WEBHOOK_ID: "taphome"}
+    )
+    assert result["step_id"] == "zones"
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"Garden": {}}
+    )
+    assert result["step_id"] == "labels"
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"Sockets": {}}
+    )
+    assert result["step_id"] == "add_devices"
+
+
 async def test_zeroconf_recovers_from_bad_token(
     hass: HomeAssistant, mock_hub
 ) -> None:
