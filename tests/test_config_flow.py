@@ -114,7 +114,7 @@ async def test_user_flow_creates_entry(hass: HomeAssistant, mock_hub) -> None:
 
 
 async def test_zeroconf_flow_creates_entry(hass: HomeAssistant, mock_hub) -> None:
-    """A discovered Core asks only for the token and runs the wizard."""
+    """A discovered Core asks for the token plus core settings, then runs."""
     result = await _start_zeroconf_flow(hass, _zeroconf_info())
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "zeroconf_confirm"
@@ -122,9 +122,13 @@ async def test_zeroconf_flow_creates_entry(hass: HomeAssistant, mock_hub) -> Non
         "name": TEST_LOCATION_NAME,
         "host": "10.0.0.5",
     }
+    # The confirm form offers the core settings (webhook, attributes), but not
+    # the connection fields (cloud/ip) that discovery already determined.
+    assert "webhook_id" in result["data_schema"].schema
+    assert CONF_IP not in result["data_schema"].schema
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_TOKEN: TEST_TOKEN}
+        result["flow_id"], {CONF_TOKEN: TEST_TOKEN, CONF_WEBHOOK_ID: "th_webhook"}
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "add_devices"
@@ -143,8 +147,8 @@ async def test_zeroconf_flow_creates_entry(hass: HomeAssistant, mock_hub) -> Non
     assert result["data"][CONF_TOKEN] == TEST_TOKEN
     assert result["data"][CONF_API_URL] == TEST_API_URL
     assert result["result"].unique_id == TEST_LOCATION_ID
-    # Discovery skips the core-settings form and applies its defaults.
-    assert result["result"].options[CONF_WEBHOOK_ID] == "taphome"
+    # The core settings entered on the confirm form are stored.
+    assert result["result"].options[CONF_WEBHOOK_ID] == "th_webhook"
 
 
 async def test_zeroconf_recovers_from_bad_token(

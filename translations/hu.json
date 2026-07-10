@@ -20,7 +20,7 @@
           "token": "A TapHome API képernyő tetején megjelenő hitelesítési token.",
           "use_cloud": "Kapcsolódás a TapHome felhőn keresztül a helyi hálózat helyett. Csak akkor ajánlott, ha a Core helyileg nem érhető el — a felhő lassabb, és internetkapcsolatot igényel. Bekapcsolva az IP-cím figyelmen kívül marad.",
           "ip": "Megtalálja a TapHome alkalmazásban a Saját helyszín alatt.",
-          "webhook_id": "Ajánlott: a Core ekkor azonnal elküldi a változásokat ahelyett, hogy a Home Assistant 2 másodpercenként lekérdezné. Adjon meg egy tetszőleges nevet, pl. taphome_primary, majd ugyanezt állítsa be a TapHome alkalmazásban az Eszközök közzététele képernyőn — kapcsolja be a Webhookot, és a Webhook URL-t állítsa be pl. http://homeassistant.local:8123/api/webhook/taphome értékre — a homeassistant.local helyére írja be a saját Home Assistant címét, a taphome_primary helyére pedig a fent megadott nevet."
+          "webhook_id": "Ajánlott: a Core ekkor azonnal elküldi a változásokat ahelyett, hogy a Home Assistant 2 másodpercenként lekérdezné. Adjon meg egy tetszőleges nevet, pl. taphome, majd ugyanezt állítsa be a TapHome alkalmazásban az Eszközök közzététele képernyőn — kapcsolja be a Webhookot, és a Webhook URL-t állítsa be pl. http://homeassistant.local:8123/api/webhook/taphome értékre — a homeassistant.local helyére írja be a saját Home Assistant címét, a taphome helyére pedig a fent megadott nevet."
         },
         "submit": "Tovább"
       },
@@ -40,7 +40,7 @@
           "token": "A TapHome API képernyő tetején megjelenő hitelesítési token.",
           "use_cloud": "Kapcsolódás a TapHome felhőn keresztül a helyi hálózat helyett. Csak akkor ajánlott, ha a Core helyileg nem érhető el — a felhő lassabb, és internetkapcsolatot igényel. Bekapcsolva az IP-cím figyelmen kívül marad.",
           "ip": "Megtalálja a TapHome alkalmazásban a Saját helyszín alatt.",
-          "webhook_id": "Ajánlott: a Core ekkor azonnal elküldi a változásokat ahelyett, hogy a Home Assistant 2 másodpercenként lekérdezné. Adjon meg egy tetszőleges nevet, pl. taphome_primary, majd ugyanezt állítsa be a TapHome alkalmazásban az Eszközök közzététele képernyőn — kapcsolja be a Webhookot, és a Webhook URL-t állítsa be pl. http://homeassistant.local:8123/api/webhook/taphome értékre — a homeassistant.local helyére írja be a saját Home Assistant címét, a taphome_primary helyére pedig a fent megadott nevet."
+          "webhook_id": "Ajánlott: a Core ekkor azonnal elküldi a változásokat ahelyett, hogy a Home Assistant 2 másodpercenként lekérdezné. Adjon meg egy tetszőleges nevet, pl. taphome, majd ugyanezt állítsa be a TapHome alkalmazásban az Eszközök közzététele képernyőn — kapcsolja be a Webhookot, és a Webhook URL-t állítsa be pl. http://homeassistant.local:8123/api/webhook/taphome értékre — a homeassistant.local helyére írja be a saját Home Assistant címét, a taphome helyére pedig a fent megadott nevet."
         },
         "submit": "Mentés"
       },
@@ -84,10 +84,13 @@
         "title": "TapHome Core csatlakoztatása",
         "description": "A hálózaton megtaláltuk a(z) {name} TapHome Core-t ({host}). Add meg az API tokenjét a Home Assistanthoz való hozzáadáshoz.",
         "data": {
-          "token": "Token"
+          "token": "Token",
+          "webhook_id": "Webhook azonosító",
+          "enabled_attributes": "Közzétett attribútumok"
         },
         "data_description": {
-          "token": "A TapHome API képernyő tetején megjelenő hitelesítési token."
+          "token": "A TapHome API képernyő tetején megjelenő hitelesítési token.",
+          "webhook_id": "Ajánlott: a Core ekkor azonnal elküldi a változásokat ahelyett, hogy a Home Assistant 2 másodpercenként lekérdezné. Adjon meg egy tetszőleges nevet, pl. taphome, majd ugyanezt állítsa be a TapHome alkalmazásban az Eszközök közzététele képernyőn — kapcsolja be a Webhookot, és a Webhook URL-t állítsa be pl. http://homeassistant.local:8123/api/webhook/taphome értékre — a homeassistant.local helyére írja be a saját Home Assistant címét, a taphome helyére pedig a fent megadott nevet."
         }
       }
     },
@@ -135,7 +138,7 @@
           "token": "A TapHome API képernyő tetején megjelenő hitelesítési token.",
           "use_cloud": "Kapcsolódás a TapHome felhőn keresztül a helyi hálózat helyett. Csak akkor ajánlott, ha a Core helyileg nem érhető el — a felhő lassabb, és internetkapcsolatot igényel. Bekapcsolva az IP-cím figyelmen kívül marad.",
           "ip": "Megtalálja a TapHome alkalmazásban a Saját helyszín alatt.",
-          "webhook_id": "Ajánlott: a Core ekkor azonnal elküldi a változásokat ahelyett, hogy a Home Assistant 2 másodpercenként lekérdezné. Adjon meg egy tetszőleges nevet, pl. taphome_primary, majd ugyanezt állítsa be a TapHome alkalmazásban az Eszközök közzététele képernyőn — kapcsolja be a Webhookot, és a Webhook URL-t állítsa be pl. http://homeassistant.local:8123/api/webhook/taphome értékre — a homeassistant.local helyére írja be a saját Home Assistant címét, a taphome_primary helyére pedig a fent megadott nevet."
+          "webhook_id": "Ajánlott: a Core ekkor azonnal elküldi a változásokat ahelyett, hogy a Home Assistant 2 másodpercenként lekérdezné. Adjon meg egy tetszőleges nevet, pl. taphome, majd ugyanezt állítsa be a TapHome alkalmazásban az Eszközök közzététele képernyőn — kapcsolja be a Webhookot, és a Webhook URL-t állítsa be pl. http://homeassistant.local:8123/api/webhook/taphome értékre — a homeassistant.local helyére írja be a saját Home Assistant címét, a taphome helyére pedig a fent megadott nevet."
         },
         "description": "Frissítse a TapHome Core kapcsolati és Core beállításait. A helyi kapcsolat ajánlott: a „TapHome felhő használata” kapcsolót csak akkor kapcsolja be, ha a Core nem érhető el közvetlenül a hálózatában — a felhő ritkábban frissít (kb. 20 másodpercenként), és a TapHome szervereinek elérhetőségétől függ. A Core IP-címét a TapHome alkalmazásban a „Saját helyszín” alatt találja.",
         "submit": "Mentés"

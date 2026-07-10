@@ -101,11 +101,16 @@ class TapHomeIsAliveSensor(TapHomeSubscriptionMixin, BinarySensorEntity):
     def _on_hub_last_update_success_time_change(
         self, old: datetime | None, last_update_success: datetime | None
     ) -> None:
-        """Handle hub last-update-time changes."""
+        """Handle hub last-update-time changes.
+
+        This fires on every poll (~2 s), so it must not write state or the
+        sensor would churn the recorder and flood websocket clients. The
+        attribute is captured in memory and flushed by the next connection
+        state/type change, which is exactly when it is worth reading.
+        """
         self._attr_extra_state_attributes["last_update_success_time"] = (
             last_update_success
         )
-        self._write_state()
 
 
 @dataclass(slots=True)
