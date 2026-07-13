@@ -2,7 +2,21 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, override
+
+from taphome_sdk import (
+    Device,
+    DeviceState,
+    DigitalOutputDevice,
+    DigitalOutputState,
+    GenericOutputAdapter,
+    GenericOutputState,
+    MultiValueSwitchDevice,
+    MultiValueSwitchState,
+    OutputCapableDevice,
+    ValueType,
+    enum_from_string_required,
+)
 
 from homeassistant.components.humidifier import (
     DOMAIN as HUMIDIFIER_DOMAIN,
@@ -12,34 +26,20 @@ from homeassistant.components.humidifier import (
     HumidifierEntityFeature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import (
-    AddEntitiesCallback,
-    ConfigType,
-    DiscoveryInfoType,
-)
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .add_entry_request import add_taphome_entities
-from .const import CONF_HUMIDIFIER
+from .entity import TapHomeEntity, handle_taphome_errors
 from .taphome_config_entry import AddEntryRequest, TapHomeEntityConfig
-from .taphome_entity import TapHomeEntity
-from .taphome_sdk import (
-    Device,
-    DeviceState,
-    DigitalOutputDevice,
-    DigitalOutputState,
-    GenericOutputAdapter,
-    GenericOutputState,
-    MultiValueSwitchDevice,
-    MultiValueSwitchState,
-    ValueType,
-    enum_from_string_required,
-)
+from .taphome_data import TapHomeConfigEntry
+
+PARALLEL_UPDATES = 0
 
 
 class TapHomeHumidifierConfig(TapHomeEntityConfig):
     """Configuration for a TapHome humidifier device."""
 
-    def __init__(self, device_config: dict) -> None:
+    def __init__(self, device_config: dict[str, Any]) -> None:
         """Store config and extract humidity limits."""
         super().__init__(device_config)
         self.switch_id: int | None = self.get_optional("switch_id", None)
@@ -55,10 +55,12 @@ class TapHomeHumidifierConfig(TapHomeEntityConfig):
         )
 
 
-class TapHomeHumidifier(TapHomeEntity, HumidifierEntity):
+class TapHomeHumidifier(
+    TapHomeEntity[OutputCapableDevice, TapHomeHumidifierConfig], HumidifierEntity
+):
     """Representation of a demo humidifier device."""
 
-    _switch_device: DigitalOutputDevice | None = None
+    _switch_device: DigitalOutputDevice[DigitalOutputState] | None = None
 
     def __init__(
         self,
@@ -78,21 +80,23 @@ class TapHomeHumidifier(TapHomeEntity, HumidifierEntity):
             self._switch_device = config.hub.get_typed_device(
                 config.entity.switch_id, DigitalOutputDevice
             )
-            self._switch_device.state.changed += self._switch_change
+            self._subscribe(self._switch_device.state.changed, self._switch_change)
             self._schedule_update_when_changed(self._switch_device)
 
         if config.entity.humidity_sensor_id:
             self._humidity_sensor = config.hub.get_typed_device(
                 config.entity.humidity_sensor_id, Device
             )
-            self._humidity_sensor.state.changed += self._on_humidity_change
+            self._subscribe(
+                self._humidity_sensor.state.changed, self._on_humidity_change
+            )
             self._schedule_update_when_changed(self._humidity_sensor)
 
         if config.entity.action_id:
             self._action_device = config.hub.get_typed_device(
                 config.entity.action_id, MultiValueSwitchDevice
             )
-            self._action_device.state.changed += self._on_action_change
+            self._subscribe(self._action_device.state.changed, self._on_action_change)
             self._schedule_update_when_changed(self._action_device)
 
         if config.entity.mode_id:
@@ -101,7 +105,7 @@ class TapHomeHumidifier(TapHomeEntity, HumidifierEntity):
             )
             self._attr_supported_features |= HumidifierEntityFeature.MODES
             self._attr_available_modes = self._mode_device.options
-            self._mode_device.state.changed += self._on_mode_change
+            self._subscribe(self._mode_device.state.changed, self._on_mode_change)
             self._schedule_update_when_changed(self._mode_device)
 
         self._humidifier_generic_output = GenericOutputAdapter(self._humidifier_device)
@@ -154,6 +158,8 @@ class TapHomeHumidifier(TapHomeEntity, HumidifierEntity):
     ) -> None:
         self._attr_mode = self._mode_device.selected_option
 
+    @override
+    @handle_taphome_errors
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         if self._switch_device is not None:
@@ -161,6 +167,8 @@ class TapHomeHumidifier(TapHomeEntity, HumidifierEntity):
         else:
             await self._humidifier_generic_output.async_turn_on()
 
+    @override
+    @handle_taphome_errors
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         if self._switch_device is None:
@@ -168,6 +176,8 @@ class TapHomeHumidifier(TapHomeEntity, HumidifierEntity):
         else:
             await self._switch_device.async_turn_off()
 
+    @override
+    @handle_taphome_errors
     async def async_set_humidity(self, humidity: int) -> None:
         """Set new humidity level."""
         if self._switch_device is not None:
@@ -176,17 +186,20 @@ class TapHomeHumidifier(TapHomeEntity, HumidifierEntity):
             self.convert_ha_percentage_to_th(humidity)
         )
 
-    async def async_set_mode(self, mode):
+    @override
+    @handle_taphome_errors
+    async def async_set_mode(self, mode: str) -> None:
         """Set new target preset mode."""
         if self._mode_device is not None:
             await self._mode_device.async_select_option(mode)
 
 
-def setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
-    add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+    entry: TapHomeConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up the humidifier platform."""
-    add_taphome_entities(hass, add_entities, CONF_HUMIDIFIER, TapHomeHumidifier)
+    """Set up TapHome humidifiers from a config entry."""
+    add_taphome_entities(
+        entry, async_add_entities, HUMIDIFIER_DOMAIN, TapHomeHumidifier
+    )

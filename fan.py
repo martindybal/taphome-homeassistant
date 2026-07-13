@@ -2,7 +2,15 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, override
+
+from taphome_sdk import (
+    GenericOutputAdapter,
+    GenericOutputState,
+    MultiValueSwitchDevice,
+    MultiValueSwitchState,
+    OutputCapableDevice,
+)
 
 from homeassistant.components.fan import (
     DOMAIN as FAN_DOMAIN,
@@ -10,34 +18,26 @@ from homeassistant.components.fan import (
     FanEntityFeature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import (
-    AddEntitiesCallback,
-    ConfigType,
-    DiscoveryInfoType,
-)
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .add_entry_request import add_taphome_entities
-from .const import CONF_FAN
+from .entity import TapHomeEntity, handle_taphome_errors
 from .taphome_config_entry import AddEntryRequest, TapHomeEntityConfig
-from .taphome_entity import TapHomeEntity
-from .taphome_sdk import (
-    GenericOutputAdapter,
-    GenericOutputState,
-    MultiValueSwitchDevice,
-    MultiValueSwitchState,
-)
+from .taphome_data import TapHomeConfigEntry
+
+PARALLEL_UPDATES = 0
 
 
 class TapHomeFanConfig(TapHomeEntityConfig):
     """Configuration for a TapHome fan device."""
 
-    def __init__(self, device_config: dict) -> None:
+    def __init__(self, device_config: dict[str, Any]) -> None:
         """Store config and extract fan settings."""
         super().__init__(device_config)
         self.preset_mode_id: int | None = self.get_optional("preset_mode_id", None)
 
 
-class TapHomeFan(TapHomeEntity, FanEntity):
+class TapHomeFan(TapHomeEntity[OutputCapableDevice, TapHomeFanConfig], FanEntity):
     """Representation of an fan."""
 
     def __init__(
@@ -64,7 +64,9 @@ class TapHomeFan(TapHomeEntity, FanEntity):
             )
             self._attr_supported_features |= FanEntityFeature.PRESET_MODE
             self._attr_preset_modes = self._preset_mode_device.options
-            self._preset_mode_device.state.changed += self._on_preset_mode_change
+            self._subscribe(
+                self._preset_mode_device.state.changed, self._on_preset_mode_change
+            )
             self._schedule_update_when_changed(self._preset_mode_device)
 
         super().__init__(config, self._fan_device, FAN_DOMAIN)
@@ -74,6 +76,7 @@ class TapHomeFan(TapHomeEntity, FanEntity):
     # The FanEntity assumes
     # self.percentage is not None and self.percentage > 0
     # or self.preset_mode is not None
+    @override
     def is_on(self) -> bool | None:
         """Return true if the entity is on."""
         return self._attr_is_on
@@ -92,6 +95,8 @@ class TapHomeFan(TapHomeEntity, FanEntity):
     ) -> None:
         self._attr_preset_mode = self._preset_mode_device.selected_option
 
+    @override
+    @handle_taphome_errors
     async def async_turn_on(
         self,
         percentage: int | None = None,
@@ -107,27 +112,32 @@ class TapHomeFan(TapHomeEntity, FanEntity):
         if preset_mode is not None:
             await self.async_set_preset_mode(preset_mode)
 
+    @override
+    @handle_taphome_errors
     async def async_set_percentage(self, percentage: int) -> None:
         """Set the speed percentage of the fan."""
         await self._fan_generic_output.async_set_output_value(
             self.convert_ha_percentage_to_th(percentage)
         )
 
+    @override
+    @handle_taphome_errors
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set the preset mode of the fan."""
         if self._preset_mode_device:
             await self._preset_mode_device.async_select_option(preset_mode)
 
+    @override
+    @handle_taphome_errors
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the fan."""
         await self._fan_generic_output.async_turn_off()
 
 
-def setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
-    add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+    entry: TapHomeConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up the switch platform."""
-    add_taphome_entities(hass, add_entities, CONF_FAN, TapHomeFan)
+    """Set up TapHome fans from a config entry."""
+    add_taphome_entities(entry, async_add_entities, FAN_DOMAIN, TapHomeFan)

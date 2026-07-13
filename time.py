@@ -2,25 +2,27 @@
 
 from datetime import time
 import logging
+from typing import override
+
+from taphome_sdk import SessionDurationVariableDevice, SessionDurationVariableState
 
 from homeassistant.components.time import DOMAIN as TIME_DOMAIN, TimeEntity
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import (
-    AddEntitiesCallback,
-    ConfigType,
-    DiscoveryInfoType,
-)
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .add_entry_request import add_taphome_entities
-from .const import CONF_TIMES
+from .entity import TapHomeEntity, handle_taphome_errors
 from .taphome_config_entry import AddEntryRequest, TapHomeEntityConfig
-from .taphome_entity import TapHomeEntity
-from .taphome_sdk import SessionDurationVariableDevice, SessionDurationVariableState
+from .taphome_data import TapHomeConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
+PARALLEL_UPDATES = 0
 
-class TapHomeTime(TapHomeEntity, TimeEntity):
+
+class TapHomeTime(
+    TapHomeEntity[SessionDurationVariableDevice, TapHomeEntityConfig], TimeEntity
+):
     """Representation of an time."""
 
     def __init__(self, config: AddEntryRequest[TapHomeEntityConfig]) -> None:
@@ -29,7 +31,7 @@ class TapHomeTime(TapHomeEntity, TimeEntity):
         self._variable = config.hub.get_typed_device(
             config.entity.id, SessionDurationVariableDevice
         )
-        self._variable.state.changed += self._on_variable_state_change
+        self._subscribe(self._variable.state.changed, self._on_variable_state_change)
 
         super().__init__(config, self._variable, TIME_DOMAIN)
 
@@ -40,16 +42,17 @@ class TapHomeTime(TapHomeEntity, TimeEntity):
     ) -> None:
         self._attr_native_value = current_state.to_time()
 
+    @override
+    @handle_taphome_errors
     async def async_set_value(self, value: time) -> None:
         """Persist new time value on the device."""
         await self._variable.async_set_time(value)
 
 
-def setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
-    add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+    entry: TapHomeConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up the switch platform."""
-    add_taphome_entities(hass, add_entities, CONF_TIMES, TapHomeTime)
+    """Set up TapHome times from a config entry."""
+    add_taphome_entities(entry, async_add_entities, TIME_DOMAIN, TapHomeTime)

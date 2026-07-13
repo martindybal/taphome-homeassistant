@@ -3,22 +3,9 @@
 from __future__ import annotations
 
 from abc import ABC
+from typing import Any, override
 
-from homeassistant.components.light import (
-    DOMAIN as LIGHT_DOMAIN,
-    ColorMode,
-    LightEntity,
-    LightEntityFeature,
-)
-from homeassistant.const import CONF_LIGHTS
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback, ConfigType
-from homeassistant.helpers.typing import DiscoveryInfoType
-
-from .add_entry_request import add_taphome_entities
-from .taphome_config_entry import AddEntryRequest, TapHomeEntityConfig
-from .taphome_entity import TapHomeEntity
-from .taphome_sdk import (
+from taphome_sdk import (
     AnalogOutputDevice,
     AnalogOutputState,
     DigitalOutputDevice,
@@ -31,30 +18,53 @@ from .taphome_sdk import (
     RGBLightState,
 )
 
+from homeassistant.components.light import (
+    DOMAIN as LIGHT_DOMAIN,
+    ColorMode,
+    LightEntity,
+    LightEntityFeature,
+)
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+
+from .add_entry_request import add_taphome_entities
+from .entity import TapHomeEntity, handle_taphome_errors
+from .taphome_config_entry import AddEntryRequest, TapHomeEntityConfig
+from .taphome_data import TapHomeConfigEntry
+
+PARALLEL_UPDATES = 0
+
+# Any device the light platform can drive. All of these state types derive from
+# ``DigitalOutputState`` (they share ``is_on``), which the base on/off handler
+# relies on.
+type LightDevice = (
+    RGBLightDevice
+    | DualWhiteLightDevice
+    | AnalogOutputDevice
+    | DigitalOutputDevice[DigitalOutputState]
+)
+
 
 class TapHomeLightConfig(TapHomeEntityConfig):
     """Configuration for a TapHome valve device."""
 
-    def __init__(self, device_config: dict) -> None:
+    def __init__(self, device_config: dict[str, Any]) -> None:
         """Store config and extract valve limits."""
         super().__init__(device_config)
         self.effect_id: int | None = self.get_optional("effect_id", None)
 
 
-class TapHomeLight(TapHomeEntity, LightEntity, ABC):
+class TapHomeLight(TapHomeEntity[LightDevice, TapHomeLightConfig], LightEntity, ABC):
     """Representation of an light."""
 
     def __init__(
         self,
         config: AddEntryRequest[TapHomeLightConfig],
-        light: RGBLightDevice
-        | DualWhiteLightDevice
-        | AnalogOutputDevice
-        | DigitalOutputDevice,
+        light: LightDevice,
     ) -> None:
         """Initialize TapHome light entity."""
         self._light = light
-        self._light.state.changed.subscribe(self._on_light_state_change)
+        self._subscribe(self._light.state.changed, self._on_light_state_change)
 
         if config.entity.effect_id:
             self._attr_supported_features = LightEntityFeature.EFFECT
@@ -62,7 +72,7 @@ class TapHomeLight(TapHomeEntity, LightEntity, ABC):
                 config.entity.effect_id, MultiValueSwitchDevice
             )
             self._attr_effect_list = self._effect_device.options
-            self._effect_device.state.changed += self._on_effect_change
+            self._subscribe(self._effect_device.state.changed, self._on_effect_change)
             self._schedule_update_when_changed(self._effect_device)
 
         super().__init__(config, self._light, LIGHT_DOMAIN)
@@ -80,7 +90,9 @@ class TapHomeLight(TapHomeEntity, LightEntity, ABC):
     ) -> None:
         self._attr_effect = self._effect_device.selected_option
 
-    async def async_turn_off(self, **kwargs):
+    @override
+    @handle_taphome_errors
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn device off."""
         await self._light.async_turn_off()
 
@@ -88,12 +100,12 @@ class TapHomeLight(TapHomeEntity, LightEntity, ABC):
 class TapHomeGenericOutputLight(TapHomeLight):
     """Representation of an on/off or dimmable light."""
 
-    _light: AnalogOutputDevice | DigitalOutputDevice
+    _light: AnalogOutputDevice | DigitalOutputDevice[DigitalOutputState]
 
     def __init__(
         self,
         config: AddEntryRequest[TapHomeLightConfig],
-        light: AnalogOutputDevice | DigitalOutputDevice,
+        light: AnalogOutputDevice | DigitalOutputDevice[DigitalOutputState],
     ) -> None:
         """Initialize TapHome light entity."""
 
@@ -103,7 +115,9 @@ class TapHomeGenericOutputLight(TapHomeLight):
                     ColorMode.BRIGHTNESS,
                 }
                 self._attr_color_mode = ColorMode.BRIGHTNESS
-                light.state.changed += self._light_analog_output_state_change
+                self._subscribe(
+                    light.state.changed, self._light_analog_output_state_change
+                )
             case DigitalOutputDevice():
                 self._attr_supported_color_modes = {
                     ColorMode.ONOFF,
@@ -120,11 +134,13 @@ class TapHomeGenericOutputLight(TapHomeLight):
             current_state.output_value
         )
 
+    @override
+    @handle_taphome_errors
     async def async_turn_on(
         self,
         *,
         brightness: int | None = None,
-        **kwargs,
+        **kwargs: Any,
     ) -> None:
         """Turn device on."""
         th_brightness = self.convert_ha_byte_to_th(brightness)
@@ -146,8 +162,10 @@ class TapHomeColorLight(TapHomeLight):
     ) -> None:
         """Initialize TapHome light entity."""
 
-        self._attr_min_color_temp_kelvin = light.min_color_temperature
-        self._attr_max_color_temp_kelvin = light.max_color_temperature
+        if light.min_color_temperature is not None:
+            self._attr_min_color_temp_kelvin = light.min_color_temperature
+        if light.max_color_temperature is not None:
+            self._attr_max_color_temp_kelvin = light.max_color_temperature
 
         match light:
             case RGBLightDevice():
@@ -160,7 +178,7 @@ class TapHomeColorLight(TapHomeLight):
                     ColorMode.COLOR_TEMP,
                 }
 
-        light.state.changed.subscribe(self._on_color_light_state_change)
+        self._subscribe(light.state.changed, self._on_color_light_state_change)
         super().__init__(config, light)
 
     def _on_color_light_state_change(
@@ -191,13 +209,15 @@ class TapHomeColorLight(TapHomeLight):
             else None
         )
 
+    @override
+    @handle_taphome_errors
     async def async_turn_on(
         self,
         *,
         brightness: int | None = None,
         color_temp_kelvin: int | None = None,
         hs_color: tuple[float, float] | None = None,
-        **kwargs,
+        **kwargs: Any,
     ) -> None:
         """Turn device on."""
 
@@ -234,11 +254,10 @@ def _create_light_entity(
             raise ValueError(f"Unsupported light device type: {type(light)}")
 
 
-def setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
-    add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+    entry: TapHomeConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up the switch platform."""
-    add_taphome_entities(hass, add_entities, CONF_LIGHTS, _create_light_entity)
+    """Set up TapHome lights from a config entry."""
+    add_taphome_entities(entry, async_add_entities, LIGHT_DOMAIN, _create_light_entity)

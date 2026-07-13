@@ -1,0 +1,103 @@
+{
+  "devices": [
+    {
+      "deviceId": 1,
+      "type": "DigitalOutput",
+      "name": "Living room light",
+      "description": "Ceiling light in the living room",
+      "zone": "Living room",
+      "category": "Lights",
+      "supportedValues": [
+        {"valueTypeId": 48, "readOnly": false}
+      ]
+    },
+    {
+      "deviceId": 2,
+      "type": "AnalogOutput",
+      "name": "Dining dimmer",
+      "description": "Dimmable light above the table",
+      "zone": "Living room",
+      "category": "Lights",
+      "supportedValues": [
+        {"valueTypeId": 42, "readOnly": false, "minValue": 0, "maxValue": 1},
+        {"valueTypeId": 67, "readOnly": false, "minValue": 0, "maxValue": 1}
+      ]
+    },
+    {
+      "deviceId": 3,
+      "type": "Thermostat",
+      "name": "Bedroom thermostat",
+      "description": "Bedroom heating thermostat",
+      "zone": "Bedroom",
+      "category": "Heating",
+      "supportedValues": [
+        {"valueTypeId": 6, "readOnly": false, "minValue": 5, "maxValue": 30},
+        {"valueTypeId": 5, "readOnly": true}
+      ]
+    },
+    {
+      "deviceId": 4,
+      "type": "Blinds",
+      "name": "Bedroom blinds",
+      "description": "Bedroom window blinds",
+      "zone": "Bedroom",
+      "category": "Blinds",
+      "supportedValues": [
+        {"valueTypeId": 46, "readOnly": false, "minValue": 0, "maxValue": 1},
+        {"valueTypeId": 66, "readOnly": true},
+        {"valueTypeId": 10, "readOnly": false, "minValue": 0, "maxValue": 1}
+      ]
+    },
+    {
+      "deviceId": 5,
+      "type": "MultiValueSwitch",
+      "name": "Scene switch",
+      "description": "Living room scenes",
+      "zone": "Living room",
+      "category": "Scenes",
+      "supportedValues": [
+        {
+          "valueTypeId": 49,
+          "readOnly": false,
+          "enumeratedValues": [
+            {"value": 0, "name": "Off", "isEnabled": true},
+            {"value": 1, "name": "Reading", "isEnabled": true},
+            {"value": 2, "name": "Movie", "isEnabled": true}
+          ]
+        },
+        {
+          "valueTypeId": 71,
+          "readOnly": false,
+          "enumeratedValues": [
+            {"value": 0, "name": "Off", "isEnabled": true},
+            {"value": 1, "name": "Reading", "isEnabled": true},
+            {"value": 2, "name": "Movie", "isEnabled": true}
+          ]
+        }
+      ]
+    },
+    {
+      "deviceId": 6,
+      "type": "Button",
+      "name": "Wall button",
+      "description": "Hallway wall button",
+      "zone": "Hallway",
+      "category": "Buttons",
+      "supportedValues": [
+        {"valueTypeId": 52, "readOnly": false}
+      ]
+    },
+    {
+      "deviceId": 7,
+      "type": "HumiditySensor",
+      "name": "Bathroom humidity",
+      "description": "Bathroom humidity sensor",
+      "zone": "Bathroom",
+      "category": "Sensors",
+      "supportedValues": [
+        {"valueTypeId": 3, "readOnly": true}
+      ]
+    }
+  ],
+  "timestamp": 0
+}

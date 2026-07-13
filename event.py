@@ -2,26 +2,30 @@
 
 import logging
 
+from taphome_sdk import ButtonAction, ButtonDevice
+
 from homeassistant.components.event import (
     DOMAIN as EVENT_DOMAIN,
     EventDeviceClass,
     EventEntity,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback, ConfigType
-from homeassistant.helpers.typing import DiscoveryInfoType
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .add_entry_request import add_taphome_entities
 from .button import TapHomeButtonConfig
-from .const import CONF_BUTTONS
+from .entity import TapHomeEntity
 from .taphome_config_entry import AddEntryRequest
-from .taphome_entity import TapHomeEntity
-from .taphome_sdk import ButtonAction, ButtonDevice
+from .taphome_data import TapHomeConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
+PARALLEL_UPDATES = 0
 
-class TapHomeButtonEvent(TapHomeEntity, EventEntity):
+
+class TapHomeButtonEvent(
+    TapHomeEntity[ButtonDevice, TapHomeButtonConfig], EventEntity
+):
     """Representation of a TapHome button event entity."""
 
     def __init__(self, config: AddEntryRequest[TapHomeButtonConfig]) -> None:
@@ -40,11 +44,10 @@ class TapHomeButtonEvent(TapHomeEntity, EventEntity):
             self.async_write_ha_state()
 
 
-def setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
-    add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+    entry: TapHomeConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up the event platform."""
-    add_taphome_entities(hass, add_entities, CONF_BUTTONS, TapHomeButtonEvent)
+    """Set up TapHome button events from a config entry."""
+    add_taphome_entities(entry, async_add_entities, EVENT_DOMAIN, TapHomeButtonEvent)

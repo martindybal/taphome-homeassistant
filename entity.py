@@ -1,0 +1,351 @@
+"""Common entity abstractions for the TapHome integration."""
+
+from collections.abc import Callable, Coroutine
+from functools import wraps
+from typing import Any, Concatenate, override
+
+from taphome_sdk import (
+    Device,
+    DeviceState,
+    Event,
+    HubConnectionState,
+    Location,
+    TapHomeError,
+    ValueChangeFailedException,
+)
+
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import (
+    area_registry as ar,
+    device_registry as dr,
+    entity_registry as er,
+    label_registry as lr,
+)
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity import Entity
+
+from .const import DOMAIN
+from .taphome_config_entry import AddEntryRequest, NameMapping, TapHomeEntityConfig
+
+
+def handle_taphome_errors[_EntityT: Entity, **_P](
+    func: Callable[Concatenate[_EntityT, _P], Coroutine[Any, Any, None]],
+) -> Callable[Concatenate[_EntityT, _P], Coroutine[Any, Any, None]]:
+    """Translate SDK errors raised by an entity action into HomeAssistantError."""
+
+    @wraps(func)
+    async def wrapper(self: _EntityT, *args: _P.args, **kwargs: _P.kwargs) -> None:
+        try:
+            await func(self, *args, **kwargs)
+        except ValueChangeFailedException as error:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="change_rejected",
+                translation_placeholders={"entity_id": self.entity_id},
+            ) from error
+        except TapHomeError as error:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="communication_error",
+                translation_placeholders={"entity_id": self.entity_id},
+            ) from error
+
+    return wrapper
+
+
+def hub_device_id(location: Location | None, core_id: str | None) -> str:
+    """Return the id part of the Core hub device identifier.
+
+    The Core is every device's ``via_device``; entity and setup code must
+    derive its id the same way for that link to hold.
+    """
+    return location.location_id if location else core_id or DOMAIN
+
+
+def _resolve_suggested_area(
+    hass: HomeAssistant, mapping: NameMapping, zone: str | None
+) -> str | None:
+    """Return the area name a new device should be created in.
+
+    Ignored zones suggest nothing; mapped zones resolve to the target area's
+    name (the target is an area id from the options flow or a name from YAML);
+    unmapped zones fall back to the TapHome zone name.
+    """
+    if zone is None or mapping.is_ignored(zone):
+        return None
+    target = mapping.map(zone)
+    if target == zone:
+        return zone
+    area = ar.async_get(hass).async_get_area(target)
+    return area.name if area else target
+
+
+class TapHomeSubscriptionMixin(Entity):
+    """Defer SDK event subscriptions to the entity lifecycle.
+
+    Handlers run once at registration time to seed the entity attributes
+    (Event.subscribe replays the last value); the permanent subscription
+    is made in async_added_to_hass and removed with the entity.
+    """
+
+    # Seeded lazily by ``_subscribe`` — entities record subscriptions from their
+    # constructors, before ``TapHomeEntity.__init__`` runs.
+    _pending_subscriptions: list[tuple[Event[...], Callable[..., None]]]
+
+    def _subscribe[**P](self, event: Event[P], handler: Callable[P, None]) -> None:
+        """Seed the handler now and subscribe when the entity is added."""
+        if not hasattr(self, "_pending_subscriptions"):
+            self._pending_subscriptions = []
+        self._pending_subscriptions.append((event, handler))
+        event.subscribe(handler)
+        event.unsubscribe(handler)
+
+    @override
+    async def async_added_to_hass(self) -> None:
+        """Activate the recorded subscriptions."""
+        await super().async_added_to_hass()
+        for event, handler in self._pending_subscriptions:
+            event.subscribe(handler)
+            self.async_on_remove(self._make_unsubscriber(event, handler))
+
+    @staticmethod
+    def _make_unsubscriber(
+        event: Event[...], handler: Callable[..., None]
+    ) -> Callable[[], None]:
+        """Return a zero-arg callback that unsubscribes ``handler`` from ``event``."""
+
+        def _unsubscribe() -> None:
+            event.unsubscribe(handler)
+
+        return _unsubscribe
+
+
+class TapHomeEntity[DeviceT: Device[Any], ConfigT: TapHomeEntityConfig](
+    TapHomeSubscriptionMixin, Entity
+):
+    """Base class for all TapHome entities."""
+
+    _attr_has_entity_name = True
+    _attr_should_poll = False
+
+    def __init__(
+        self,
+        config: AddEntryRequest[ConfigT],
+        taphome_device: DeviceT,
+        domain: str,
+        unique_id_determination: str = "",
+    ) -> None:
+        """Initialize shared entity state."""
+        super().__init__()
+        self.taphome_device: DeviceT = taphome_device
+        self._core_config = config.core
+
+        self._attr_available = False
+        self._attr_name = None
+
+        self._zone = taphome_device.zone
+        self._category = taphome_device.category
+
+        segment = config.core.unique_id_segment
+        unique_id_core = f".{segment}" if segment is not None else ""
+        unique_id_device = (
+            f"{domain}.{unique_id_determination}" if unique_id_determination else domain
+        )
+        self._attr_unique_id = (
+            f"taphome{unique_id_core}.{unique_id_device}.{taphome_device.id}".lower()
+        )
+
+        location_id = hub_device_id(config.hub.location, config.core.id)
+        self._device_identifiers = {(DOMAIN, f"{location_id}_{taphome_device.id}")}
+        self._attr_device_info = DeviceInfo(
+            identifiers=self._device_identifiers,
+            name=taphome_device.name,
+            manufacturer="TapHome",
+            model=taphome_device.device_type,
+            suggested_area=_resolve_suggested_area(
+                config.hass, config.core.zone_mapping, self._zone
+            ),
+            via_device=(DOMAIN, location_id),
+        )
+
+        self._add_state_attributes_if_allowed("taphome_id", taphome_device.id)
+        self._add_state_attributes_if_allowed("taphome_name", taphome_device.name)
+        self._add_state_attributes_if_allowed(
+            "taphome_description", taphome_device.description
+        )
+        self._add_state_attributes_if_allowed(
+            "taphome_category", taphome_device.category
+        )
+        self._add_state_attributes_if_allowed("taphome_zone", self._zone)
+
+        self._subscribe(
+            config.hub.connection_state.changed, self._connection_state_changed
+        )
+        self._subscribe(taphome_device.state.changed, self._state_changed)
+
+    def _schedule_update_when_changed(self, device: Device[Any]) -> None:
+        """Refresh the entity state whenever the given device changes."""
+        self._subscribe(
+            device.state.changed, lambda _, __: self.schedule_update_ha_state()
+        )
+
+    @override
+    async def async_added_to_hass(self) -> None:
+        """Subscribe to the SDK events and apply the zone/label mappings."""
+        await super().async_added_to_hass()
+        self._apply_zone_mapping()
+        self._apply_label_mapping()
+
+    def _apply_zone_mapping(self) -> None:
+        """Move the device to the area its TapHome zone is mapped to.
+
+        Unmapped zones already land in an area of the same name through
+        ``suggested_area``; ignored zones get no assignment at all. A mapped
+        target is an area id (options flow) or a name (YAML), created when
+        missing.
+        """
+        mapping = self._core_config.zone_mapping
+        if self._zone is None or mapping.is_ignored(self._zone):
+            return
+        target = mapping.map(self._zone)
+        if target == self._zone:
+            return
+        registry = ar.async_get(self.hass)
+        area = (
+            registry.async_get_area(target)
+            or registry.async_get_area_by_name(target)
+            or registry.async_create(target)
+        )
+        device_registry = dr.async_get(self.hass)
+        device = device_registry.async_get_device(self._device_identifiers)
+        if device is not None and device.area_id != area.id:
+            device_registry.async_update_device(device.id, area_id=area.id)
+
+    def _apply_label_mapping(self) -> None:
+        """Label the device and entity after its TapHome category.
+
+        Every category becomes a label (created when missing) unless it is
+        ignored; the mapping may rename it. A mapped target is a label id
+        (options flow) or a name (YAML). The label goes to both the device and
+        its entity so it shows everywhere labels are used.
+        """
+        mapping = self._core_config.label_mapping
+        if self._category is None or mapping.is_ignored(self._category):
+            return
+        target = mapping.map(self._category)
+        registry = lr.async_get(self.hass)
+        label = (
+            registry.async_get_label(target)
+            or registry.async_get_label_by_name(target)
+            or registry.async_create(target)
+        )
+
+        device_registry = dr.async_get(self.hass)
+        device = device_registry.async_get_device(self._device_identifiers)
+        if device is not None and label.label_id not in device.labels:
+            device_registry.async_update_device(
+                device.id, labels=device.labels | {label.label_id}
+            )
+
+        entity_registry = er.async_get(self.hass)
+        entry = entity_registry.async_get(self.entity_id)
+        if entry is not None and label.label_id not in entry.labels:
+            entity_registry.async_update_entity(
+                self.entity_id, labels=entry.labels | {label.label_id}
+            )
+
+    @override
+    def schedule_update_ha_state(self, force_refresh: bool = False) -> None:
+        """Write the state to the state machine."""
+        if self.hass is not None:
+            super().schedule_update_ha_state(force_refresh)
+
+    def _connection_state_changed(
+        self, _: HubConnectionState, current_state: HubConnectionState
+    ) -> None:
+        """Handle connection state changes."""
+        self._attr_available = current_state is HubConnectionState.CONNECTED
+        self.schedule_update_ha_state()
+
+    def _state_changed(self, _: DeviceState | None, current_state: DeviceState) -> None:
+        self._add_state_attributes_if_allowed(
+            "taphome_operation_mode",
+            current_state.operation_mode,
+            lambda value: value.name.lower(),
+        )
+        self.schedule_update_ha_state()
+
+    def _add_state_attributes_if_allowed(
+        self,
+        key: str,
+        value: Any,
+        value_transform: Callable[[Any], Any] = lambda v: v,
+    ) -> None:
+        if self._core_config.is_attribute_enabled(key) and value is not None:
+            self._add_state_attributes(key, value, value_transform)
+
+    def _add_state_attributes(
+        self,
+        key: str,
+        value: Any,
+        value_transform: Callable[[Any], Any] = lambda v: v,
+    ) -> None:
+        if not hasattr(self, "_attr_extra_state_attributes"):
+            self._attr_extra_state_attributes = {}
+        self._attr_extra_state_attributes[key] = value_transform(value)
+
+    @staticmethod
+    def convert_th_percentage_to_ha_byte(value: float | None) -> int | None:
+        """Convert 0..1 to 0..255 scale."""
+        if value is None:
+            return None
+        value = max(0.0, min(1.0, value))
+        return round(value * 255)
+
+    @staticmethod
+    def convert_ha_byte_to_th(value: float | None) -> float | None:
+        """Convert 0..255 to 0..1 scale."""
+        if value is None:
+            return None
+        value = max(0.0, min(255, value))
+        return round(value / 255, 2)
+
+    @staticmethod
+    def convert_th_percentage_to_ha(value: float | None) -> int | None:
+        """Convert 0..1 to 0..100 scale."""
+        if value is None:
+            return None
+        value = max(0.0, min(1.0, value))
+        return round(value * 100)
+
+    @staticmethod
+    def convert_ha_percentage_to_th(value: float) -> float:
+        """Convert 0..100 to 0..1 scale."""
+        value = max(0, min(100, value))
+        return round(value / 100, 2)
+
+    @staticmethod
+    def convert_th_bool_to_ha(value: float | None) -> bool | None:
+        """Convert 0/1 values to boolean."""
+        if value == 1:
+            return True
+        if value == 0:
+            return False
+        return None
+
+    @staticmethod
+    def invert_th_percentage_to_ha(value: float | None) -> int | None:
+        """Invert 0..1 to 0..100 scale."""
+        if value is None:
+            return None
+        value = max(0.0, min(1.0, value))
+        return TapHomeEntity.convert_th_percentage_to_ha(1 - value)
+
+    @staticmethod
+    def invert_ha_percentage_to_th(value: float | None) -> float | None:
+        """Invert 0..100 to 0..1 scale."""
+        if value is None:
+            return None
+        value = max(0, min(100, value))
+        return 1 - TapHomeEntity.convert_ha_percentage_to_th(value)

@@ -8,10 +8,12 @@ jobs:
     steps:
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.12"
+          python-version: "3.14"
       - run: python -m venv .venv
       - run: .venv/bin/pip install --upgrade pip
       - run: .venv/bin/pip install homeassistant
+      # The SDK dependency, same as manifest.json requirements.
+      - run: .venv/bin/pip install taphome-sdk
       - run: tar -czf python-env.tar.gz .venv
       - uses: actions/upload-artifact@v4
         with:
@@ -32,19 +34,48 @@ jobs:
       package: "ruff"
       command: "ruff check ."
 
-  mypy:
-    needs: prepare-python-env
-    uses: ./.github/workflows/python-check.yml
-    with:
-      package: "mypy"
-      command: "mypy -p taphome_sdk --ignore-missing-imports --explicit-package-bases"
-
   pylint:
     needs: prepare-python-env
     uses: ./.github/workflows/python-check.yml
     with:
       package: "pylint"
       command: "pylint . --fail-under=9.5"
+
+  mypy:
+    needs: prepare-python-env
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+      - uses: actions/download-artifact@v4
+        with:
+          name: python-env
+          path: .
+      - run: tar -xzf python-env.tar.gz
+      - run: .venv/bin/pip install mypy
+      # Address the integration as the nested package ``custom_components.taphome``
+      # (config in pyproject.toml) so the repo-root select.py/time.py never shadow
+      # the stdlib. The nesting lives outside the checkout to avoid recursion, and
+      # mypy runs from a neutral directory (never ``python -m mypy`` from the root).
+      - name: mypy --strict
+        shell: bash
+        run: |
+          mkdir -p "${RUNNER_TEMP}/mypy_root/custom_components"
+          ln -s "${GITHUB_WORKSPACE}" "${RUNNER_TEMP}/mypy_root/custom_components/taphome"
+          cd "${RUNNER_TEMP}"
+          MYPYPATH="${RUNNER_TEMP}/mypy_root" \
+            "${GITHUB_WORKSPACE}/.venv/bin/mypy" -p custom_components.taphome \
+            --config-file "${GITHUB_WORKSPACE}/pyproject.toml"
+
+  pytest:
+    needs: prepare-python-env
+    uses: ./.github/workflows/python-check.yml
+    with:
+      package: "pytest-homeassistant-custom-component"
+      command: "pytest tests"
 
   validate-hacs:
     runs-on: ubuntu-latest

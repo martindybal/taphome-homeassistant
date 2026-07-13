@@ -2,6 +2,16 @@
 
 from __future__ import annotations
 
+from typing import Any, override
+
+from taphome_sdk import (
+    BidirectionalDeviceState,
+    GenericOutputAdapter,
+    GenericOutputState,
+    OutputCapableDevice,
+    PositionState,
+)
+
 from homeassistant.components.valve import (
     DOMAIN as VALVE_DOMAIN,
     ValveDeviceClass,
@@ -9,34 +19,26 @@ from homeassistant.components.valve import (
     ValveEntityFeature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import (
-    AddEntitiesCallback,
-    ConfigType,
-    DiscoveryInfoType,
-)
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .add_entry_request import add_taphome_entities
-from .const import CONF_VALVE
+from .entity import TapHomeEntity, handle_taphome_errors
 from .taphome_config_entry import AddEntryRequest, TapHomeEntityConfig
-from .taphome_entity import TapHomeEntity
-from .taphome_sdk import (
-    BidirectionalDeviceState,
-    GenericOutputAdapter,
-    GenericOutputState,
-    PositionState,
-)
+from .taphome_data import TapHomeConfigEntry
+
+PARALLEL_UPDATES = 0
 
 
 class TapHomeValveConfig(TapHomeEntityConfig):
     """Configuration for a TapHome valve device."""
 
-    def __init__(self, device_config: dict) -> None:
+    def __init__(self, device_config: dict[str, Any]) -> None:
         """Store config and extract valve limits."""
         super().__init__(device_config)
         self.device_class: ValveDeviceClass = self.get_optional("device_class", None)
 
 
-class TapHomeValve(TapHomeEntity, ValveEntity):
+class TapHomeValve(TapHomeEntity[OutputCapableDevice, TapHomeValveConfig], ValveEntity):
     """Representation of an valve."""
 
     def __init__(self, config: AddEntryRequest[TapHomeValveConfig]) -> None:
@@ -70,22 +72,28 @@ class TapHomeValve(TapHomeEntity, ValveEntity):
         match current_state.device_state:
             case BidirectionalDeviceState() as bidirectional_state:
                 position_state = bidirectional_state.get_position_state()
-                self._attr_is_closed = position_state == PositionState.CLOSED
-                self._attr_is_opening = position_state == PositionState.OPENING
-                self._attr_is_closing = position_state == PositionState.CLOSING
+                self._attr_is_closed = position_state is PositionState.CLOSED
+                self._attr_is_opening = position_state is PositionState.OPENING
+                self._attr_is_closing = position_state is PositionState.CLOSING
             case _:
                 self._attr_is_closed = not current_state.is_on
 
+    @override
+    @handle_taphome_errors
     async def async_open_valve(self) -> None:
         """Open the valve."""
         # After turning on, the last value is ignored and 100 % is used.
         # This behaviour is not desired.
         await self._valve_generic_output.async_turn_on()
 
+    @override
+    @handle_taphome_errors
     async def async_close_valve(self) -> None:
         """Close the valve."""
         await self._valve_generic_output.async_turn_off()
 
+    @override
+    @handle_taphome_errors
     async def async_set_valve_position(self, position: int) -> None:
         """Move the valve to a specific position."""
         await self._valve_generic_output.async_set_output_value(
@@ -93,11 +101,10 @@ class TapHomeValve(TapHomeEntity, ValveEntity):
         )
 
 
-def setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
-    add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+    entry: TapHomeConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up the valve platform."""
-    add_taphome_entities(hass, add_entities, CONF_VALVE, TapHomeValve)
+    """Set up TapHome valves from a config entry."""
+    add_taphome_entities(entry, async_add_entities, VALVE_DOMAIN, TapHomeValve)

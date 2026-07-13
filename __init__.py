@@ -1,8 +1,13 @@
 """TapHome integration."""
 
-from dataclasses import dataclass, field
+# sdk_locator must be imported before anything imports taphome_sdk, which
+# breaks the usual import ordering on purpose.
+# pylint: disable=wrong-import-order
+
+from . import sdk_locator  # noqa: F401
+
+from dataclasses import dataclass
 import logging
-import typing
 
 from aiohttp.web import Request
 import voluptuous as vol
@@ -21,8 +26,11 @@ from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.components.time import DOMAIN as TIME_DOMAIN
 from homeassistant.components.valve import DOMAIN as VALVE_DOMAIN
-from homeassistant.components.webhook import async_register as async_register_webhook
-from homeassistant.config_entries import ConfigType
+from homeassistant.components.webhook import (
+    async_register as async_register_webhook,
+    async_unregister as async_unregister_webhook,
+)
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntryState
 from homeassistant.const import (
     CONF_BINARY_SENSORS,
     CONF_COVERS,
@@ -34,8 +42,15 @@ from homeassistant.const import (
     CONF_WEBHOOK_ID,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.discovery import load_platform
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    entity_registry as er,
+    issue_registry as ir,
+)
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.typing import ConfigType
 
 from .binary_sensor import BinarySensorEntityConfig
 from .button import TapHomeButtonConfig
@@ -43,13 +58,15 @@ from .climate import TapHomeClimateConfig
 from .const import (
     AVAILABLE_ATTRIBUTES,
     CONF_API_URL,
-    CONF_IP,
     CONF_BUTTONS,
     CONF_CLIMATES,
+    CONF_CORE_UNIQUE_ID,
     CONF_CORES,
     CONF_ENABLED_ATTRIBUTES,
     CONF_FAN,
     CONF_HUMIDIFIER,
+    CONF_IP,
+    CONF_KNOWN_DEVICE_IDS,
     CONF_LABELS,
     CONF_LANGUAGE,
     CONF_MULTIVALUE_SWITCHES,
@@ -58,14 +75,20 @@ from .const import (
     CONF_UPDATE_INTERVAL,
     CONF_VALVE,
     CONF_ZONES,
+    DOMAIN,
+    PLATFORMS,
+    SUBENTRY_DATA_AUTO_TITLE,
     TAPHOME_PLATFORM,
     USE_DESCRIPTION_AS_ENTITY_ID,
     USE_DESCRIPTION_AS_NAME,
 )
 from .cover import TapHomeCoverConfig
 from .fan import TapHomeFanConfig
+from .entity import hub_device_id
 from .humidifier import TapHomeHumidifierConfig
 from .light import TapHomeLightConfig
+from .number import TapHomeNumberConfig
+from .platform_descriptors import device_config_id
 from .sensor import TapHomeSensorConfig
 from .switch import TapHomeSwitchConfig
 from .taphome_config_entry import (
@@ -74,29 +97,52 @@ from .taphome_config_entry import (
     TapHomeCoreConfig,
     TapHomeEntityConfig,
 )
+from .subentry import (
+    build_device_subentry,
+    device_config_from_subentry,
+    iter_device_subentries,
+    subentry_platform,
+)
+from .taphome_data import TapHomeConfigEntry, TapHomeRuntimeData
 from .taphome_issue_registry import TapHomeIssueRegistry
-from .taphome_sdk import HubConnectionState, TapHomeHub, TapHomeHubFactory
+from taphome_sdk import (
+    HubConnectionState,
+    TapHomeAuthError,
+    TapHomeError,
+    TapHomeHub,
+    TapHomeHubFactory,
+)
+from .issues import Issues
 from .valve import TapHomeValveConfig
 
 _LOGGER = logging.getLogger(__name__)
 
-# "domain": BINARY_SENSOR_DOMAIN,
-# "config_key": CONF_BINARY_SENSORS,
-# "config_entry": BinarySensorConfigEntry,
 
-
-@dataclass
+@dataclass(slots=True, frozen=True)
 class DomainDefinition:
-    """Configuration holder for a Home Assistant platform domain."""
+    """Bind a Home Assistant platform domain to its TapHome configuration."""
 
     name: str
     config_key: str
     config_entry_type: type
-    add_entry_requests: list = field(default_factory=list)
 
-    def add_requests(self, requests: list) -> None:
-        """Extend stored entry requests."""
-        self.add_entry_requests.extend(requests)
+
+DOMAIN_DEFINITIONS: tuple[DomainDefinition, ...] = (
+    DomainDefinition(BINARY_SENSOR_DOMAIN, CONF_BINARY_SENSORS, BinarySensorEntityConfig),
+    DomainDefinition(BUTTON_DOMAIN, CONF_BUTTONS, TapHomeButtonConfig),
+    DomainDefinition(EVENT_DOMAIN, CONF_BUTTONS, TapHomeButtonConfig),
+    DomainDefinition(CLIMATE_DOMAIN, CONF_CLIMATES, TapHomeClimateConfig),
+    DomainDefinition(COVER_DOMAIN, CONF_COVERS, TapHomeCoverConfig),
+    DomainDefinition(LIGHT_DOMAIN, CONF_LIGHTS, TapHomeLightConfig),
+    DomainDefinition(FAN_DOMAIN, CONF_FAN, TapHomeFanConfig),
+    DomainDefinition(VALVE_DOMAIN, CONF_VALVE, TapHomeValveConfig),
+    DomainDefinition(HUMIDIFIER_DOMAIN, CONF_HUMIDIFIER, TapHomeHumidifierConfig),
+    DomainDefinition(SELECT_DOMAIN, CONF_MULTIVALUE_SWITCHES, TapHomeEntityConfig),
+    DomainDefinition(SENSOR_DOMAIN, CONF_SENSORS, TapHomeSensorConfig),
+    DomainDefinition(SWITCH_DOMAIN, CONF_SWITCHES, TapHomeSwitchConfig),
+    DomainDefinition(TIME_DOMAIN, CONF_TIMES, TapHomeEntityConfig),
+    DomainDefinition(NUMBER_DOMAIN, CONF_NUMBERS, TapHomeNumberConfig),
+)
 
 
 CONFIG_SCHEMA = vol.Schema(
@@ -177,187 +223,552 @@ CONFIG_SCHEMA = vol.Schema(
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the TapHome integration."""
-    if CONF_LANGUAGE in config[TAPHOME_PLATFORM]:
-        _LOGGER.error(
-            "TapHome language setting is not supported any more. "
-            "You can rename entities as you wish. "
-            "This option will be removed in future, please remove it from your config"
-        )
+    """Import legacy YAML configuration into config entries."""
+    if TAPHOME_PLATFORM not in config:
+        return True
 
-    if len(config[TAPHOME_PLATFORM][CONF_CORES]) > 1:
-        for core_config in config[TAPHOME_PLATFORM][CONF_CORES]:
+    yaml_config = config[TAPHOME_PLATFORM]
+    cores = yaml_config.get(CONF_CORES, [])
+
+    if len(cores) > 1:
+        for core_config in cores:
             if CONF_ID not in core_config:
                 _LOGGER.error(
-                    "You have to specify a 'name' if you are using multiple cores"
+                    "You have to specify an 'id' if you are using multiple cores"
                 )
                 return False
 
-    domains = [
-        DomainDefinition(
-            BINARY_SENSOR_DOMAIN, CONF_BINARY_SENSORS, BinarySensorEntityConfig
-        ),
-        DomainDefinition(BUTTON_DOMAIN, CONF_BUTTONS, TapHomeButtonConfig),
-        DomainDefinition(EVENT_DOMAIN, CONF_BUTTONS, TapHomeButtonConfig),
-        DomainDefinition(CLIMATE_DOMAIN, CONF_CLIMATES, TapHomeClimateConfig),
-        DomainDefinition(COVER_DOMAIN, CONF_COVERS, TapHomeCoverConfig),
-        DomainDefinition(LIGHT_DOMAIN, CONF_LIGHTS, TapHomeLightConfig),
-        DomainDefinition(FAN_DOMAIN, CONF_FAN, TapHomeFanConfig),
-        DomainDefinition(VALVE_DOMAIN, CONF_VALVE, TapHomeValveConfig),
-        DomainDefinition(HUMIDIFIER_DOMAIN, CONF_HUMIDIFIER, TapHomeHumidifierConfig),
-        DomainDefinition(SELECT_DOMAIN, CONF_MULTIVALUE_SWITCHES, TapHomeEntityConfig),
-        DomainDefinition(SENSOR_DOMAIN, CONF_SENSORS, TapHomeSensorConfig),
-        DomainDefinition(SWITCH_DOMAIN, CONF_SWITCHES, TapHomeSwitchConfig),
-        DomainDefinition(NUMBER_DOMAIN, CONF_NUMBERS, TapHomeEntityConfig),
-        DomainDefinition(TIME_DOMAIN, CONF_TIMES, TapHomeEntityConfig),
-    ]
+    for core_config in cores:
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                DOMAIN, context={"source": SOURCE_IMPORT}, data=core_config
+            )
+        )
 
-    for core_config in config[TAPHOME_PLATFORM][CONF_CORES]:
-        if not await _setup_core(hass, core_config, domains):
-            return False
-
-    for domain in domains:
-        hass.data[TAPHOME_PLATFORM][domain.config_key] = domain.add_entry_requests
-
-        load_platform(
+    if cores:
+        ir.async_create_issue(
             hass,
-            domain.name,
-            TAPHOME_PLATFORM,
-            {},
-            config,
+            DOMAIN,
+            Issues.YAML_DEPRECATED,
+            is_fixable=False,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key=Issues.YAML_DEPRECATED,
+            learn_more_url=(
+                "https://github.com/martindybal/taphome-homeassistant"
+                "/blob/production/docs/user-guide.md#migrating-from-yaml"
+            ),
         )
 
     return True
 
 
-def _read_from_config_or_default(config: dict, key: str, default_value) -> typing.Any:
-    if key in config:
-        return config[key]
-    return default_value
-
-
-async def _setup_core(
-    hass: HomeAssistant, core_config: dict, domains: list[DomainDefinition]
-) -> bool:
-    token = core_config[CONF_TOKEN]
-
-    core_id = _read_from_config_or_default(core_config, CONF_ID, None)
-    use_description_as_entity_id = _read_from_config_or_default(
-        core_config, USE_DESCRIPTION_AS_ENTITY_ID, False
+async def async_setup_entry(hass: HomeAssistant, entry: TapHomeConfigEntry) -> bool:
+    """Set up a TapHome core from a config entry."""
+    core_config = _build_core_config(entry)
+    taphome_issue_registry = TapHomeIssueRegistry(
+        hass, core_config.id, entry.entry_id
     )
-    use_description_as_name = _read_from_config_or_default(
-        core_config, USE_DESCRIPTION_AS_NAME, False
-    )
-    zone_mapping = (
-        NameMapping.from_dict(core_config.get(CONF_ZONES))
-        if CONF_ZONES in core_config
-        else None
-    )
-    label_mapping = (
-        NameMapping.from_dict(core_config.get(CONF_LABELS))
-        if CONF_LABELS in core_config
-        else None
-    )
-    enabled_attributes = tuple(
-        _read_from_config_or_default(
-            core_config, CONF_ENABLED_ATTRIBUTES, AVAILABLE_ATTRIBUTES
-        )
-    )
-
-    core_config_entry = TapHomeCoreConfig(
-        core_id,
-        use_description_as_entity_id,
-        use_description_as_name,
-        zone_mapping,
-        label_mapping,
-        enabled_attributes,
-    )
-    taphome_issue_registry = TapHomeIssueRegistry(hass, core_id)
-    ip = _read_from_config_or_default(core_config, CONF_IP, None)
-    api_url = _read_from_config_or_default(core_config, CONF_API_URL, None)
-    if api_url and ip:
-        taphome_issue_registry.create_ip_and_api_url_set_issue()
-    else:
-        taphome_issue_registry.try_delete_ip_and_api_url_set_issue()
-        if api_url is None:
-            if ip is not None:
-                api_url = f"http://{ip}/api/TapHomeApi/v1"
-            else:
-                api_url = "https://api.taphome.com/api/TapHomeApi/v1"
-    webhook_id = _read_from_config_or_default(core_config, CONF_WEBHOOK_ID, None)
-    update_interval = _read_from_config_or_default(
-        core_config, CONF_UPDATE_INTERVAL, None
-    )
-
-    if update_interval is not None:
-        _LOGGER.error("Update interval is not supported anymore")
-
-    hub: TapHomeHub
 
     try:
         hub = await TapHomeHubFactory.async_connect(
-            api_url,
-            token,
+            entry.data[CONF_API_URL],
+            entry.data[CONF_TOKEN],
+            async_get_clientsession(hass),
         )
-        if hub.connection_state.value != HubConnectionState.CONNECTED:
-            _LOGGER.error("Failed to connect to TapHome Hub")
-            return False
+    except TapHomeAuthError as error:
+        raise ConfigEntryAuthFailed(
+            "TapHome API rejected the configured token"
+        ) from error
+    except Exception as error:
+        raise ConfigEntryNotReady(
+            f"Failed to connect to TapHome core: {error}"
+        ) from error
 
-        def hub_connection_state_changed(
-            _: HubConnectionState, state: HubConnectionState
-        ) -> None:
-            """Handle changes in hub connection state."""
-            if state == HubConnectionState.CONNECTED:
-                taphome_issue_registry.try_delete_core_unavailable_issue()
+    if hub.connection_state.value != HubConnectionState.CONNECTED:
+        hub.disconnect()
+        raise ConfigEntryNotReady("TapHome hub is not connected")
+
+    unavailable_logged = False
+
+    def hub_connection_state_changed(
+        _: HubConnectionState, state: HubConnectionState
+    ) -> None:
+        """Handle changes in hub connection state."""
+        nonlocal unavailable_logged
+        if state == HubConnectionState.CONNECTED:
+            if unavailable_logged:
+                _LOGGER.info("Connection to the TapHome Core re-established")
+                unavailable_logged = False
+            taphome_issue_registry.try_delete_core_unavailable_issue()
+        else:
+            if not unavailable_logged:
+                _LOGGER.info(
+                    "Connection to the TapHome Core lost;"
+                    " entities are unavailable until it recovers"
+                )
+                unavailable_logged = True
+            if state == HubConnectionState.AUTH_FAILED:
+                # The token stopped working at runtime; reauth prompts for a
+                # new one instead of reporting the Core as unreachable.
+                entry.async_start_reauth(hass)
             else:
                 taphome_issue_registry.create_core_unavailable_issue()
 
-        hub.connection_state.changed += hub_connection_state_changed
+    hub.connection_state.changed += hub_connection_state_changed
 
-    except NotImplementedError:
-        return False
+    _register_hub_device(hass, entry, hub)
+    _register_webhook(hass, entry, hub, core_config)
+    _async_remove_stale_entities(hass, entry)
+    _async_detect_new_devices(
+        hass, entry, hub, taphome_issue_registry, set(hub.devices)
+    )
+    _subscribe_new_device_detection(hass, entry, hub, taphome_issue_registry)
+    _async_sync_subentry_titles(hass, entry, hub)
 
-    if webhook_id:
-        webhook_name = f"Taphome-{core_id}" if core_id else "Taphome"
+    add_entry_requests = {
+        domain.name: _map_subentry_requests(hass, core_config, entry, domain, hub)
+        for domain in DOMAIN_DEFINITIONS
+    }
 
-        async def async_handle_webhook(
-            _: HomeAssistant, webhook_id: str, request: Request
-        ) -> None:
-            _LOGGER.info("Taphome webhook triggered - webhook_id: %s", webhook_id)
-            await hub.async_handle_webhook(request)
+    entry.runtime_data = TapHomeRuntimeData(
+        hub, core_config, add_entry_requests, hub_connection_state_changed
+    )
 
-        async_register_webhook(
-            hass, TAPHOME_PLATFORM, webhook_name, webhook_id, async_handle_webhook
-        )
+    entry.async_on_unload(entry.add_update_listener(_async_update_listener))
 
-    hass.data[TAPHOME_PLATFORM] = {}
-    for domain in domains:
-        domain_config = core_config[domain.config_key]
-
-        config_entries = _map_config_entries(domain.config_entry_type, domain_config)
-
-        core_add_entry_requests = _map_add_entry_requests(
-            hass, core_config_entry, config_entries, hub
-        )
-
-        domain.add_requests(core_add_entry_requests)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
 
-def _map_config_entries(
-    config_entry_factory, platform_config: list
-) -> list[TapHomeEntityConfig]:
-    return list(map(config_entry_factory, platform_config))
+async def async_unload_entry(hass: HomeAssistant, entry: TapHomeConfigEntry) -> bool:
+    """Unload a TapHome config entry."""
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    if unload_ok:
+        runtime_data = entry.runtime_data
+        runtime_data.hub.connection_state.changed -= (
+            runtime_data.connection_state_handler
+        )
+        runtime_data.hub.disconnect()
+    return unload_ok
 
 
-def _map_add_entry_requests(
+async def async_migrate_entry(
+    hass: HomeAssistant, entry: TapHomeConfigEntry
+) -> bool:
+    """Migrate old config entries to the current version."""
+    if entry.version == 1 and entry.minor_version < 2:
+        _migrate_devices_to_subentries(hass, entry)
+    return True
+
+
+def _migrate_devices_to_subentries(
+    hass: HomeAssistant, entry: TapHomeConfigEntry
+) -> None:
+    """Move per-platform device option lists into one subentry per device.
+
+    Each ``options[<config_key>]`` device becomes a ``device`` subentry; the
+    existing entities and their device are re-homed to it (keeping their
+    generated unique ids, so history is preserved) and the device lists are
+    dropped from options. Idempotent: a re-run after an interrupted migration
+    (or a device listed twice) skips devices that already have a subentry.
+    """
+    from .config_flow import _normalize_device_config  # noqa: PLC0415
+
+    entity_registry = er.async_get(hass)
+    device_registry = dr.async_get(hass)
+    domain_to_key = {
+        definition.name: definition.config_key for definition in DOMAIN_DEFINITIONS
+    }
+    device_config_keys = list(
+        dict.fromkeys(definition.config_key for definition in DOMAIN_DEFINITIONS)
+    )
+
+    entities = er.async_entries_for_config_entry(entity_registry, entry.entry_id)
+    name_by_device: dict[tuple[str, int], str] = {}
+    for registry_entry in entities:
+        device = (
+            device_registry.async_get(registry_entry.device_id)
+            if registry_entry.device_id
+            else None
+        )
+        if device is None or not device.name:
+            continue
+        config_key = domain_to_key.get(registry_entry.domain)
+        device_id = _parse_device_id_from_unique_id(registry_entry.unique_id)
+        if config_key is not None and device_id is not None:
+            name_by_device.setdefault((config_key, device_id), device.name)
+
+    # Seed from any subentries a previous (interrupted) migration already added
+    # so the re-run skips them instead of failing on their duplicate unique id.
+    subentry_by_device: dict[tuple[str, int], str] = {}
+    for subentry in iter_device_subentries(entry):
+        platform = subentry_platform(subentry.data)
+        if platform is not None and "id" in subentry.data:
+            subentry_by_device[(platform, device_config_id(subentry.data))] = (
+                subentry.subentry_id
+            )
+
+    new_options = dict(entry.options)
+    for config_key in device_config_keys:
+        for raw_config in new_options.pop(config_key, None) or []:
+            device_config = _normalize_device_config(config_key, raw_config)
+            device_id = device_config_id(device_config)
+            if (config_key, device_id) in subentry_by_device:
+                continue
+            title = name_by_device.get(
+                (config_key, device_id), f"TapHome device {device_id}"
+            )
+            subentry = build_device_subentry(config_key, device_config, title)
+            hass.config_entries.async_add_subentry(entry, subentry)
+            subentry_by_device[(config_key, device_id)] = subentry.subentry_id
+
+    subentries_by_ha_device: dict[str, set[str]] = {}
+    for registry_entry in entities:
+        config_key = domain_to_key.get(registry_entry.domain)
+        device_id = _parse_device_id_from_unique_id(registry_entry.unique_id)
+        subentry_id = (
+            subentry_by_device.get((config_key, device_id))
+            if config_key is not None and device_id is not None
+            else None
+        )
+        if subentry_id is None:
+            continue
+        entity_registry.async_update_entity(
+            registry_entry.entity_id, config_subentry_id=subentry_id
+        )
+        if registry_entry.device_id:
+            subentries_by_ha_device.setdefault(registry_entry.device_id, set()).add(
+                subentry_id
+            )
+
+    for ha_device_id, subentry_ids in subentries_by_ha_device.items():
+        for subentry_id in subentry_ids:
+            device_registry.async_update_device(
+                ha_device_id,
+                add_config_entry_id=entry.entry_id,
+                add_config_subentry_id=subentry_id,
+            )
+        # Drop the bare (no-subentry) link so the device belongs to its subentry.
+        device_registry.async_update_device(
+            ha_device_id,
+            remove_config_entry_id=entry.entry_id,
+            remove_config_subentry_id=None,
+        )
+
+    hass.config_entries.async_update_entry(
+        entry, options=new_options, minor_version=2
+    )
+
+
+async def _async_update_listener(hass: HomeAssistant, entry: TapHomeConfigEntry) -> None:
+    """Reload the entry when its options or a device subentry change.
+
+    ``async_schedule_reload`` (over ``async_reload``) is the recommended call: it
+    cancels a pending setup retry first, avoiding a race with the reload.
+    """
+    hass.config_entries.async_schedule_reload(entry.entry_id)
+
+
+def _build_core_config(entry: TapHomeConfigEntry) -> TapHomeCoreConfig:
+    """Build the immutable core configuration from a config entry."""
+    options = entry.options
+    zone_mapping = NameMapping.from_dict(options.get(CONF_ZONES))
+    label_mapping = NameMapping.from_dict(options.get(CONF_LABELS))
+
+    # New cores store their location id here; older entries fall back to the
+    # legacy CONF_ID (a YAML id or None) so their unique ids stay unchanged.
+    unique_id_segment = entry.data.get(CONF_CORE_UNIQUE_ID) or entry.data.get(CONF_ID)
+
+    return TapHomeCoreConfig(
+        entry.data.get(CONF_ID),
+        unique_id_segment,
+        entry.entry_id,
+        zone_mapping,
+        label_mapping,
+        tuple(options.get(CONF_ENABLED_ATTRIBUTES, AVAILABLE_ATTRIBUTES)),
+    )
+
+
+def _parse_device_id_from_unique_id(unique_id: str) -> int | None:
+    """Extract the TapHome device id from a generated entity unique id."""
+    if not unique_id.startswith("taphome"):
+        return None
+    try:
+        return int(unique_id.rsplit(".", 1)[-1])
+    except ValueError:
+        return None
+
+
+def _domains_by_config_key() -> dict[str, list[str]]:
+    """Map each platform config key to the domain names sharing it."""
+    mapping: dict[str, list[str]] = {}
+    for domain in DOMAIN_DEFINITIONS:
+        mapping.setdefault(domain.config_key, []).append(domain.name)
+    return mapping
+
+
+def _async_remove_stale_entities(
+    hass: HomeAssistant, entry: TapHomeConfigEntry
+) -> None:
+    """Remove registry entities whose device is no longer configured."""
+    configured_ids: dict[str, set[int]] = {
+        domain.name: set() for domain in DOMAIN_DEFINITIONS
+    }
+    domains_by_key = _domains_by_config_key()
+    for subentry in iter_device_subentries(entry):
+        data = subentry.data
+        platform = subentry_platform(data)
+        if platform not in domains_by_key or "id" not in data:
+            continue
+        for name in domains_by_key[platform]:
+            configured_ids[name].add(device_config_id(data))
+
+    entity_registry = er.async_get(hass)
+    for registry_entry in er.async_entries_for_config_entry(
+        entity_registry, entry.entry_id
+    ):
+        if registry_entry.domain not in configured_ids:
+            continue
+        # Unparseable unique ids (the is-alive sensor, legacy custom ids) do not
+        # map to a device id and are left alone to stay on the safe side.
+        device_id = _parse_device_id_from_unique_id(registry_entry.unique_id)
+        if device_id is None:
+            continue
+        if device_id not in configured_ids[registry_entry.domain]:
+            entity_registry.async_remove(registry_entry.entity_id)
+
+
+def _all_configured_device_ids(entry: TapHomeConfigEntry) -> set[int]:
+    """Return the ids of every device exposed by a subentry."""
+    return {
+        device_config_id(subentry.data)
+        for subentry in iter_device_subentries(entry)
+        if "id" in subentry.data
+    }
+
+
+def _async_detect_new_devices(
     hass: HomeAssistant,
-    core_config_entry: TapHomeCoreConfig,
-    config_entries: list[TapHomeEntityConfig],
+    entry: TapHomeConfigEntry,
     hub: TapHomeHub,
-) -> list[AddEntryRequest]:
-    return [
-        AddEntryRequest(hass, core_config_entry, config_entry, hub)
-        for config_entry in config_entries
-    ]
+    issue_registry: TapHomeIssueRegistry,
+    exposed: set[int],
+) -> None:
+    """Report devices exposed since the entry was last known about.
+
+    On the first setup the currently exposed devices become the baseline, so
+    nothing is reported. Afterwards any device exposed in the API that is not in
+    the baseline and not already configured raises a fixable repair issue.
+    """
+    configured = _all_configured_device_ids(entry)
+    known_raw = entry.data.get(CONF_KNOWN_DEVICE_IDS)
+
+    if known_raw is None:
+        hass.config_entries.async_update_entry(
+            entry,
+            data={**entry.data, CONF_KNOWN_DEVICE_IDS: sorted(exposed | configured)},
+        )
+        return
+
+    known = {int(value) for value in known_raw}
+    new_devices = exposed - known - configured
+    issue_registry.sync_new_device_issues(entry.entry_id, hub, new_devices)
+
+
+def _subscribe_new_device_detection(
+    hass: HomeAssistant,
+    entry: TapHomeConfigEntry,
+    hub: TapHomeHub,
+    issue_registry: TapHomeIssueRegistry,
+) -> None:
+    """Report new devices the moment their values arrive (webhook or poll).
+
+    Exposing a device in the TapHome app makes its id show up in the incoming
+    values without a matching registered device; the hub surfaces that on
+    ``new_device_ids``. Reacting to it fetches the device metadata on demand
+    instead of polling discovery on a timer.
+    """
+    detecting = False
+
+    async def _async_detect() -> None:
+        nonlocal detecting
+        try:
+            # Ids seen while a run is in flight are skipped by the guard below;
+            # loop until the pending set stops changing so none are dropped.
+            while True:
+                pending = hub.new_device_ids.value
+                try:
+                    exposed = await hub.async_discover_new_devices()
+                except TapHomeError as error:
+                    _LOGGER.debug("Skipping new-device detection: %s", error)
+                    return
+                _async_detect_new_devices(hass, entry, hub, issue_registry, exposed)
+                if not hub.new_device_ids.value or hub.new_device_ids.value == pending:
+                    return
+        finally:
+            detecting = False
+
+    def _on_new_device_ids(
+        _: frozenset[int], new_device_ids: frozenset[int]
+    ) -> None:
+        nonlocal detecting
+        if new_device_ids and not detecting:
+            detecting = True
+            entry.async_create_background_task(
+                hass, _async_detect(), "taphome_new_device_detection"
+            )
+
+    def _unsubscribe() -> None:
+        # Return None: unsubscribe returns the Event, which async_on_unload
+        # would otherwise mistake for a coroutine to await.
+        hub.new_device_ids.changed.unsubscribe(_on_new_device_ids)
+
+    hub.new_device_ids.changed += _on_new_device_ids
+    entry.async_on_unload(_unsubscribe)
+
+
+def _async_sync_subentry_titles(
+    hass: HomeAssistant, entry: TapHomeConfigEntry, hub: TapHomeHub
+) -> None:
+    """Refresh device subentry titles from their TapHome device.
+
+    Titles follow the device name, zone, category and exposed value as they
+    change in TapHome, but only while the stored title still equals the last
+    auto-generated one — a title the user renamed in Home Assistant is left
+    untouched. Runs before the update listener is registered, so the writes do
+    not trigger a reload.
+    """
+    from .config_flow import device_subentry_title  # noqa: PLC0415
+
+    for subentry in iter_device_subentries(entry):
+        data = subentry.data
+        auto_title = data.get(SUBENTRY_DATA_AUTO_TITLE)
+        device_id = data.get("id")
+        if auto_title is None or not isinstance(device_id, int):
+            continue
+        device = hub.devices.get(device_id)
+        if device is None:
+            continue
+        title = device_subentry_title(data, device)
+        if title == subentry.title or subentry.title != auto_title:
+            continue
+        hass.config_entries.async_update_subentry(
+            entry,
+            subentry,
+            title=title,
+            data={**data, SUBENTRY_DATA_AUTO_TITLE: title},
+        )
+
+
+def _register_hub_device(
+    hass: HomeAssistant, entry: TapHomeConfigEntry, hub: TapHomeHub
+) -> None:
+    """Register the TapHome Core as the hub device."""
+    location = hub.location
+    location_id = hub_device_id(location, entry.data.get(CONF_ID))
+    device_registry = dr.async_get(hass)
+    device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, location_id)},
+        name=location.location_name if location else entry.title,
+        manufacturer="TapHome",
+        model="Core",
+        configuration_url=_core_configuration_url(entry.data.get(CONF_API_URL, "")),
+    )
+
+
+def _core_configuration_url(api_url: str) -> str | None:
+    """Return the Core's local log page, or None for a cloud connection.
+
+    The Core only serves a UI (its local API log) on the local network; the
+    cloud API has no such page.
+    """
+    prefix, suffix = "http://", "/api/TapHomeApi/v1"
+    normalized = api_url.rstrip("/")
+    if normalized.startswith(prefix) and normalized.endswith(suffix):
+        host = normalized[len(prefix) : -len(suffix)]
+        if host:
+            return f"http://{host}/localapilog"
+    return None
+
+
+async def async_remove_config_entry_device(
+    hass: HomeAssistant, entry: TapHomeConfigEntry, device_entry: dr.DeviceEntry
+) -> bool:
+    """Allow deleting a device the Core no longer provides.
+
+    The Core hub device and devices still exposed by the Core are kept (remove
+    those through the device subentry's Delete); a genuinely orphaned device can
+    be deleted from its device page.
+    """
+    if entry.state is not ConfigEntryState.LOADED:
+        return True
+    hub = entry.runtime_data.hub
+    location_id = hub_device_id(hub.location, entry.data.get(CONF_ID))
+    prefix = f"{location_id}_"
+    for domain, identifier in device_entry.identifiers:
+        if domain != DOMAIN:
+            continue
+        if identifier == location_id:
+            return False  # the Core hub device itself
+        suffix = identifier.removeprefix(prefix)
+        if suffix != identifier and suffix.isdigit() and int(suffix) in hub.devices:
+            return False  # still exposed by the Core
+    return True
+
+
+def _register_webhook(
+    hass: HomeAssistant,
+    entry: TapHomeConfigEntry,
+    hub: TapHomeHub,
+    core_config: TapHomeCoreConfig,
+) -> None:
+    """Register the push webhook for the entry when configured."""
+    webhook_id = entry.options.get(CONF_WEBHOOK_ID)
+    if not webhook_id:
+        return
+
+    webhook_name = f"Taphome-{core_config.id}" if core_config.id else "Taphome"
+
+    async def async_handle_webhook(
+        _: HomeAssistant, webhook_id: str, request: Request
+    ) -> None:
+        _LOGGER.info("Taphome webhook triggered - webhook_id: %s", webhook_id)
+        try:
+            payload = await request.json()
+        except ValueError:
+            _LOGGER.warning("Ignoring TapHome webhook with an invalid JSON body")
+            return
+        await hub.async_handle_webhook(payload)
+
+    async_register_webhook(
+        hass, TAPHOME_PLATFORM, webhook_name, webhook_id, async_handle_webhook
+    )
+    entry.async_on_unload(lambda: async_unregister_webhook(hass, webhook_id))
+
+
+def _map_subentry_requests(
+    hass: HomeAssistant,
+    core_config: TapHomeCoreConfig,
+    entry: TapHomeConfigEntry,
+    domain: DomainDefinition,
+    hub: TapHomeHub,
+) -> list[tuple[str, AddEntryRequest[TapHomeEntityConfig]]]:
+    """Build the (subentry id, request) pairs for one platform domain.
+
+    Every exposed device is a ``device`` subentry whose ``data`` names the
+    platform bucket it belongs to; a subentry feeds one request per domain
+    sharing that bucket (e.g. ``buttons`` feeds both button and event).
+    """
+    requests: list[tuple[str, AddEntryRequest[TapHomeEntityConfig]]] = []
+    for subentry in iter_device_subentries(entry):
+        if subentry_platform(subentry.data) != domain.config_key:
+            continue
+        entity_config = domain.config_entry_type(
+            device_config_from_subentry(subentry.data)
+        )
+        requests.append(
+            (subentry.subentry_id, AddEntryRequest(hass, core_config, entity_config, hub))
+        )
+    return requests
