@@ -23,7 +23,9 @@ _LOGGER = logging.getLogger(__name__)
 PARALLEL_UPDATES = 0
 
 
-class TapHomeButtonEvent(TapHomeEntity, EventEntity):
+class TapHomeButtonEvent(
+    TapHomeEntity[ButtonDevice, TapHomeButtonConfig], EventEntity
+):
     """Representation of a TapHome button event entity."""
 
     def __init__(self, config: AddEntryRequest[TapHomeButtonConfig]) -> None:

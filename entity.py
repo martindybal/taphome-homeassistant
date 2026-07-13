@@ -1,6 +1,6 @@
 """Common entity abstractions for the TapHome integration."""
 
-from collections.abc import Awaitable, Callable
+from collections.abc import Callable, Coroutine
 from functools import wraps
 from typing import Any, Concatenate, override
 
@@ -26,12 +26,12 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 
 from .const import DOMAIN
-from .taphome_config_entry import AddEntryRequest, NameMapping, TapHomeEntityConfigT
+from .taphome_config_entry import AddEntryRequest, NameMapping, TapHomeEntityConfig
 
 
 def handle_taphome_errors[_EntityT: Entity, **_P](
-    func: Callable[Concatenate[_EntityT, _P], Awaitable[None]],
-) -> Callable[Concatenate[_EntityT, _P], Awaitable[None]]:
+    func: Callable[Concatenate[_EntityT, _P], Coroutine[Any, Any, None]],
+) -> Callable[Concatenate[_EntityT, _P], Coroutine[Any, Any, None]]:
     """Translate SDK errors raised by an entity action into HomeAssistantError."""
 
     @wraps(func)
@@ -81,7 +81,7 @@ def _resolve_suggested_area(
     return area.name if area else target
 
 
-class TapHomeSubscriptionMixin:
+class TapHomeSubscriptionMixin(Entity):
     """Defer SDK event subscriptions to the entity lifecycle.
 
     Handlers run once at registration time to seed the entity attributes
@@ -89,25 +89,41 @@ class TapHomeSubscriptionMixin:
     is made in async_added_to_hass and removed with the entity.
     """
 
-    def _subscribe(self, event: Event, handler: Callable) -> None:
+    # Seeded lazily by ``_subscribe`` — entities record subscriptions from their
+    # constructors, before ``TapHomeEntity.__init__`` runs.
+    _pending_subscriptions: list[tuple[Event[...], Callable[..., None]]]
+
+    def _subscribe[**P](self, event: Event[P], handler: Callable[P, None]) -> None:
         """Seed the handler now and subscribe when the entity is added."""
         if not hasattr(self, "_pending_subscriptions"):
-            self._pending_subscriptions: list[tuple[Event, Callable]] = []
+            self._pending_subscriptions = []
         self._pending_subscriptions.append((event, handler))
         event.subscribe(handler)
         event.unsubscribe(handler)
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Activate the recorded subscriptions."""
-        await super().async_added_to_hass()  # type: ignore[misc]
-        for event, handler in getattr(self, "_pending_subscriptions", []):
+        await super().async_added_to_hass()
+        for event, handler in self._pending_subscriptions:
             event.subscribe(handler)
-            self.async_on_remove(  # type: ignore[attr-defined]
-                lambda event=event, handler=handler: event.unsubscribe(handler)
-            )
+            self.async_on_remove(self._make_unsubscriber(event, handler))
+
+    @staticmethod
+    def _make_unsubscriber(
+        event: Event[...], handler: Callable[..., None]
+    ) -> Callable[[], None]:
+        """Return a zero-arg callback that unsubscribes ``handler`` from ``event``."""
+
+        def _unsubscribe() -> None:
+            event.unsubscribe(handler)
+
+        return _unsubscribe
 
 
-class TapHomeEntity(TapHomeSubscriptionMixin, Entity):
+class TapHomeEntity[DeviceT: Device[Any], ConfigT: TapHomeEntityConfig](
+    TapHomeSubscriptionMixin, Entity
+):
     """Base class for all TapHome entities."""
 
     _attr_has_entity_name = True
@@ -115,13 +131,14 @@ class TapHomeEntity(TapHomeSubscriptionMixin, Entity):
 
     def __init__(
         self,
-        config: AddEntryRequest[TapHomeEntityConfigT],
-        taphome_device: Device,
+        config: AddEntryRequest[ConfigT],
+        taphome_device: DeviceT,
         domain: str,
         unique_id_determination: str = "",
     ) -> None:
         """Initialize shared entity state."""
         super().__init__()
+        self.taphome_device: DeviceT = taphome_device
         self._core_config = config.core
 
         self._attr_available = False
@@ -167,7 +184,7 @@ class TapHomeEntity(TapHomeSubscriptionMixin, Entity):
         )
         self._subscribe(taphome_device.state.changed, self._state_changed)
 
-    def _schedule_update_when_changed(self, device: Device) -> None:
+    def _schedule_update_when_changed(self, device: Device[Any]) -> None:
         """Refresh the entity state whenever the given device changes."""
         self._subscribe(
             device.state.changed, lambda _, __: self.schedule_update_ha_state()
@@ -263,7 +280,7 @@ class TapHomeEntity(TapHomeSubscriptionMixin, Entity):
         self,
         key: str,
         value: Any,
-        value_transform=lambda v: v,
+        value_transform: Callable[[Any], Any] = lambda v: v,
     ) -> None:
         if self._core_config.is_attribute_enabled(key) and value is not None:
             self._add_state_attributes(key, value, value_transform)
@@ -272,8 +289,8 @@ class TapHomeEntity(TapHomeSubscriptionMixin, Entity):
         self,
         key: str,
         value: Any,
-        value_transform=lambda v: v,
-    ):
+        value_transform: Callable[[Any], Any] = lambda v: v,
+    ) -> None:
         if not hasattr(self, "_attr_extra_state_attributes"):
             self._attr_extra_state_attributes = {}
         self._attr_extra_state_attributes[key] = value_transform(value)

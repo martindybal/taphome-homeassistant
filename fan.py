@@ -9,6 +9,7 @@ from taphome_sdk import (
     GenericOutputState,
     MultiValueSwitchDevice,
     MultiValueSwitchState,
+    OutputCapableDevice,
 )
 
 from homeassistant.components.fan import (
@@ -30,13 +31,13 @@ PARALLEL_UPDATES = 0
 class TapHomeFanConfig(TapHomeEntityConfig):
     """Configuration for a TapHome fan device."""
 
-    def __init__(self, device_config: dict) -> None:
+    def __init__(self, device_config: dict[str, Any]) -> None:
         """Store config and extract fan settings."""
         super().__init__(device_config)
         self.preset_mode_id: int | None = self.get_optional("preset_mode_id", None)
 
 
-class TapHomeFan(TapHomeEntity, FanEntity):
+class TapHomeFan(TapHomeEntity[OutputCapableDevice, TapHomeFanConfig], FanEntity):
     """Representation of an fan."""
 
     def __init__(

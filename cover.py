@@ -28,14 +28,14 @@ PARALLEL_UPDATES = 0
 class TapHomeCoverConfig(TapHomeEntityConfig):
     """Configuration for a TapHome cover device."""
 
-    def __init__(self, device_config: dict) -> None:
+    def __init__(self, device_config: dict[str, Any]) -> None:
         """Store config and extract cover limits."""
         super().__init__(device_config)
         self.device_class: CoverDeviceClass = self.get_optional("device_class", None)
         self.close_threshold: int | None = self.get_optional("close_threshold", None)
 
 
-class TapHomeCover(TapHomeEntity, CoverEntity):
+class TapHomeCover(TapHomeEntity[BidirectionalDevice, TapHomeCoverConfig], CoverEntity):
     """Representation of a cover."""
 
     def __init__(
@@ -93,12 +93,12 @@ class TapHomeCover(TapHomeEntity, CoverEntity):
             self._attr_is_closed = position_state is PositionState.CLOSED
 
     @override
-    async def async_open_cover(self, **kwargs):
+    async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
         await self.async_set_cover_position(position=100)
 
     @override
-    async def async_close_cover(self, **kwargs):
+    async def async_close_cover(self, **kwargs: Any) -> None:
         """Close cover."""
         await self.async_set_cover_position(position=0)
 
@@ -120,12 +120,12 @@ class TapHomeCover(TapHomeEntity, CoverEntity):
             await self._cover.async_set_position(taphome_position, taphome_tilt)
 
     @override
-    async def async_open_cover_tilt(self, **kwargs):
+    async def async_open_cover_tilt(self, **kwargs: Any) -> None:
         """Open the cover tilt."""
         await self.async_set_cover_tilt_position(tilt_position=100)
 
     @override
-    async def async_close_cover_tilt(self, **kwargs):
+    async def async_close_cover_tilt(self, **kwargs: Any) -> None:
         """Close the cover tilt."""
         await self.async_set_cover_tilt_position(tilt_position=0)
 

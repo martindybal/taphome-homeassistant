@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import TypeVar
+from typing import Any, TypeVar
 
 from taphome_sdk import TapHomeHub, get_optional, get_required
 
@@ -23,7 +23,7 @@ class NameMapping:
     ignored: frozenset[str]
 
     @staticmethod
-    def from_dict(data: dict | None) -> NameMapping:
+    def from_dict(data: dict[str, Any] | None) -> NameMapping:
         """Create a NameMapping from a dictionary."""
         renames: dict[str, str] = {}
         ignored: set[str] = set()
@@ -69,21 +69,24 @@ class TapHomeCoreConfig:
 class TapHomeEntityConfig:
     """Configuration options for a TapHome entity."""
 
-    def __init__(self, device_config: dict) -> None:
-        """Initialize TapHome entity configuration."""
-        self._device_config = device_config
-        self.id: int = self._get_id()
+    def __init__(self, device_config: dict[str, Any] | int) -> None:
+        """Initialize TapHome entity configuration.
 
-    def _get_id(self) -> int:
-        if isinstance(self._device_config, int):
-            return self._device_config
-        return int(get_required(self._device_config, "id"))
+        ``device_config`` is normally the device-config mapping; a bare ``int``
+        is the legacy YAML shorthand (``switches: [2]``) for just the device id.
+        """
+        self._device_config: dict[str, Any] = (
+            {"id": device_config}
+            if isinstance(device_config, int)
+            else device_config
+        )
+        self.id: int = int(get_required(self._device_config, "id"))
 
-    def get_required(self, key: str):
+    def get_required(self, key: str) -> Any:
         """Return value for ``key`` or raise if missing."""
         return get_required(self._device_config, key)
 
-    def get_optional(self, key: str, default):
+    def get_optional(self, key: str, default: Any) -> Any:
         """Return value for ``key`` or ``default`` if not present."""
         return get_optional(self._device_config, key, default)
 

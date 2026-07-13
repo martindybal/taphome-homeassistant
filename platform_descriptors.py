@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from dataclasses import dataclass
 from enum import Enum
+from typing import Any
 
 from taphome_sdk import (
     AnalogOutputDevice,
@@ -351,7 +352,7 @@ PLATFORM_DESCRIPTORS_BY_KEY: dict[str, PlatformDescriptor] = {
 }
 
 
-def device_config_id(device_config: Mapping | int) -> int:
+def device_config_id(device_config: Mapping[str, Any] | int) -> int:
     """Return the TapHome device id of a stored device configuration.
 
     Accepts a mapping (dict or a subentry's ``mappingproxy`` ``data``) or a bare

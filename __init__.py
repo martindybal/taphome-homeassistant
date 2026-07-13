@@ -112,7 +112,7 @@ from taphome_sdk import (
     TapHomeHub,
     TapHomeHubFactory,
 )
-from .translations import Issues
+from .issues import Issues
 from .valve import TapHomeValveConfig
 
 _LOGGER = logging.getLogger(__name__)
@@ -754,14 +754,14 @@ def _map_subentry_requests(
     entry: TapHomeConfigEntry,
     domain: DomainDefinition,
     hub: TapHomeHub,
-) -> list[tuple[str, AddEntryRequest]]:
+) -> list[tuple[str, AddEntryRequest[TapHomeEntityConfig]]]:
     """Build the (subentry id, request) pairs for one platform domain.
 
     Every exposed device is a ``device`` subentry whose ``data`` names the
     platform bucket it belongs to; a subentry feeds one request per domain
     sharing that bucket (e.g. ``buttons`` feeds both button and event).
     """
-    requests: list[tuple[str, AddEntryRequest]] = []
+    requests: list[tuple[str, AddEntryRequest[TapHomeEntityConfig]]] = []
     for subentry in iter_device_subentries(entry):
         if subentry_platform(subentry.data) != domain.config_key:
             continue

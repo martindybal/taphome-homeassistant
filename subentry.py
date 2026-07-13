@@ -46,7 +46,7 @@ def device_subentry_unique_id(
 
 def device_subentry_payload(
     platform: str, device_config: Mapping[str, Any], auto_title: str | None = None
-) -> dict:
+) -> dict[str, Any]:
     """Return the subentry ``data`` for one device/platform pair.
 
     ``auto_title`` records the title as last derived from TapHome so setup can

@@ -16,7 +16,9 @@ from .taphome_data import TapHomeConfigEntry
 PARALLEL_UPDATES = 0
 
 
-class TapHomeSelect(TapHomeEntity, SelectEntity):
+class TapHomeSelect(
+    TapHomeEntity[MultiValueSwitchDevice, TapHomeEntityConfig], SelectEntity
+):
     """Representation of an select."""
 
     def __init__(

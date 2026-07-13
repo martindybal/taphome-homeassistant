@@ -1,11 +1,13 @@
 """TapHome Issue Registry."""
 
+from taphome_sdk import TapHomeHub
+
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.issue_registry import IssueSeverity
 
 from .const import TAPHOME_PLATFORM
-from .translations import Issues
+from .issues import Issues
 
 
 class TapHomeIssueRegistry:
@@ -83,7 +85,7 @@ class TapHomeIssueRegistry:
         )
 
     def sync_new_device_issues(
-        self, config_entry_id: str, hub, new_device_ids: set[int]
+        self, config_entry_id: str, hub: TapHomeHub, new_device_ids: set[int]
     ) -> None:
         """Create fixable issues for new devices and clear resolved ones."""
         registry = ir.async_get(self.hass)
@@ -115,13 +117,13 @@ class TapHomeIssueRegistry:
                 },
             )
 
-    def _create_device_not_exposed_issue_id(self, taphome_device_id):
+    def _create_device_not_exposed_issue_id(self, taphome_device_id: int) -> str:
         return f"{Issues.DEVICE_NOT_EXPOSED}_{self.entry_id}_{taphome_device_id}"
 
-    def _create_device_type_mismatch_issue_id(self, taphome_device_id):
+    def _create_device_type_mismatch_issue_id(self, taphome_device_id: int) -> str:
         return f"{Issues.DEVICE_TYPE_MISMATCH}_{self.entry_id}_{taphome_device_id}"
 
-    def _create_core_unavailable_issue_id(self):
+    def _create_core_unavailable_issue_id(self) -> str:
         return f"{Issues.CORE_UNAVAILABLE}_{self.entry_id}"
 
     def create_issue(
@@ -140,7 +142,7 @@ class TapHomeIssueRegistry:
     ) -> None:
         """Create an issue in the issue registry."""
 
-        def create_issue():
+        def create_issue() -> None:
             ir.async_create_issue(
                 self.hass,
                 TAPHOME_PLATFORM,
@@ -161,7 +163,7 @@ class TapHomeIssueRegistry:
     def try_delete_issue(self, issue_id: str) -> None:
         """Delete an issue from the issue registry when exist."""
 
-        def delete_issue():
-            return ir.async_delete_issue(self.hass, TAPHOME_PLATFORM, issue_id)
+        def delete_issue() -> None:
+            ir.async_delete_issue(self.hass, TAPHOME_PLATFORM, issue_id)
 
         self.hass.loop.call_soon_threadsafe(delete_issue)

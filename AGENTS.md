@@ -13,7 +13,7 @@ CI (`.github/workflows/ci.yaml`, Python 3.14 — current Home Assistant requires
 
 ```bash
 python -m venv .venv && source .venv/bin/activate
-pip install homeassistant ruff pylint pytest-homeassistant-custom-component taphome-sdk
+pip install homeassistant ruff pylint mypy pytest-homeassistant-custom-component taphome-sdk
 
 python -m compileall -q .                                          # compile check
 ruff check .                                                       # lint
@@ -26,13 +26,25 @@ lands on `sys.path` and its `select.py`/`time.py` shadow the stdlib. The same
 shadowing breaks `python -m mypy` and similar tools when run **from** this
 directory — run them from elsewhere.
 
+`mypy --strict` (Platinum `strict-typing`, config in `pyproject.toml`
+`[tool.mypy]` — it mirrors Core's `.strict-typing` settings, so passing here
+means passing in Core) must address the integration as the **nested** package
+`custom_components.taphome` so `select.py`/`time.py` stay submodules: symlink
+`custom_components/taphome` → repo root, put its parent on `MYPYPATH`, and run
+`mypy -p custom_components.taphome` from a neutral directory (see `docs/development.md`
+and the `mypy` job in `ci.yaml`). It runs natively on Windows (mypy does not
+import Home Assistant). Note the config enables `disallow_any_generics` as extra
+hardening beyond Core, but deliberately leaves `no_implicit_reexport` off (Core
+does too) — enabling it would force non-idiomatic HA imports.
+
 Home Assistant can only be imported on Linux (it uses `fcntl`/`resource` and a
 socket event-loop self-pipe), so the suite does not run on native Windows — use
 a Linux box, WSL, or a `python:3.14` container: mount the repo **and its
 `../taphome-sdk` sibling** under a common parent (e.g. `/work/...`), `pip
 install -e /work/taphome-sdk`, then run pytest from the repo mount.
-`pyproject.toml` holds only the pylint config (disables the HA-inherent false
-positives; the repo is not a pip package).
+`pyproject.toml` holds the pylint and mypy config (no `[build-system]`/`[project]`
+— the repo is not a pip package); the pylint section disables the HA-inherent
+false positives.
 
 **CI installs `taphome-sdk` from PyPI** (same as `manifest.json`
 requirements). When a change here needs new SDK API, release the SDK first —
@@ -140,15 +152,17 @@ be mirrored there. Intentional differences of the Core copy (do NOT port back):
 - no YAML support (`CONFIG_SCHEMA`, `async_setup` import shim, `async_step_import`,
   `resolve_api_url`, `_normalize_device_config`, `_yaml_core_to_options`,
   `_yaml_device_subentries`, YAML fallback unique ids, per-device `unique_id`
-  option, `translations.py` `YAML_DEPRECATED`),
+  option, `issues.py` `YAML_DEPRECATED`),
 - no `sdk_locator.py` (Core installs `taphome-sdk` from PyPI only),
 - no `from __future__ import annotations` (banned in Core; this repo needs it
   on Python < 3.14),
 - Core `manifest.json` (no `version`, has `quality_scale`), `strings.json`
   instead of `translations/*.json`, `quality_scale.yaml` (draft with all
   tiers and exempt reasoning: `docs/core-quality-scale.yaml` in this repo),
-- no `pyproject.toml` (Core uses its own pylint config); the Core copy is
-  listed in `.strict-typing` and must pass Core's strict mypy,
+- no `pyproject.toml` (Core uses its own pylint and mypy config); the Core copy
+  is listed in `.strict-typing` and must pass Core's strict mypy — this repo's
+  `[tool.mypy]` mirrors those settings (minus `no_implicit_reexport`) so the
+  code stays Core-clean,
 - tests live in `tests/components/taphome` with `tests.common.MockConfigEntry`
   and helpers in the test package `__init__.py`,
 - the Core copy carries `@override` decorators and identity (`is`) enum

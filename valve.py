@@ -2,12 +2,13 @@
 
 from __future__ import annotations
 
-from typing import override
+from typing import Any, override
 
 from taphome_sdk import (
     BidirectionalDeviceState,
     GenericOutputAdapter,
     GenericOutputState,
+    OutputCapableDevice,
     PositionState,
 )
 
@@ -31,13 +32,13 @@ PARALLEL_UPDATES = 0
 class TapHomeValveConfig(TapHomeEntityConfig):
     """Configuration for a TapHome valve device."""
 
-    def __init__(self, device_config: dict) -> None:
+    def __init__(self, device_config: dict[str, Any]) -> None:
         """Store config and extract valve limits."""
         super().__init__(device_config)
         self.device_class: ValveDeviceClass = self.get_optional("device_class", None)
 
 
-class TapHomeValve(TapHomeEntity, ValveEntity):
+class TapHomeValve(TapHomeEntity[OutputCapableDevice, TapHomeValveConfig], ValveEntity):
     """Representation of an valve."""
 
     def __init__(self, config: AddEntryRequest[TapHomeValveConfig]) -> None:

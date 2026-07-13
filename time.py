@@ -20,7 +20,9 @@ _LOGGER = logging.getLogger(__name__)
 PARALLEL_UPDATES = 0
 
 
-class TapHomeTime(TapHomeEntity, TimeEntity):
+class TapHomeTime(
+    TapHomeEntity[SessionDurationVariableDevice, TapHomeEntityConfig], TimeEntity
+):
     """Representation of an time."""
 
     def __init__(self, config: AddEntryRequest[TapHomeEntityConfig]) -> None:

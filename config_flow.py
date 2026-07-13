@@ -121,6 +121,7 @@ from .subentry import (
     iter_device_subentries,
     subentry_platform,
 )
+from .taphome_data import TapHomeConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -260,14 +261,14 @@ def _value_type_label(value_type: ValueType) -> str:
     return value_type.name.replace("_", " ").lower()
 
 
-def _device_display_label(device: Device) -> str:
+def _device_display_label(device: Device[Any]) -> str:
     """Return a human readable label of a TapHome device (device picker)."""
     location = " · ".join(part for part in (device.zone, device.category) if part)
     label = f"{device.name} ({device.id})"
     return f"{label} — {location}" if location else label
 
 
-def device_subentry_title(data: Mapping[str, Any], device: Device) -> str:
+def device_subentry_title(data: Mapping[str, Any], device: Device[Any]) -> str:
     """Return the title a subentry should have for its current TapHome device.
 
     Reads id, description (falling back to the name), zone, category and, for
@@ -379,7 +380,7 @@ async def _async_get_location(
 
 async def _async_load_devices(
     session: ClientSession, api_url: str, token: str
-) -> dict[int, Device]:
+) -> dict[int, Device[Any]]:
     """Connect to the core and return its devices for the setup wizard."""
     try:
         hub = await TapHomeHubFactory.async_connect(api_url, token, session)
@@ -393,34 +394,34 @@ async def _async_load_devices(
         hub.disconnect()
 
 
-def _normalize_device_config(config_key: str, device_config: Any) -> dict:
+def _normalize_device_config(config_key: str, device_config: Any) -> dict[str, Any]:
     """Normalize a YAML device entry to the dict shape stored in options."""
     if isinstance(device_config, int):
         return {"id": device_config}
 
-    device_config = dict(device_config)
+    config: dict[str, Any] = dict(device_config)
     if config_key != CONF_CLIMATES:
-        return device_config
+        return config
 
     for legacy_key, current_key in _CLIMATE_LEGACY_RENAMES:
-        if legacy_key in device_config:
-            device_config[current_key] = device_config.pop(legacy_key)
+        if legacy_key in config:
+            config[current_key] = config.pop(legacy_key)
 
-    if "heating_switch_id" in device_config:
-        device_config["hvac_switch_id"] = device_config.pop("heating_switch_id")
-        device_config["hvac_mode"] = "heat"
-    if "cooling_switch_id" in device_config:
-        device_config["hvac_switch_id"] = device_config.pop("cooling_switch_id")
-        device_config["hvac_mode"] = "cool"
-    if "hvac_mode" in device_config:
-        device_config["hvac_mode"] = str(device_config["hvac_mode"])
-    if "range_high_thermostat_id" in device_config:
-        device_config["id"] = device_config["range_high_thermostat_id"]
+    if "heating_switch_id" in config:
+        config["hvac_switch_id"] = config.pop("heating_switch_id")
+        config["hvac_mode"] = "heat"
+    if "cooling_switch_id" in config:
+        config["hvac_switch_id"] = config.pop("cooling_switch_id")
+        config["hvac_mode"] = "cool"
+    if "hvac_mode" in config:
+        config["hvac_mode"] = str(config["hvac_mode"])
+    if "range_high_thermostat_id" in config:
+        config["id"] = config["range_high_thermostat_id"]
 
-    return device_config
+    return config
 
 
-def _yaml_core_to_options(core_config: dict) -> dict:
+def _yaml_core_to_options(core_config: dict[str, Any]) -> dict[str, Any]:
     """Convert a YAML core configuration to config entry options."""
     options: dict[str, Any] = {}
 
@@ -441,7 +442,7 @@ def _yaml_core_to_options(core_config: dict) -> dict:
 
 
 def _yaml_device_subentries(
-    core_config: dict, devices: dict[int, Device]
+    core_config: dict[str, Any], devices: dict[int, Device[Any]]
 ) -> list[ConfigSubentryData]:
     """Build one device subentry per device in a YAML core configuration."""
     subentries: list[ConfigSubentryData] = []
@@ -459,14 +460,14 @@ def _yaml_device_subentries(
     return subentries
 
 
-def _yaml_subentry_title(device_id: int, device: Device | None) -> str:
+def _yaml_subentry_title(device_id: int, device: Device[Any] | None) -> str:
     """Title an imported subentry the same way every other path does."""
     if device is None:
         return f"Device {device_id}"
     return device_subentry_title({}, device)
 
 
-def _device_qualifies(device: Device, descriptor: PlatformDescriptor) -> bool:
+def _device_qualifies(device: Device[Any], descriptor: PlatformDescriptor) -> bool:
     """Return True when the device can be exposed on the descriptor's platform."""
     return not descriptor.candidate_types or isinstance(
         device, descriptor.candidate_types
@@ -475,7 +476,7 @@ def _device_qualifies(device: Device, descriptor: PlatformDescriptor) -> bool:
 
 def build_field_selector(
     option_field: OptionField,
-    devices: dict[int, Device],
+    devices: dict[int, Device[Any]],
     device_label: Callable[[int], str],
 ) -> Any:
     """Build the selector for one per-device option field."""
@@ -543,8 +544,8 @@ def _suggested_field_value(option_field: OptionField, value: Any) -> Any:
 
 def _build_fields_schema(
     fields: tuple[OptionField, ...],
-    device_config: dict,
-    devices: dict[int, Device],
+    device_config: dict[str, Any],
+    devices: dict[int, Device[Any]],
     device_label: Callable[[int], str],
 ) -> tuple[dict[Any, Any], dict[str, Any]]:
     """Build the schema dict and suggested values for the given fields."""
@@ -564,8 +565,8 @@ def _build_fields_schema(
 
 def build_device_options_schema(
     descriptor: PlatformDescriptor,
-    device_config: dict,
-    devices: dict[int, Device],
+    device_config: dict[str, Any],
+    devices: dict[int, Device[Any]],
     device_label: Callable[[int], str],
 ) -> tuple[vol.Schema, dict[str, Any]]:
     """Build the per-device options form and its suggested values."""
@@ -580,8 +581,8 @@ ADVANCED_OPTIONS_SECTION = "advanced_options"
 
 def build_device_options_schema_split(
     descriptor: PlatformDescriptor,
-    device_config: dict,
-    devices: dict[int, Device],
+    device_config: dict[str, Any],
+    devices: dict[int, Device[Any]],
     device_label: Callable[[int], str],
 ) -> tuple[vol.Schema, dict[str, Any]]:
     """Build the options form with the advanced fields in a collapsed section.
@@ -621,10 +622,10 @@ def flatten_advanced_options(user_input: dict[str, Any]) -> dict[str, Any]:
 
 def apply_device_options(
     descriptor: PlatformDescriptor,
-    device_config: dict,
+    device_config: dict[str, Any],
     user_input: dict[str, Any],
     errors: dict[str, str],
-) -> dict:
+) -> dict[str, Any]:
     """Merge submitted per-device options into the stored device config."""
     new_config = dict(device_config)
     # unique_id is a YAML-only option: any imported value is preserved by the
@@ -652,13 +653,17 @@ def apply_device_options(
     return new_config
 
 
-class _TapHomeDeviceArchetypeFlow:
+class _TapHomeDeviceArchetypeFlow[_FlowResultT]:
     """Archetype add steps shared by the subentry flow and the options flow.
 
     Adding starts from a menu of user-facing device types (archetypes); each
     type asks only for what it needs. Subclasses provide the parent entry and
     how the collected subentry payloads are persisted, so the exact same steps
     back both the integration page's "Add device" and the Configure dialog.
+
+    ``_FlowResultT`` is the flow-result type of the hosting FlowHandler
+    (``ConfigFlowResult``, ``SubentryFlowResult`` or ``FlowResult``), so the
+    shared steps stay type-checked against whichever flow mixes them in.
     """
 
     _archetype: DeviceArchetype | None = None
@@ -670,26 +675,28 @@ class _TapHomeDeviceArchetypeFlow:
     _archetype_fixed_device_id: int | None = None
 
     # Members provided by the hosting data-entry FlowHandler.
-    async_show_form: Callable[..., Any]
-    async_show_menu: Callable[..., Any]
-    async_abort: Callable[..., Any]
+    async_show_form: Callable[..., _FlowResultT]
+    async_show_menu: Callable[..., _FlowResultT]
+    async_abort: Callable[..., _FlowResultT]
     add_suggested_values_to_schema: Callable[..., Any]
 
     @property
-    def _archetype_entry(self) -> ConfigEntry:
+    def _archetype_entry(self) -> TapHomeConfigEntry:
         """Return the config entry devices are added to."""
         raise NotImplementedError
 
-    def _archetype_finish(self, payloads: list[ConfigSubentryData]) -> Any:
+    def _archetype_finish(
+        self, payloads: list[ConfigSubentryData]
+    ) -> _FlowResultT:
         """Persist the collected device subentries and end the flow."""
         raise NotImplementedError
 
     @property
-    def _archetype_devices(self) -> dict[int, Device]:
+    def _archetype_devices(self) -> dict[int, Device[Any]]:
         """Return the devices discovered by the loaded core."""
         return self._archetype_entry.runtime_data.hub.devices
 
-    def _archetype_device_label(self, device: Device) -> str:
+    def _archetype_device_label(self, device: Device[Any]) -> str:
         """Return a human readable label of a TapHome device."""
         return _device_display_label(device)
 
@@ -731,7 +738,7 @@ class _TapHomeDeviceArchetypeFlow:
         return pairs
 
     def _archetype_available_values(
-        self, archetype: DeviceArchetype, device: Device
+        self, archetype: DeviceArchetype, device: Device[Any]
     ) -> list[ValueType]:
         """Return the device values not yet exposed on the archetype's platform."""
         if (archetype.config_key, device.id) in self._archetype_device_level_pairs():
@@ -748,7 +755,7 @@ class _TapHomeDeviceArchetypeFlow:
             not in unique_ids
         ]
 
-    def _archetype_addable_devices(self, archetype: DeviceArchetype) -> list[Device]:
+    def _archetype_addable_devices(self, archetype: DeviceArchetype) -> list[Device[Any]]:
         """Return the devices the archetype can still be added for."""
         descriptor = PLATFORM_DESCRIPTORS_BY_KEY[archetype.config_key]
         candidates = [
@@ -773,7 +780,7 @@ class _TapHomeDeviceArchetypeFlow:
             if (archetype.config_key, device.id) not in configured
         ]
 
-    def _async_show_archetype_menu(self, step_id: str) -> Any:
+    def _async_show_archetype_menu(self, step_id: str) -> _FlowResultT:
         """Show the menu of device types."""
         return self.async_show_menu(
             step_id=step_id,
@@ -781,77 +788,87 @@ class _TapHomeDeviceArchetypeFlow:
         )
 
     # One step per archetype so each gets its own translated title and form.
-    async def async_step_light(self, user_input=None) -> Any:
+    async def async_step_light(self, user_input: dict[str, Any] | None = None) -> _FlowResultT:
         """Add a light."""
         return await self._async_archetype_step("light", user_input)
 
-    async def async_step_switch(self, user_input=None) -> Any:
+    async def async_step_switch(self, user_input: dict[str, Any] | None = None) -> _FlowResultT:
         """Add a switch."""
         return await self._async_archetype_step("switch", user_input)
 
-    async def async_step_cover(self, user_input=None) -> Any:
+    async def async_step_cover(self, user_input: dict[str, Any] | None = None) -> _FlowResultT:
         """Add a cover."""
         return await self._async_archetype_step("cover", user_input)
 
-    async def async_step_thermostat(self, user_input=None) -> Any:
+    async def async_step_thermostat(self, user_input: dict[str, Any] | None = None) -> _FlowResultT:
         """Add a simple thermostat."""
         return await self._async_archetype_step("thermostat", user_input)
 
-    async def async_step_thermostat_controlled(self, user_input=None) -> Any:
+    async def async_step_thermostat_controlled(
+        self, user_input: dict[str, Any] | None = None
+    ) -> _FlowResultT:
         """Add a thermostat that drives a switch or mode."""
         return await self._async_archetype_step("thermostat_controlled", user_input)
 
-    async def async_step_thermostat_range(self, user_input=None) -> Any:
+    async def async_step_thermostat_range(
+        self, user_input: dict[str, Any] | None = None
+    ) -> _FlowResultT:
         """Add a range thermostat."""
         return await self._async_archetype_step("thermostat_range", user_input)
 
-    async def async_step_sensor(self, user_input=None) -> Any:
+    async def async_step_sensor(self, user_input: dict[str, Any] | None = None) -> _FlowResultT:
         """Add sensor values of a device."""
         return await self._async_archetype_step("sensor", user_input)
 
-    async def async_step_binary_sensor(self, user_input=None) -> Any:
+    async def async_step_binary_sensor(
+        self, user_input: dict[str, Any] | None = None
+    ) -> _FlowResultT:
         """Add binary sensor values of a device."""
         return await self._async_archetype_step("binary_sensor", user_input)
 
-    async def async_step_fan(self, user_input=None) -> Any:
+    async def async_step_fan(self, user_input: dict[str, Any] | None = None) -> _FlowResultT:
         """Add a fan."""
         return await self._async_archetype_step("fan", user_input)
 
-    async def async_step_humidifier(self, user_input=None) -> Any:
+    async def async_step_humidifier(self, user_input: dict[str, Any] | None = None) -> _FlowResultT:
         """Add a humidifier."""
         return await self._async_archetype_step("humidifier", user_input)
 
-    async def async_step_valve(self, user_input=None) -> Any:
+    async def async_step_valve(self, user_input: dict[str, Any] | None = None) -> _FlowResultT:
         """Add a valve."""
         return await self._async_archetype_step("valve", user_input)
 
-    async def async_step_button(self, user_input=None) -> Any:
+    async def async_step_button(self, user_input: dict[str, Any] | None = None) -> _FlowResultT:
         """Add a button."""
         return await self._async_archetype_step("button", user_input)
 
-    async def async_step_select(self, user_input=None) -> Any:
+    async def async_step_select(self, user_input: dict[str, Any] | None = None) -> _FlowResultT:
         """Add a select."""
         return await self._async_archetype_step("select", user_input)
 
-    async def async_step_number(self, user_input=None) -> Any:
+    async def async_step_number(self, user_input: dict[str, Any] | None = None) -> _FlowResultT:
         """Add a number."""
         return await self._async_archetype_step("number", user_input)
 
-    async def async_step_time(self, user_input=None) -> Any:
+    async def async_step_time(self, user_input: dict[str, Any] | None = None) -> _FlowResultT:
         """Add a time."""
         return await self._async_archetype_step("time", user_input)
 
-    async def async_step_sensor_values(self, user_input=None) -> Any:
+    async def async_step_sensor_values(
+        self, user_input: dict[str, Any] | None = None
+    ) -> _FlowResultT:
         """Pick the sensor values to expose."""
         return await self._async_values_step(user_input)
 
-    async def async_step_binary_sensor_values(self, user_input=None) -> Any:
+    async def async_step_binary_sensor_values(
+        self, user_input: dict[str, Any] | None = None
+    ) -> _FlowResultT:
         """Pick the binary sensor values to expose."""
         return await self._async_values_step(user_input)
 
     async def _async_archetype_step(
         self, key: str, user_input: dict[str, Any] | None
-    ) -> Any:
+    ) -> _FlowResultT:
         """Show one archetype's add form: device picker plus its fields."""
         if self._archetype_entry.state is not ConfigEntryState.LOADED:
             return self.async_abort(reason="entry_not_loaded")
@@ -917,7 +934,7 @@ class _TapHomeDeviceArchetypeFlow:
 
     @staticmethod
     def _validate_archetype(
-        archetype: DeviceArchetype, device_config: dict
+        archetype: DeviceArchetype, device_config: dict[str, Any]
     ) -> str | None:
         """Validate archetype-specific field combinations."""
         if archetype.key != "thermostat_controlled":
@@ -936,7 +953,7 @@ class _TapHomeDeviceArchetypeFlow:
 
     async def _async_range_thermostat_step(
         self, user_input: dict[str, Any] | None
-    ) -> Any:
+    ) -> _FlowResultT:
         """Add a range thermostat from its high and low thermostats."""
         archetype = self._archetype
         assert archetype is not None
@@ -980,14 +997,16 @@ class _TapHomeDeviceArchetypeFlow:
             step_id="thermostat_range", data_schema=schema, errors=errors
         )
 
-    async def _async_next_values_step(self) -> Any:
+    async def _async_next_values_step(self) -> _FlowResultT:
         """Continue to the value selection of the picked device."""
         assert self._archetype is not None
         if self._archetype.config_key == CONF_SENSORS:
             return await self.async_step_sensor_values()
         return await self.async_step_binary_sensor_values()
 
-    async def _async_values_step(self, user_input: dict[str, Any] | None) -> Any:
+    async def _async_values_step(
+        self, user_input: dict[str, Any] | None
+    ) -> _FlowResultT:
         """Pick the device values to expose; each becomes its own subentry."""
         archetype = self._archetype
         assert archetype is not None and self._archetype_device_id is not None
@@ -1044,7 +1063,7 @@ class _TapHomeDeviceArchetypeFlow:
             description_placeholders={"device": self._archetype_device_label(device)},
         )
 
-    def _create_archetype_subentry(self, device_config: dict) -> Any:
+    def _create_archetype_subentry(self, device_config: dict[str, Any]) -> _FlowResultT:
         """Persist the collected device configuration as a subentry."""
         archetype = self._archetype
         assert archetype is not None
@@ -1081,7 +1100,7 @@ class _TapHomeSetupFlow(ConfigEntryBaseFlow):
         self._selected_subentry_ids: list[str] = []
 
     @property
-    def _devices(self) -> dict[int, Device]:
+    def _devices(self) -> dict[int, Device[Any]]:
         """Return the TapHome devices available to the flow."""
         raise NotImplementedError
 
@@ -1372,7 +1391,7 @@ class _TapHomeSetupFlow(ConfigEntryBaseFlow):
         return {}
 
     def _device_subentry_data(
-        self, config_key: str, device_config: dict
+        self, config_key: str, device_config: dict[str, Any]
     ) -> ConfigSubentryData:
         """Build the subentry payload for one exposed device."""
         title = self._device_label(device_config_id(device_config))
@@ -1406,7 +1425,7 @@ class _TapHomeSetupFlow(ConfigEntryBaseFlow):
         location = self._device_location(device)
         return f"{label} — {location}" if location else label
 
-    def _device_location(self, device: Device) -> str | None:
+    def _device_location(self, device: Device[Any]) -> str | None:
         """Describe where a device lives: its area, or its zone and category."""
         if device.id in self._configured_device_ids():
             return self._area_name(device.zone)
@@ -1414,7 +1433,7 @@ class _TapHomeSetupFlow(ConfigEntryBaseFlow):
             " · ".join(part for part in (device.zone, device.category) if part) or None
         )
 
-    def _device_subentries(self) -> list[dict]:
+    def _device_subentries(self) -> list[dict[str, Any]]:
         """Return the data of the configured device subentries.
 
         Overridden by the options flow, which reads the loaded entry. The setup
@@ -1473,7 +1492,7 @@ class _TapHomeSetupFlow(ConfigEntryBaseFlow):
         option_key: str,
         step_id: str,
         user_input: dict[str, Any] | None,
-        get_name: Callable[[Device], str | None],
+        get_name: Callable[[Device[Any]], str | None],
         field_key: str,
         target_selector: Any,
         resolve_target: Callable[[str], str | None],
@@ -1527,7 +1546,7 @@ class _TapHomeSetupFlow(ConfigEntryBaseFlow):
         )
 
     def _build_device_options_schema(
-        self, descriptor: PlatformDescriptor, device_config: dict
+        self, descriptor: PlatformDescriptor, device_config: dict[str, Any]
     ) -> tuple[vol.Schema, dict[str, Any]]:
         """Build the per-device options form and its suggested values."""
         return build_device_options_schema(
@@ -1537,28 +1556,30 @@ class _TapHomeSetupFlow(ConfigEntryBaseFlow):
     def _apply_device_options(
         self,
         descriptor: PlatformDescriptor,
-        device_config: dict,
+        device_config: dict[str, Any],
         user_input: dict[str, Any],
         errors: dict[str, str],
-    ) -> dict:
+    ) -> dict[str, Any]:
         """Merge submitted per-device options into the stored device config."""
         return apply_device_options(descriptor, device_config, user_input, errors)
 
 
-class TapHomeOptionsFlow(_TapHomeDeviceArchetypeFlow, _TapHomeSetupFlow, OptionsFlow):
+class TapHomeOptionsFlow(
+    _TapHomeDeviceArchetypeFlow[ConfigFlowResult], _TapHomeSetupFlow, OptionsFlow
+):
     """Handle the TapHome options flow."""
 
     @property
     def _hub(self) -> TapHomeHub:
         """Return the live hub of the loaded config entry."""
-        return self.config_entry.runtime_data.hub
+        return self._archetype_entry.runtime_data.hub
 
     @property
-    def _devices(self) -> dict[int, Device]:
+    def _devices(self) -> dict[int, Device[Any]]:
         """Return the devices discovered by the loaded core."""
         return self._hub.devices
 
-    def _device_subentries(self) -> list[dict]:
+    def _device_subentries(self) -> list[dict[str, Any]]:
         """Return the data of the loaded entry's device subentries."""
         return [
             dict(subentry.data)
@@ -1570,7 +1591,7 @@ class TapHomeOptionsFlow(_TapHomeDeviceArchetypeFlow, _TapHomeSetupFlow, Options
         return self._async_save_options()
 
     @property
-    def _archetype_entry(self) -> ConfigEntry:
+    def _archetype_entry(self) -> TapHomeConfigEntry:
         """Return the config entry devices are added to."""
         return self.config_entry
 
@@ -1774,6 +1795,8 @@ class TapHomeOptionsFlow(_TapHomeDeviceArchetypeFlow, _TapHomeSetupFlow, Options
             return self.async_abort(reason="no_device_config")
         subentry = subentries[0]
         config_key = subentry_platform(subentry.data)
+        if config_key is None:
+            return self.async_abort(reason="unknown_subentry")
         descriptor = PLATFORM_DESCRIPTORS_BY_KEY.get(config_key)
         if descriptor is None:
             return self.async_abort(reason="unknown_subentry")
@@ -1875,7 +1898,7 @@ class TapHomeConfigFlow(_TapHomeSetupFlow, ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Initialize the config flow state."""
         super().__init__()
-        self._wizard_devices: dict[int, Device] = {}
+        self._wizard_devices: dict[int, Device[Any]] = {}
         self._wizard_data: dict[str, Any] = {}
         self._wizard_title = ""
         self._discovered_api_url: str | None = None
@@ -1897,7 +1920,7 @@ class TapHomeConfigFlow(_TapHomeSetupFlow, ConfigFlow, domain=DOMAIN):
         return {SUBENTRY_TYPE_DEVICE: TapHomeDeviceSubentryFlowHandler}
 
     @property
-    def _devices(self) -> dict[int, Device]:
+    def _devices(self) -> dict[int, Device[Any]]:
         """Return the devices discovered while adding the core."""
         return self._wizard_devices
 
@@ -2168,7 +2191,9 @@ class TapHomeConfigFlow(_TapHomeSetupFlow, ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_import(self, import_data: dict) -> ConfigFlowResult:
+    async def async_step_import(
+        self, import_data: dict[str, Any]
+    ) -> ConfigFlowResult:
         """Import one core from the legacy YAML configuration."""
         token = import_data[CONF_TOKEN]
         core_id = import_data.get(CONF_ID)
@@ -2181,7 +2206,7 @@ class TapHomeConfigFlow(_TapHomeSetupFlow, ConfigFlow, domain=DOMAIN):
                 return self.async_abort(reason="already_configured")
 
         title = core_id or "TapHome"
-        devices: dict[int, Device] = {}
+        devices: dict[int, Device[Any]] = {}
         try:
             location = await _async_get_location(
                 async_get_clientsession(self.hass), api_url, token
@@ -2224,7 +2249,9 @@ class TapHomeConfigFlow(_TapHomeSetupFlow, ConfigFlow, domain=DOMAIN):
 
 
 
-class TapHomeDeviceSubentryFlowHandler(_TapHomeDeviceArchetypeFlow, ConfigSubentryFlow):
+class TapHomeDeviceSubentryFlowHandler(
+    _TapHomeDeviceArchetypeFlow[SubentryFlowResult], ConfigSubentryFlow
+):
     """Add, edit and remove a single exposed TapHome device.
 
     The archetype add steps come from the shared mixin; the device page's Edit
@@ -2233,7 +2260,7 @@ class TapHomeDeviceSubentryFlowHandler(_TapHomeDeviceArchetypeFlow, ConfigSubent
     """
 
     @property
-    def _archetype_entry(self) -> ConfigEntry:
+    def _archetype_entry(self) -> TapHomeConfigEntry:
         """Return the parent config entry."""
         return self._get_entry()
 
@@ -2267,6 +2294,8 @@ class TapHomeDeviceSubentryFlowHandler(_TapHomeDeviceArchetypeFlow, ConfigSubent
 
         subentry = self._get_reconfigure_subentry()
         config_key = subentry_platform(subentry.data)
+        if config_key is None:
+            return self.async_abort(reason="unknown_subentry")
         descriptor = PLATFORM_DESCRIPTORS_BY_KEY.get(config_key)
         if descriptor is None:
             return self.async_abort(reason="unknown_subentry")
