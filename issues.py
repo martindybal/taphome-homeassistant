@@ -1,4 +1,8 @@
-"""Text constants for the TapHome integration."""
+"""Repair-issue identifier constants for the TapHome integration.
+
+Kept in a dedicated module (not ``translations.py``) so its name does not
+collide with the ``translations/`` data directory.
+"""
 
 from enum import StrEnum
 

@@ -13,6 +13,7 @@ from taphome_sdk import (
     GenericOutputState,
     MultiValueSwitchDevice,
     MultiValueSwitchState,
+    OutputCapableDevice,
     ValueType,
     enum_from_string_required,
 )
@@ -38,7 +39,7 @@ PARALLEL_UPDATES = 0
 class TapHomeHumidifierConfig(TapHomeEntityConfig):
     """Configuration for a TapHome humidifier device."""
 
-    def __init__(self, device_config: dict) -> None:
+    def __init__(self, device_config: dict[str, Any]) -> None:
         """Store config and extract humidity limits."""
         super().__init__(device_config)
         self.switch_id: int | None = self.get_optional("switch_id", None)
@@ -54,10 +55,12 @@ class TapHomeHumidifierConfig(TapHomeEntityConfig):
         )
 
 
-class TapHomeHumidifier(TapHomeEntity, HumidifierEntity):
+class TapHomeHumidifier(
+    TapHomeEntity[OutputCapableDevice, TapHomeHumidifierConfig], HumidifierEntity
+):
     """Representation of a demo humidifier device."""
 
-    _switch_device: DigitalOutputDevice | None = None
+    _switch_device: DigitalOutputDevice[DigitalOutputState] | None = None
 
     def __init__(
         self,
@@ -185,7 +188,7 @@ class TapHomeHumidifier(TapHomeEntity, HumidifierEntity):
 
     @override
     @handle_taphome_errors
-    async def async_set_mode(self, mode):
+    async def async_set_mode(self, mode: str) -> None:
         """Set new target preset mode."""
         if self._mode_device is not None:
             await self._mode_device.async_select_option(mode)

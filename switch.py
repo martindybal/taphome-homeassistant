@@ -25,13 +25,16 @@ PARALLEL_UPDATES = 0
 class TapHomeSwitchConfig(TapHomeEntityConfig):
     """Configuration for a TapHome switch device."""
 
-    def __init__(self, device_config: dict) -> None:
+    def __init__(self, device_config: dict[str, Any]) -> None:
         """Store config and extract switch limits."""
         super().__init__(device_config)
         self.device_class: SwitchDeviceClass = self.get_optional("device_class", None)
 
 
-class TapHomeSwitch(TapHomeEntity, SwitchEntity):
+class TapHomeSwitch(
+    TapHomeEntity[DigitalOutputDevice[DigitalOutputState], TapHomeSwitchConfig],
+    SwitchEntity,
+):
     """Representation of a TapHome switch entity."""
 
     def __init__(self, config: AddEntryRequest[TapHomeSwitchConfig]) -> None:

@@ -16,9 +16,12 @@ from .subentry import (
     config_subentry_from_data,
     iter_device_subentries,
 )
+from .taphome_data import TapHomeConfigEntry
 
 
-class NewDeviceRepairFlow(_TapHomeDeviceArchetypeFlow, RepairsFlow):
+class NewDeviceRepairFlow(
+    _TapHomeDeviceArchetypeFlow[data_entry_flow.FlowResult], RepairsFlow
+):
     """Guide the user through adding a newly discovered TapHome device.
 
     The device is fixed (the one the issue was raised for); the flow offers the
@@ -71,7 +74,7 @@ class NewDeviceRepairFlow(_TapHomeDeviceArchetypeFlow, RepairsFlow):
         return self.async_create_entry(title="", data={})
 
     @property
-    def _archetype_entry(self) -> ConfigEntry:
+    def _archetype_entry(self) -> TapHomeConfigEntry:
         """Return the config entry the issue was raised for."""
         entry = self._entry()
         if entry is None:

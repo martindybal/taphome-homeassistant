@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from typing import override
+from typing import Any, override
 
 from taphome_sdk import DeviceState, ValueType, VariableDevice, VariableState
 
@@ -24,7 +24,7 @@ PARALLEL_UPDATES = 0
 class TapHomeNumberConfig(TapHomeEntityConfig):
     """Configuration for a TapHome number (variable) device."""
 
-    def __init__(self, device_config: dict) -> None:
+    def __init__(self, device_config: dict[str, Any]) -> None:
         """Store config and extract optional value-range overrides."""
         super().__init__(device_config)
         self.min_value = self._optional_float("min_value")
@@ -36,7 +36,7 @@ class TapHomeNumberConfig(TapHomeEntityConfig):
         return None if value is None else float(value)
 
 
-class TapHomeNumber(TapHomeEntity, NumberEntity):
+class TapHomeNumber(TapHomeEntity[VariableDevice, TapHomeNumberConfig], NumberEntity):
     """Representation of a TapHome number entity."""
 
     def __init__(self, config: AddEntryRequest[TapHomeNumberConfig]) -> None:

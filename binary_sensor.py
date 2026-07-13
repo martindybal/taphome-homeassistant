@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, replace
 from datetime import datetime
+from typing import Any
 
 from taphome_sdk import Device, DeviceState, HubConnectionState, TapHomeHub, ValueType
 from taphome_sdk.taphome_api import ApiConnectionType
@@ -178,7 +179,7 @@ KNOWN_BINARY_SENSOR_TYPES: tuple[TapHomeBinarySensorType, ...] = (
 class BinarySensorEntityConfig(TapHomeEntityConfig):
     """Configuration for TapHome binary sensors."""
 
-    def __init__(self, device_config: dict) -> None:
+    def __init__(self, device_config: dict[str, Any]) -> None:
         """Initialize binary sensor config entry."""
         super().__init__(device_config)
         self.device_class: BinarySensorDeviceClass | None = self.get_optional(
@@ -190,7 +191,9 @@ class BinarySensorEntityConfig(TapHomeEntityConfig):
         self.value_type: ValueType | None = self.get_optional("value_type", None)
 
 
-class TapHomeBinarySensor(TapHomeEntity, BinarySensorEntity):
+class TapHomeBinarySensor(
+    TapHomeEntity[Device[Any], BinarySensorEntityConfig], BinarySensorEntity
+):
     """Representation of an binary sensor."""
 
     def __init__(

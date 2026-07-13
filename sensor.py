@@ -293,7 +293,7 @@ KNOWN_SENSOR_TYPES: tuple[TapHomeSensorType, ...] = (
 class TapHomeSensorConfig(TapHomeEntityConfig):
     """Configuration options for TapHome sensor entities."""
 
-    def __init__(self, device_config: dict) -> None:
+    def __init__(self, device_config: dict[str, Any]) -> None:
         """Initialize configuration entry from raw device config."""
         super().__init__(device_config)
         self.device_class: SensorDeviceClass | None = self.get_optional(
@@ -311,7 +311,7 @@ class TapHomeSensorConfig(TapHomeEntityConfig):
             self.state_class = SensorStateClass.MEASUREMENT
 
 
-class TapHomeSensor(TapHomeEntity, SensorEntity):
+class TapHomeSensor(TapHomeEntity[Device[Any], TapHomeSensorConfig], SensorEntity):
     """Representation of a TapHome sensor."""
 
     def __init__(

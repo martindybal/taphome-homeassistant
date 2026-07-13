@@ -1,6 +1,50 @@
 # Tooling configuration only (this repo is a HACS integration package, not a
 # distributable Python project, so there is no [build-system]/[project]).
 
+[tool.mypy]
+# Platinum ``strict-typing``. These flags mirror Home Assistant Core's mypy
+# configuration for a module listed in ``.strict-typing`` (base GENERAL_SETTINGS
+# plus STRICT_SETTINGS from ``script/hassfest/mypy_config.py``), so passing here
+# means passing in Core. Note Core deliberately does NOT enable
+# ``disallow_any_generics`` or ``no_implicit_reexport`` (both commented out
+# upstream), so bare ``dict``/``type`` and HA re-exported imports are accepted.
+#
+# The integration must be addressed as the nested package
+# ``custom_components.taphome`` (never ``python -m mypy`` from the repo root):
+# the root ``select.py``/``time.py`` would otherwise shadow the stdlib. CI/dev
+# put a ``custom_components/taphome`` symlink (or junction) on ``MYPYPATH`` and
+# run ``mypy -p custom_components.taphome`` from outside the repo root.
+python_version = "3.14"
+platform = "linux"
+local_partial_types = true
+strict_equality = true
+no_implicit_optional = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+extra_checks = false
+check_untyped_defs = true
+disallow_incomplete_defs = true
+disallow_subclassing_any = true
+disallow_untyped_calls = true
+disallow_untyped_decorators = true
+disallow_untyped_defs = true
+warn_return_any = true
+warn_unreachable = true
+# Extra local hardening beyond Core's baseline: Core leaves this commented out,
+# but parameterized generics (``dict[str, Any]`` etc.) are valid there too, so
+# enabling it here keeps the code tighter without diverging from the Core copy.
+# ``no_implicit_reexport`` stays OFF on purpose — enabling it would force
+# non-idiomatic ``from homeassistant.components.x import y as y`` imports.
+disallow_any_generics = true
+# The nested package also exposes tests/docs/.venv as submodules; they are not
+# part of the shipped integration and are not strict-typed.
+exclude = "/(\\.venv|tests|docs|__pycache__)/"
+
+[[tool.mypy.overrides]]
+# voluptuous ships no type information (Home Assistant core silences it too).
+module = "voluptuous.*"
+ignore_missing_imports = true
+
 [tool.pylint.MAIN]
 py-version = "3.14"
 

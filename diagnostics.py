@@ -18,7 +18,7 @@ from .taphome_data import TapHomeConfigEntry
 TO_REDACT = {CONF_TOKEN, CONF_WEBHOOK_ID}
 
 
-def _device_diagnostics(device: Device) -> dict[str, Any]:
+def _device_diagnostics(device: Device[Any]) -> dict[str, Any]:
     """Return the diagnostics of a single TapHome device."""
     state = device.state
     return {

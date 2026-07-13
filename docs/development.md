@@ -47,12 +47,26 @@ Same checks as CI (`.github/workflows/ci.yaml`):
 
 ```bash
 python -m venv .venv && source .venv/bin/activate
-pip install homeassistant ruff pylint pytest-homeassistant-custom-component taphome-sdk
+pip install homeassistant ruff pylint mypy pytest-homeassistant-custom-component taphome-sdk
 
 python -m compileall -q .
 ruff check .
 pylint . --fail-under=9.5
 pytest tests  # the pytest script, not python -m: repo root on sys.path would shadow stdlib select/time
+```
+
+`mypy --strict` (Platinum `strict-typing`) needs the integration addressed as
+the nested package `custom_components.taphome`, because the repo-root
+`select.py`/`time.py` would otherwise shadow the stdlib (never `python -m mypy`
+from the root). The `[tool.mypy]` config in `pyproject.toml` mirrors Home
+Assistant Core's settings for a `.strict-typing` module. Run it from outside the
+repo with a `custom_components/taphome` symlink on `MYPYPATH`:
+
+```bash
+mkdir -p /tmp/mypy_root/custom_components
+ln -s "$PWD" /tmp/mypy_root/custom_components/taphome
+(cd /tmp && MYPYPATH=/tmp/mypy_root mypy -p custom_components.taphome \
+  --config-file "$OLDPWD/pyproject.toml")
 ```
 
 The pytest suite in `tests/` covers the config flow (setup wizard, reauth,

@@ -1,7 +1,7 @@
 """Helper object used during entity creation."""
 
 from collections.abc import Callable, Iterable
-from typing import TypeVar
+from typing import Any, TypeVar, cast
 
 from taphome_sdk import DeviceNotExposedError, DeviceTypeError
 
@@ -12,7 +12,7 @@ from .taphome_config_entry import AddEntryRequest, TapHomeEntityConfigT
 from .taphome_data import TapHomeConfigEntry
 from .taphome_issue_registry import TapHomeIssueRegistry
 
-TapHomeEntityT = TypeVar("TapHomeEntityT", bound=TapHomeEntity)
+TapHomeEntityT = TypeVar("TapHomeEntityT", bound=TapHomeEntity[Any, Any])
 
 
 def add_taphome_entities(
@@ -30,8 +30,12 @@ def add_taphome_entities(
     added under the right ``config_subentry_id`` (which ties the entities and
     their device to that subentry).
     """
-    requests: list[tuple[str, AddEntryRequest[TapHomeEntityConfigT]]] = (
-        entry.runtime_data.add_entry_requests[platform_domain]
+    # Storage keeps the requests under the ``TapHomeEntityConfig`` base type; for
+    # a given platform every request in the bucket carries this factory's own
+    # config subtype, so narrowing to it is safe.
+    requests: list[tuple[str, AddEntryRequest[TapHomeEntityConfigT]]] = cast(
+        "list[tuple[str, AddEntryRequest[TapHomeEntityConfigT]]]",
+        entry.runtime_data.add_entry_requests[platform_domain],
     )
 
     for subentry_id, configuration in requests:

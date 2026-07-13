@@ -1,7 +1,7 @@
 """TapHome button integration."""
 
 from collections.abc import Iterator
-from typing import override
+from typing import Any, override
 
 from taphome_sdk import ButtonAction, ButtonDevice, enum_from_string_required
 
@@ -24,7 +24,7 @@ PARALLEL_UPDATES = 0
 class TapHomeButtonConfig(TapHomeEntityConfig):
     """Configuration options for TapHome buttons."""
 
-    def __init__(self, device_config: dict) -> None:
+    def __init__(self, device_config: dict[str, Any]) -> None:
         """Initialize button config entry."""
         super().__init__(device_config)
 
@@ -42,7 +42,7 @@ class TapHomeButtonConfig(TapHomeEntityConfig):
                 self.actions.append(action)
 
 
-class TapHomeButton(TapHomeEntity, ButtonEntity):
+class TapHomeButton(TapHomeEntity[ButtonDevice, TapHomeButtonConfig], ButtonEntity):
     """Representation of an button."""
 
     def __init__(

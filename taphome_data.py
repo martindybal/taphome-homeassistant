@@ -9,7 +9,11 @@ from homeassistant.config_entries import ConfigEntry
 
 from taphome_sdk import HubConnectionState, TapHomeHub
 
-from .taphome_config_entry import AddEntryRequest, TapHomeCoreConfig
+from .taphome_config_entry import (
+    AddEntryRequest,
+    TapHomeCoreConfig,
+    TapHomeEntityConfig,
+)
 
 
 @dataclass(slots=True)
@@ -20,7 +24,9 @@ class TapHomeRuntimeData:
     core_config: TapHomeCoreConfig
     # Per platform domain, the (subentry id, request) pairs to add. Entities are
     # added grouped by subentry so each is tied to its device's config subentry.
-    add_entry_requests: dict[str, list[tuple[str, AddEntryRequest]]]
+    add_entry_requests: dict[
+        str, list[tuple[str, AddEntryRequest[TapHomeEntityConfig]]]
+    ]
     connection_state_handler: Callable[[HubConnectionState, HubConnectionState], None]
 
 
