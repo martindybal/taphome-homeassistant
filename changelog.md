@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026.11
+- Compatibility with Home Assistant's [removal of deprecated light features](https://contributors.home-assistant.io/blog/2026/02/23/remove-deprecate-light-features/) ([#212](https://github.com/martindybal/taphome-homeassistant/issues/212)):
+  - The color temperature range falls back to the Home Assistant defaults when TapHome doesn't report min/max values, instead of `None`, which Home Assistant no longer accepts.
+  - Color lights report the `unknown` color mode when neither color temperature nor color is known yet, instead of no color mode, which now raises an error.
+- Minimum supported Home Assistant version is now 2025.1.
+
 ## 2026.3
 - New Number entity type. TapHome Variables can now be exposed as writable number entities, allowing users to read and write numeric values from Home Assistant. Min/max bounds from TapHome metadata are respected.
 
