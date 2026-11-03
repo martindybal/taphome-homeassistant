@@ -1,0 +1,7 @@
+[MESSAGES CONTROL]
+# Home Assistant entities intentionally implement only the async variants of
+# abstract entity methods (async_turn_on instead of turn_on, ...), so
+# abstract-method (W0223) is a false positive here. Home Assistant core
+# disables it for the same reason. astroid 4 flags many more of these than
+# astroid 3 did, which pushed the score below CI's --fail-under=9.5.
+disable=abstract-method
