@@ -9,6 +9,8 @@ from homeassistant.components.light import (
     ATTR_EFFECT,
     ATTR_EFFECT_LIST,
     ATTR_HS_COLOR,
+    DEFAULT_MAX_KELVIN,
+    DEFAULT_MIN_KELVIN,
     DOMAIN as LIGHT_DOMAIN,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
@@ -67,6 +69,31 @@ DUAL_WHITE_LIGHT = {
             "readOnly": False,
             "minValue": 2700,
             "maxValue": 6000,
+        },
+    ],
+    "values": {
+        ValueType.SWITCH_STATE: 0.0,
+        ValueType.HUE_BRIGHTNESS: 0.0,
+    },
+}
+
+# TapHome does not always report the color temperature range (minValue and
+# maxValue are optional in the discovery response).
+DUAL_WHITE_LIGHT_WITHOUT_RANGE = {
+    "deviceId": 62,
+    "type": "DualWhiteLight",
+    "name": "Hallway Panel",
+    "description": "Tunable white panel without a reported range",
+    "supportedValues": [
+        {"valueTypeId": ValueType.SWITCH_STATE.value, "readOnly": False},
+        {"valueTypeId": ValueType.HUE_BRIGHTNESS.value, "readOnly": False},
+        {
+            "valueTypeId": ValueType.HUE_BRIGHTNESS_DESIRED_VALUE.value,
+            "readOnly": False,
+        },
+        {
+            "valueTypeId": ValueType.CORRELATED_COLOR_TEMPERATURE.value,
+            "readOnly": False,
         },
     ],
     "values": {
@@ -228,6 +255,36 @@ async def test_dual_white_light_color_temperature(
     assert state.state == STATE_ON
     assert state.attributes[ATTR_COLOR_TEMP_KELVIN] == 3000
     assert state.attributes[ATTR_COLOR_MODE] == ColorMode.COLOR_TEMP
+
+
+async def test_color_temperature_range_falls_back_to_defaults(
+    hass: HomeAssistant, mock_hub
+) -> None:
+    """A missing TapHome range falls back to the Home Assistant defaults."""
+    make_device(mock_hub, DUAL_WHITE_LIGHT_WITHOUT_RANGE)
+    await setup_integration(hass, make_config_entry({"lights": [{"id": 62}]}))
+
+    state = hass.states.get("light.hallway_panel")
+    assert state.attributes["min_color_temp_kelvin"] == DEFAULT_MIN_KELVIN
+    assert state.attributes["max_color_temp_kelvin"] == DEFAULT_MAX_KELVIN
+
+
+async def test_color_light_without_color_state_reports_unknown_mode(
+    hass: HomeAssistant, mock_hub
+) -> None:
+    """An ON light that has not reported any color state uses the unknown mode."""
+    make_device(mock_hub, DUAL_WHITE_LIGHT)
+    await setup_integration(hass, make_config_entry({"lights": [{"id": 61}]}))
+
+    # The core reports the light on without a color temperature value.
+    mock_hub.devices[61].state.apply_changes(
+        {ValueType.SWITCH_STATE: 1, ValueType.HUE_BRIGHTNESS: 1.0}
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("light.kitchen_panel")
+    assert state.state == STATE_ON
+    assert state.attributes[ATTR_COLOR_MODE] == ColorMode.UNKNOWN
 
 
 async def test_light_effect_from_multivalue_switch(
