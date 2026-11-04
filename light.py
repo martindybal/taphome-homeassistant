@@ -19,6 +19,8 @@ from taphome_sdk import (
 )
 
 from homeassistant.components.light import (
+    DEFAULT_MAX_KELVIN,
+    DEFAULT_MIN_KELVIN,
     DOMAIN as LIGHT_DOMAIN,
     ColorMode,
     LightEntity,
@@ -162,10 +164,17 @@ class TapHomeColorLight(TapHomeLight):
     ) -> None:
         """Initialize TapHome light entity."""
 
-        if light.min_color_temperature is not None:
-            self._attr_min_color_temp_kelvin = light.min_color_temperature
-        if light.max_color_temperature is not None:
-            self._attr_max_color_temp_kelvin = light.max_color_temperature
+        # TapHome may not report the range; Home Assistant requires one.
+        self._attr_min_color_temp_kelvin = (
+            light.min_color_temperature
+            if light.min_color_temperature is not None
+            else DEFAULT_MIN_KELVIN
+        )
+        self._attr_max_color_temp_kelvin = (
+            light.max_color_temperature
+            if light.max_color_temperature is not None
+            else DEFAULT_MAX_KELVIN
+        )
 
         match light:
             case RGBLightDevice():
@@ -206,7 +215,7 @@ class TapHomeColorLight(TapHomeLight):
             if self._attr_color_temp_kelvin is not None
             else ColorMode.HS
             if self._attr_hs_color is not None
-            else None
+            else ColorMode.UNKNOWN
         )
 
     @override
