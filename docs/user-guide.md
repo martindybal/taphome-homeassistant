@@ -6,6 +6,8 @@ upgrading from a YAML configuration, see [Migrating from YAML](#migrating-from-y
 
 ## Prerequisites
 
+The integration requires **Home Assistant 2026.10 or newer**.
+
 Before adding the integration, prepare your TapHome core in the TapHome app:
 
 1. Open the TapHome app and go to **Settings → Integrations → TapHome API**
@@ -260,6 +262,12 @@ automation:
 - **Scenes/rules stay in TapHome.** The integration exposes devices and
   values; TapHome scenes and rules are not imported (multi-value switches
   used for scenes can be exposed as `select` entities).
+- **A device exposed by several entries shows Edit/Delete for one of them.**
+  When one TapHome device is added under two platforms (or split into
+  per-value sensor entries), all its entities share one device page, but the
+  page's **⋮ → Edit/Delete** belongs to the oldest entry. Edit or remove the
+  other configurations via **Configure → Edit device / Remove device** —
+  picking the device there lists every configuration.
 
 ## Removing the integration
 

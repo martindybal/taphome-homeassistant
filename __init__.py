@@ -10,7 +10,7 @@ from dataclasses import dataclass
 import logging
 
 from aiohttp.web import Request
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN
@@ -84,7 +84,7 @@ from .const import (
 )
 from .cover import TapHomeCoverConfig
 from .fan import TapHomeFanConfig
-from .entity import hub_device_id
+from .entity import hub_device_id, resolve_suggested_area
 from .humidifier import TapHomeHumidifierConfig
 from .light import TapHomeLightConfig
 from .number import TapHomeNumberConfig
@@ -145,13 +145,13 @@ DOMAIN_DEFINITIONS: tuple[DomainDefinition, ...] = (
 )
 
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
-        TAPHOME_PLATFORM: vol.Schema(
+        TAPHOME_PLATFORM: probatio.Schema(
             {
-                vol.Optional(CONF_LANGUAGE): cv.string,
+                probatio.Optional(CONF_LANGUAGE): cv.string,
                 CONF_CORES: [
-                    vol.All(
+                    probatio.All(
                         cv.has_at_least_one_key(
                             CONF_LIGHTS,
                             CONF_BUTTONS,
@@ -168,57 +168,57 @@ CONFIG_SCHEMA = vol.Schema(
                             CONF_TIMES,
                         ),
                         {
-                            vol.Required(CONF_TOKEN): cv.string,
-                            vol.Optional(CONF_ID): cv.string,
-                            vol.Optional(CONF_IP): cv.string,
-                            vol.Optional(CONF_API_URL): cv.string,
-                            vol.Optional(CONF_WEBHOOK_ID): cv.string,
-                            vol.Optional(CONF_UPDATE_INTERVAL): cv.positive_float,
-                            vol.Optional(USE_DESCRIPTION_AS_ENTITY_ID): cv.boolean,
-                            vol.Optional(USE_DESCRIPTION_AS_NAME): cv.boolean,
-                            vol.Optional(CONF_ZONES): vol.Any(
+                            probatio.Required(CONF_TOKEN): cv.string,
+                            probatio.Optional(CONF_ID): cv.string,
+                            probatio.Optional(CONF_IP): cv.string,
+                            probatio.Optional(CONF_API_URL): cv.string,
+                            probatio.Optional(CONF_WEBHOOK_ID): cv.string,
+                            probatio.Optional(CONF_UPDATE_INTERVAL): cv.positive_float,
+                            probatio.Optional(USE_DESCRIPTION_AS_ENTITY_ID): cv.boolean,
+                            probatio.Optional(USE_DESCRIPTION_AS_NAME): cv.boolean,
+                            probatio.Optional(CONF_ZONES): probatio.Any(
                                 None,
                                 {
-                                    str: vol.Any(
-                                        str, {vol.Required("ignore"): cv.boolean}
+                                    str: probatio.Any(
+                                        str, {probatio.Required("ignore"): cv.boolean}
                                     )
                                 },
                             ),
-                            vol.Optional(CONF_LABELS): vol.Any(
+                            probatio.Optional(CONF_LABELS): probatio.Any(
                                 None,
                                 {
-                                    str: vol.Any(
-                                        str, {vol.Required("ignore"): cv.boolean}
+                                    str: probatio.Any(
+                                        str, {probatio.Required("ignore"): cv.boolean}
                                     )
                                 },
                             ),
-                            vol.Optional(
+                            probatio.Optional(
                                 CONF_ENABLED_ATTRIBUTES, default=AVAILABLE_ATTRIBUTES
                             ): cv.ensure_list,
-                            vol.Optional(CONF_LIGHTS, default=[]): cv.ensure_list,
-                            vol.Optional(CONF_BUTTONS, default=[]): cv.ensure_list,
-                            vol.Optional(CONF_COVERS, default=[]): cv.ensure_list,
-                            vol.Optional(CONF_CLIMATES, default=[]): cv.ensure_list,
-                            vol.Optional(CONF_FAN, default=[]): cv.ensure_list,
-                            vol.Optional(CONF_HUMIDIFIER, default=[]): cv.ensure_list,
-                            vol.Optional(
+                            probatio.Optional(CONF_LIGHTS, default=[]): cv.ensure_list,
+                            probatio.Optional(CONF_BUTTONS, default=[]): cv.ensure_list,
+                            probatio.Optional(CONF_COVERS, default=[]): cv.ensure_list,
+                            probatio.Optional(CONF_CLIMATES, default=[]): cv.ensure_list,
+                            probatio.Optional(CONF_FAN, default=[]): cv.ensure_list,
+                            probatio.Optional(CONF_HUMIDIFIER, default=[]): cv.ensure_list,
+                            probatio.Optional(
                                 CONF_MULTIVALUE_SWITCHES, default=[]
                             ): cv.ensure_list,
-                            vol.Optional(CONF_SWITCHES, default=[]): cv.ensure_list,
-                            vol.Optional(CONF_SENSORS, default=[]): cv.ensure_list,
-                            vol.Optional(
+                            probatio.Optional(CONF_SWITCHES, default=[]): cv.ensure_list,
+                            probatio.Optional(CONF_SENSORS, default=[]): cv.ensure_list,
+                            probatio.Optional(
                                 CONF_BINARY_SENSORS, default=[]
                             ): cv.ensure_list,
-                            vol.Optional(CONF_VALVE, default=[]): cv.ensure_list,
-                            vol.Optional(CONF_NUMBERS, default=[]): cv.ensure_list,
-                            vol.Optional(CONF_TIMES, default=[]): cv.ensure_list,
+                            probatio.Optional(CONF_VALVE, default=[]): cv.ensure_list,
+                            probatio.Optional(CONF_NUMBERS, default=[]): cv.ensure_list,
+                            probatio.Optional(CONF_TIMES, default=[]): cv.ensure_list,
                         },
                     )
                 ],
             }
         )
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 
@@ -316,7 +316,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: TapHomeConfigEntry) -> b
 
     hub.connection_state.changed += hub_connection_state_changed
 
-    _register_hub_device(hass, entry, hub)
+    hub_device = _register_hub_device(hass, entry, hub)
+    _register_taphome_devices(hass, entry, hub, core_config, hub_device)
     _register_webhook(hass, entry, hub, core_config)
     _async_remove_stale_entities(hass, entry)
     _async_detect_new_devices(
@@ -423,7 +424,10 @@ def _migrate_devices_to_subentries(
             hass.config_entries.async_add_subentry(entry, subentry)
             subentry_by_device[(config_key, device_id)] = subentry.subentry_id
 
-    subentries_by_ha_device: dict[str, set[str]] = {}
+    # Devices stay at the entry level here; the first setup moves each one to
+    # its owning subentry (_register_taphome_devices). Entities must be
+    # re-homed first: moving a device removes the entities left in its old
+    # (no-subentry) home.
     for registry_entry in entities:
         config_key = domain_to_key.get(registry_entry.domain)
         device_id = _parse_device_id_from_unique_id(registry_entry.unique_id)
@@ -436,24 +440,6 @@ def _migrate_devices_to_subentries(
             continue
         entity_registry.async_update_entity(
             registry_entry.entity_id, config_subentry_id=subentry_id
-        )
-        if registry_entry.device_id:
-            subentries_by_ha_device.setdefault(registry_entry.device_id, set()).add(
-                subentry_id
-            )
-
-    for ha_device_id, subentry_ids in subentries_by_ha_device.items():
-        for subentry_id in subentry_ids:
-            device_registry.async_update_device(
-                ha_device_id,
-                add_config_entry_id=entry.entry_id,
-                add_config_subentry_id=subentry_id,
-            )
-        # Drop the bare (no-subentry) link so the device belongs to its subentry.
-        device_registry.async_update_device(
-            ha_device_id,
-            remove_config_entry_id=entry.entry_id,
-            remove_config_subentry_id=None,
         )
 
     hass.config_entries.async_update_entry(
@@ -663,12 +649,12 @@ def _async_sync_subentry_titles(
 
 def _register_hub_device(
     hass: HomeAssistant, entry: TapHomeConfigEntry, hub: TapHomeHub
-) -> None:
+) -> dr.DeviceEntry:
     """Register the TapHome Core as the hub device."""
     location = hub.location
     location_id = hub_device_id(location, entry.data.get(CONF_ID))
     device_registry = dr.async_get(hass)
-    device_registry.async_get_or_create(
+    return device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, location_id)},
         name=location.location_name if location else entry.title,
@@ -676,6 +662,60 @@ def _register_hub_device(
         model="Core",
         configuration_url=_core_configuration_url(entry.data.get(CONF_API_URL, "")),
     )
+
+
+def _register_taphome_devices(
+    hass: HomeAssistant,
+    entry: TapHomeConfigEntry,
+    hub: TapHomeHub,
+    core_config: TapHomeCoreConfig,
+    hub_device: dr.DeviceEntry,
+) -> None:
+    """Register one HA device per TapHome device exposed by a subentry.
+
+    A device belongs to a single config subentry; when several subentries
+    expose the same TapHome device (a device configured under two platforms,
+    or one sensor subentry per device value), the oldest subentry owns it and
+    the other subentries' entities only attach to it. Registering centrally —
+    entities carry no device_info — keeps the device from bouncing between
+    subentries, which would remove the other subentries' entities.
+    """
+    device_registry = dr.async_get(hass)
+    location_id = hub_device_id(hub.location, entry.data.get(CONF_ID))
+
+    owning_subentry: dict[int, str] = {}
+    for subentry in iter_device_subentries(entry):
+        if "id" not in subentry.data:
+            continue
+        device_id = device_config_id(subentry.data)
+        owner = owning_subentry.get(device_id)
+        # Subentry ids are ULIDs: the smallest one is the oldest subentry.
+        if owner is None or subentry.subentry_id < owner:
+            owning_subentry[device_id] = subentry.subentry_id
+
+    for device_id, subentry_id in owning_subentry.items():
+        device = hub.devices.get(device_id)
+        if device is None:
+            # Not exposed by the Core; the entity factory raises a repair issue.
+            continue
+        device_entry = device_registry.async_get_or_create(
+            config_entry_id=entry.entry_id,
+            identifiers={(DOMAIN, f"{location_id}_{device_id}")},
+            name=device.name,
+            manufacturer="TapHome",
+            model=device.device_type,
+            suggested_area=resolve_suggested_area(
+                hass, core_config.zone_mapping, device.zone
+            ),
+            via_device_id=hub_device.id,
+        )
+        # Not passing config_subentry_id above keeps an owned device where it
+        # is; a new device (and one left at the entry level by the options
+        # migration) is moved to its owning subentry explicitly.
+        if device_entry.config_subentry_id is None:
+            device_registry.async_update_device(
+                device_entry.id, new_config_subentry_id=subentry_id
+            )
 
 
 def _core_configuration_url(api_url: str) -> str | None:

@@ -22,7 +22,6 @@ from homeassistant.helpers import (
     entity_registry as er,
     label_registry as lr,
 )
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 
 from .const import DOMAIN
@@ -63,7 +62,7 @@ def hub_device_id(location: Location | None, core_id: str | None) -> str:
     return location.location_id if location else core_id or DOMAIN
 
 
-def _resolve_suggested_area(
+def resolve_suggested_area(
     hass: HomeAssistant, mapping: NameMapping, zone: str | None
 ) -> str | None:
     """Return the area name a new device should be created in.
@@ -156,17 +155,15 @@ class TapHomeEntity[DeviceT: Device[Any], ConfigT: TapHomeEntityConfig](
             f"taphome{unique_id_core}.{unique_id_device}.{taphome_device.id}".lower()
         )
 
+        # The HA device is registered centrally in async_setup_entry (one
+        # device per TapHome device, owned by a single subentry). The entity
+        # attaches to it directly instead of carrying a device_info: a device
+        # belongs to one subentry, and re-registering it from an entity added
+        # under another subentry would move it there, which removes the
+        # previous subentry's entities.
         location_id = hub_device_id(config.hub.location, config.core.id)
-        self._device_identifiers = {(DOMAIN, f"{location_id}_{taphome_device.id}")}
-        self._attr_device_info = DeviceInfo(
-            identifiers=self._device_identifiers,
-            name=taphome_device.name,
-            manufacturer="TapHome",
-            model=taphome_device.device_type,
-            suggested_area=_resolve_suggested_area(
-                config.hass, config.core.zone_mapping, self._zone
-            ),
-            via_device=(DOMAIN, location_id),
+        self.device_entry = dr.async_get(config.hass).async_get_device_by_identifier(
+            (DOMAIN, f"{location_id}_{taphome_device.id}"), config.core.entry_id
         )
 
         self._add_state_attributes_if_allowed("taphome_id", taphome_device.id)
@@ -217,10 +214,9 @@ class TapHomeEntity[DeviceT: Device[Any], ConfigT: TapHomeEntityConfig](
             or registry.async_get_area_by_name(target)
             or registry.async_create(target)
         )
-        device_registry = dr.async_get(self.hass)
-        device = device_registry.async_get_device(self._device_identifiers)
+        device = self._current_device_entry()
         if device is not None and device.area_id != area.id:
-            device_registry.async_update_device(device.id, area_id=area.id)
+            dr.async_get(self.hass).async_update_device(device.id, area_id=area.id)
 
     def _apply_label_mapping(self) -> None:
         """Label the device and entity after its TapHome category.
@@ -241,10 +237,9 @@ class TapHomeEntity[DeviceT: Device[Any], ConfigT: TapHomeEntityConfig](
             or registry.async_create(target)
         )
 
-        device_registry = dr.async_get(self.hass)
-        device = device_registry.async_get_device(self._device_identifiers)
+        device = self._current_device_entry()
         if device is not None and label.label_id not in device.labels:
-            device_registry.async_update_device(
+            dr.async_get(self.hass).async_update_device(
                 device.id, labels=device.labels | {label.label_id}
             )
 
@@ -254,6 +249,17 @@ class TapHomeEntity[DeviceT: Device[Any], ConfigT: TapHomeEntityConfig](
             entity_registry.async_update_entity(
                 self.entity_id, labels=entry.labels | {label.label_id}
             )
+
+    def _current_device_entry(self) -> dr.DeviceEntry | None:
+        """Return the fresh registry entry of this entity's device.
+
+        ``self.device_entry`` is a snapshot from entity creation; a sibling
+        entity sharing the device may have updated it (area, labels) since.
+        """
+        if self.device_entry is None:
+            return None
+        device = dr.async_get(self.hass).async_get(self.device_entry.id)
+        return device if isinstance(device, dr.DeviceEntry) else None
 
     @override
     def schedule_update_ha_state(self, force_refresh: bool = False) -> None:

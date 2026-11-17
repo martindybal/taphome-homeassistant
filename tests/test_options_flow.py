@@ -677,15 +677,12 @@ async def test_options_edit_device_rejects_hub_device(
     hass: HomeAssistant, mock_hub
 ) -> None:
     """The Core hub device has no device configuration to edit."""
-    from homeassistant.helpers import device_registry as dr
-
-    from custom_components.taphome.const import DOMAIN
-    from tests_common import TEST_LOCATION_ID
+    from tests_common import get_registry_device
 
     entry = make_config_entry()
     await setup_integration(hass, entry)
 
-    hub_device = dr.async_get(hass).async_get_device({(DOMAIN, TEST_LOCATION_ID)})
+    hub_device = get_registry_device(hass, entry)
     assert hub_device is not None
 
     result = await _start_options_flow(hass, entry)
@@ -702,16 +699,14 @@ async def test_options_remove_device_via_area(hass: HomeAssistant, mock_hub) -> 
     """An area target fans out to this entry's devices in that area."""
     from homeassistant.helpers import area_registry as ar, device_registry as dr
 
-    from custom_components.taphome.const import DOMAIN
-    from tests_common import TEST_LOCATION_ID
+    from tests_common import get_registry_device
 
     entry = make_config_entry()
     await setup_integration(hass, entry)
 
     area = ar.async_get(hass).async_create("Zahrada")
-    device_registry = dr.async_get(hass)
-    socket = device_registry.async_get_device({(DOMAIN, f"{TEST_LOCATION_ID}_2")})
-    device_registry.async_update_device(socket.id, area_id=area.id)
+    socket = get_registry_device(hass, entry, 2)
+    dr.async_get(hass).async_update_device(socket.id, area_id=area.id)
 
     result = await _start_options_flow(hass, entry)
     result = await hass.config_entries.options.async_configure(
@@ -738,8 +733,7 @@ async def test_options_remove_device_via_suggested_area(
     from homeassistant.helpers import area_registry as ar, device_registry as dr
     from taphome_sdk import ValueType
 
-    from custom_components.taphome.const import DOMAIN
-    from tests_common import TEST_LOCATION_ID, make_device
+    from tests_common import get_registry_device, make_device
 
     make_device(
         mock_hub,
@@ -762,9 +756,8 @@ async def test_options_remove_device_via_suggested_area(
     # the Garden Socket into the same area to get a two-device review list.
     area = ar.async_get(hass).async_get_area_by_name("Pracovna")
     assert area is not None
-    device_registry = dr.async_get(hass)
-    socket = device_registry.async_get_device({(DOMAIN, f"{TEST_LOCATION_ID}_2")})
-    device_registry.async_update_device(socket.id, area_id=area.id)
+    socket = get_registry_device(hass, entry, 2)
+    dr.async_get(hass).async_update_device(socket.id, area_id=area.id)
 
     result = await _start_options_flow(hass, entry)
     result = await hass.config_entries.options.async_configure(

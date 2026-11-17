@@ -10,7 +10,7 @@ from typing import Any
 
 import aiohttp
 from aiohttp import ClientSession
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import (
     SOURCE_IGNORE,
@@ -131,20 +131,20 @@ CONF_USE_CLOUD = "use_cloud"
 
 DEFAULT_WEBHOOK_ID = "taphome"
 
-CONNECTION_SCHEMA = vol.Schema(
+CONNECTION_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_TOKEN): TextSelector(
+        probatio.Required(CONF_TOKEN): TextSelector(
             TextSelectorConfig(type=TextSelectorType.PASSWORD)
         ),
-        vol.Optional(CONF_USE_CLOUD, default=False): BooleanSelector(),
-        vol.Optional(CONF_IP): TextSelector(),
+        probatio.Optional(CONF_USE_CLOUD, default=False): BooleanSelector(),
+        probatio.Optional(CONF_IP): TextSelector(),
     }
 )
 
 CORE_SCHEMA = CONNECTION_SCHEMA.extend(
     {
-        vol.Optional(CONF_WEBHOOK_ID): TextSelector(),
-        vol.Optional(
+        probatio.Optional(CONF_WEBHOOK_ID): TextSelector(),
+        probatio.Optional(
             CONF_ENABLED_ATTRIBUTES, default=AVAILABLE_ATTRIBUTES
         ): SelectSelector(
             SelectSelectorConfig(
@@ -157,9 +157,9 @@ CORE_SCHEMA = CONNECTION_SCHEMA.extend(
 )
 
 # Token-only form, used by the reauth step.
-TOKEN_SCHEMA = vol.Schema(
+TOKEN_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_TOKEN): TextSelector(
+        probatio.Required(CONF_TOKEN): TextSelector(
             TextSelectorConfig(type=TextSelectorType.PASSWORD)
         ),
     }
@@ -168,13 +168,13 @@ TOKEN_SCHEMA = vol.Schema(
 # Discovery already knows the local address, so its confirm step asks for the
 # token plus the same core-level settings as CORE_SCHEMA, minus the connection
 # (cloud/ip) fields that discovery has determined to be a local connection.
-DISCOVERY_CONFIRM_SCHEMA = vol.Schema(
+DISCOVERY_CONFIRM_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_TOKEN): TextSelector(
+        probatio.Required(CONF_TOKEN): TextSelector(
             TextSelectorConfig(type=TextSelectorType.PASSWORD)
         ),
-        vol.Optional(CONF_WEBHOOK_ID): TextSelector(),
-        vol.Optional(
+        probatio.Optional(CONF_WEBHOOK_ID): TextSelector(),
+        probatio.Optional(
             CONF_ENABLED_ATTRIBUTES, default=AVAILABLE_ATTRIBUTES
         ): SelectSelector(
             SelectSelectorConfig(
@@ -552,7 +552,7 @@ def _build_fields_schema(
     schema_dict: dict[Any, Any] = {}
     suggested_values: dict[str, Any] = {}
     for option_field in fields:
-        schema_dict[vol.Optional(option_field.key)] = build_field_selector(
+        schema_dict[probatio.Optional(option_field.key)] = build_field_selector(
             option_field, devices, device_label
         )
         value = device_config.get(option_field.key)
@@ -568,12 +568,12 @@ def build_device_options_schema(
     device_config: dict[str, Any],
     devices: dict[int, Device[Any]],
     device_label: Callable[[int], str],
-) -> tuple[vol.Schema, dict[str, Any]]:
+) -> tuple[probatio.Schema, dict[str, Any]]:
     """Build the per-device options form and its suggested values."""
     schema_dict, suggested_values = _build_fields_schema(
         descriptor.fields, device_config, devices, device_label
     )
-    return vol.Schema(schema_dict), suggested_values
+    return probatio.Schema(schema_dict), suggested_values
 
 
 ADVANCED_OPTIONS_SECTION = "advanced_options"
@@ -584,7 +584,7 @@ def build_device_options_schema_split(
     device_config: dict[str, Any],
     devices: dict[int, Device[Any]],
     device_label: Callable[[int], str],
-) -> tuple[vol.Schema, dict[str, Any]]:
+) -> tuple[probatio.Schema, dict[str, Any]]:
     """Build the options form with the advanced fields in a collapsed section.
 
     Reconfigure always offers every field so a device can be converted between
@@ -601,12 +601,12 @@ def build_device_options_schema_split(
         advanced_dict, advanced_suggested = _build_fields_schema(
             advanced, device_config, devices, device_label
         )
-        schema_dict[vol.Optional(ADVANCED_OPTIONS_SECTION)] = section(
-            vol.Schema(advanced_dict), {"collapsed": True}
+        schema_dict[probatio.Optional(ADVANCED_OPTIONS_SECTION)] = section(
+            probatio.Schema(advanced_dict), {"collapsed": True}
         )
         if advanced_suggested:
             suggested_values[ADVANCED_OPTIONS_SECTION] = advanced_suggested
-    return vol.Schema(schema_dict), suggested_values
+    return probatio.Schema(schema_dict), suggested_values
 
 
 def flatten_advanced_options(user_input: dict[str, Any]) -> dict[str, Any]:
@@ -920,14 +920,14 @@ class _TapHomeDeviceArchetypeFlow[_FlowResultT]:
                 for device in devices
             ]
             options.sort(key=lambda option: option["label"].casefold())
-            schema_dict[vol.Required("device")] = SelectSelector(
+            schema_dict[probatio.Required("device")] = SelectSelector(
                 SelectSelectorConfig(options=options, mode=SelectSelectorMode.DROPDOWN)
             )
         fields_schema, _ = _build_fields_schema(
             field_defs, {}, self._archetype_devices, self._archetype_helper_label
         )
         schema_dict.update(fields_schema)
-        schema = vol.Schema(schema_dict)
+        schema = probatio.Schema(schema_dict)
         if user_input:
             schema = self.add_suggested_values_to_schema(schema, user_input)
         return self.async_show_form(step_id=key, data_schema=schema, errors=errors)
@@ -983,7 +983,7 @@ class _TapHomeDeviceArchetypeFlow[_FlowResultT]:
         fields_schema, _ = _build_fields_schema(
             field_defs, {}, self._archetype_devices, self._archetype_helper_label
         )
-        schema = vol.Schema(fields_schema)
+        schema = probatio.Schema(fields_schema)
         # In the repair flow the new thermostat is the fixed device; offer it
         # as the high thermostat so only the low one is left to pick.
         suggested = dict(user_input or {})
@@ -1043,9 +1043,9 @@ class _TapHomeDeviceArchetypeFlow[_FlowResultT]:
             for value_type in available
         ]
         options.sort(key=lambda option: option["label"])
-        schema = vol.Schema(
+        schema = probatio.Schema(
             {
-                vol.Required(
+                probatio.Required(
                     "values", default=[option["value"] for option in options]
                 ): SelectSelector(
                     SelectSelectorConfig(
@@ -1235,16 +1235,16 @@ class _TapHomeSetupFlow(ConfigEntryBaseFlow):
             if int(option["value"]) not in configured_ids
         ]
 
-        schema = vol.Schema(
+        schema = probatio.Schema(
             {
-                vol.Optional("devices", default=unconfigured): SelectSelector(
+                probatio.Optional("devices", default=unconfigured): SelectSelector(
                     SelectSelectorConfig(
                         options=options,
                         multiple=True,
                         mode=SelectSelectorMode.DROPDOWN,
                     )
                 ),
-                vol.Optional("clear_selection", default=False): BooleanSelector(),
+                probatio.Optional("clear_selection", default=False): BooleanSelector(),
             }
         )
         if cleared:
@@ -1294,10 +1294,10 @@ class _TapHomeSetupFlow(ConfigEntryBaseFlow):
         # nested in a section cannot be localized, so the "domains" key shows as
         # is, matching the raw option keys of the next step.
         schema_dict: dict[Any, Any] = {
-            vol.Required(self._device_label(device.id)): section(
-                vol.Schema(
+            probatio.Required(self._device_label(device.id)): section(
+                probatio.Schema(
                     {
-                        vol.Optional("domains", default=[]): SelectSelector(
+                        probatio.Optional("domains", default=[]): SelectSelector(
                             SelectSelectorConfig(
                                 options=self._platforms_for_device(device.id),
                                 multiple=True,
@@ -1314,7 +1314,7 @@ class _TapHomeSetupFlow(ConfigEntryBaseFlow):
 
         return self.async_show_form(
             step_id="add_devices_platform",
-            data_schema=vol.Schema(schema_dict),
+            data_schema=probatio.Schema(schema_dict),
             last_step=False,
         )
 
@@ -1346,7 +1346,7 @@ class _TapHomeSetupFlow(ConfigEntryBaseFlow):
                 descriptor, {"id": device_id}
             )
             section_key = self._pair_section_key(device_id, config_key)
-            schema_dict[vol.Optional(section_key)] = section(
+            schema_dict[probatio.Optional(section_key)] = section(
                 field_schema, {"collapsed": descriptor.advanced}
             )
 
@@ -1356,7 +1356,7 @@ class _TapHomeSetupFlow(ConfigEntryBaseFlow):
         return self.async_show_form(
             step_id="add_devices_options",
             data_schema=self.add_suggested_values_to_schema(
-                vol.Schema(schema_dict), suggested_values
+                probatio.Schema(schema_dict), suggested_values
             ),
             errors=errors,
         )
@@ -1524,14 +1524,14 @@ class _TapHomeSetupFlow(ConfigEntryBaseFlow):
             mapped = mapping.get(name)
             suggested = resolve_target(mapped) if isinstance(mapped, str) else None
             ignored = isinstance(mapped, dict) and bool(mapped.get("ignore"))
-            schema_dict[vol.Required(name)] = section(
-                vol.Schema(
+            schema_dict[probatio.Required(name)] = section(
+                probatio.Schema(
                     {
-                        vol.Optional(
+                        probatio.Optional(
                             field_key,
                             description={"suggested_value": suggested},
                         ): target_selector,
-                        vol.Optional(
+                        probatio.Optional(
                             "ignore", default=ignored
                         ): BooleanSelector(),
                     }
@@ -1541,13 +1541,13 @@ class _TapHomeSetupFlow(ConfigEntryBaseFlow):
 
         return self.async_show_form(
             step_id=step_id,
-            data_schema=vol.Schema(schema_dict),
+            data_schema=probatio.Schema(schema_dict),
             last_step=not self._setup_wizard,
         )
 
     def _build_device_options_schema(
         self, descriptor: PlatformDescriptor, device_config: dict[str, Any]
-    ) -> tuple[vol.Schema, dict[str, Any]]:
+    ) -> tuple[probatio.Schema, dict[str, Any]]:
         """Build the per-device options form and its suggested values."""
         return build_device_options_schema(
             descriptor, device_config, self._devices, self._device_label
@@ -1648,9 +1648,9 @@ class TapHomeOptionsFlow(
                     return await self.async_step_edit_device_form()
                 return await self.async_step_edit_device_pick()
 
-        schema = vol.Schema(
+        schema = probatio.Schema(
             {
-                vol.Required("target"): TargetSelector(
+                probatio.Required("target"): TargetSelector(
                     TargetSelectorConfig(
                         entity=[EntityFilterSelectorConfig(integration=DOMAIN)],
                         device=[DeviceFilterSelectorConfig(integration=DOMAIN)],
@@ -1727,16 +1727,26 @@ class TapHomeOptionsFlow(
                 subentry_ids.append(registry_entry.config_subentry_id)
         for device_id in device_ids:
             device = device_registry.async_get(device_id)
-            if device is not None:
-                subentry_ids.extend(
-                    sorted(
-                        subentry_id
-                        for subentry_id in device.config_entries_subentries.get(
-                            entry.entry_id, set()
-                        )
-                        if subentry_id is not None
-                    )
-                )
+            if device is None:
+                continue
+            # The device belongs to one subentry; entities from this entry's
+            # other subentries sharing the device attach to it, so collect
+            # their subentries too.
+            device_subentry_ids: set[str] = set()
+            if (
+                device.config_entry_id == entry.entry_id
+                and device.config_subentry_id is not None
+            ):
+                device_subentry_ids.add(device.config_subentry_id)
+            for registry_entry in er.async_entries_for_device(
+                entity_registry, device_id, include_disabled_entities=True
+            ):
+                if (
+                    registry_entry.config_entry_id == entry.entry_id
+                    and registry_entry.config_subentry_id is not None
+                ):
+                    device_subentry_ids.add(registry_entry.config_subentry_id)
+            subentry_ids.extend(sorted(device_subentry_ids))
 
         subentries = [
             entry.subentries[subentry_id]
@@ -1774,9 +1784,9 @@ class TapHomeOptionsFlow(
         ]
         return self.async_show_form(
             step_id="edit_device_pick",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required("config"): SelectSelector(
+                    probatio.Required("config"): SelectSelector(
                         SelectSelectorConfig(
                             options=options, mode=SelectSelectorMode.DROPDOWN
                         )
@@ -1872,9 +1882,9 @@ class TapHomeOptionsFlow(
         options.sort(key=lambda option: option["label"].casefold())
         return self.async_show_form(
             step_id="remove_device_confirm",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(
+                    probatio.Required(
                         "devices", default=[option["value"] for option in options]
                     ): SelectSelector(
                         SelectSelectorConfig(

@@ -4,12 +4,12 @@ from taphome_sdk import HubConnectionState
 
 from homeassistant.const import STATE_OFF, STATE_ON, EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import entity_registry as er
 
 from custom_components.taphome.const import DOMAIN
 from tests_common import (
-    TEST_LOCATION_ID,
     device_subentry,
+    get_registry_device,
     make_config_entry,
     setup_integration,
 )
@@ -48,7 +48,7 @@ async def test_binary_sensor_device_under_subentry_plus_is_alive(
     await setup_integration(hass, entry)
 
     entity_registry = er.async_get(hass)
-    device = dr.async_get(hass).async_get_device({(DOMAIN, f"{TEST_LOCATION_ID}_5")})
+    device = get_registry_device(hass, entry, 5)
     assert device is not None
 
     binary_sensors = [
@@ -69,5 +69,5 @@ async def test_binary_sensor_device_under_subentry_plus_is_alive(
     is_alive = entity_registry.async_get(is_alive_id)
     assert is_alive.config_subentry_id is None
     assert is_alive.entity_category is EntityCategory.DIAGNOSTIC
-    hub_device = dr.async_get(hass).async_get_device({(DOMAIN, TEST_LOCATION_ID)})
+    hub_device = get_registry_device(hass, entry)
     assert is_alive.device_id == hub_device.id

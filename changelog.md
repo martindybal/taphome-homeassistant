@@ -1,5 +1,13 @@
 # Changelog
 
+## 2026.11.1
+
+Compatibility with the Home Assistant 2026.10 device registry (one device per config entry and subentry):
+
+- **Fixed: entities disappeared when one TapHome device was exposed by several subentries** — a device added under two platforms (e.g. as light and switch), or a sensor/binary sensor split into per-value entries. Since Home Assistant 2026.8 a device belongs to a single subentry; each platform re-registered the shared device under its own subentry, and Home Assistant then removed the previous subentry's entities on every reload. The device is now registered once per TapHome device: the oldest subentry owns it, and every entity still belongs to its own subentry. On a shared device's page the owning entry offers Edit/Delete; the other configurations are reachable via **Configure → Edit device** as before.
+- Migrated off device-registry APIs deprecated in Home Assistant 2026.8–2026.10 (`async_get_device`, `via_device`, multi-entry device links) and from `voluptuous` to its Home Assistant successor `probatio`; the new-device repair flow uses the typed repair flow results. No visible changes.
+- **Requires Home Assistant 2026.10 or newer** (the HACS minimum was raised from 2025.3).
+
 ## 2026.7.1
 
 Quality-scale improvements on the road to Home Assistant Core:

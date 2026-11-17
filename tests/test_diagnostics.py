@@ -29,16 +29,13 @@ async def test_config_entry_diagnostics(hass: HomeAssistant, mock_hub) -> None:
 
 async def test_device_diagnostics(hass: HomeAssistant, mock_hub) -> None:
     """The device diagnostics dump only the device of that device page."""
-    from homeassistant.helpers import device_registry as dr
-
-    from custom_components.taphome.const import DOMAIN
     from custom_components.taphome.diagnostics import async_get_device_diagnostics
-    from tests_common import TEST_LOCATION_ID
+    from tests_common import get_registry_device
 
     entry = make_config_entry()
     await setup_integration(hass, entry)
 
-    device = dr.async_get(hass).async_get_device({(DOMAIN, f"{TEST_LOCATION_ID}_2")})
+    device = get_registry_device(hass, entry, 2)
     diagnostics = await async_get_device_diagnostics(hass, entry, device)
 
     assert [device["id"] for device in diagnostics["devices"]] == [2]

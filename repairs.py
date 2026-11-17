@@ -4,8 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from homeassistant import data_entry_flow
-from homeassistant.components.repairs import RepairsFlow
+from homeassistant.components.repairs import RepairsFlow, RepairsFlowResult
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import AbortFlow
@@ -20,7 +19,7 @@ from .taphome_data import TapHomeConfigEntry
 
 
 class NewDeviceRepairFlow(
-    _TapHomeDeviceArchetypeFlow[data_entry_flow.FlowResult], RepairsFlow
+    _TapHomeDeviceArchetypeFlow[RepairsFlowResult], RepairsFlow
 ):
     """Guide the user through adding a newly discovered TapHome device.
 
@@ -38,13 +37,13 @@ class NewDeviceRepairFlow(
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
-    ) -> data_entry_flow.FlowResult:
+    ) -> RepairsFlowResult:
         """Handle the first step of the fix flow."""
         return await self.async_step_menu()
 
     async def async_step_menu(
         self, user_input: dict[str, Any] | None = None
-    ) -> data_entry_flow.FlowResult:
+    ) -> RepairsFlowResult:
         """Offer the device types this device can be exposed as, or ignore it."""
         entry = self._entry()
         if entry is None or entry.state is not ConfigEntryState.LOADED:
@@ -65,7 +64,7 @@ class NewDeviceRepairFlow(
 
     async def async_step_ignore(
         self, user_input: dict[str, Any] | None = None
-    ) -> data_entry_flow.FlowResult:
+    ) -> RepairsFlowResult:
         """Mark the device known so it is never reported as new again."""
         entry = self._entry()
         if entry is None:
@@ -81,7 +80,7 @@ class NewDeviceRepairFlow(
             raise AbortFlow("entry_not_loaded")
         return entry
 
-    def _archetype_finish(self, payloads: list[Any]) -> data_entry_flow.FlowResult:
+    def _archetype_finish(self, payloads: list[Any]) -> RepairsFlowResult:
         """Add the collected subentries and mark the device known."""
         entry = self._archetype_entry
         existing = {

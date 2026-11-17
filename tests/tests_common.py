@@ -348,6 +348,20 @@ async def setup_integration(hass: HomeAssistant, config_entry) -> None:
     await hass.async_block_till_done()
 
 
+def get_registry_device(hass: HomeAssistant, config_entry, taphome_id: int | None = None):
+    """Return the HA device of one TapHome device (default: the Core hub)."""
+    from homeassistant.helpers import device_registry as dr
+
+    from custom_components.taphome.const import DOMAIN
+
+    identifier = (
+        TEST_LOCATION_ID if taphome_id is None else f"{TEST_LOCATION_ID}_{taphome_id}"
+    )
+    return dr.async_get(hass).async_get_device_by_identifier(
+        (DOMAIN, identifier), config_entry.entry_id
+    )
+
+
 def device_subentry(config_entry, platform: str, device_id: int):
     """Return the device subentry for one platform/device, or None."""
     from custom_components.taphome.subentry import (

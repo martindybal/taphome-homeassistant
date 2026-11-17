@@ -379,20 +379,17 @@ async def test_devices_are_registered(
     hass: HomeAssistant, mock_hub, mock_config_entry: MockConfigEntry
 ) -> None:
     """The Core and every TapHome device appear in the device registry."""
-    from homeassistant.helpers import device_registry as dr
-
-    from tests_common import TEST_LOCATION_ID, TEST_LOCATION_NAME
+    from tests_common import TEST_LOCATION_NAME, get_registry_device
 
     await setup_integration(hass, mock_config_entry)
 
-    device_registry = dr.async_get(hass)
-    hub_device = device_registry.async_get_device({(DOMAIN, TEST_LOCATION_ID)})
+    hub_device = get_registry_device(hass, mock_config_entry)
     assert hub_device is not None
     assert hub_device.manufacturer == "TapHome"
     assert hub_device.model == "Core"
     assert hub_device.name == TEST_LOCATION_NAME
 
-    socket = device_registry.async_get_device({(DOMAIN, f"{TEST_LOCATION_ID}_2")})
+    socket = get_registry_device(hass, mock_config_entry, 2)
     assert socket is not None
     assert socket.name == "Garden Socket"
     assert socket.manufacturer == "TapHome"
@@ -401,19 +398,56 @@ async def test_devices_are_registered(
     assert hub_device.configuration_url == "http://10.0.0.5/localapilog"
 
 
+async def test_device_shared_by_subentries_keeps_both_entities(
+    hass: HomeAssistant, mock_hub
+) -> None:
+    """Two subentries exposing one TapHome device share a single HA device.
+
+    Regression: per-entity device registration re-registered the shared device
+    under each entity's subentry; since a device belongs to a single subentry,
+    every re-registration moved it and Home Assistant removed the previous
+    subentry's entities. The device is now registered centrally under the
+    oldest subentry while each entity keeps its own subentry.
+    """
+    from homeassistant.helpers import entity_registry as er
+
+    from tests_common import device_subentry, get_registry_device
+
+    # make_config_entry exposes device 2 as a switch; add it as a light too.
+    entry = make_config_entry({"lights": [{"id": 2}]})
+    await setup_integration(hass, entry)
+
+    assert hass.states.get("light.garden_socket") is not None
+    assert hass.states.get("switch.garden_socket") is not None
+
+    device = get_registry_device(hass, entry, 2)
+    assert device is not None
+    lights = device_subentry(entry, "lights", 2)
+    switches = device_subentry(entry, "switches", 2)
+
+    # The oldest subentry owns the device; each entity stays in its own.
+    assert device.config_subentry_id == min(
+        lights.subentry_id, switches.subentry_id
+    )
+    entity_registry = er.async_get(hass)
+    light = entity_registry.async_get("light.garden_socket")
+    switch = entity_registry.async_get("switch.garden_socket")
+    assert light.device_id == device.id
+    assert switch.device_id == device.id
+    assert light.config_subentry_id == lights.subentry_id
+    assert switch.config_subentry_id == switches.subentry_id
+
+
 async def test_remove_config_entry_device(
     hass: HomeAssistant, mock_hub, mock_config_entry: MockConfigEntry
 ) -> None:
     """Only the hub and devices no longer exposed by the Core can be removed."""
-    from homeassistant.helpers import device_registry as dr
-
     from custom_components.taphome import async_remove_config_entry_device
-    from tests_common import TEST_LOCATION_ID
+    from tests_common import get_registry_device
 
     await setup_integration(hass, mock_config_entry)
-    registry = dr.async_get(hass)
-    hub_device = registry.async_get_device({(DOMAIN, TEST_LOCATION_ID)})
-    socket = registry.async_get_device({(DOMAIN, f"{TEST_LOCATION_ID}_2")})
+    hub_device = get_registry_device(hass, mock_config_entry)
+    socket = get_registry_device(hass, mock_config_entry, 2)
 
     # The Core hub device and a device still exposed by the Core are kept.
     assert not await async_remove_config_entry_device(hass, mock_config_entry, hub_device)
@@ -482,9 +516,8 @@ async def test_migration_moves_option_devices_to_subentries(
     assert migrated.config_subentry_id == subentry.subentry_id
 
     migrated_device = device_registry.async_get(device.id)
-    assert migrated_device.config_entries_subentries[entry.entry_id] == {
-        subentry.subentry_id
-    }
+    assert migrated_device.config_entry_id == entry.entry_id
+    assert migrated_device.config_subentry_id == subentry.subentry_id
 
 
 async def test_migration_is_idempotent(hass: HomeAssistant, mock_hub) -> None:
@@ -529,12 +562,11 @@ async def test_zone_and_label_mapping_apply_to_device(
     """A mapped zone/category sets the device area and labels device + entity."""
     from homeassistant.helpers import (
         area_registry as ar,
-        device_registry as dr,
         entity_registry as er,
         label_registry as lr,
     )
 
-    from tests_common import TEST_LOCATION_ID, make_device
+    from tests_common import get_registry_device, make_device
 
     # Give the switch device (id 2) a zone and a category to map.
     make_device(
@@ -564,7 +596,7 @@ async def test_zone_and_label_mapping_apply_to_device(
     )
     await setup_integration(hass, entry)
 
-    device = dr.async_get(hass).async_get_device({(DOMAIN, f"{TEST_LOCATION_ID}_2")})
+    device = get_registry_device(hass, entry, 2)
     assert device is not None
     assert device.area_id == area.id
     assert label.label_id in device.labels
@@ -583,9 +615,9 @@ async def test_zone_mapping_by_name_and_ignore(
     hass: HomeAssistant, mock_hub
 ) -> None:
     """YAML name targets create areas; ignored zones get no area at all."""
-    from homeassistant.helpers import area_registry as ar, device_registry as dr
+    from homeassistant.helpers import area_registry as ar
 
-    from tests_common import TEST_LOCATION_ID, make_device
+    from tests_common import get_registry_device, make_device
 
     for device_id, zone in ((2, "Garden"), (9, "Zvlhčovač")):
         make_device(
@@ -611,18 +643,17 @@ async def test_zone_mapping_by_name_and_ignore(
     await setup_integration(hass, entry)
 
     area_registry = ar.async_get(hass)
-    device_registry = dr.async_get(hass)
 
     # The YAML mapping target is a name: the area is created and assigned.
     zahrada = area_registry.async_get_area_by_name("Zahrada")
     assert zahrada is not None
-    mapped = device_registry.async_get_device({(DOMAIN, f"{TEST_LOCATION_ID}_2")})
+    mapped = get_registry_device(hass, entry, 2)
     assert mapped.area_id == zahrada.id
     # The raw TapHome zone name must not leak into an area of its own.
     assert area_registry.async_get_area_by_name("Garden") is None
 
     # An ignored zone assigns no area and creates none.
-    ignored = device_registry.async_get_device({(DOMAIN, f"{TEST_LOCATION_ID}_9")})
+    ignored = get_registry_device(hass, entry, 9)
     assert ignored.area_id is None
     assert area_registry.async_get_area_by_name("Zvlhčovač") is None
 
@@ -632,12 +663,11 @@ async def test_labels_created_from_categories(
 ) -> None:
     """Without a mapping every category becomes a label of the same name."""
     from homeassistant.helpers import (
-        device_registry as dr,
         entity_registry as er,
         label_registry as lr,
     )
 
-    from tests_common import TEST_LOCATION_ID, make_device
+    from tests_common import get_registry_device, make_device
 
     make_device(
         mock_hub,
@@ -659,7 +689,7 @@ async def test_labels_created_from_categories(
     label = lr.async_get(hass).async_get_label_by_name("Osvětlení")
     assert label is not None
 
-    device = dr.async_get(hass).async_get_device({(DOMAIN, f"{TEST_LOCATION_ID}_2")})
+    device = get_registry_device(hass, entry, 2)
     assert label.label_id in device.labels
 
     entity_registry = er.async_get(hass)
