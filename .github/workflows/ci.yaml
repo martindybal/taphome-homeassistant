@@ -12,6 +12,11 @@ jobs:
       - run: python -m venv .venv
       - run: .venv/bin/pip install --upgrade pip
       - run: .venv/bin/pip install homeassistant
+      # The test harness pins the exact homeassistant release it supports;
+      # installing it into the shared venv keeps every job (mypy included) on
+      # the same Home Assistant version pytest runs against, instead of mypy
+      # type-checking a newer release than the tests can use.
+      - run: .venv/bin/pip install pytest-homeassistant-custom-component
       # The SDK dependency, same as manifest.json requirements.
       - run: .venv/bin/pip install taphome-sdk
       - run: tar -czf python-env.tar.gz .venv
