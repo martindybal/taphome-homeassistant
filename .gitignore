@@ -1,3 +1,6 @@
 __pycache__/
-.venv/
 codex-apply.sh
+.venv/
+.pytest_cache/
+.ruff_cache/
+.coverage

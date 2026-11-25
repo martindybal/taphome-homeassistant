@@ -2,37 +2,39 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, override
+
+from taphome_sdk import DigitalOutputDevice, DigitalOutputState
 
 from homeassistant.components.switch import (
     DOMAIN as SWITCH_DOMAIN,
     SwitchDeviceClass,
     SwitchEntity,
 )
-from homeassistant.const import CONF_SWITCHES
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import (
-    AddEntitiesCallback,
-    ConfigType,
-    DiscoveryInfoType,
-)
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .add_entry_request import add_taphome_entities
+from .entity import TapHomeEntity, handle_taphome_errors
 from .taphome_config_entry import AddEntryRequest, TapHomeEntityConfig
-from .taphome_entity import TapHomeEntity
-from .taphome_sdk import DigitalOutputDevice, DigitalOutputState
+from .taphome_data import TapHomeConfigEntry
+
+PARALLEL_UPDATES = 0
 
 
 class TapHomeSwitchConfig(TapHomeEntityConfig):
     """Configuration for a TapHome switch device."""
 
-    def __init__(self, device_config: dict) -> None:
+    def __init__(self, device_config: dict[str, Any]) -> None:
         """Store config and extract switch limits."""
         super().__init__(device_config)
         self.device_class: SwitchDeviceClass = self.get_optional("device_class", None)
 
 
-class TapHomeSwitch(TapHomeEntity, SwitchEntity):
+class TapHomeSwitch(
+    TapHomeEntity[DigitalOutputDevice[DigitalOutputState], TapHomeSwitchConfig],
+    SwitchEntity,
+):
     """Representation of a TapHome switch entity."""
 
     def __init__(self, config: AddEntryRequest[TapHomeSwitchConfig]) -> None:
@@ -42,7 +44,7 @@ class TapHomeSwitch(TapHomeEntity, SwitchEntity):
         self._switch = config.hub.get_typed_device(
             config.entity.id, DigitalOutputDevice
         )
-        self._switch.state.changed += self._on_switch_state_change
+        self._subscribe(self._switch.state.changed, self._on_switch_state_change)
 
         super().__init__(config, self._switch, SWITCH_DOMAIN)
 
@@ -51,20 +53,23 @@ class TapHomeSwitch(TapHomeEntity, SwitchEntity):
     ) -> None:
         self._attr_is_on = current_state.is_on
 
+    @override
+    @handle_taphome_errors
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         await self._switch.async_turn_on()
 
+    @override
+    @handle_taphome_errors
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         await self._switch.async_turn_off()
 
 
-def setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
-    add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+    entry: TapHomeConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up the switch platform."""
-    add_taphome_entities(hass, add_entities, CONF_SWITCHES, TapHomeSwitch)
+    """Set up TapHome switches from a config entry."""
+    add_taphome_entities(entry, async_add_entities, SWITCH_DOMAIN, TapHomeSwitch)

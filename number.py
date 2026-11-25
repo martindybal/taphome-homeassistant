@@ -3,59 +3,87 @@
 from __future__ import annotations
 
 import logging
+from typing import Any, override
+
+from taphome_sdk import DeviceState, ValueType, VariableDevice, VariableState
 
 from homeassistant.components.number import DOMAIN as NUMBER_DOMAIN, NumberEntity
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import (
-    AddEntitiesCallback,
-    ConfigType,
-    DiscoveryInfoType,
-)
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .add_entry_request import add_taphome_entities
-from .const import CONF_NUMBERS
+from .entity import TapHomeEntity, handle_taphome_errors
 from .taphome_config_entry import AddEntryRequest, TapHomeEntityConfig
-from .taphome_entity import TapHomeEntity
-from .taphome_sdk import DeviceState, ValueType, VariableDevice, VariableState
+from .taphome_data import TapHomeConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
+PARALLEL_UPDATES = 0
 
-class TapHomeNumber(TapHomeEntity, NumberEntity):
+
+class TapHomeNumberConfig(TapHomeEntityConfig):
+    """Configuration for a TapHome number (variable) device."""
+
+    def __init__(self, device_config: dict[str, Any]) -> None:
+        """Store config and extract optional value-range overrides."""
+        super().__init__(device_config)
+        self.min_value = self._optional_float("min_value")
+        self.max_value = self._optional_float("max_value")
+        self.step = self._optional_float("step")
+
+    def _optional_float(self, key: str) -> float | None:
+        value = self.get_optional(key, None)
+        return None if value is None else float(value)
+
+
+class TapHomeNumber(TapHomeEntity[VariableDevice, TapHomeNumberConfig], NumberEntity):
     """Representation of a TapHome number entity."""
 
-    def __init__(self, config: AddEntryRequest[TapHomeEntityConfig]) -> None:
+    def __init__(self, config: AddEntryRequest[TapHomeNumberConfig]) -> None:
         """Initialize TapHome number entity."""
-        self._variable = config.hub.get_typed_device(
-            config.entity.id, VariableDevice
-        )
+        self._variable = config.hub.get_typed_device(config.entity.id, VariableDevice)
 
         self._read_only = False
-        supported_value = self._variable.supported_values.get(
-            ValueType.VARIABLE_STATE
-        )
-        if supported_value is not None:
-            if supported_value.read_only:
-                self._read_only = True
-                _LOGGER.info(
-                    "TapHome variable %s is read-only; writes will be ignored",
-                    self._variable.id,
-                )
-            if supported_value.min_value is not None:
-                self._attr_native_min_value = float(supported_value.min_value)
-            if supported_value.max_value is not None:
-                self._attr_native_max_value = float(supported_value.max_value)
+        supported_value = self._variable.supported_values.get(ValueType.VARIABLE_STATE)
+        if supported_value is not None and supported_value.read_only:
+            self._read_only = True
+            _LOGGER.info(
+                "TapHome variable %s is read-only; writes will be ignored",
+                self._variable.id,
+            )
+
+        # A configured override wins over the range TapHome reports; when
+        # neither provides a bound we leave the attribute unset so Home
+        # Assistant applies its own default rather than a made-up range (a
+        # hard-coded 0..100 would reject legitimate values above 100).
+        sdk_min = supported_value.min_value if supported_value is not None else None
+        sdk_max = supported_value.max_value if supported_value is not None else None
+        min_value = config.entity.min_value
+        if min_value is None and sdk_min is not None:
+            min_value = float(sdk_min)
+        if min_value is not None:
+            self._attr_native_min_value = min_value
+
+        max_value = config.entity.max_value
+        if max_value is None and sdk_max is not None:
+            max_value = float(sdk_max)
+        if max_value is not None:
+            self._attr_native_max_value = max_value
+
+        if config.entity.step is not None and config.entity.step > 0:
+            self._attr_native_step = config.entity.step
 
         super().__init__(config, self._variable, NUMBER_DOMAIN)
 
-    def _state_changed(
-        self, _: DeviceState | None, current_state: DeviceState
-    ) -> None:
+    @override
+    def _state_changed(self, _: DeviceState | None, current_state: DeviceState) -> None:
         """Update native value before HA state is refreshed."""
         if isinstance(current_state, VariableState):
             self._attr_native_value = current_state.value
         super()._state_changed(_, current_state)
 
+    @override
+    @handle_taphome_errors
     async def async_set_native_value(self, value: float) -> None:
         """Set new value."""
         if self._read_only:
@@ -67,11 +95,10 @@ class TapHomeNumber(TapHomeEntity, NumberEntity):
         await self._variable.async_set_value(value)
 
 
-def setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
-    add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+    entry: TapHomeConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up the number platform."""
-    add_taphome_entities(hass, add_entities, CONF_NUMBERS, TapHomeNumber)
+    """Set up TapHome numbers from a config entry."""
+    add_taphome_entities(entry, async_add_entities, NUMBER_DOMAIN, TapHomeNumber)

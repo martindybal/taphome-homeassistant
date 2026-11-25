@@ -1,20 +1,975 @@
 {
+  "config": {
+    "initiate_flow": {
+      "user": "TapHome Core hozzáadása"
+    },
+    "step": {
+      "user": {
+        "title": "TapHome Core csatlakoztatása",
+        "description": "Tegye közzé eszközeit a TapHome alkalmazásban (Beállítások → Eszközök közzététele → TapHome API), és adja meg alább a tokent. A helyi kapcsolat ajánlott: a „TapHome felhő használata” kapcsolót csak akkor kapcsolja be, ha a Core nem érhető el közvetlenül a hálózatában — a felhő ritkábban frissít (kb. 20 másodpercenként), és a TapHome szervereinek elérhetőségétől függ. A Core IP-címét a TapHome alkalmazásban a „Saját helyszín” alatt találja.",
+        "data": {
+          "token": "Token",
+          "use_cloud": "TapHome felhő használata",
+          "ip": "IP-cím",
+          "webhook_id": "Webhook azonosító",
+          "use_description_as_entity_id": "TapHome leírások használata entitásazonosítóként",
+          "use_description_as_name": "TapHome leírások használata entitásnévként",
+          "enabled_attributes": "Közzétett attribútumok"
+        },
+        "data_description": {
+          "token": "A TapHome API képernyő tetején megjelenő hitelesítési token.",
+          "use_cloud": "Kapcsolódás a TapHome felhőn keresztül a helyi hálózat helyett. Csak akkor ajánlott, ha a Core helyileg nem érhető el — a felhő lassabb, és internetkapcsolatot igényel. Bekapcsolva az IP-cím figyelmen kívül marad.",
+          "ip": "Megtalálja a TapHome alkalmazásban a Saját helyszín alatt.",
+          "webhook_id": "Ajánlott: a Core ekkor azonnal elküldi a változásokat ahelyett, hogy a Home Assistant 2 másodpercenként lekérdezné. Adjon meg egy tetszőleges nevet, pl. taphome, majd ugyanezt állítsa be a TapHome alkalmazásban az Eszközök közzététele képernyőn — kapcsolja be a Webhookot, és a Webhook URL-t állítsa be pl. http://homeassistant.local:8123/api/webhook/taphome értékre — a homeassistant.local helyére írja be a saját Home Assistant címét, a taphome helyére pedig a fent megadott nevet."
+        },
+        "submit": "Tovább"
+      },
+      "reconfigure": {
+        "title": "TapHome Core újrakonfigurálása",
+        "description": "Frissítse a TapHome Core kapcsolati és Core beállításait. A helyi kapcsolat ajánlott: a „TapHome felhő használata” kapcsolót csak akkor kapcsolja be, ha a Core nem érhető el közvetlenül a hálózatában — a felhő ritkábban frissít (kb. 20 másodpercenként), és a TapHome szervereinek elérhetőségétől függ. A Core IP-címét a TapHome alkalmazásban a „Saját helyszín” alatt találja.",
+        "data": {
+          "token": "Token",
+          "use_cloud": "TapHome felhő használata",
+          "ip": "IP-cím",
+          "webhook_id": "Webhook azonosító",
+          "use_description_as_entity_id": "TapHome leírások használata entitásazonosítóként",
+          "use_description_as_name": "TapHome leírások használata entitásnévként",
+          "enabled_attributes": "Közzétett attribútumok"
+        },
+        "data_description": {
+          "token": "A TapHome API képernyő tetején megjelenő hitelesítési token.",
+          "use_cloud": "Kapcsolódás a TapHome felhőn keresztül a helyi hálózat helyett. Csak akkor ajánlott, ha a Core helyileg nem érhető el — a felhő lassabb, és internetkapcsolatot igényel. Bekapcsolva az IP-cím figyelmen kívül marad.",
+          "ip": "Megtalálja a TapHome alkalmazásban a Saját helyszín alatt.",
+          "webhook_id": "Ajánlott: a Core ekkor azonnal elküldi a változásokat ahelyett, hogy a Home Assistant 2 másodpercenként lekérdezné. Adjon meg egy tetszőleges nevet, pl. taphome, majd ugyanezt állítsa be a TapHome alkalmazásban az Eszközök közzététele képernyőn — kapcsolja be a Webhookot, és a Webhook URL-t állítsa be pl. http://homeassistant.local:8123/api/webhook/taphome értékre — a homeassistant.local helyére írja be a saját Home Assistant címét, a taphome helyére pedig a fent megadott nevet."
+        },
+        "submit": "Mentés"
+      },
+      "reauth_confirm": {
+        "title": "TapHome újrahitelesítése",
+        "description": "A(z) {name} tokenje már nem érvényes. Adjon meg egy új tokent.",
+        "data": {
+          "token": "Token"
+        },
+        "submit": "Mentés"
+      },
+      "zones": {
+        "title": "Zónák",
+        "description": "Rendelje a TapHome zónákat a Home Assistant területeihez. Az üres zóna a TapHome nevét használja; az Ignorálás bejelölésével nem lesz terület hozzárendelve."
+      },
+      "labels": {
+        "title": "Címkék",
+        "description": "Rendelje a TapHome kategóriákat a Home Assistant címkéihez. Az üres kategória a TapHome nevét használja; az Ignorálás bejelölésével nem lesz címke hozzárendelve."
+      },
+      "add_devices": {
+        "title": "Eszközök hozzáadása",
+        "description": "Válassza ki a hozzáadni kívánt TapHome eszközöket. A mezőbe gépelve kereshet. A még hozzá nem adott eszközöknél a TapHome zóna és kategória, a hozzáadottaknál a helyiség jelenik meg.",
+        "data": {
+          "devices": "Eszközök",
+          "clear_selection": "Kijelölés törlése"
+        },
+        "data_description": {
+          "clear_selection": "Kapcsolja be, és nyomja meg a Tovább gombot a teljes kijelölés törléséhez, majd válassza ki csak a kívánt eszközöket."
+        }
+      },
+      "add_devices_platform": {
+        "title": "Domének kiválasztása",
+        "description": "Minden eszközhöz válassza ki a Home Assistant doméneket, amelyekként az eszköz megjelenik. Eszközönként több domént is választhat, vagy egyet sem, hogy kihagyja az eszközt. Csak az adott eszközzel kompatibilis domének jelennek meg."
+      },
+      "add_devices_options": {
+        "title": "Eszközbeállítások",
+        "description": "Állítsa be a beállításokat minden kiválasztott eszközhöz és doménhez. Minden szakasz egy eszköz egy doménben. Az üres mezők automatikus alapértelmezett értékeket használnak.",
+        "submit": "Hozzáadás"
+      },
+      "zeroconf_confirm": {
+        "title": "TapHome Core csatlakoztatása",
+        "description": "A hálózaton megtaláltuk a(z) {name} TapHome Core-t ({host}). Add meg az API tokenjét a Home Assistanthoz való hozzáadáshoz.",
+        "data": {
+          "token": "Token",
+          "webhook_id": "Webhook azonosító",
+          "enabled_attributes": "Közzétett attribútumok"
+        },
+        "data_description": {
+          "token": "A TapHome API képernyő tetején megjelenő hitelesítési token.",
+          "webhook_id": "Ajánlott: a Core ekkor azonnal elküldi a változásokat ahelyett, hogy a Home Assistant 2 másodpercenként lekérdezné. Adjon meg egy tetszőleges nevet, pl. taphome, majd ugyanezt állítsa be a TapHome alkalmazásban az Eszközök közzététele képernyőn — kapcsolja be a Webhookot, és a Webhook URL-t állítsa be pl. http://homeassistant.local:8123/api/webhook/taphome értékre — a homeassistant.local helyére írja be a saját Home Assistant címét, a taphome helyére pedig a fent megadott nevet."
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Nem sikerült csatlakozni a TapHome Core-hoz.",
+      "invalid_auth": "A TapHome Core elutasította a tokent.",
+      "ip_required": "Adja meg a Core IP-címét, vagy kapcsolja be a TapHome felhőt.",
+      "no_devices_selected": "Válasszon ki legalább egy eszközt.",
+      "invalid_device_id": "Érvénytelen eszközazonosító."
+    },
+    "abort": {
+      "already_configured": "Ez a TapHome Core már konfigurálva van.",
+      "reauth_successful": "Az újrahitelesítés sikeres volt.",
+      "reconfigure_successful": "Az újrakonfigurálás sikeres volt.",
+      "unique_id_mismatch": "A csatlakoztatott Core nem egyezik azzal a Core-ral, amelyhez ez a bejegyzés készült.",
+      "invalid_discovery_info": "A megtalált Core nem adta meg a szükséges adatokat."
+    },
+    "flow_title": "{name}"
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "TapHome beállítások",
+        "menu_options": {
+          "core_settings": "Core beállítások",
+          "add_device": "Eszköz hozzáadása",
+          "edit_device": "Eszköz szerkesztése",
+          "remove_device": "Eszköz eltávolítása",
+          "zones": "Zónák (területek)",
+          "labels": "Címkék (kategóriák)"
+        }
+      },
+      "core_settings": {
+        "title": "Core beállítások",
+        "data": {
+          "token": "Token",
+          "use_cloud": "TapHome felhő használata",
+          "ip": "IP-cím",
+          "webhook_id": "Webhook azonosító",
+          "use_description_as_entity_id": "TapHome leírások használata entitásazonosítóként",
+          "use_description_as_name": "TapHome leírások használata entitásnévként",
+          "enabled_attributes": "Közzétett attribútumok"
+        },
+        "data_description": {
+          "token": "A TapHome API képernyő tetején megjelenő hitelesítési token.",
+          "use_cloud": "Kapcsolódás a TapHome felhőn keresztül a helyi hálózat helyett. Csak akkor ajánlott, ha a Core helyileg nem érhető el — a felhő lassabb, és internetkapcsolatot igényel. Bekapcsolva az IP-cím figyelmen kívül marad.",
+          "ip": "Megtalálja a TapHome alkalmazásban a Saját helyszín alatt.",
+          "webhook_id": "Ajánlott: a Core ekkor azonnal elküldi a változásokat ahelyett, hogy a Home Assistant 2 másodpercenként lekérdezné. Adjon meg egy tetszőleges nevet, pl. taphome, majd ugyanezt állítsa be a TapHome alkalmazásban az Eszközök közzététele képernyőn — kapcsolja be a Webhookot, és a Webhook URL-t állítsa be pl. http://homeassistant.local:8123/api/webhook/taphome értékre — a homeassistant.local helyére írja be a saját Home Assistant címét, a taphome helyére pedig a fent megadott nevet."
+        },
+        "description": "Frissítse a TapHome Core kapcsolati és Core beállításait. A helyi kapcsolat ajánlott: a „TapHome felhő használata” kapcsolót csak akkor kapcsolja be, ha a Core nem érhető el közvetlenül a hálózatában — a felhő ritkábban frissít (kb. 20 másodpercenként), és a TapHome szervereinek elérhetőségétől függ. A Core IP-címét a TapHome alkalmazásban a „Saját helyszín” alatt találja.",
+        "submit": "Mentés"
+      },
+      "zones": {
+        "title": "Zónák",
+        "description": "Rendelje a TapHome zónákat a Home Assistant területeihez. Az üres zóna a TapHome nevét használja; az Ignorálás bejelölésével nem lesz terület hozzárendelve.",
+        "submit": "Mentés"
+      },
+      "labels": {
+        "title": "Címkék",
+        "description": "Rendelje a TapHome kategóriákat a Home Assistant címkéihez. Az üres kategória a TapHome nevét használja; az Ignorálás bejelölésével nem lesz címke hozzárendelve.",
+        "submit": "Mentés"
+      },
+      "edit_device": {
+        "title": "Eszköz szerkesztése",
+        "description": "Válassza ki, mit szeretne szerkeszteni — eszközt, entitást, területet vagy címkét.",
+        "data": {
+          "target": "Mit szerkesszen"
+        },
+        "submit": "Tovább"
+      },
+      "remove_device": {
+        "title": "Eszköz eltávolítása",
+        "description": "Válassza ki, mit szeretne eltávolítani — eszközt, entitást, vagy egy egész területet vagy címkét. Még semmi sem törlődik: a következő lépés áttekintésre listázza az érintett TapHome eszközöket.",
+        "data": {
+          "target": "Mit távolítson el"
+        },
+        "submit": "Tovább"
+      },
+      "edit_device_pick": {
+        "title": "Konfiguráció kiválasztása",
+        "description": "Az eszköznek több TapHome konfigurációja van. Válassza ki a szerkesztendőt.",
+        "data": {
+          "config": "Konfiguráció"
+        },
+        "submit": "Tovább"
+      },
+      "edit_device_form": {
+        "title": "Eszközbeállítások",
+        "description": "{device} beállításai. Az üres mezők automatikus alapértelmezéseket használnak.",
+        "data": {
+          "effect_id": "Effektek többértékű kapcsolója",
+          "device_class": "Eszközosztály",
+          "actions": "Műveletek",
+          "close_threshold": "Zárási küszöb (%)",
+          "range_high_thermostat_id": "Tartomány felső termosztátja",
+          "range_low_thermostat_id": "Tartomány alsó termosztátja",
+          "target_temperature_step": "Célhőmérséklet lépésköze",
+          "precision": "Hőmérséklet pontossága",
+          "hvac_switch_id": "HVAC kapcsoló",
+          "hvac_mode": "Rögzített HVAC mód",
+          "hvac_mode_id": "HVAC mód többértékű kapcsolója",
+          "hvac_action_id": "HVAC művelet többértékű kapcsolója",
+          "preset_mode_id": "Előbeállítások többértékű kapcsolója",
+          "fan_mode_id": "Ventilátormódok többértékű kapcsolója",
+          "swing_mode_id": "Legyezési módok többértékű kapcsolója",
+          "swing_horizontal_mode_id": "Vízszintes legyezési módok többértékű kapcsolója",
+          "target_humidity_id": "Célpáratartalom analóg kimenete",
+          "min_humidity": "Minimális páratartalom (%)",
+          "max_humidity": "Maximális páratartalom (%)",
+          "switch_id": "Be/ki kapcsoló",
+          "action_id": "Művelet többértékű kapcsolója",
+          "mode_id": "Módok többértékű kapcsolója",
+          "humidity_sensor_id": "Páratartalom-érzékelő",
+          "value_type": "Értéktípus",
+          "unit_of_measurement": "Mértékegység",
+          "state_class": "Állapotosztály",
+          "min_value": "Minimális érték",
+          "max_value": "Maximális érték",
+          "step": "Lépésköz"
+        },
+        "sections": {
+          "advanced_options": {
+            "name": "Speciális beállítások",
+            "description": "Minden további beállítás, más eszközváltozatokéval együtt — itt az eszköz átalakítható (pl. egyszerű termosztát vezéreltté).",
+            "data": {
+              "effect_id": "Effektek többértékű kapcsolója",
+              "device_class": "Eszközosztály",
+              "actions": "Műveletek",
+              "close_threshold": "Zárási küszöb (%)",
+              "range_high_thermostat_id": "Tartomány felső termosztátja",
+              "range_low_thermostat_id": "Tartomány alsó termosztátja",
+              "target_temperature_step": "Célhőmérséklet lépésköze",
+              "precision": "Hőmérséklet pontossága",
+              "hvac_switch_id": "HVAC kapcsoló",
+              "hvac_mode": "Rögzített HVAC mód",
+              "hvac_mode_id": "HVAC mód többértékű kapcsolója",
+              "hvac_action_id": "HVAC művelet többértékű kapcsolója",
+              "preset_mode_id": "Előbeállítások többértékű kapcsolója",
+              "fan_mode_id": "Ventilátormódok többértékű kapcsolója",
+              "swing_mode_id": "Legyezési módok többértékű kapcsolója",
+              "swing_horizontal_mode_id": "Vízszintes legyezési módok többértékű kapcsolója",
+              "target_humidity_id": "Célpáratartalom analóg kimenete",
+              "min_humidity": "Minimális páratartalom (%)",
+              "max_humidity": "Maximális páratartalom (%)",
+              "switch_id": "Be/ki kapcsoló",
+              "action_id": "Művelet többértékű kapcsolója",
+              "mode_id": "Módok többértékű kapcsolója",
+              "humidity_sensor_id": "Páratartalom-érzékelő",
+              "value_type": "Értéktípus",
+              "unit_of_measurement": "Mértékegység",
+              "state_class": "Állapotosztály",
+              "min_value": "Minimális érték",
+              "max_value": "Maximális érték",
+              "step": "Lépésköz"
+            }
+          }
+        },
+        "submit": "Mentés"
+      },
+      "remove_device_confirm": {
+        "title": "Eszköz eltávolítása",
+        "description": "Vegye ki a pipát arról, amit meg szeretne tartani. A kiválasztott eszközök és minden entitásuk eltávolításra kerül a Home Assistantból.",
+        "submit": "Eltávolítás",
+        "data": {
+          "devices": "Eszközök"
+        }
+      },
+      "add_device": {
+        "title": "TapHome eszköz hozzáadása",
+        "description": "Válassza ki a hozzáadni kívánt eszköz típusát.",
+        "menu_options": {
+          "light": "Világítás",
+          "switch": "Kapcsoló / konnektor",
+          "cover": "Árnyékolás (redőny, zsaluzia)",
+          "thermostat": "Termosztát",
+          "thermostat_controlled": "Vezérelt termosztát",
+          "thermostat_range": "Range termosztát",
+          "sensor": "Érzékelő",
+          "binary_sensor": "Bináris érzékelő",
+          "fan": "Ventilátor",
+          "humidifier": "Párásító / párátlanító",
+          "valve": "Szelep",
+          "button": "Gomb / esemény",
+          "select": "Választó (többértékű kapcsoló)",
+          "number": "Szám",
+          "time": "Idő"
+        }
+      },
+      "light": {
+        "title": "Világítás",
+        "description": "Válassza ki a TapHome eszközt és állítsa be a beállításait. Az üres mezők automatikus alapértelmezéseket használnak.",
+        "data": {
+          "device": "Eszköz",
+          "effect_id": "Effektek többértékű kapcsolója"
+        },
+        "submit": "Hozzáadás"
+      },
+      "switch": {
+        "title": "Kapcsoló / konnektor",
+        "description": "Válassza ki a TapHome eszközt és állítsa be a beállításait. Az üres mezők automatikus alapértelmezéseket használnak.",
+        "data": {
+          "device": "Eszköz",
+          "device_class": "Eszközosztály"
+        },
+        "submit": "Hozzáadás"
+      },
+      "cover": {
+        "title": "Árnyékolás (redőny, zsaluzia)",
+        "description": "Válassza ki a TapHome eszközt és állítsa be a beállításait. Az üres mezők automatikus alapértelmezéseket használnak.",
+        "data": {
+          "device": "Eszköz",
+          "device_class": "Eszközosztály",
+          "close_threshold": "Zárási küszöb (%)"
+        },
+        "submit": "Hozzáadás"
+      },
+      "thermostat": {
+        "title": "Termosztát",
+        "description": "Termosztát hőmérséklettel és célértékkel. A fűtés- vagy hűtésvezérlés később hozzáadható a speciális beállításokban.",
+        "data": {
+          "device": "Eszköz"
+        },
+        "submit": "Hozzáadás"
+      },
+      "thermostat_controlled": {
+        "title": "Vezérelt termosztát",
+        "description": "Termosztát, amely a fűtést vagy hűtést is vezérli. Érvényes kombinációk: kapcsoló + rögzített mód, kapcsoló + módválasztó, vagy önálló módválasztó.",
+        "data": {
+          "device": "Eszköz",
+          "hvac_switch_id": "HVAC kapcsoló",
+          "hvac_mode": "Rögzített HVAC mód",
+          "hvac_mode_id": "HVAC mód többértékű kapcsolója",
+          "hvac_action_id": "HVAC művelet többértékű kapcsolója"
+        },
+        "submit": "Hozzáadás"
+      },
+      "thermostat_range": {
+        "title": "Range termosztát",
+        "description": "Klíma külön alsó és felső célértékkel, két TapHome termosztát vezérlésével.",
+        "data": {
+          "range_high_thermostat_id": "Tartomány felső termosztátja",
+          "range_low_thermostat_id": "Tartomány alsó termosztátja"
+        },
+        "submit": "Hozzáadás"
+      },
+      "sensor": {
+        "title": "Érzékelő",
+        "description": "Válassza ki az eszközt, amelynek értékeit érzékelőként szeretné hozzáadni.",
+        "data": {
+          "device": "Eszköz"
+        },
+        "submit": "Tovább"
+      },
+      "binary_sensor": {
+        "title": "Bináris érzékelő",
+        "description": "Válassza ki az eszközt, amelynek értékeit bináris érzékelőként szeretné hozzáadni.",
+        "data": {
+          "device": "Eszköz"
+        },
+        "submit": "Tovább"
+      },
+      "fan": {
+        "title": "Ventilátor",
+        "description": "Válassza ki a TapHome eszközt és állítsa be a beállításait. Az üres mezők automatikus alapértelmezéseket használnak.",
+        "data": {
+          "device": "Eszköz",
+          "preset_mode_id": "Előbeállítások többértékű kapcsolója"
+        },
+        "submit": "Hozzáadás"
+      },
+      "humidifier": {
+        "title": "Párásító / párátlanító",
+        "description": "Válassza ki a TapHome eszközt és állítsa be a beállításait. Az üres mezők automatikus alapértelmezéseket használnak.",
+        "data": {
+          "device": "Eszköz",
+          "device_class": "Eszközosztály"
+        },
+        "submit": "Hozzáadás"
+      },
+      "valve": {
+        "title": "Szelep",
+        "description": "Válassza ki a TapHome eszközt és állítsa be a beállításait. Az üres mezők automatikus alapértelmezéseket használnak.",
+        "data": {
+          "device": "Eszköz",
+          "device_class": "Eszközosztály"
+        },
+        "submit": "Hozzáadás"
+      },
+      "button": {
+        "title": "Gomb / esemény",
+        "description": "Válassza ki a TapHome eszközt és állítsa be a beállításait. Az üres mezők automatikus alapértelmezéseket használnak.",
+        "data": {
+          "device": "Eszköz",
+          "actions": "Műveletek",
+          "device_class": "Eszközosztály"
+        },
+        "submit": "Hozzáadás"
+      },
+      "select": {
+        "title": "Választó (többértékű kapcsoló)",
+        "description": "Válassza ki a TapHome eszközt és állítsa be a beállításait. Az üres mezők automatikus alapértelmezéseket használnak.",
+        "data": {
+          "device": "Eszköz"
+        },
+        "submit": "Hozzáadás"
+      },
+      "number": {
+        "title": "Szám",
+        "description": "Válassza ki a TapHome eszközt és állítsa be a beállításait. Az üres mezők automatikus alapértelmezéseket használnak.",
+        "data": {
+          "device": "Eszköz",
+          "min_value": "Minimális érték",
+          "max_value": "Maximális érték",
+          "step": "Lépésköz"
+        },
+        "submit": "Hozzáadás"
+      },
+      "time": {
+        "title": "Idő",
+        "description": "Válassza ki a TapHome eszközt és állítsa be a beállításait. Az üres mezők automatikus alapértelmezéseket használnak.",
+        "data": {
+          "device": "Eszköz"
+        },
+        "submit": "Hozzáadás"
+      },
+      "sensor_values": {
+        "title": "Érzékelőértékek",
+        "description": "Válassza ki, mely értékeket adja hozzá: {device}. Minden kiválasztott érték önálló érzékelő lesz.",
+        "data": {
+          "values": "Értékek"
+        },
+        "submit": "Hozzáadás"
+      },
+      "binary_sensor_values": {
+        "title": "Bináris érzékelőértékek",
+        "description": "Válassza ki, mely értékeket adja hozzá: {device}. Minden kiválasztott érték önálló bináris érzékelő lesz.",
+        "data": {
+          "values": "Értékek"
+        },
+        "submit": "Hozzáadás"
+      }
+    },
+    "error": {
+      "invalid_device_id": "Érvénytelen eszközazonosító.",
+      "cannot_connect": "Nem sikerült csatlakozni a TapHome Core-hoz.",
+      "invalid_auth": "A TapHome Core elutasította a tokent.",
+      "ip_required": "Adja meg a Core IP-címét, vagy kapcsolja be a TapHome felhőt.",
+      "unique_id_mismatch": "A csatlakoztatott Core nem egyezik azzal a Core-ral, amelyhez ez a bejegyzés készült.",
+      "no_device_config": "A kijelölés nem tartalmaz ehhez a Core-hoz tartozó TapHome eszközt. Több Core esetén annál nyissa meg a Beállítást, amelyikhez az eszköz tartozik.",
+      "select_target": "Válasszon legalább egy eszközt, entitást, területet vagy címkét.",
+      "no_devices_selected": "Válasszon ki legalább egy eszközt.",
+      "invalid_hvac_config": "Érvénytelen kombináció: kapcsoló + rögzített mód, kapcsoló + módválasztó, vagy önálló módválasztó.",
+      "range_thermostats_required": "Válassza ki az alsó és a felső termosztátot is.",
+      "no_values_selected": "Válasszon ki legalább egy értéket.",
+      "already_configured": "Ez az eszköz már szerepel ezen a domainen."
+    },
+    "abort": {
+      "entry_not_loaded": "A TapHome Core nincs betöltve. Először javítsa a kapcsolatot.",
+      "no_device_config": "A kijelölés nem tartalmaz ehhez a Core-hoz tartozó TapHome eszközt. Több Core esetén annál nyissa meg a Beállítást, amelyikhez az eszköz tartozik.",
+      "device_removed": "Az eszköz el lett távolítva.",
+      "reconfigure_successful": "Az újrakonfigurálás sikeres volt.",
+      "unknown_subentry": "Ez az eszközkonfiguráció már nem érvényes.",
+      "no_devices_available": "Minden TapHome eszköz már hozzá van adva az összes kompatibilis domainhez.",
+      "device_added": "Az eszköz hozzá lett adva."
+    }
+  },
+  "selector": {
+    "platform": {
+      "options": {
+        "lights": "Light",
+        "buttons": "Button / Event",
+        "covers": "Cover",
+        "climates": "Climate",
+        "fans": "Fan",
+        "humidifiers": "Humidifier",
+        "multivalue_switches": "Select",
+        "switches": "Switch",
+        "sensors": "Sensor",
+        "binary_sensors": "Binary sensor",
+        "valves": "Valve",
+        "times": "Time"
+      }
+    }
+  },
   "issues": {
     "device_not_exposed": {
-      "title": "A(z) {device_id} eszköz nincs közzétéve a(z) core{core_id} számára",
-      "description": "A(z) {device_id} eszköz, amely core{core_id} számára van konfigurálva, nincs kitéve a TapHome API-ban. Ellenőrizze a TapHome beállításait."
+      "title": "A(z) {device_id} eszköz nincs közzétéve a(z) Core{core_id} számára",
+      "description": "A(z) {device_id} eszköz, amely Core{core_id} számára van konfigurálva, nincs kitéve a TapHome API-ban. Ellenőrizze a TapHome beállításait."
     },
     "core_unavailable": {
-      "title": "Nem sikerült csatlakozni a TapHome core{core_id} rendszerhez",
-      "description": "A Home Assistant nem tud kommunikálni a TapHome core{core_id} rendszerrel."
-    },
-    "ip_and_api_url_set": {
-      "title": "Mind az api_url, mind az ip be van állítva a(z) core{core_id} számára",
-      "description": "A(z) core{core_id} konfigurációjában mind az api_url, mind az ip meg van adva. Az api_url kerül felhasználásra."
+      "title": "Nem sikerült csatlakozni a TapHome Core{core_id} rendszerhez",
+      "description": "A Home Assistant nem tud kommunikálni a TapHome Core{core_id} rendszerrel."
     },
     "device_type_mismatch": {
-      "title": "Nem támogatott eszköztípus {device_id} a(z) core{core_id} számára",
+      "title": "Nem támogatott eszköztípus {device_id} a(z) Core{core_id} számára",
       "description": "A(z) {device_id} azonosítójú eszköz típusa {device_type}, támogatott értékek [{supported_values}], várt: {expected}. Kérjük, ellenőrizze a TapHome beállításokat."
+    },
+    "yaml_deprecated": {
+      "title": "A TapHome YAML-konfiguráció elavult",
+      "description": "A TapHome YAML-konfigurációja importálásra került, és az integráció mostantól a felületen kezelhető (Beállítások → Eszközök és szolgáltatások). Távolítsa el a taphome szakaszt a configuration.yaml fájlból — az ott végzett módosítások már nem érvényesülnek."
+    },
+    "new_device": {
+      "title": "Új TapHome eszköz található: {device}",
+      "fix_flow": {
+        "step": {
+          "menu": {
+            "title": "Új TapHome eszköz",
+            "description": "A(z) {device} TapHome eszközt megtaláltuk, de még nincs használatban a Home Assistantban. Válaszd ki, milyen típusként add hozzá, vagy hagyd figyelmen kívül.",
+            "menu_options": {
+              "light": "Világítás",
+              "switch": "Kapcsoló / konnektor",
+              "cover": "Árnyékolás (redőny, zsaluzia)",
+              "thermostat": "Termosztát",
+              "thermostat_controlled": "Vezérelt termosztát",
+              "thermostat_range": "Range termosztát",
+              "sensor": "Érzékelő",
+              "binary_sensor": "Bináris érzékelő",
+              "fan": "Ventilátor",
+              "humidifier": "Párásító / párátlanító",
+              "valve": "Szelep",
+              "button": "Gomb / esemény",
+              "select": "Választó (többértékű kapcsoló)",
+              "number": "Szám",
+              "time": "Idő",
+              "ignore": "Eszköz figyelmen kívül hagyása"
+            }
+          },
+          "light": {
+            "title": "Világítás",
+            "description": "Válassza ki a TapHome eszközt és állítsa be a beállításait. Az üres mezők automatikus alapértelmezéseket használnak.",
+            "data": {
+              "device": "Eszköz",
+              "effect_id": "Effektek többértékű kapcsolója"
+            },
+            "submit": "Hozzáadás"
+          },
+          "switch": {
+            "title": "Kapcsoló / konnektor",
+            "description": "Válassza ki a TapHome eszközt és állítsa be a beállításait. Az üres mezők automatikus alapértelmezéseket használnak.",
+            "data": {
+              "device": "Eszköz",
+              "device_class": "Eszközosztály"
+            },
+            "submit": "Hozzáadás"
+          },
+          "cover": {
+            "title": "Árnyékolás (redőny, zsaluzia)",
+            "description": "Válassza ki a TapHome eszközt és állítsa be a beállításait. Az üres mezők automatikus alapértelmezéseket használnak.",
+            "data": {
+              "device": "Eszköz",
+              "device_class": "Eszközosztály",
+              "close_threshold": "Zárási küszöb (%)"
+            },
+            "submit": "Hozzáadás"
+          },
+          "thermostat": {
+            "title": "Termosztát",
+            "description": "Termosztát hőmérséklettel és célértékkel. A fűtés- vagy hűtésvezérlés később hozzáadható a speciális beállításokban.",
+            "data": {
+              "device": "Eszköz"
+            },
+            "submit": "Hozzáadás"
+          },
+          "thermostat_controlled": {
+            "title": "Vezérelt termosztát",
+            "description": "Termosztát, amely a fűtést vagy hűtést is vezérli. Érvényes kombinációk: kapcsoló + rögzített mód, kapcsoló + módválasztó, vagy önálló módválasztó.",
+            "data": {
+              "device": "Eszköz",
+              "hvac_switch_id": "HVAC kapcsoló",
+              "hvac_mode": "Rögzített HVAC mód",
+              "hvac_mode_id": "HVAC mód többértékű kapcsolója",
+              "hvac_action_id": "HVAC művelet többértékű kapcsolója"
+            },
+            "submit": "Hozzáadás"
+          },
+          "thermostat_range": {
+            "title": "Range termosztát",
+            "description": "Klíma külön alsó és felső célértékkel, két TapHome termosztát vezérlésével.",
+            "data": {
+              "range_high_thermostat_id": "Tartomány felső termosztátja",
+              "range_low_thermostat_id": "Tartomány alsó termosztátja"
+            },
+            "submit": "Hozzáadás"
+          },
+          "sensor": {
+            "title": "Érzékelő",
+            "description": "Válassza ki az eszközt, amelynek értékeit érzékelőként szeretné hozzáadni.",
+            "data": {
+              "device": "Eszköz"
+            },
+            "submit": "Tovább"
+          },
+          "binary_sensor": {
+            "title": "Bináris érzékelő",
+            "description": "Válassza ki az eszközt, amelynek értékeit bináris érzékelőként szeretné hozzáadni.",
+            "data": {
+              "device": "Eszköz"
+            },
+            "submit": "Tovább"
+          },
+          "fan": {
+            "title": "Ventilátor",
+            "description": "Válassza ki a TapHome eszközt és állítsa be a beállításait. Az üres mezők automatikus alapértelmezéseket használnak.",
+            "data": {
+              "device": "Eszköz",
+              "preset_mode_id": "Előbeállítások többértékű kapcsolója"
+            },
+            "submit": "Hozzáadás"
+          },
+          "humidifier": {
+            "title": "Párásító / párátlanító",
+            "description": "Válassza ki a TapHome eszközt és állítsa be a beállításait. Az üres mezők automatikus alapértelmezéseket használnak.",
+            "data": {
+              "device": "Eszköz",
+              "device_class": "Eszközosztály"
+            },
+            "submit": "Hozzáadás"
+          },
+          "valve": {
+            "title": "Szelep",
+            "description": "Válassza ki a TapHome eszközt és állítsa be a beállításait. Az üres mezők automatikus alapértelmezéseket használnak.",
+            "data": {
+              "device": "Eszköz",
+              "device_class": "Eszközosztály"
+            },
+            "submit": "Hozzáadás"
+          },
+          "button": {
+            "title": "Gomb / esemény",
+            "description": "Válassza ki a TapHome eszközt és állítsa be a beállításait. Az üres mezők automatikus alapértelmezéseket használnak.",
+            "data": {
+              "device": "Eszköz",
+              "actions": "Műveletek",
+              "device_class": "Eszközosztály"
+            },
+            "submit": "Hozzáadás"
+          },
+          "select": {
+            "title": "Választó (többértékű kapcsoló)",
+            "description": "Válassza ki a TapHome eszközt és állítsa be a beállításait. Az üres mezők automatikus alapértelmezéseket használnak.",
+            "data": {
+              "device": "Eszköz"
+            },
+            "submit": "Hozzáadás"
+          },
+          "number": {
+            "title": "Szám",
+            "description": "Válassza ki a TapHome eszközt és állítsa be a beállításait. Az üres mezők automatikus alapértelmezéseket használnak.",
+            "data": {
+              "device": "Eszköz"
+            },
+            "submit": "Hozzáadás"
+          },
+          "time": {
+            "title": "Idő",
+            "description": "Válassza ki a TapHome eszközt és állítsa be a beállításait. Az üres mezők automatikus alapértelmezéseket használnak.",
+            "data": {
+              "device": "Eszköz"
+            },
+            "submit": "Hozzáadás"
+          },
+          "sensor_values": {
+            "title": "Érzékelőértékek",
+            "description": "Válassza ki, mely értékeket adja hozzá: {device}. Minden kiválasztott érték önálló érzékelő lesz.",
+            "data": {
+              "values": "Értékek"
+            },
+            "submit": "Hozzáadás"
+          },
+          "binary_sensor_values": {
+            "title": "Bináris érzékelőértékek",
+            "description": "Válassza ki, mely értékeket adja hozzá: {device}. Minden kiválasztott érték önálló bináris érzékelő lesz.",
+            "data": {
+              "values": "Értékek"
+            },
+            "submit": "Hozzáadás"
+          }
+        },
+        "error": {
+          "invalid_device_id": "Érvénytelen eszközazonosító.",
+          "invalid_hvac_config": "Érvénytelen kombináció: kapcsoló + rögzített mód, kapcsoló + módválasztó, vagy önálló módválasztó.",
+          "range_thermostats_required": "Válassza ki az alsó és a felső termosztátot is.",
+          "no_values_selected": "Válasszon ki legalább egy értéket.",
+          "already_configured": "Ez az eszköz már szerepel ezen a domainen."
+        },
+        "abort": {
+          "entry_not_loaded": "A TapHome Core nincs betöltve. Először javítsa a kapcsolatot.",
+          "no_devices_available": "Minden TapHome eszköz már hozzá van adva az összes kompatibilis domainhez.",
+          "unknown_subentry": "Ez az eszközkonfiguráció már nem érvényes.",
+          "already_configured": "Ez az eszköz már szerepel ezen a domainen.",
+          "reconfigure_successful": "Az újrakonfigurálás sikeres volt.",
+          "device_gone": "Ezt a TapHome eszközt a Core már nem teszi elérhetővé."
+        }
+      }
+    }
+  },
+  "config_subentries": {
+    "device": {
+      "initiate_flow": {
+        "user": "Eszköz hozzáadása"
+      },
+      "entry_type": "Eszköz",
+      "step": {
+        "user": {
+          "title": "TapHome eszköz hozzáadása",
+          "description": "Válassza ki a hozzáadni kívánt eszköz típusát.",
+          "menu_options": {
+            "light": "Világítás",
+            "switch": "Kapcsoló / konnektor",
+            "cover": "Árnyékolás (redőny, zsaluzia)",
+            "thermostat": "Termosztát",
+            "thermostat_controlled": "Vezérelt termosztát",
+            "thermostat_range": "Range termosztát",
+            "sensor": "Érzékelő",
+            "binary_sensor": "Bináris érzékelő",
+            "fan": "Ventilátor",
+            "humidifier": "Párásító / párátlanító",
+            "valve": "Szelep",
+            "button": "Gomb / esemény",
+            "select": "Választó (többértékű kapcsoló)",
+            "number": "Szám",
+            "time": "Idő"
+          }
+        },
+        "light": {
+          "title": "Világítás",
+          "description": "Válassza ki a TapHome eszközt és állítsa be a beállításait. Az üres mezők automatikus alapértelmezéseket használnak.",
+          "data": {
+            "device": "Eszköz",
+            "effect_id": "Effektek többértékű kapcsolója"
+          },
+          "submit": "Hozzáadás"
+        },
+        "switch": {
+          "title": "Kapcsoló / konnektor",
+          "description": "Válassza ki a TapHome eszközt és állítsa be a beállításait. Az üres mezők automatikus alapértelmezéseket használnak.",
+          "data": {
+            "device": "Eszköz",
+            "device_class": "Eszközosztály"
+          },
+          "submit": "Hozzáadás"
+        },
+        "cover": {
+          "title": "Árnyékolás (redőny, zsaluzia)",
+          "description": "Válassza ki a TapHome eszközt és állítsa be a beállításait. Az üres mezők automatikus alapértelmezéseket használnak.",
+          "data": {
+            "device": "Eszköz",
+            "device_class": "Eszközosztály",
+            "close_threshold": "Zárási küszöb (%)"
+          },
+          "submit": "Hozzáadás"
+        },
+        "thermostat": {
+          "title": "Termosztát",
+          "description": "Termosztát hőmérséklettel és célértékkel. A fűtés- vagy hűtésvezérlés később hozzáadható a speciális beállításokban.",
+          "data": {
+            "device": "Eszköz"
+          },
+          "submit": "Hozzáadás"
+        },
+        "thermostat_controlled": {
+          "title": "Vezérelt termosztát",
+          "description": "Termosztát, amely a fűtést vagy hűtést is vezérli. Érvényes kombinációk: kapcsoló + rögzített mód, kapcsoló + módválasztó, vagy önálló módválasztó.",
+          "data": {
+            "device": "Eszköz",
+            "hvac_switch_id": "HVAC kapcsoló",
+            "hvac_mode": "Rögzített HVAC mód",
+            "hvac_mode_id": "HVAC mód többértékű kapcsolója",
+            "hvac_action_id": "HVAC művelet többértékű kapcsolója"
+          },
+          "submit": "Hozzáadás"
+        },
+        "thermostat_range": {
+          "title": "Range termosztát",
+          "description": "Klíma külön alsó és felső célértékkel, két TapHome termosztát vezérlésével.",
+          "data": {
+            "range_high_thermostat_id": "Tartomány felső termosztátja",
+            "range_low_thermostat_id": "Tartomány alsó termosztátja"
+          },
+          "submit": "Hozzáadás"
+        },
+        "sensor": {
+          "title": "Érzékelő",
+          "description": "Válassza ki az eszközt, amelynek értékeit érzékelőként szeretné hozzáadni.",
+          "data": {
+            "device": "Eszköz"
+          },
+          "submit": "Tovább"
+        },
+        "binary_sensor": {
+          "title": "Bináris érzékelő",
+          "description": "Válassza ki az eszközt, amelynek értékeit bináris érzékelőként szeretné hozzáadni.",
+          "data": {
+            "device": "Eszköz"
+          },
+          "submit": "Tovább"
+        },
+        "fan": {
+          "title": "Ventilátor",
+          "description": "Válassza ki a TapHome eszközt és állítsa be a beállításait. Az üres mezők automatikus alapértelmezéseket használnak.",
+          "data": {
+            "device": "Eszköz",
+            "preset_mode_id": "Előbeállítások többértékű kapcsolója"
+          },
+          "submit": "Hozzáadás"
+        },
+        "humidifier": {
+          "title": "Párásító / párátlanító",
+          "description": "Válassza ki a TapHome eszközt és állítsa be a beállításait. Az üres mezők automatikus alapértelmezéseket használnak.",
+          "data": {
+            "device": "Eszköz",
+            "device_class": "Eszközosztály"
+          },
+          "submit": "Hozzáadás"
+        },
+        "valve": {
+          "title": "Szelep",
+          "description": "Válassza ki a TapHome eszközt és állítsa be a beállításait. Az üres mezők automatikus alapértelmezéseket használnak.",
+          "data": {
+            "device": "Eszköz",
+            "device_class": "Eszközosztály"
+          },
+          "submit": "Hozzáadás"
+        },
+        "button": {
+          "title": "Gomb / esemény",
+          "description": "Válassza ki a TapHome eszközt és állítsa be a beállításait. Az üres mezők automatikus alapértelmezéseket használnak.",
+          "data": {
+            "device": "Eszköz",
+            "actions": "Műveletek",
+            "device_class": "Eszközosztály"
+          },
+          "submit": "Hozzáadás"
+        },
+        "select": {
+          "title": "Választó (többértékű kapcsoló)",
+          "description": "Válassza ki a TapHome eszközt és állítsa be a beállításait. Az üres mezők automatikus alapértelmezéseket használnak.",
+          "data": {
+            "device": "Eszköz"
+          },
+          "submit": "Hozzáadás"
+        },
+        "number": {
+          "title": "Szám",
+          "description": "Válassza ki a TapHome eszközt és állítsa be a beállításait. Az üres mezők automatikus alapértelmezéseket használnak.",
+          "data": {
+            "device": "Eszköz",
+            "min_value": "Minimális érték",
+            "max_value": "Maximális érték",
+            "step": "Lépésköz"
+          },
+          "submit": "Hozzáadás"
+        },
+        "time": {
+          "title": "Idő",
+          "description": "Válassza ki a TapHome eszközt és állítsa be a beállításait. Az üres mezők automatikus alapértelmezéseket használnak.",
+          "data": {
+            "device": "Eszköz"
+          },
+          "submit": "Hozzáadás"
+        },
+        "sensor_values": {
+          "title": "Érzékelőértékek",
+          "description": "Válassza ki, mely értékeket adja hozzá: {device}. Minden kiválasztott érték önálló érzékelő lesz.",
+          "data": {
+            "values": "Értékek"
+          },
+          "submit": "Hozzáadás"
+        },
+        "binary_sensor_values": {
+          "title": "Bináris érzékelőértékek",
+          "description": "Válassza ki, mely értékeket adja hozzá: {device}. Minden kiválasztott érték önálló bináris érzékelő lesz.",
+          "data": {
+            "values": "Értékek"
+          },
+          "submit": "Hozzáadás"
+        },
+        "reconfigure": {
+          "title": "Eszközbeállítások",
+          "description": "Módosítsa az eszköz beállításait. Az üres mezők automatikus alapértelmezéseket használnak.",
+          "data": {
+            "effect_id": "Effektek többértékű kapcsolója",
+            "device_class": "Eszközosztály",
+            "actions": "Műveletek",
+            "close_threshold": "Zárási küszöb (%)",
+            "range_high_thermostat_id": "Tartomány felső termosztátja",
+            "range_low_thermostat_id": "Tartomány alsó termosztátja",
+            "target_temperature_step": "Célhőmérséklet lépésköze",
+            "precision": "Hőmérséklet pontossága",
+            "hvac_switch_id": "HVAC kapcsoló",
+            "hvac_mode": "Rögzített HVAC mód",
+            "hvac_mode_id": "HVAC mód többértékű kapcsolója",
+            "hvac_action_id": "HVAC művelet többértékű kapcsolója",
+            "preset_mode_id": "Előbeállítások többértékű kapcsolója",
+            "fan_mode_id": "Ventilátormódok többértékű kapcsolója",
+            "swing_mode_id": "Legyezési módok többértékű kapcsolója",
+            "swing_horizontal_mode_id": "Vízszintes legyezési módok többértékű kapcsolója",
+            "target_humidity_id": "Célpáratartalom analóg kimenete",
+            "min_humidity": "Minimális páratartalom (%)",
+            "max_humidity": "Maximális páratartalom (%)",
+            "switch_id": "Be/ki kapcsoló",
+            "action_id": "Művelet többértékű kapcsolója",
+            "mode_id": "Módok többértékű kapcsolója",
+            "humidity_sensor_id": "Páratartalom-érzékelő",
+            "value_type": "Értéktípus",
+            "unit_of_measurement": "Mértékegység",
+            "state_class": "Állapotosztály",
+            "min_value": "Minimális érték",
+            "max_value": "Maximális érték",
+            "step": "Lépésköz"
+          },
+          "sections": {
+            "advanced_options": {
+              "name": "Speciális beállítások",
+              "description": "Minden további beállítás, más eszközváltozatokéval együtt — itt az eszköz átalakítható (pl. egyszerű termosztát vezéreltté).",
+              "data": {
+                "effect_id": "Effektek többértékű kapcsolója",
+                "device_class": "Eszközosztály",
+                "actions": "Műveletek",
+                "close_threshold": "Zárási küszöb (%)",
+                "range_high_thermostat_id": "Tartomány felső termosztátja",
+                "range_low_thermostat_id": "Tartomány alsó termosztátja",
+                "target_temperature_step": "Célhőmérséklet lépésköze",
+                "precision": "Hőmérséklet pontossága",
+                "hvac_switch_id": "HVAC kapcsoló",
+                "hvac_mode": "Rögzített HVAC mód",
+                "hvac_mode_id": "HVAC mód többértékű kapcsolója",
+                "hvac_action_id": "HVAC művelet többértékű kapcsolója",
+                "preset_mode_id": "Előbeállítások többértékű kapcsolója",
+                "fan_mode_id": "Ventilátormódok többértékű kapcsolója",
+                "swing_mode_id": "Legyezési módok többértékű kapcsolója",
+                "swing_horizontal_mode_id": "Vízszintes legyezési módok többértékű kapcsolója",
+                "target_humidity_id": "Célpáratartalom analóg kimenete",
+                "min_humidity": "Minimális páratartalom (%)",
+                "max_humidity": "Maximális páratartalom (%)",
+                "switch_id": "Be/ki kapcsoló",
+                "action_id": "Művelet többértékű kapcsolója",
+                "mode_id": "Módok többértékű kapcsolója",
+                "humidity_sensor_id": "Páratartalom-érzékelő",
+                "value_type": "Értéktípus",
+                "unit_of_measurement": "Mértékegység",
+                "state_class": "Állapotosztály",
+                "min_value": "Minimális érték",
+                "max_value": "Maximális érték",
+                "step": "Lépésköz"
+              }
+            }
+          },
+          "submit": "Mentés"
+        }
+      },
+      "error": {
+        "invalid_device_id": "Érvénytelen eszközazonosító.",
+        "invalid_hvac_config": "Érvénytelen kombináció: kapcsoló + rögzített mód, kapcsoló + módválasztó, vagy önálló módválasztó.",
+        "range_thermostats_required": "Válassza ki az alsó és a felső termosztátot is.",
+        "no_values_selected": "Válasszon ki legalább egy értéket.",
+        "already_configured": "Ez az eszköz már szerepel ezen a domainen."
+      },
+      "abort": {
+        "entry_not_loaded": "A TapHome Core nincs betöltve. Először javítsa a kapcsolatot.",
+        "no_devices_available": "Minden TapHome eszköz már hozzá van adva az összes kompatibilis domainhez.",
+        "unknown_subentry": "Ez az eszközkonfiguráció már nem érvényes.",
+        "already_configured": "Ez az eszköz már szerepel ezen a domainen.",
+        "reconfigure_successful": "Az újrakonfigurálás sikeres volt."
+      }
+    }
+  },
+  "exceptions": {
+    "change_rejected": {
+      "message": "A TapHome nem hajtotta végre a kért módosítást: {entity_id}"
+    },
+    "communication_error": {
+      "message": "Kommunikációs hiba a TapHome Core-ral a(z) {entity_id} vezérlése közben"
+    },
+    "invalid_hvac_mode": {
+      "message": "A(z) {hvac_mode} nem érvényes HVAC mód ehhez a termosztáthoz"
+    },
+    "hvac_mode_not_supported": {
+      "message": "Ez a termosztát nem támogatja a HVAC mód beállítását"
     }
   }
 }

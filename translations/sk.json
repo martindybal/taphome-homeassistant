@@ -1,20 +1,975 @@
 {
+  "config": {
+    "initiate_flow": {
+      "user": "Pridať TapHome Core"
+    },
+    "step": {
+      "user": {
+        "title": "Pripojiť TapHome Core",
+        "description": "Zverejnite svoje zariadenia v aplikácii TapHome (Nastavenia → Zverejniť zariadenia → TapHome API) a zadajte nižšie token. Odporúčame lokálne pripojenie: „Použiť TapHome cloud“ zapnite len vtedy, keď sa ku Core nedá pripojiť priamo vo vašej sieti — cloud aktualizuje stav menej často (približne raz za 20 sekúnd) a vyžaduje dostupnosť serverov TapHome. IP adresu vášho Core nájdete v aplikácii TapHome v časti „Moja lokalita“.",
+        "data": {
+          "token": "Token",
+          "use_cloud": "Použiť TapHome cloud",
+          "ip": "IP adresa",
+          "webhook_id": "Webhook ID",
+          "use_description_as_entity_id": "Použiť popisy TapHome ako ID entít",
+          "use_description_as_name": "Použiť popisy TapHome ako názvy entít",
+          "enabled_attributes": "Zverejnené atribúty"
+        },
+        "data_description": {
+          "token": "Autorizačný token zobrazený v hornej časti obrazovky TapHome API.",
+          "use_cloud": "Pripojenie cez TapHome cloud namiesto lokálnej siete. Odporúčané len vtedy, keď Core nie je dostupný lokálne — cloud je pomalší a vyžaduje internetové pripojenie. Pri zapnutí sa IP adresa ignoruje.",
+          "ip": "Nájdete ju v aplikácii TapHome v časti Moja lokalita.",
+          "webhook_id": "Odporúčané: Core potom posiela zmeny okamžite, namiesto toho, aby ich Home Assistant zisťoval dotazom každé 2 sekundy. Zadajte ľubovoľný názov, napr. taphome, a rovnaký nastavte aj v aplikácii TapHome na obrazovke Zverejniť zariadenia → zapnite Povoliť Web Hook a do Web Hook URL vyplňte napr. http://homeassistant.local:8123/api/webhook/taphome — homeassistant.local nahraďte adresou vášho Home Assistant a taphome názvom, ktorý ste zadali vyššie."
+        },
+        "submit": "Ďalej"
+      },
+      "reconfigure": {
+        "title": "Zmeniť nastavenie TapHome Core",
+        "description": "Upravte nastavenie pripojenia a Core tohto TapHome Core. Odporúčame lokálne pripojenie: „Použiť TapHome cloud“ zapnite len vtedy, keď sa ku Core nedá pripojiť priamo vo vašej sieti — cloud aktualizuje stav menej často (približne raz za 20 sekúnd) a vyžaduje dostupnosť serverov TapHome. IP adresu vášho Core nájdete v aplikácii TapHome v časti „Moja lokalita“.",
+        "data": {
+          "token": "Token",
+          "use_cloud": "Použiť TapHome cloud",
+          "ip": "IP adresa",
+          "webhook_id": "Webhook ID",
+          "use_description_as_entity_id": "Použiť popisy TapHome ako ID entít",
+          "use_description_as_name": "Použiť popisy TapHome ako názvy entít",
+          "enabled_attributes": "Zverejnené atribúty"
+        },
+        "data_description": {
+          "token": "Autorizačný token zobrazený v hornej časti obrazovky TapHome API.",
+          "use_cloud": "Pripojenie cez TapHome cloud namiesto lokálnej siete. Odporúčané len vtedy, keď Core nie je dostupný lokálne — cloud je pomalší a vyžaduje internetové pripojenie. Pri zapnutí sa IP adresa ignoruje.",
+          "ip": "Nájdete ju v aplikácii TapHome v časti Moja lokalita.",
+          "webhook_id": "Odporúčané: Core potom posiela zmeny okamžite, namiesto toho, aby ich Home Assistant zisťoval dotazom každé 2 sekundy. Zadajte ľubovoľný názov, napr. taphome, a rovnaký nastavte aj v aplikácii TapHome na obrazovke Zverejniť zariadenia → zapnite Povoliť Web Hook a do Web Hook URL vyplňte napr. http://homeassistant.local:8123/api/webhook/taphome — homeassistant.local nahraďte adresou vášho Home Assistant a taphome názvom, ktorý ste zadali vyššie."
+        },
+        "submit": "Uložiť"
+      },
+      "reauth_confirm": {
+        "title": "Znova overiť TapHome",
+        "description": "Token pre {name} už nie je platný. Zadajte nový token.",
+        "data": {
+          "token": "Token"
+        },
+        "submit": "Uložiť"
+      },
+      "zones": {
+        "title": "Zóny",
+        "description": "Namapujte zóny TapHome na oblasti Home Assistanta. Prázdna zóna použije svoj názov z TapHome; zaškrtnutím Ignorovať sa oblasť nepriradí vôbec."
+      },
+      "labels": {
+        "title": "Štítky",
+        "description": "Namapujte kategórie TapHome na štítky Home Assistanta. Prázdna kategória použije svoj názov z TapHome; zaškrtnutím Ignorovať sa štítok nepriradí vôbec."
+      },
+      "add_devices": {
+        "title": "Pridať zariadenia",
+        "description": "Vyberte zariadenia TapHome, ktoré chcete pridať. Do poľa môžete písať a vyhľadávať. Pri zatiaľ nepridaných zariadeniach sa zobrazuje TapHome zóna a kategória, pri pridaných miestnosť.",
+        "data": {
+          "devices": "Zariadenia",
+          "clear_selection": "Zrušiť výber"
+        },
+        "data_description": {
+          "clear_selection": "Zapnite a stlačte Ďalej pre zrušenie celého výberu, potom vyberte len požadované zariadenia."
+        }
+      },
+      "add_devices_platform": {
+        "title": "Výber domén",
+        "description": "Pri každom zariadení zvoľte domény Home Assistantu, ako ktoré sa zariadenie vystaví. Na jedno zariadenie môžete vybrať aj viac domén, alebo žiadnu a zariadenie tak preskočiť. Ponúkajú sa len domény použiteľné pre dané zariadenie."
+      },
+      "add_devices_options": {
+        "title": "Možnosti zariadenia",
+        "description": "Nastavte možnosti pre každé vybrané zariadenie a doménu. Každá sekcia je jedno zariadenie v jednej doméne. Prázdne polia použijú automatické predvolené hodnoty.",
+        "submit": "Pridať"
+      },
+      "zeroconf_confirm": {
+        "title": "Pripojiť TapHome Core",
+        "description": "V sieti bol nájdený TapHome Core {name} na adrese {host}. Pre pridanie do Home Assistanta zadajte jeho API token.",
+        "data": {
+          "token": "Token",
+          "webhook_id": "Webhook ID",
+          "enabled_attributes": "Zverejnené atribúty"
+        },
+        "data_description": {
+          "token": "Autorizačný token zobrazený v hornej časti obrazovky TapHome API.",
+          "webhook_id": "Odporúčané: Core potom posiela zmeny okamžite, namiesto toho, aby ich Home Assistant zisťoval dotazom každé 2 sekundy. Zadajte ľubovoľný názov, napr. taphome, a rovnaký nastavte aj v aplikácii TapHome na obrazovke Zverejniť zariadenia → zapnite Povoliť Web Hook a do Web Hook URL vyplňte napr. http://homeassistant.local:8123/api/webhook/taphome — homeassistant.local nahraďte adresou vášho Home Assistant a taphome názvom, ktorý ste zadali vyššie."
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Pripojenie k TapHome Core zlyhalo.",
+      "invalid_auth": "TapHome Core odmietol token.",
+      "ip_required": "Vyplňte IP adresu vášho Core, alebo zapnite TapHome cloud.",
+      "no_devices_selected": "Vyberte aspoň jedno zariadenie.",
+      "invalid_device_id": "Neplatné ID zariadenia."
+    },
+    "abort": {
+      "already_configured": "Tento TapHome Core je už nakonfigurovaný.",
+      "reauth_successful": "Opätovné overenie prebehlo úspešne.",
+      "reconfigure_successful": "Zmena nastavenia prebehla úspešne.",
+      "unique_id_mismatch": "Pripojený Core nezodpovedá Core, pre ktorý bol tento záznam vytvorený.",
+      "invalid_discovery_info": "Nájdený Core neohlásil potrebné údaje."
+    },
+    "flow_title": "{name}"
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Možnosti TapHome",
+        "menu_options": {
+          "core_settings": "Nastavenie Core",
+          "add_device": "Pridať zariadenie",
+          "edit_device": "Upraviť zariadenie",
+          "remove_device": "Odstrániť zariadenie",
+          "zones": "Zóny (oblasti)",
+          "labels": "Štítky (kategórie)"
+        }
+      },
+      "core_settings": {
+        "title": "Nastavenie Core",
+        "data": {
+          "token": "Token",
+          "use_cloud": "Použiť TapHome cloud",
+          "ip": "IP adresa",
+          "webhook_id": "Webhook ID",
+          "use_description_as_entity_id": "Použiť popisy TapHome ako ID entít",
+          "use_description_as_name": "Použiť popisy TapHome ako názvy entít",
+          "enabled_attributes": "Zverejnené atribúty"
+        },
+        "data_description": {
+          "token": "Autorizačný token zobrazený v hornej časti obrazovky TapHome API.",
+          "use_cloud": "Pripojenie cez TapHome cloud namiesto lokálnej siete. Odporúčané len vtedy, keď Core nie je dostupný lokálne — cloud je pomalší a vyžaduje internetové pripojenie. Pri zapnutí sa IP adresa ignoruje.",
+          "ip": "Nájdete ju v aplikácii TapHome v časti Moja lokalita.",
+          "webhook_id": "Odporúčané: Core potom posiela zmeny okamžite, namiesto toho, aby ich Home Assistant zisťoval dotazom každé 2 sekundy. Zadajte ľubovoľný názov, napr. taphome, a rovnaký nastavte aj v aplikácii TapHome na obrazovke Zverejniť zariadenia → zapnite Povoliť Web Hook a do Web Hook URL vyplňte napr. http://homeassistant.local:8123/api/webhook/taphome — homeassistant.local nahraďte adresou vášho Home Assistant a taphome názvom, ktorý ste zadali vyššie."
+        },
+        "description": "Upravte nastavenie pripojenia a Core tohto TapHome Core. Odporúčame lokálne pripojenie: „Použiť TapHome cloud“ zapnite len vtedy, keď sa ku Core nedá pripojiť priamo vo vašej sieti — cloud aktualizuje stav menej často (približne raz za 20 sekúnd) a vyžaduje dostupnosť serverov TapHome. IP adresu vášho Core nájdete v aplikácii TapHome v časti „Moja lokalita“.",
+        "submit": "Uložiť"
+      },
+      "zones": {
+        "title": "Zóny",
+        "description": "Namapujte zóny TapHome na oblasti Home Assistanta. Prázdna zóna použije svoj názov z TapHome; zaškrtnutím Ignorovať sa oblasť nepriradí vôbec.",
+        "submit": "Uložiť"
+      },
+      "labels": {
+        "title": "Štítky",
+        "description": "Namapujte kategórie TapHome na štítky Home Assistanta. Prázdna kategória použije svoj názov z TapHome; zaškrtnutím Ignorovať sa štítok nepriradí vôbec.",
+        "submit": "Uložiť"
+      },
+      "edit_device": {
+        "title": "Upraviť zariadenie",
+        "description": "Vyberte, čo chcete upraviť — zariadenie, entitu, oblasť alebo štítok, podľa toho, čo poznáte.",
+        "data": {
+          "target": "Čo upraviť"
+        },
+        "submit": "Ďalej"
+      },
+      "remove_device": {
+        "title": "Odstrániť zariadenie",
+        "description": "Vyberte, čo chcete odstrániť — zariadenie, entitu, alebo celú oblasť či štítok. Zatiaľ sa nič nemaže: v ďalšom kroku uvidíte zoznam zodpovedajúcich zariadení TapHome a môžete ho upraviť.",
+        "data": {
+          "target": "Čo odstrániť"
+        },
+        "submit": "Ďalej"
+      },
+      "edit_device_pick": {
+        "title": "Vyberte konfiguráciu",
+        "description": "Zariadenie má viac konfigurácií TapHome. Vyberte tú, ktorú chcete upraviť.",
+        "data": {
+          "config": "Konfigurácia"
+        },
+        "submit": "Ďalej"
+      },
+      "edit_device_form": {
+        "title": "Možnosti zariadenia",
+        "description": "Možnosti zariadenia {device}. Prázdne polia použijú automatické predvolené hodnoty.",
+        "data": {
+          "effect_id": "Viachodnotový prepínač efektov",
+          "device_class": "Trieda zariadenia",
+          "actions": "Akcie",
+          "close_threshold": "Prah zatvorenia (%)",
+          "range_high_thermostat_id": "Horný termostat rozsahu",
+          "range_low_thermostat_id": "Dolný termostat rozsahu",
+          "target_temperature_step": "Krok cieľovej teploty",
+          "precision": "Presnosť teploty",
+          "hvac_switch_id": "Spínač HVAC",
+          "hvac_mode": "Pevný režim HVAC",
+          "hvac_mode_id": "Viachodnotový prepínač režimu HVAC",
+          "hvac_action_id": "Viachodnotový prepínač akcie HVAC",
+          "preset_mode_id": "Viachodnotový prepínač predvolieb",
+          "fan_mode_id": "Viachodnotový prepínač režimov ventilátora",
+          "swing_mode_id": "Viachodnotový prepínač natáčania",
+          "swing_horizontal_mode_id": "Viachodnotový prepínač horizontálneho natáčania",
+          "target_humidity_id": "Analógový výstup cieľovej vlhkosti",
+          "min_humidity": "Minimálna vlhkosť (%)",
+          "max_humidity": "Maximálna vlhkosť (%)",
+          "switch_id": "Spínač zapnutia/vypnutia",
+          "action_id": "Viachodnotový prepínač akcie",
+          "mode_id": "Viachodnotový prepínač režimov",
+          "humidity_sensor_id": "Senzor vlhkosti",
+          "value_type": "Typ hodnoty",
+          "unit_of_measurement": "Jednotka merania",
+          "state_class": "Trieda stavu",
+          "min_value": "Minimálna hodnota",
+          "max_value": "Maximálna hodnota",
+          "step": "Krok"
+        },
+        "sections": {
+          "advanced_options": {
+            "name": "Pokročilé možnosti",
+            "description": "Všetky zostávajúce možnosti vrátane iných variantov zariadenia — tu možno zariadenie previesť (napr. jednoduchý termostat na riadený).",
+            "data": {
+              "effect_id": "Viachodnotový prepínač efektov",
+              "device_class": "Trieda zariadenia",
+              "actions": "Akcie",
+              "close_threshold": "Prah zatvorenia (%)",
+              "range_high_thermostat_id": "Horný termostat rozsahu",
+              "range_low_thermostat_id": "Dolný termostat rozsahu",
+              "target_temperature_step": "Krok cieľovej teploty",
+              "precision": "Presnosť teploty",
+              "hvac_switch_id": "Spínač HVAC",
+              "hvac_mode": "Pevný režim HVAC",
+              "hvac_mode_id": "Viachodnotový prepínač režimu HVAC",
+              "hvac_action_id": "Viachodnotový prepínač akcie HVAC",
+              "preset_mode_id": "Viachodnotový prepínač predvolieb",
+              "fan_mode_id": "Viachodnotový prepínač režimov ventilátora",
+              "swing_mode_id": "Viachodnotový prepínač natáčania",
+              "swing_horizontal_mode_id": "Viachodnotový prepínač horizontálneho natáčania",
+              "target_humidity_id": "Analógový výstup cieľovej vlhkosti",
+              "min_humidity": "Minimálna vlhkosť (%)",
+              "max_humidity": "Maximálna vlhkosť (%)",
+              "switch_id": "Spínač zapnutia/vypnutia",
+              "action_id": "Viachodnotový prepínač akcie",
+              "mode_id": "Viachodnotový prepínač režimov",
+              "humidity_sensor_id": "Senzor vlhkosti",
+              "value_type": "Typ hodnoty",
+              "unit_of_measurement": "Jednotka merania",
+              "state_class": "Trieda stavu",
+              "min_value": "Minimálna hodnota",
+              "max_value": "Maximálna hodnota",
+              "step": "Krok"
+            }
+          }
+        },
+        "submit": "Uložiť"
+      },
+      "remove_device_confirm": {
+        "title": "Odstrániť zariadenie",
+        "description": "Odškrtnite zariadenia, ktoré chcete ponechať. Vybrané zariadenia a všetky ich entity budú odstránené z Home Assistanta.",
+        "submit": "Odstrániť",
+        "data": {
+          "devices": "Zariadenia"
+        }
+      },
+      "add_device": {
+        "title": "Pridať zariadenie TapHome",
+        "description": "Vyberte typ zariadenia, ktoré chcete pridať.",
+        "menu_options": {
+          "light": "Svetlo",
+          "switch": "Spínač / zásuvka",
+          "cover": "Tienenie (rolety, žalúzie)",
+          "thermostat": "Termostat",
+          "thermostat_controlled": "Riadený termostat",
+          "thermostat_range": "Range termostat",
+          "sensor": "Senzor",
+          "binary_sensor": "Binárny senzor",
+          "fan": "Ventilátor",
+          "humidifier": "Zvlhčovač / odvlhčovač",
+          "valve": "Ventil",
+          "button": "Tlačidlo / udalosť",
+          "select": "Výber (prepínač hodnôt)",
+          "number": "Číslo",
+          "time": "Čas"
+        }
+      },
+      "light": {
+        "title": "Svetlo",
+        "description": "Vyberte zariadenie TapHome a nastavte jeho možnosti. Prázdne polia použijú automatické predvolené hodnoty.",
+        "data": {
+          "device": "Zariadenie",
+          "effect_id": "Viachodnotový prepínač efektov"
+        },
+        "submit": "Pridať"
+      },
+      "switch": {
+        "title": "Spínač / zásuvka",
+        "description": "Vyberte zariadenie TapHome a nastavte jeho možnosti. Prázdne polia použijú automatické predvolené hodnoty.",
+        "data": {
+          "device": "Zariadenie",
+          "device_class": "Trieda zariadenia"
+        },
+        "submit": "Pridať"
+      },
+      "cover": {
+        "title": "Tienenie (rolety, žalúzie)",
+        "description": "Vyberte zariadenie TapHome a nastavte jeho možnosti. Prázdne polia použijú automatické predvolené hodnoty.",
+        "data": {
+          "device": "Zariadenie",
+          "device_class": "Trieda zariadenia",
+          "close_threshold": "Prah zatvorenia (%)"
+        },
+        "submit": "Pridať"
+      },
+      "thermostat": {
+        "title": "Termostat",
+        "description": "Termostat s teplotou a žiadanou hodnotou. Riadenie kúrenia alebo chladenia možno doplniť neskôr v pokročilých možnostiach.",
+        "data": {
+          "device": "Zariadenie"
+        },
+        "submit": "Pridať"
+      },
+      "thermostat_controlled": {
+        "title": "Riadený termostat",
+        "description": "Termostat, ktorý zároveň riadi kúrenie alebo chladenie. Platné kombinácie: spínač + pevný režim, spínač + prepínač režimov, alebo samotný prepínač režimov.",
+        "data": {
+          "device": "Zariadenie",
+          "hvac_switch_id": "Spínač HVAC",
+          "hvac_mode": "Pevný režim HVAC",
+          "hvac_mode_id": "Viachodnotový prepínač režimu HVAC",
+          "hvac_action_id": "Viachodnotový prepínač akcie HVAC"
+        },
+        "submit": "Pridať"
+      },
+      "thermostat_range": {
+        "title": "Range termostat",
+        "description": "Klimatizácia so samostatnou dolnou a hornou žiadanou hodnotou riadená dvomi termostatmi TapHome.",
+        "data": {
+          "range_high_thermostat_id": "Horný termostat rozsahu",
+          "range_low_thermostat_id": "Dolný termostat rozsahu"
+        },
+        "submit": "Pridať"
+      },
+      "sensor": {
+        "title": "Senzor",
+        "description": "Vyberte zariadenie, ktorého hodnoty chcete pridať ako senzory.",
+        "data": {
+          "device": "Zariadenie"
+        },
+        "submit": "Ďalej"
+      },
+      "binary_sensor": {
+        "title": "Binárny senzor",
+        "description": "Vyberte zariadenie, ktorého hodnoty chcete pridať ako binárne senzory.",
+        "data": {
+          "device": "Zariadenie"
+        },
+        "submit": "Ďalej"
+      },
+      "fan": {
+        "title": "Ventilátor",
+        "description": "Vyberte zariadenie TapHome a nastavte jeho možnosti. Prázdne polia použijú automatické predvolené hodnoty.",
+        "data": {
+          "device": "Zariadenie",
+          "preset_mode_id": "Viachodnotový prepínač predvolieb"
+        },
+        "submit": "Pridať"
+      },
+      "humidifier": {
+        "title": "Zvlhčovač / odvlhčovač",
+        "description": "Vyberte zariadenie TapHome a nastavte jeho možnosti. Prázdne polia použijú automatické predvolené hodnoty.",
+        "data": {
+          "device": "Zariadenie",
+          "device_class": "Trieda zariadenia"
+        },
+        "submit": "Pridať"
+      },
+      "valve": {
+        "title": "Ventil",
+        "description": "Vyberte zariadenie TapHome a nastavte jeho možnosti. Prázdne polia použijú automatické predvolené hodnoty.",
+        "data": {
+          "device": "Zariadenie",
+          "device_class": "Trieda zariadenia"
+        },
+        "submit": "Pridať"
+      },
+      "button": {
+        "title": "Tlačidlo / udalosť",
+        "description": "Vyberte zariadenie TapHome a nastavte jeho možnosti. Prázdne polia použijú automatické predvolené hodnoty.",
+        "data": {
+          "device": "Zariadenie",
+          "actions": "Akcie",
+          "device_class": "Trieda zariadenia"
+        },
+        "submit": "Pridať"
+      },
+      "select": {
+        "title": "Výber (prepínač hodnôt)",
+        "description": "Vyberte zariadenie TapHome a nastavte jeho možnosti. Prázdne polia použijú automatické predvolené hodnoty.",
+        "data": {
+          "device": "Zariadenie"
+        },
+        "submit": "Pridať"
+      },
+      "number": {
+        "title": "Číslo",
+        "description": "Vyberte zariadenie TapHome a nastavte jeho možnosti. Prázdne polia použijú automatické predvolené hodnoty.",
+        "data": {
+          "device": "Zariadenie",
+          "min_value": "Minimálna hodnota",
+          "max_value": "Maximálna hodnota",
+          "step": "Krok"
+        },
+        "submit": "Pridať"
+      },
+      "time": {
+        "title": "Čas",
+        "description": "Vyberte zariadenie TapHome a nastavte jeho možnosti. Prázdne polia použijú automatické predvolené hodnoty.",
+        "data": {
+          "device": "Zariadenie"
+        },
+        "submit": "Pridať"
+      },
+      "sensor_values": {
+        "title": "Hodnoty senzora",
+        "description": "Vyberte, ktoré hodnoty zariadenia {device} pridať. Každá vybraná hodnota bude samostatný senzor.",
+        "data": {
+          "values": "Hodnoty"
+        },
+        "submit": "Pridať"
+      },
+      "binary_sensor_values": {
+        "title": "Hodnoty binárneho senzora",
+        "description": "Vyberte, ktoré hodnoty zariadenia {device} pridať. Každá vybraná hodnota bude samostatný binárny senzor.",
+        "data": {
+          "values": "Hodnoty"
+        },
+        "submit": "Pridať"
+      }
+    },
+    "error": {
+      "invalid_device_id": "Neplatné ID zariadenia.",
+      "cannot_connect": "Pripojenie k TapHome Core zlyhalo.",
+      "invalid_auth": "TapHome Core odmietol token.",
+      "ip_required": "Vyplňte IP adresu vášho Core, alebo zapnite TapHome cloud.",
+      "unique_id_mismatch": "Pripojený Core nezodpovedá Core, pre ktorý bol tento záznam vytvorený.",
+      "no_device_config": "Výber neobsahuje žiadne zariadenie TapHome tohto Core. Ak máte viac Core, otvorte Nastaviť pri tom, ktorému zariadenie patrí.",
+      "select_target": "Vyberte aspoň jedno zariadenie, entitu, oblasť alebo štítok.",
+      "no_devices_selected": "Vyberte aspoň jedno zariadenie.",
+      "invalid_hvac_config": "Neplatná kombinácia: použite spínač + pevný režim, spínač + prepínač režimov, alebo samotný prepínač režimov.",
+      "range_thermostats_required": "Vyberte dolný aj horný termostat.",
+      "no_values_selected": "Vyberte aspoň jednu hodnotu.",
+      "already_configured": "Toto zariadenie je už v tejto doméne pridané."
+    },
+    "abort": {
+      "entry_not_loaded": "TapHome Core nie je načítaný. Najprv opravte pripojenie.",
+      "no_device_config": "Výber neobsahuje žiadne zariadenie TapHome tohto Core. Ak máte viac Core, otvorte Nastaviť pri tom, ktorému zariadenie patrí.",
+      "device_removed": "Zariadenie bolo odstránené.",
+      "reconfigure_successful": "Rekonfigurácia bola úspešná.",
+      "unknown_subentry": "Táto konfigurácia zariadenia už nie je platná.",
+      "no_devices_available": "Všetky zariadenia TapHome sú už pridané vo všetkých kompatibilných doménach.",
+      "device_added": "Zariadenie bolo pridané."
+    }
+  },
+  "selector": {
+    "platform": {
+      "options": {
+        "lights": "Light",
+        "buttons": "Button / Event",
+        "covers": "Cover",
+        "climates": "Climate",
+        "fans": "Fan",
+        "humidifiers": "Humidifier",
+        "multivalue_switches": "Select",
+        "switches": "Switch",
+        "sensors": "Sensor",
+        "binary_sensors": "Binary sensor",
+        "valves": "Valve",
+        "times": "Time"
+      }
+    }
+  },
   "issues": {
     "device_not_exposed": {
-      "title": "Zariadenie {device_id} nie je vystavené pre core{core_id}",
-      "description": "Zariadenie {device_id} nakonfigurované pre core{core_id} nie je vystavené v TapHome API. Skontrolujte nastavenie TapHome."
+      "title": "Zariadenie {device_id} nie je vystavené pre Core{core_id}",
+      "description": "Zariadenie {device_id} nakonfigurované pre Core{core_id} nie je vystavené v TapHome API. Skontrolujte nastavenie TapHome."
     },
     "core_unavailable": {
-      "title": "Pripojenie k TapHome core{core_id} zlyhalo",
-      "description": "Home Assistant sa nevie pripojiť k TapHome core{core_id}."
-    },
-    "ip_and_api_url_set": {
-      "title": "Pre core{core_id} sú nastavené api_url aj ip",
-      "description": "Pre core{core_id} sú nakonfigurované hodnoty api_url aj ip. Použije sa api_url."
+      "title": "Pripojenie k TapHome Core{core_id} zlyhalo",
+      "description": "Home Assistant sa nevie pripojiť k TapHome Core{core_id}."
     },
     "device_type_mismatch": {
-      "title": "Nepodporovaný typ zariadenia {device_id} v core{core_id}",
+      "title": "Nepodporovaný typ zariadenia {device_id} v Core{core_id}",
       "description": "Zariadenie {device_id} je typu {device_type} s podporovanými hodnotami [{supported_values}], očakávané: {expected}. Skontrolujte nastavenie TapHome."
+    },
+    "yaml_deprecated": {
+      "title": "YAML konfigurácia TapHome je zastaraná",
+      "description": "Vaša YAML konfigurácia TapHome bola naimportovaná a integrácia sa teraz spravuje v UI (Nastavenia → Zariadenia a služby). Odstráňte sekciu taphome z configuration.yaml — zmeny v nej sa už nepremietajú."
+    },
+    "new_device": {
+      "title": "Nájdené nové zariadenie TapHome: {device}",
+      "fix_flow": {
+        "step": {
+          "menu": {
+            "title": "Nové zariadenie TapHome",
+            "description": "V TapHome API sa našlo zariadenie {device}, ktoré zatiaľ nie je použité v Home Assistante. Vyberte typ, ako ktorý ho chcete pridať, alebo ho ignorujte.",
+            "menu_options": {
+              "light": "Svetlo",
+              "switch": "Spínač / zásuvka",
+              "cover": "Tienenie (rolety, žalúzie)",
+              "thermostat": "Termostat",
+              "thermostat_controlled": "Riadený termostat",
+              "thermostat_range": "Range termostat",
+              "sensor": "Senzor",
+              "binary_sensor": "Binárny senzor",
+              "fan": "Ventilátor",
+              "humidifier": "Zvlhčovač / odvlhčovač",
+              "valve": "Ventil",
+              "button": "Tlačidlo / udalosť",
+              "select": "Výber (prepínač hodnôt)",
+              "number": "Číslo",
+              "time": "Čas",
+              "ignore": "Ignorovať toto zariadenie"
+            }
+          },
+          "light": {
+            "title": "Svetlo",
+            "description": "Vyberte zariadenie TapHome a nastavte jeho možnosti. Prázdne polia použijú automatické predvolené hodnoty.",
+            "data": {
+              "device": "Zariadenie",
+              "effect_id": "Viachodnotový prepínač efektov"
+            },
+            "submit": "Pridať"
+          },
+          "switch": {
+            "title": "Spínač / zásuvka",
+            "description": "Vyberte zariadenie TapHome a nastavte jeho možnosti. Prázdne polia použijú automatické predvolené hodnoty.",
+            "data": {
+              "device": "Zariadenie",
+              "device_class": "Trieda zariadenia"
+            },
+            "submit": "Pridať"
+          },
+          "cover": {
+            "title": "Tienenie (rolety, žalúzie)",
+            "description": "Vyberte zariadenie TapHome a nastavte jeho možnosti. Prázdne polia použijú automatické predvolené hodnoty.",
+            "data": {
+              "device": "Zariadenie",
+              "device_class": "Trieda zariadenia",
+              "close_threshold": "Prah zatvorenia (%)"
+            },
+            "submit": "Pridať"
+          },
+          "thermostat": {
+            "title": "Termostat",
+            "description": "Termostat s teplotou a žiadanou hodnotou. Riadenie kúrenia alebo chladenia možno doplniť neskôr v pokročilých možnostiach.",
+            "data": {
+              "device": "Zariadenie"
+            },
+            "submit": "Pridať"
+          },
+          "thermostat_controlled": {
+            "title": "Riadený termostat",
+            "description": "Termostat, ktorý zároveň riadi kúrenie alebo chladenie. Platné kombinácie: spínač + pevný režim, spínač + prepínač režimov, alebo samotný prepínač režimov.",
+            "data": {
+              "device": "Zariadenie",
+              "hvac_switch_id": "Spínač HVAC",
+              "hvac_mode": "Pevný režim HVAC",
+              "hvac_mode_id": "Viachodnotový prepínač režimu HVAC",
+              "hvac_action_id": "Viachodnotový prepínač akcie HVAC"
+            },
+            "submit": "Pridať"
+          },
+          "thermostat_range": {
+            "title": "Range termostat",
+            "description": "Klimatizácia so samostatnou dolnou a hornou žiadanou hodnotou riadená dvomi termostatmi TapHome.",
+            "data": {
+              "range_high_thermostat_id": "Horný termostat rozsahu",
+              "range_low_thermostat_id": "Dolný termostat rozsahu"
+            },
+            "submit": "Pridať"
+          },
+          "sensor": {
+            "title": "Senzor",
+            "description": "Vyberte zariadenie, ktorého hodnoty chcete pridať ako senzory.",
+            "data": {
+              "device": "Zariadenie"
+            },
+            "submit": "Ďalej"
+          },
+          "binary_sensor": {
+            "title": "Binárny senzor",
+            "description": "Vyberte zariadenie, ktorého hodnoty chcete pridať ako binárne senzory.",
+            "data": {
+              "device": "Zariadenie"
+            },
+            "submit": "Ďalej"
+          },
+          "fan": {
+            "title": "Ventilátor",
+            "description": "Vyberte zariadenie TapHome a nastavte jeho možnosti. Prázdne polia použijú automatické predvolené hodnoty.",
+            "data": {
+              "device": "Zariadenie",
+              "preset_mode_id": "Viachodnotový prepínač predvolieb"
+            },
+            "submit": "Pridať"
+          },
+          "humidifier": {
+            "title": "Zvlhčovač / odvlhčovač",
+            "description": "Vyberte zariadenie TapHome a nastavte jeho možnosti. Prázdne polia použijú automatické predvolené hodnoty.",
+            "data": {
+              "device": "Zariadenie",
+              "device_class": "Trieda zariadenia"
+            },
+            "submit": "Pridať"
+          },
+          "valve": {
+            "title": "Ventil",
+            "description": "Vyberte zariadenie TapHome a nastavte jeho možnosti. Prázdne polia použijú automatické predvolené hodnoty.",
+            "data": {
+              "device": "Zariadenie",
+              "device_class": "Trieda zariadenia"
+            },
+            "submit": "Pridať"
+          },
+          "button": {
+            "title": "Tlačidlo / udalosť",
+            "description": "Vyberte zariadenie TapHome a nastavte jeho možnosti. Prázdne polia použijú automatické predvolené hodnoty.",
+            "data": {
+              "device": "Zariadenie",
+              "actions": "Akcie",
+              "device_class": "Trieda zariadenia"
+            },
+            "submit": "Pridať"
+          },
+          "select": {
+            "title": "Výber (prepínač hodnôt)",
+            "description": "Vyberte zariadenie TapHome a nastavte jeho možnosti. Prázdne polia použijú automatické predvolené hodnoty.",
+            "data": {
+              "device": "Zariadenie"
+            },
+            "submit": "Pridať"
+          },
+          "number": {
+            "title": "Číslo",
+            "description": "Vyberte zariadenie TapHome a nastavte jeho možnosti. Prázdne polia použijú automatické predvolené hodnoty.",
+            "data": {
+              "device": "Zariadenie"
+            },
+            "submit": "Pridať"
+          },
+          "time": {
+            "title": "Čas",
+            "description": "Vyberte zariadenie TapHome a nastavte jeho možnosti. Prázdne polia použijú automatické predvolené hodnoty.",
+            "data": {
+              "device": "Zariadenie"
+            },
+            "submit": "Pridať"
+          },
+          "sensor_values": {
+            "title": "Hodnoty senzora",
+            "description": "Vyberte, ktoré hodnoty zariadenia {device} pridať. Každá vybraná hodnota bude samostatný senzor.",
+            "data": {
+              "values": "Hodnoty"
+            },
+            "submit": "Pridať"
+          },
+          "binary_sensor_values": {
+            "title": "Hodnoty binárneho senzora",
+            "description": "Vyberte, ktoré hodnoty zariadenia {device} pridať. Každá vybraná hodnota bude samostatný binárny senzor.",
+            "data": {
+              "values": "Hodnoty"
+            },
+            "submit": "Pridať"
+          }
+        },
+        "error": {
+          "invalid_device_id": "Neplatné ID zariadenia.",
+          "invalid_hvac_config": "Neplatná kombinácia: použite spínač + pevný režim, spínač + prepínač režimov, alebo samotný prepínač režimov.",
+          "range_thermostats_required": "Vyberte dolný aj horný termostat.",
+          "no_values_selected": "Vyberte aspoň jednu hodnotu.",
+          "already_configured": "Toto zariadenie je už v tejto doméne pridané."
+        },
+        "abort": {
+          "entry_not_loaded": "TapHome Core nie je načítaný. Najprv opravte pripojenie.",
+          "no_devices_available": "Všetky zariadenia TapHome sú už pridané vo všetkých kompatibilných doménach.",
+          "unknown_subentry": "Táto konfigurácia zariadenia už nie je platná.",
+          "already_configured": "Toto zariadenie je už v tejto doméne pridané.",
+          "reconfigure_successful": "Rekonfigurácia bola úspešná.",
+          "device_gone": "Toto zariadenie už TapHome Core neposkytuje."
+        }
+      }
+    }
+  },
+  "config_subentries": {
+    "device": {
+      "initiate_flow": {
+        "user": "Pridať zariadenie"
+      },
+      "entry_type": "Zariadenie",
+      "step": {
+        "user": {
+          "title": "Pridať zariadenie TapHome",
+          "description": "Vyberte typ zariadenia, ktoré chcete pridať.",
+          "menu_options": {
+            "light": "Svetlo",
+            "switch": "Spínač / zásuvka",
+            "cover": "Tienenie (rolety, žalúzie)",
+            "thermostat": "Termostat",
+            "thermostat_controlled": "Riadený termostat",
+            "thermostat_range": "Range termostat",
+            "sensor": "Senzor",
+            "binary_sensor": "Binárny senzor",
+            "fan": "Ventilátor",
+            "humidifier": "Zvlhčovač / odvlhčovač",
+            "valve": "Ventil",
+            "button": "Tlačidlo / udalosť",
+            "select": "Výber (prepínač hodnôt)",
+            "number": "Číslo",
+            "time": "Čas"
+          }
+        },
+        "light": {
+          "title": "Svetlo",
+          "description": "Vyberte zariadenie TapHome a nastavte jeho možnosti. Prázdne polia použijú automatické predvolené hodnoty.",
+          "data": {
+            "device": "Zariadenie",
+            "effect_id": "Viachodnotový prepínač efektov"
+          },
+          "submit": "Pridať"
+        },
+        "switch": {
+          "title": "Spínač / zásuvka",
+          "description": "Vyberte zariadenie TapHome a nastavte jeho možnosti. Prázdne polia použijú automatické predvolené hodnoty.",
+          "data": {
+            "device": "Zariadenie",
+            "device_class": "Trieda zariadenia"
+          },
+          "submit": "Pridať"
+        },
+        "cover": {
+          "title": "Tienenie (rolety, žalúzie)",
+          "description": "Vyberte zariadenie TapHome a nastavte jeho možnosti. Prázdne polia použijú automatické predvolené hodnoty.",
+          "data": {
+            "device": "Zariadenie",
+            "device_class": "Trieda zariadenia",
+            "close_threshold": "Prah zatvorenia (%)"
+          },
+          "submit": "Pridať"
+        },
+        "thermostat": {
+          "title": "Termostat",
+          "description": "Termostat s teplotou a žiadanou hodnotou. Riadenie kúrenia alebo chladenia možno doplniť neskôr v pokročilých možnostiach.",
+          "data": {
+            "device": "Zariadenie"
+          },
+          "submit": "Pridať"
+        },
+        "thermostat_controlled": {
+          "title": "Riadený termostat",
+          "description": "Termostat, ktorý zároveň riadi kúrenie alebo chladenie. Platné kombinácie: spínač + pevný režim, spínač + prepínač režimov, alebo samotný prepínač režimov.",
+          "data": {
+            "device": "Zariadenie",
+            "hvac_switch_id": "Spínač HVAC",
+            "hvac_mode": "Pevný režim HVAC",
+            "hvac_mode_id": "Viachodnotový prepínač režimu HVAC",
+            "hvac_action_id": "Viachodnotový prepínač akcie HVAC"
+          },
+          "submit": "Pridať"
+        },
+        "thermostat_range": {
+          "title": "Range termostat",
+          "description": "Klimatizácia so samostatnou dolnou a hornou žiadanou hodnotou riadená dvomi termostatmi TapHome.",
+          "data": {
+            "range_high_thermostat_id": "Horný termostat rozsahu",
+            "range_low_thermostat_id": "Dolný termostat rozsahu"
+          },
+          "submit": "Pridať"
+        },
+        "sensor": {
+          "title": "Senzor",
+          "description": "Vyberte zariadenie, ktorého hodnoty chcete pridať ako senzory.",
+          "data": {
+            "device": "Zariadenie"
+          },
+          "submit": "Ďalej"
+        },
+        "binary_sensor": {
+          "title": "Binárny senzor",
+          "description": "Vyberte zariadenie, ktorého hodnoty chcete pridať ako binárne senzory.",
+          "data": {
+            "device": "Zariadenie"
+          },
+          "submit": "Ďalej"
+        },
+        "fan": {
+          "title": "Ventilátor",
+          "description": "Vyberte zariadenie TapHome a nastavte jeho možnosti. Prázdne polia použijú automatické predvolené hodnoty.",
+          "data": {
+            "device": "Zariadenie",
+            "preset_mode_id": "Viachodnotový prepínač predvolieb"
+          },
+          "submit": "Pridať"
+        },
+        "humidifier": {
+          "title": "Zvlhčovač / odvlhčovač",
+          "description": "Vyberte zariadenie TapHome a nastavte jeho možnosti. Prázdne polia použijú automatické predvolené hodnoty.",
+          "data": {
+            "device": "Zariadenie",
+            "device_class": "Trieda zariadenia"
+          },
+          "submit": "Pridať"
+        },
+        "valve": {
+          "title": "Ventil",
+          "description": "Vyberte zariadenie TapHome a nastavte jeho možnosti. Prázdne polia použijú automatické predvolené hodnoty.",
+          "data": {
+            "device": "Zariadenie",
+            "device_class": "Trieda zariadenia"
+          },
+          "submit": "Pridať"
+        },
+        "button": {
+          "title": "Tlačidlo / udalosť",
+          "description": "Vyberte zariadenie TapHome a nastavte jeho možnosti. Prázdne polia použijú automatické predvolené hodnoty.",
+          "data": {
+            "device": "Zariadenie",
+            "actions": "Akcie",
+            "device_class": "Trieda zariadenia"
+          },
+          "submit": "Pridať"
+        },
+        "select": {
+          "title": "Výber (prepínač hodnôt)",
+          "description": "Vyberte zariadenie TapHome a nastavte jeho možnosti. Prázdne polia použijú automatické predvolené hodnoty.",
+          "data": {
+            "device": "Zariadenie"
+          },
+          "submit": "Pridať"
+        },
+        "number": {
+          "title": "Číslo",
+          "description": "Vyberte zariadenie TapHome a nastavte jeho možnosti. Prázdne polia použijú automatické predvolené hodnoty.",
+          "data": {
+            "device": "Zariadenie",
+            "min_value": "Minimálna hodnota",
+            "max_value": "Maximálna hodnota",
+            "step": "Krok"
+          },
+          "submit": "Pridať"
+        },
+        "time": {
+          "title": "Čas",
+          "description": "Vyberte zariadenie TapHome a nastavte jeho možnosti. Prázdne polia použijú automatické predvolené hodnoty.",
+          "data": {
+            "device": "Zariadenie"
+          },
+          "submit": "Pridať"
+        },
+        "sensor_values": {
+          "title": "Hodnoty senzora",
+          "description": "Vyberte, ktoré hodnoty zariadenia {device} pridať. Každá vybraná hodnota bude samostatný senzor.",
+          "data": {
+            "values": "Hodnoty"
+          },
+          "submit": "Pridať"
+        },
+        "binary_sensor_values": {
+          "title": "Hodnoty binárneho senzora",
+          "description": "Vyberte, ktoré hodnoty zariadenia {device} pridať. Každá vybraná hodnota bude samostatný binárny senzor.",
+          "data": {
+            "values": "Hodnoty"
+          },
+          "submit": "Pridať"
+        },
+        "reconfigure": {
+          "title": "Možnosti zariadenia",
+          "description": "Zmeňte možnosti tohto zariadenia. Prázdne polia použijú automatické predvolené hodnoty.",
+          "data": {
+            "effect_id": "Viachodnotový prepínač efektov",
+            "device_class": "Trieda zariadenia",
+            "actions": "Akcie",
+            "close_threshold": "Prah zatvorenia (%)",
+            "range_high_thermostat_id": "Horný termostat rozsahu",
+            "range_low_thermostat_id": "Dolný termostat rozsahu",
+            "target_temperature_step": "Krok cieľovej teploty",
+            "precision": "Presnosť teploty",
+            "hvac_switch_id": "Spínač HVAC",
+            "hvac_mode": "Pevný režim HVAC",
+            "hvac_mode_id": "Viachodnotový prepínač režimu HVAC",
+            "hvac_action_id": "Viachodnotový prepínač akcie HVAC",
+            "preset_mode_id": "Viachodnotový prepínač predvolieb",
+            "fan_mode_id": "Viachodnotový prepínač režimov ventilátora",
+            "swing_mode_id": "Viachodnotový prepínač natáčania",
+            "swing_horizontal_mode_id": "Viachodnotový prepínač horizontálneho natáčania",
+            "target_humidity_id": "Analógový výstup cieľovej vlhkosti",
+            "min_humidity": "Minimálna vlhkosť (%)",
+            "max_humidity": "Maximálna vlhkosť (%)",
+            "switch_id": "Spínač zapnutia/vypnutia",
+            "action_id": "Viachodnotový prepínač akcie",
+            "mode_id": "Viachodnotový prepínač režimov",
+            "humidity_sensor_id": "Senzor vlhkosti",
+            "value_type": "Typ hodnoty",
+            "unit_of_measurement": "Jednotka merania",
+            "state_class": "Trieda stavu",
+            "min_value": "Minimálna hodnota",
+            "max_value": "Maximálna hodnota",
+            "step": "Krok"
+          },
+          "sections": {
+            "advanced_options": {
+              "name": "Pokročilé možnosti",
+              "description": "Všetky zostávajúce možnosti vrátane iných variantov zariadenia — tu možno zariadenie previesť (napr. jednoduchý termostat na riadený).",
+              "data": {
+                "effect_id": "Viachodnotový prepínač efektov",
+                "device_class": "Trieda zariadenia",
+                "actions": "Akcie",
+                "close_threshold": "Prah zatvorenia (%)",
+                "range_high_thermostat_id": "Horný termostat rozsahu",
+                "range_low_thermostat_id": "Dolný termostat rozsahu",
+                "target_temperature_step": "Krok cieľovej teploty",
+                "precision": "Presnosť teploty",
+                "hvac_switch_id": "Spínač HVAC",
+                "hvac_mode": "Pevný režim HVAC",
+                "hvac_mode_id": "Viachodnotový prepínač režimu HVAC",
+                "hvac_action_id": "Viachodnotový prepínač akcie HVAC",
+                "preset_mode_id": "Viachodnotový prepínač predvolieb",
+                "fan_mode_id": "Viachodnotový prepínač režimov ventilátora",
+                "swing_mode_id": "Viachodnotový prepínač natáčania",
+                "swing_horizontal_mode_id": "Viachodnotový prepínač horizontálneho natáčania",
+                "target_humidity_id": "Analógový výstup cieľovej vlhkosti",
+                "min_humidity": "Minimálna vlhkosť (%)",
+                "max_humidity": "Maximálna vlhkosť (%)",
+                "switch_id": "Spínač zapnutia/vypnutia",
+                "action_id": "Viachodnotový prepínač akcie",
+                "mode_id": "Viachodnotový prepínač režimov",
+                "humidity_sensor_id": "Senzor vlhkosti",
+                "value_type": "Typ hodnoty",
+                "unit_of_measurement": "Jednotka merania",
+                "state_class": "Trieda stavu",
+                "min_value": "Minimálna hodnota",
+                "max_value": "Maximálna hodnota",
+                "step": "Krok"
+              }
+            }
+          },
+          "submit": "Uložiť"
+        }
+      },
+      "error": {
+        "invalid_device_id": "Neplatné ID zariadenia.",
+        "invalid_hvac_config": "Neplatná kombinácia: použite spínač + pevný režim, spínač + prepínač režimov, alebo samotný prepínač režimov.",
+        "range_thermostats_required": "Vyberte dolný aj horný termostat.",
+        "no_values_selected": "Vyberte aspoň jednu hodnotu.",
+        "already_configured": "Toto zariadenie je už v tejto doméne pridané."
+      },
+      "abort": {
+        "entry_not_loaded": "TapHome Core nie je načítaný. Najprv opravte pripojenie.",
+        "no_devices_available": "Všetky zariadenia TapHome sú už pridané vo všetkých kompatibilných doménach.",
+        "unknown_subentry": "Táto konfigurácia zariadenia už nie je platná.",
+        "already_configured": "Toto zariadenie je už v tejto doméne pridané.",
+        "reconfigure_successful": "Rekonfigurácia bola úspešná."
+      }
+    }
+  },
+  "exceptions": {
+    "change_rejected": {
+      "message": "TapHome nevykonal požadovanú zmenu pre {entity_id}"
+    },
+    "communication_error": {
+      "message": "Chyba komunikácie s TapHome Core pri ovládaní {entity_id}"
+    },
+    "invalid_hvac_mode": {
+      "message": "{hvac_mode} nie je platný režim vykurovania/chladenia pre tento termostat"
+    },
+    "hvac_mode_not_supported": {
+      "message": "Tento termostat nepodporuje nastavenie režimu vykurovania/chladenia"
     }
   }
 }
