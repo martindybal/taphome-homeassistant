@@ -8,6 +8,9 @@ Compatibility with the Home Assistant 2026.10 device registry (one device per co
 - Migrated off device-registry APIs deprecated in Home Assistant 2026.8–2026.10 (`async_get_device`, `via_device`, multi-entry device links) and from `voluptuous` to its Home Assistant successor `probatio`; the new-device repair flow uses the typed repair flow results. No visible changes.
 - **Requires Home Assistant 2026.10 or newer** (the HACS minimum was raised from 2025.3).
 
+- **Fixed: a long press on a TapHome button fired the `long_press` event two or three times** ([#211](https://github.com/martindybal/taphome-homeassistant/issues/211)). While a button is held, the Core pushes its held state when the hold starts and again on release, and each of those updates repeated the last gesture; the regular poll could repeat it the same way. Every press, long press, double or triple press now fires the event once. Reported with a field-tested patch by `pepies`.
+- Requires [taphome-sdk 1.2.0](https://github.com/martindybal/taphome-sdk/blob/main/CHANGELOG.md).
+
 ## 2026.7.1
 
 Quality-scale improvements on the road to Home Assistant Core:
